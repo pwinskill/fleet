@@ -1,0 +1,3505 @@
+"year","inc","model","metric"
+0,1.40345437067816,"IBM","Clinical incidence
+(per person-year)"
+0.0821917808219178,1.52996040339046,"IBM","Clinical incidence
+(per person-year)"
+0.164383561643836,1.55420157007262,"IBM","Clinical incidence
+(per person-year)"
+0.246575342465753,1.51165676526703,"IBM","Clinical incidence
+(per person-year)"
+0.328767123287671,1.43996569468268,"IBM","Clinical incidence
+(per person-year)"
+0.410958904109589,1.44929228756949,"IBM","Clinical incidence
+(per person-year)"
+0.493150684931507,1.44670169112161,"IBM","Clinical incidence
+(per person-year)"
+0.575342465753425,1.51828397591109,"IBM","Clinical incidence
+(per person-year)"
+0.657534246575342,1.52246049836411,"IBM","Clinical incidence
+(per person-year)"
+0.73972602739726,1.51009425451831,"IBM","Clinical incidence
+(per person-year)"
+0.821917808219178,1.61423944188364,"IBM","Clinical incidence
+(per person-year)"
+0.904109589041096,1.47308141799766,"IBM","Clinical incidence
+(per person-year)"
+0.986301369863014,1.3841573297814,"IBM","Clinical incidence
+(per person-year)"
+1.06849315068493,1.45345085386008,"IBM","Clinical incidence
+(per person-year)"
+1.15068493150685,1.4994333742563,"IBM","Clinical incidence
+(per person-year)"
+1.23287671232877,1.52827842402682,"IBM","Clinical incidence
+(per person-year)"
+1.31506849315068,1.53148463625465,"IBM","Clinical incidence
+(per person-year)"
+1.3972602739726,1.55204182874781,"IBM","Clinical incidence
+(per person-year)"
+1.47945205479452,1.69946360876473,"IBM","Clinical incidence
+(per person-year)"
+1.56164383561644,1.39635384688046,"IBM","Clinical incidence
+(per person-year)"
+1.64383561643836,1.49017166096565,"IBM","Clinical incidence
+(per person-year)"
+1.72602739726027,1.60183408311574,"IBM","Clinical incidence
+(per person-year)"
+1.80821917808219,1.40613254823353,"IBM","Clinical incidence
+(per person-year)"
+1.89041095890411,1.44646157701826,"IBM","Clinical incidence
+(per person-year)"
+1.97260273972603,1.49456393843837,"IBM","Clinical incidence
+(per person-year)"
+2.05479452054795,1.45053697308038,"IBM","Clinical incidence
+(per person-year)"
+2.13698630136986,1.42983509193151,"IBM","Clinical incidence
+(per person-year)"
+2.21917808219178,1.35914670705923,"IBM","Clinical incidence
+(per person-year)"
+2.3013698630137,1.34480641148777,"IBM","Clinical incidence
+(per person-year)"
+2.38356164383562,1.41767552583358,"IBM","Clinical incidence
+(per person-year)"
+2.46575342465753,1.50918573509374,"IBM","Clinical incidence
+(per person-year)"
+2.54794520547945,1.38998589562764,"IBM","Clinical incidence
+(per person-year)"
+2.63013698630137,1.42424573506688,"IBM","Clinical incidence
+(per person-year)"
+2.71232876712329,1.50196360677796,"IBM","Clinical incidence
+(per person-year)"
+2.79452054794521,1.40986386546705,"IBM","Clinical incidence
+(per person-year)"
+2.87671232876712,1.42161635832522,"IBM","Clinical incidence
+(per person-year)"
+2.95890410958904,1.51637480991425,"IBM","Clinical incidence
+(per person-year)"
+3.04109589041096,1.5871065318083,"IBM","Clinical incidence
+(per person-year)"
+3.12328767123288,1.46962979210077,"IBM","Clinical incidence
+(per person-year)"
+3.20547945205479,1.6607829293167,"IBM","Clinical incidence
+(per person-year)"
+3.28767123287671,1.3691868221556,"IBM","Clinical incidence
+(per person-year)"
+3.36986301369863,1.58230342392332,"IBM","Clinical incidence
+(per person-year)"
+3.45205479452055,1.50568990042674,"IBM","Clinical incidence
+(per person-year)"
+3.53424657534247,1.54042519560579,"IBM","Clinical incidence
+(per person-year)"
+3.61643835616438,1.58921785940469,"IBM","Clinical incidence
+(per person-year)"
+3.6986301369863,1.48315335114709,"IBM","Clinical incidence
+(per person-year)"
+3.78082191780822,1.39523771601497,"IBM","Clinical incidence
+(per person-year)"
+3.86301369863014,1.75876862983655,"IBM","Clinical incidence
+(per person-year)"
+3.94520547945205,1.63456445321905,"IBM","Clinical incidence
+(per person-year)"
+4.02739726027397,1.62513213107403,"IBM","Clinical incidence
+(per person-year)"
+4.10958904109589,1.68121780160169,"IBM","Clinical incidence
+(per person-year)"
+4.19178082191781,1.44398700588595,"IBM","Clinical incidence
+(per person-year)"
+4.27397260273973,1.51247158220603,"IBM","Clinical incidence
+(per person-year)"
+4.35616438356164,1.41808128193968,"IBM","Clinical incidence
+(per person-year)"
+4.43835616438356,1.45001361590338,"IBM","Clinical incidence
+(per person-year)"
+4.52054794520548,1.45936955235338,"IBM","Clinical incidence
+(per person-year)"
+4.6027397260274,1.58817957034135,"IBM","Clinical incidence
+(per person-year)"
+4.68493150684932,1.49553967511413,"IBM","Clinical incidence
+(per person-year)"
+4.76712328767123,1.29632308038441,"IBM","Clinical incidence
+(per person-year)"
+4.84931506849315,1.50138183687898,"IBM","Clinical incidence
+(per person-year)"
+4.93150684931507,1.33871694228171,"IBM","Clinical incidence
+(per person-year)"
+5.01369863013699,1.49536872105451,"IBM","Clinical incidence
+(per person-year)"
+5.0958904109589,1.4920676118483,"IBM","Clinical incidence
+(per person-year)"
+5.17808219178082,1.47696740150853,"IBM","Clinical incidence
+(per person-year)"
+5.26027397260274,1.51867500967617,"IBM","Clinical incidence
+(per person-year)"
+5.34246575342466,1.44155281198324,"IBM","Clinical incidence
+(per person-year)"
+5.42465753424658,1.50937650264465,"IBM","Clinical incidence
+(per person-year)"
+5.50684931506849,1.51978604487292,"IBM","Clinical incidence
+(per person-year)"
+5.58904109589041,1.62198884253265,"IBM","Clinical incidence
+(per person-year)"
+5.67123287671233,1.55565525308039,"IBM","Clinical incidence
+(per person-year)"
+5.75342465753425,1.45742463117383,"IBM","Clinical incidence
+(per person-year)"
+5.83561643835616,1.40989886361815,"IBM","Clinical incidence
+(per person-year)"
+5.91780821917808,1.501333590411,"IBM","Clinical incidence
+(per person-year)"
+6,1.48021992113615,"IBM","Clinical incidence
+(per person-year)"
+6.08219178082192,1.47062570668705,"IBM","Clinical incidence
+(per person-year)"
+6.16438356164384,1.52549132210311,"IBM","Clinical incidence
+(per person-year)"
+6.24657534246575,1.54018285275878,"IBM","Clinical incidence
+(per person-year)"
+6.32876712328767,1.51171344047334,"IBM","Clinical incidence
+(per person-year)"
+6.41095890410959,1.5820578027286,"IBM","Clinical incidence
+(per person-year)"
+6.49315068493151,1.39477807623433,"IBM","Clinical incidence
+(per person-year)"
+6.57534246575342,1.40877192982456,"IBM","Clinical incidence
+(per person-year)"
+6.65753424657534,1.66994608948825,"IBM","Clinical incidence
+(per person-year)"
+6.73972602739726,1.42128034612611,"IBM","Clinical incidence
+(per person-year)"
+6.82191780821918,1.45751812175252,"IBM","Clinical incidence
+(per person-year)"
+6.9041095890411,1.49223221586263,"IBM","Clinical incidence
+(per person-year)"
+6.98630136986301,1.45854731030941,"IBM","Clinical incidence
+(per person-year)"
+7.06849315068493,1.50993313771706,"IBM","Clinical incidence
+(per person-year)"
+7.15068493150685,1.63835127177953,"IBM","Clinical incidence
+(per person-year)"
+7.23287671232877,1.41335914811229,"IBM","Clinical incidence
+(per person-year)"
+7.31506849315068,1.5521116285086,"IBM","Clinical incidence
+(per person-year)"
+7.3972602739726,1.64043612999529,"IBM","Clinical incidence
+(per person-year)"
+7.47945205479452,1.48952947679901,"IBM","Clinical incidence
+(per person-year)"
+7.56164383561644,1.61669505962521,"IBM","Clinical incidence
+(per person-year)"
+7.64383561643836,1.56677735482303,"IBM","Clinical incidence
+(per person-year)"
+7.72602739726027,1.58652059398581,"IBM","Clinical incidence
+(per person-year)"
+7.80821917808219,1.70078411208947,"IBM","Clinical incidence
+(per person-year)"
+7.89041095890411,1.5559148087379,"IBM","Clinical incidence
+(per person-year)"
+7.97260273972603,1.4977551775743,"IBM","Clinical incidence
+(per person-year)"
+8.05479452054795,1.63861489693791,"IBM","Clinical incidence
+(per person-year)"
+8.13698630136986,1.45707405372208,"IBM","Clinical incidence
+(per person-year)"
+8.21917808219178,1.64417059476504,"IBM","Clinical incidence
+(per person-year)"
+8.3013698630137,1.53403326838537,"IBM","Clinical incidence
+(per person-year)"
+8.38356164383562,1.64720714354543,"IBM","Clinical incidence
+(per person-year)"
+8.46575342465753,1.4242991252059,"IBM","Clinical incidence
+(per person-year)"
+8.54794520547945,1.46909439386679,"IBM","Clinical incidence
+(per person-year)"
+8.63013698630137,1.5400598668917,"IBM","Clinical incidence
+(per person-year)"
+8.71232876712329,1.59611684449886,"IBM","Clinical incidence
+(per person-year)"
+8.79452054794521,1.62458619105698,"IBM","Clinical incidence
+(per person-year)"
+8.87671232876712,1.34612050623335,"IBM","Clinical incidence
+(per person-year)"
+8.95890410958904,1.58996212121212,"IBM","Clinical incidence
+(per person-year)"
+9.04109589041096,1.66769430215645,"IBM","Clinical incidence
+(per person-year)"
+9.12328767123288,1.49085317773222,"IBM","Clinical incidence
+(per person-year)"
+9.20547945205479,1.74580697945184,"IBM","Clinical incidence
+(per person-year)"
+9.28767123287671,1.55143748921687,"IBM","Clinical incidence
+(per person-year)"
+9.36986301369863,1.68981481481481,"IBM","Clinical incidence
+(per person-year)"
+9.45205479452055,1.65646859986542,"IBM","Clinical incidence
+(per person-year)"
+9.53424657534247,1.31918804816875,"IBM","Clinical incidence
+(per person-year)"
+9.61643835616438,1.45300740187846,"IBM","Clinical incidence
+(per person-year)"
+9.6986301369863,1.5052946557311,"IBM","Clinical incidence
+(per person-year)"
+9.78082191780822,1.52790697674419,"IBM","Clinical incidence
+(per person-year)"
+9.86301369863014,1.51242308591012,"IBM","Clinical incidence
+(per person-year)"
+9.94520547945205,1.39386807157553,"IBM","Clinical incidence
+(per person-year)"
+10.027397260274,1.41170599335631,"IBM","Clinical incidence
+(per person-year)"
+10.1095890410959,1.71854713823148,"IBM","Clinical incidence
+(per person-year)"
+10.1917808219178,1.35276473451953,"IBM","Clinical incidence
+(per person-year)"
+10.2739726027397,1.65506997107341,"IBM","Clinical incidence
+(per person-year)"
+10.3561643835616,1.45347929289775,"IBM","Clinical incidence
+(per person-year)"
+10.4383561643836,1.46682616378165,"IBM","Clinical incidence
+(per person-year)"
+10.5205479452055,1.48870171271409,"IBM","Clinical incidence
+(per person-year)"
+10.6027397260274,1.6278833213358,"IBM","Clinical incidence
+(per person-year)"
+10.6849315068493,1.46097777500896,"IBM","Clinical incidence
+(per person-year)"
+10.7671232876712,1.54641815134397,"IBM","Clinical incidence
+(per person-year)"
+10.8493150684932,1.37823600708581,"IBM","Clinical incidence
+(per person-year)"
+10.9315068493151,1.45506297698083,"IBM","Clinical incidence
+(per person-year)"
+11.013698630137,1.35241771700541,"IBM","Clinical incidence
+(per person-year)"
+11.0958904109589,1.54586636466591,"IBM","Clinical incidence
+(per person-year)"
+11.1780821917808,1.63206278727995,"IBM","Clinical incidence
+(per person-year)"
+11.2602739726027,1.55011325028313,"IBM","Clinical incidence
+(per person-year)"
+11.3424657534247,1.5140706754867,"IBM","Clinical incidence
+(per person-year)"
+11.4246575342466,1.50593089221248,"IBM","Clinical incidence
+(per person-year)"
+11.5068493150685,1.42578125,"IBM","Clinical incidence
+(per person-year)"
+11.5890410958904,1.54532482398507,"IBM","Clinical incidence
+(per person-year)"
+11.6712328767123,1.52760361151169,"IBM","Clinical incidence
+(per person-year)"
+11.7534246575342,1.5685136682298,"IBM","Clinical incidence
+(per person-year)"
+11.8356164383562,1.61494252873563,"IBM","Clinical incidence
+(per person-year)"
+11.9178082191781,1.43456797887058,"IBM","Clinical incidence
+(per person-year)"
+12,1.73896977892387,"IBM","Clinical incidence
+(per person-year)"
+12.0821917808219,1.4768952216012,"IBM","Clinical incidence
+(per person-year)"
+12.1643835616438,1.38427281024769,"IBM","Clinical incidence
+(per person-year)"
+12.2465753424658,1.60759953272503,"IBM","Clinical incidence
+(per person-year)"
+12.3287671232877,1.51051246273863,"IBM","Clinical incidence
+(per person-year)"
+12.4109589041096,1.67584940312213,"IBM","Clinical incidence
+(per person-year)"
+12.4931506849315,1.70954777049907,"IBM","Clinical incidence
+(per person-year)"
+12.5753424657534,1.55348638513995,"IBM","Clinical incidence
+(per person-year)"
+12.6575342465753,1.5190524416875,"IBM","Clinical incidence
+(per person-year)"
+12.7397260273973,1.55609616938999,"IBM","Clinical incidence
+(per person-year)"
+12.8219178082192,1.56308206638542,"IBM","Clinical incidence
+(per person-year)"
+12.9041095890411,1.62314973635728,"IBM","Clinical incidence
+(per person-year)"
+12.986301369863,1.64474204310086,"IBM","Clinical incidence
+(per person-year)"
+13.0684931506849,1.52205384821162,"IBM","Clinical incidence
+(per person-year)"
+13.1506849315068,1.5894174589997,"IBM","Clinical incidence
+(per person-year)"
+13.2328767123288,1.53072283479408,"IBM","Clinical incidence
+(per person-year)"
+13.3150684931507,1.42578125,"IBM","Clinical incidence
+(per person-year)"
+13.3972602739726,1.58663159718394,"IBM","Clinical incidence
+(per person-year)"
+13.4794520547945,1.51756355128367,"IBM","Clinical incidence
+(per person-year)"
+13.5616438356164,1.47161130172182,"IBM","Clinical incidence
+(per person-year)"
+13.6438356164384,1.68568636413789,"IBM","Clinical incidence
+(per person-year)"
+13.7260273972603,1.57151418613087,"IBM","Clinical incidence
+(per person-year)"
+13.8082191780822,1.61216538103576,"IBM","Clinical incidence
+(per person-year)"
+13.8904109589041,1.40802380689959,"IBM","Clinical incidence
+(per person-year)"
+13.972602739726,1.50031377470976,"IBM","Clinical incidence
+(per person-year)"
+14.0547945205479,1.47951358457493,"IBM","Clinical incidence
+(per person-year)"
+14.1369863013699,1.57657516667188,"IBM","Clinical incidence
+(per person-year)"
+14.2191780821918,1.61496876314519,"IBM","Clinical incidence
+(per person-year)"
+14.3013698630137,1.62237402330043,"IBM","Clinical incidence
+(per person-year)"
+14.3835616438356,1.65163542987771,"IBM","Clinical incidence
+(per person-year)"
+14.4657534246575,1.50589840931196,"IBM","Clinical incidence
+(per person-year)"
+14.5479452054795,1.63223530893746,"IBM","Clinical incidence
+(per person-year)"
+14.6301369863014,1.34707499018453,"IBM","Clinical incidence
+(per person-year)"
+14.7123287671233,1.46805134409025,"IBM","Clinical incidence
+(per person-year)"
+14.7945205479452,1.41657370017127,"IBM","Clinical incidence
+(per person-year)"
+14.8767123287671,1.55603968465433,"IBM","Clinical incidence
+(per person-year)"
+14.958904109589,1.45782755110032,"IBM","Clinical incidence
+(per person-year)"
+15.041095890411,1.30769110422729,"IBM","Clinical incidence
+(per person-year)"
+15.1232876712329,1.5792289560201,"IBM","Clinical incidence
+(per person-year)"
+15.2054794520548,1.45207549497317,"IBM","Clinical incidence
+(per person-year)"
+15.2876712328767,1.34926991559362,"IBM","Clinical incidence
+(per person-year)"
+15.3698630136986,1.62149906231746,"IBM","Clinical incidence
+(per person-year)"
+15.4520547945205,1.45018337408313,"IBM","Clinical incidence
+(per person-year)"
+15.5342465753425,1.49774998093204,"IBM","Clinical incidence
+(per person-year)"
+15.6164383561644,1.56965306900496,"IBM","Clinical incidence
+(per person-year)"
+15.6986301369863,1.51712449577448,"IBM","Clinical incidence
+(per person-year)"
+15.7808219178082,1.49995382626362,"IBM","Clinical incidence
+(per person-year)"
+15.8630136986301,1.45097918367976,"IBM","Clinical incidence
+(per person-year)"
+15.9452054794521,1.47159231339595,"IBM","Clinical incidence
+(per person-year)"
+16.027397260274,1.45125856707459,"IBM","Clinical incidence
+(per person-year)"
+16.1095890410959,1.4565224116064,"IBM","Clinical incidence
+(per person-year)"
+16.1917808219178,1.63238935314144,"IBM","Clinical incidence
+(per person-year)"
+16.2739726027397,1.47809685118177,"IBM","Clinical incidence
+(per person-year)"
+16.3561643835616,1.47554389754667,"IBM","Clinical incidence
+(per person-year)"
+16.4383561643836,1.60092681565977,"IBM","Clinical incidence
+(per person-year)"
+16.5205479452055,1.61925296271018,"IBM","Clinical incidence
+(per person-year)"
+16.6027397260274,1.41815864727092,"IBM","Clinical incidence
+(per person-year)"
+16.6849315068493,1.38441007070723,"IBM","Clinical incidence
+(per person-year)"
+16.7671232876712,1.58224701294262,"IBM","Clinical incidence
+(per person-year)"
+16.8493150684932,1.53332816617579,"IBM","Clinical incidence
+(per person-year)"
+16.9315068493151,1.57454534169201,"IBM","Clinical incidence
+(per person-year)"
+17.013698630137,1.3157324752077,"IBM","Clinical incidence
+(per person-year)"
+17.0958904109589,1.39465372467452,"IBM","Clinical incidence
+(per person-year)"
+17.1780821917808,1.52310487658408,"IBM","Clinical incidence
+(per person-year)"
+17.2602739726027,1.44053871433398,"IBM","Clinical incidence
+(per person-year)"
+17.3424657534247,1.36969025868168,"IBM","Clinical incidence
+(per person-year)"
+17.4246575342466,1.3740569444231,"IBM","Clinical incidence
+(per person-year)"
+17.5068493150685,1.44748124330118,"IBM","Clinical incidence
+(per person-year)"
+17.5890410958904,1.44971815279327,"IBM","Clinical incidence
+(per person-year)"
+17.6712328767123,1.56757706827248,"IBM","Clinical incidence
+(per person-year)"
+17.7534246575342,1.30832388713581,"IBM","Clinical incidence
+(per person-year)"
+17.8356164383562,1.52651816900545,"IBM","Clinical incidence
+(per person-year)"
+17.9178082191781,1.53906526523138,"IBM","Clinical incidence
+(per person-year)"
+18,1.44648441128208,"IBM","Clinical incidence
+(per person-year)"
+18.0821917808219,1.42779528414647,"IBM","Clinical incidence
+(per person-year)"
+18.1643835616438,1.49448640600524,"IBM","Clinical incidence
+(per person-year)"
+18.2465753424658,1.45540161047585,"IBM","Clinical incidence
+(per person-year)"
+18.3287671232877,1.53908163581682,"IBM","Clinical incidence
+(per person-year)"
+18.4109589041096,1.53203407814255,"IBM","Clinical incidence
+(per person-year)"
+18.4931506849315,1.45552497419698,"IBM","Clinical incidence
+(per person-year)"
+18.5753424657534,1.56591263650546,"IBM","Clinical incidence
+(per person-year)"
+18.6575342465753,1.57865563275822,"IBM","Clinical incidence
+(per person-year)"
+18.7397260273973,1.69517897074231,"IBM","Clinical incidence
+(per person-year)"
+18.8219178082192,1.62186688362487,"IBM","Clinical incidence
+(per person-year)"
+18.9041095890411,1.66491629569252,"IBM","Clinical incidence
+(per person-year)"
+18.986301369863,1.50589840931196,"IBM","Clinical incidence
+(per person-year)"
+19.0684931506849,1.78625035179336,"IBM","Clinical incidence
+(per person-year)"
+19.1506849315068,1.63216485818819,"IBM","Clinical incidence
+(per person-year)"
+19.2328767123288,1.59555368210701,"IBM","Clinical incidence
+(per person-year)"
+19.3150684931507,1.49228344490739,"IBM","Clinical incidence
+(per person-year)"
+19.3972602739726,1.45449893786923,"IBM","Clinical incidence
+(per person-year)"
+19.4794520547945,1.4419472742826,"IBM","Clinical incidence
+(per person-year)"
+19.5616438356164,1.50374531835206,"IBM","Clinical incidence
+(per person-year)"
+19.6438356164384,1.42389014589998,"IBM","Clinical incidence
+(per person-year)"
+19.7260273972603,1.38811506197571,"IBM","Clinical incidence
+(per person-year)"
+19.8082191780822,1.40046042534532,"IBM","Clinical incidence
+(per person-year)"
+19.8904109589041,1.53841935382783,"IBM","Clinical incidence
+(per person-year)"
+19.972602739726,1.70533916435943,"IBM","Clinical incidence
+(per person-year)"
+20.0547945205479,1.46635033610123,"IBM","Clinical incidence
+(per person-year)"
+20.1369863013699,1.39439377298123,"IBM","Clinical incidence
+(per person-year)"
+20.2191780821918,1.46602699988843,"IBM","Clinical incidence
+(per person-year)"
+20.3013698630137,1.3994545600385,"IBM","Clinical incidence
+(per person-year)"
+20.3835616438356,1.51665281595602,"IBM","Clinical incidence
+(per person-year)"
+20.4657534246575,1.44632985012623,"IBM","Clinical incidence
+(per person-year)"
+20.5479452054795,1.38447072323335,"IBM","Clinical incidence
+(per person-year)"
+20.6301369863014,1.56229536997109,"IBM","Clinical incidence
+(per person-year)"
+20.7123287671233,1.43378552457895,"IBM","Clinical incidence
+(per person-year)"
+20.7945205479452,1.4002187594122,"IBM","Clinical incidence
+(per person-year)"
+20.8767123287671,1.55495597841522,"IBM","Clinical incidence
+(per person-year)"
+20.958904109589,1.41922329176348,"IBM","Clinical incidence
+(per person-year)"
+21.041095890411,1.55862025336475,"IBM","Clinical incidence
+(per person-year)"
+21.1232876712329,1.53630710318528,"IBM","Clinical incidence
+(per person-year)"
+21.2054794520548,1.43519249597322,"IBM","Clinical incidence
+(per person-year)"
+21.2876712328767,1.50400963580462,"IBM","Clinical incidence
+(per person-year)"
+21.3698630136986,1.57790973871734,"IBM","Clinical incidence
+(per person-year)"
+21.4520547945205,1.62562976767693,"IBM","Clinical incidence
+(per person-year)"
+21.5342465753425,1.60342302908158,"IBM","Clinical incidence
+(per person-year)"
+21.6164383561644,1.51061419107118,"IBM","Clinical incidence
+(per person-year)"
+21.6986301369863,1.70429355259641,"IBM","Clinical incidence
+(per person-year)"
+21.7808219178082,1.50902606829515,"IBM","Clinical incidence
+(per person-year)"
+21.8630136986301,1.60432004772146,"IBM","Clinical incidence
+(per person-year)"
+21.9452054794521,1.58137170563854,"IBM","Clinical incidence
+(per person-year)"
+22.027397260274,1.56129547804832,"IBM","Clinical incidence
+(per person-year)"
+22.1095890410959,1.42116996891387,"IBM","Clinical incidence
+(per person-year)"
+22.1917808219178,1.57894322883076,"IBM","Clinical incidence
+(per person-year)"
+22.2739726027397,1.69125295508274,"IBM","Clinical incidence
+(per person-year)"
+22.3561643835616,1.79933638805498,"IBM","Clinical incidence
+(per person-year)"
+22.4383561643836,1.76412328658585,"IBM","Clinical incidence
+(per person-year)"
+22.5205479452055,1.61059338908801,"IBM","Clinical incidence
+(per person-year)"
+22.6027397260274,1.5696540478322,"IBM","Clinical incidence
+(per person-year)"
+22.6849315068493,1.7437517033522,"IBM","Clinical incidence
+(per person-year)"
+22.7671232876712,1.5196930783097,"IBM","Clinical incidence
+(per person-year)"
+22.8493150684932,1.63648504698157,"IBM","Clinical incidence
+(per person-year)"
+22.9315068493151,1.54575478406523,"IBM","Clinical incidence
+(per person-year)"
+23.013698630137,1.7079184522309,"IBM","Clinical incidence
+(per person-year)"
+23.0958904109589,1.75441797011326,"IBM","Clinical incidence
+(per person-year)"
+23.1780821917808,1.55794100783589,"IBM","Clinical incidence
+(per person-year)"
+23.2602739726027,1.49968945583106,"IBM","Clinical incidence
+(per person-year)"
+23.3424657534247,1.63164174355711,"IBM","Clinical incidence
+(per person-year)"
+23.4246575342466,1.66550478484061,"IBM","Clinical incidence
+(per person-year)"
+23.5068493150685,1.67992597981843,"IBM","Clinical incidence
+(per person-year)"
+23.5890410958904,1.5384005957757,"IBM","Clinical incidence
+(per person-year)"
+23.6712328767123,1.51150660681545,"IBM","Clinical incidence
+(per person-year)"
+23.7534246575342,1.32683219800541,"IBM","Clinical incidence
+(per person-year)"
+23.8356164383562,1.56523459134425,"IBM","Clinical incidence
+(per person-year)"
+23.9178082191781,1.67656608854043,"IBM","Clinical incidence
+(per person-year)"
+24,1.52448029983008,"IBM","Clinical incidence
+(per person-year)"
+24.0821917808219,1.75178582817782,"IBM","Clinical incidence
+(per person-year)"
+24.1643835616438,1.50819255280263,"IBM","Clinical incidence
+(per person-year)"
+24.2465753424658,1.63116858419701,"IBM","Clinical incidence
+(per person-year)"
+24.3287671232877,1.60649876857075,"IBM","Clinical incidence
+(per person-year)"
+24.4109589041096,1.75033456538363,"IBM","Clinical incidence
+(per person-year)"
+24.4931506849315,1.44737470737184,"IBM","Clinical incidence
+(per person-year)"
+24.5753424657534,1.43407014629783,"IBM","Clinical incidence
+(per person-year)"
+24.6575342465753,1.4526553744269,"IBM","Clinical incidence
+(per person-year)"
+24.7397260273973,1.54798075705786,"IBM","Clinical incidence
+(per person-year)"
+24.8219178082192,1.49684907213883,"IBM","Clinical incidence
+(per person-year)"
+24.9041095890411,1.59693265099823,"IBM","Clinical incidence
+(per person-year)"
+24.986301369863,1.65846270352139,"IBM","Clinical incidence
+(per person-year)"
+25.0684931506849,1.73067261194499,"IBM","Clinical incidence
+(per person-year)"
+25.1506849315068,1.31568636669958,"IBM","Clinical incidence
+(per person-year)"
+25.2328767123288,1.56718639818225,"IBM","Clinical incidence
+(per person-year)"
+25.3150684931507,1.66669272991696,"IBM","Clinical incidence
+(per person-year)"
+25.3972602739726,1.69480793583791,"IBM","Clinical incidence
+(per person-year)"
+25.4794520547945,1.69493120813266,"IBM","Clinical incidence
+(per person-year)"
+25.5616438356164,1.54897691955764,"IBM","Clinical incidence
+(per person-year)"
+25.6438356164384,1.53409627554072,"IBM","Clinical incidence
+(per person-year)"
+25.7260273972603,1.63863420803035,"IBM","Clinical incidence
+(per person-year)"
+25.8082191780822,1.51012222467865,"IBM","Clinical incidence
+(per person-year)"
+25.8904109589041,1.66171356307303,"IBM","Clinical incidence
+(per person-year)"
+25.972602739726,1.62550140551467,"IBM","Clinical incidence
+(per person-year)"
+26.0547945205479,1.52555872750501,"IBM","Clinical incidence
+(per person-year)"
+26.1369863013699,1.51029693866227,"IBM","Clinical incidence
+(per person-year)"
+26.2191780821918,1.51652392626317,"IBM","Clinical incidence
+(per person-year)"
+26.3013698630137,1.56439292096981,"IBM","Clinical incidence
+(per person-year)"
+26.3835616438356,1.37607121924947,"IBM","Clinical incidence
+(per person-year)"
+26.4657534246575,1.45411429926488,"IBM","Clinical incidence
+(per person-year)"
+26.5479452054795,1.6517672838134,"IBM","Clinical incidence
+(per person-year)"
+26.6301369863014,1.52382690964506,"IBM","Clinical incidence
+(per person-year)"
+26.7123287671233,1.5976665711648,"IBM","Clinical incidence
+(per person-year)"
+26.7945205479452,1.44769747845617,"IBM","Clinical incidence
+(per person-year)"
+26.8767123287671,1.48219795680187,"IBM","Clinical incidence
+(per person-year)"
+26.958904109589,1.50460152105835,"IBM","Clinical incidence
+(per person-year)"
+27.041095890411,1.40635991558483,"IBM","Clinical incidence
+(per person-year)"
+27.1232876712329,1.43364435039118,"IBM","Clinical incidence
+(per person-year)"
+27.2054794520548,1.46713615023474,"IBM","Clinical incidence
+(per person-year)"
+27.2876712328767,1.54713164105775,"IBM","Clinical incidence
+(per person-year)"
+27.3698630136986,1.47929515418502,"IBM","Clinical incidence
+(per person-year)"
+27.4520547945205,1.64846252402306,"IBM","Clinical incidence
+(per person-year)"
+27.5342465753425,1.47149276563197,"IBM","Clinical incidence
+(per person-year)"
+27.6164383561644,1.55202455360711,"IBM","Clinical incidence
+(per person-year)"
+27.6986301369863,1.52054204175445,"IBM","Clinical incidence
+(per person-year)"
+27.7808219178082,1.50323707573475,"IBM","Clinical incidence
+(per person-year)"
+27.8630136986301,1.53783922335074,"IBM","Clinical incidence
+(per person-year)"
+27.9452054794521,1.5532164306131,"IBM","Clinical incidence
+(per person-year)"
+28.027397260274,1.51037725216159,"IBM","Clinical incidence
+(per person-year)"
+28.1095890410959,1.61766358892011,"IBM","Clinical incidence
+(per person-year)"
+28.1917808219178,1.57443635547288,"IBM","Clinical incidence
+(per person-year)"
+28.2739726027397,1.54134553628773,"IBM","Clinical incidence
+(per person-year)"
+28.3561643835616,1.5786638797331,"IBM","Clinical incidence
+(per person-year)"
+28.4383561643836,1.56616982836495,"IBM","Clinical incidence
+(per person-year)"
+28.5205479452055,1.55866843518489,"IBM","Clinical incidence
+(per person-year)"
+28.6027397260274,1.56194490197978,"IBM","Clinical incidence
+(per person-year)"
+28.6849315068493,1.44215262546768,"IBM","Clinical incidence
+(per person-year)"
+28.7671232876712,1.56946427711907,"IBM","Clinical incidence
+(per person-year)"
+28.8493150684932,1.51469268730372,"IBM","Clinical incidence
+(per person-year)"
+28.9315068493151,1.51161675114728,"IBM","Clinical incidence
+(per person-year)"
+29.013698630137,1.3697044216981,"IBM","Clinical incidence
+(per person-year)"
+29.0958904109589,1.58907461548239,"IBM","Clinical incidence
+(per person-year)"
+29.1780821917808,1.54166798494004,"IBM","Clinical incidence
+(per person-year)"
+29.2602739726027,1.71538351618691,"IBM","Clinical incidence
+(per person-year)"
+29.3424657534247,1.51752701651935,"IBM","Clinical incidence
+(per person-year)"
+29.4246575342466,1.64922711058264,"IBM","Clinical incidence
+(per person-year)"
+29.5068493150685,1.66996485451034,"IBM","Clinical incidence
+(per person-year)"
+29.5890410958904,1.60186281474465,"IBM","Clinical incidence
+(per person-year)"
+29.6712328767123,1.61283474596261,"IBM","Clinical incidence
+(per person-year)"
+29.7534246575342,1.62689787689788,"IBM","Clinical incidence
+(per person-year)"
+29.8356164383562,1.61942462961511,"IBM","Clinical incidence
+(per person-year)"
+29.9178082191781,1.72494190793192,"IBM","Clinical incidence
+(per person-year)"
+30,0.7954313845382,"IBM","Clinical incidence
+(per person-year)"
+30.0821917808219,0.0856753880821232,"IBM","Clinical incidence
+(per person-year)"
+30.1643835616438,0.0514987144917539,"IBM","Clinical incidence
+(per person-year)"
+30.2465753424658,0.0399462172261222,"IBM","Clinical incidence
+(per person-year)"
+30.3287671232877,0.119392523364486,"IBM","Clinical incidence
+(per person-year)"
+30.4109589041096,0.0963539240349079,"IBM","Clinical incidence
+(per person-year)"
+30.4931506849315,0.124266856497315,"IBM","Clinical incidence
+(per person-year)"
+30.5753424657534,0.151802218114603,"IBM","Clinical incidence
+(per person-year)"
+30.6575342465753,0.100934062557611,"IBM","Clinical incidence
+(per person-year)"
+30.7397260273973,0.167944785276074,"IBM","Clinical incidence
+(per person-year)"
+30.8219178082192,0.162491173129471,"IBM","Clinical incidence
+(per person-year)"
+30.9041095890411,0.101142276547923,"IBM","Clinical incidence
+(per person-year)"
+30.986301369863,0.174377388731352,"IBM","Clinical incidence
+(per person-year)"
+31.0684931506849,0.241677188876228,"IBM","Clinical incidence
+(per person-year)"
+31.1506849315068,0.206897080001226,"IBM","Clinical incidence
+(per person-year)"
+31.2328767123288,0.229015226872752,"IBM","Clinical incidence
+(per person-year)"
+31.3150684931507,0.301081510448491,"IBM","Clinical incidence
+(per person-year)"
+31.3972602739726,0.312543005244729,"IBM","Clinical incidence
+(per person-year)"
+31.4794520547945,0.357044600006114,"IBM","Clinical incidence
+(per person-year)"
+31.5616438356164,0.367814336972288,"IBM","Clinical incidence
+(per person-year)"
+31.6438356164384,0.444573011982156,"IBM","Clinical incidence
+(per person-year)"
+31.7260273972603,0.496363414112398,"IBM","Clinical incidence
+(per person-year)"
+31.8082191780822,0.590452644751702,"IBM","Clinical incidence
+(per person-year)"
+31.8904109589041,0.702791913079356,"IBM","Clinical incidence
+(per person-year)"
+31.972602739726,0.629588923997497,"IBM","Clinical incidence
+(per person-year)"
+32.0547945205479,0.63046468969734,"IBM","Clinical incidence
+(per person-year)"
+32.1369863013699,0.77041908840624,"IBM","Clinical incidence
+(per person-year)"
+32.2191780821918,0.74096403931864,"IBM","Clinical incidence
+(per person-year)"
+32.3013698630137,0.764567374585264,"IBM","Clinical incidence
+(per person-year)"
+32.3835616438356,0.840162047693583,"IBM","Clinical incidence
+(per person-year)"
+32.4657534246575,0.932918056873489,"IBM","Clinical incidence
+(per person-year)"
+32.5479452054795,1.04028439650021,"IBM","Clinical incidence
+(per person-year)"
+32.6301369863014,1.16265180171212,"IBM","Clinical incidence
+(per person-year)"
+32.7123287671233,1.12381667228332,"IBM","Clinical incidence
+(per person-year)"
+32.7945205479452,1.17875926552456,"IBM","Clinical incidence
+(per person-year)"
+32.8767123287671,1.39529865125241,"IBM","Clinical incidence
+(per person-year)"
+32.958904109589,1.21736176520544,"IBM","Clinical incidence
+(per person-year)"
+33.041095890411,1.32411738372003,"IBM","Clinical incidence
+(per person-year)"
+33.1232876712329,1.27695152962934,"IBM","Clinical incidence
+(per person-year)"
+33.2054794520548,1.36244447186575,"IBM","Clinical incidence
+(per person-year)"
+33.2876712328767,1.41891891891892,"IBM","Clinical incidence
+(per person-year)"
+33.3698630136986,1.48394548394548,"IBM","Clinical incidence
+(per person-year)"
+33.4520547945205,1.40859471094711,"IBM","Clinical incidence
+(per person-year)"
+33.5342465753425,1.38774793483074,"IBM","Clinical incidence
+(per person-year)"
+33.6164383561644,1.54050830351408,"IBM","Clinical incidence
+(per person-year)"
+33.6986301369863,1.4570296846583,"IBM","Clinical incidence
+(per person-year)"
+33.7808219178082,1.54503321489263,"IBM","Clinical incidence
+(per person-year)"
+33.8630136986301,1.54483581904437,"IBM","Clinical incidence
+(per person-year)"
+33.9452054794521,1.50465123514405,"IBM","Clinical incidence
+(per person-year)"
+34.027397260274,1.50737127540207,"IBM","Clinical incidence
+(per person-year)"
+34.1095890410959,1.59761055468154,"IBM","Clinical incidence
+(per person-year)"
+34.1917808219178,1.44868536646586,"IBM","Clinical incidence
+(per person-year)"
+34.2739726027397,1.42793174962293,"IBM","Clinical incidence
+(per person-year)"
+34.3561643835616,1.47158948293173,"IBM","Clinical incidence
+(per person-year)"
+34.4383561643836,1.64762307800818,"IBM","Clinical incidence
+(per person-year)"
+34.5205479452055,1.6985818947898,"IBM","Clinical incidence
+(per person-year)"
+34.6027397260274,1.70911506944664,"IBM","Clinical incidence
+(per person-year)"
+34.6849315068493,1.79408255786209,"IBM","Clinical incidence
+(per person-year)"
+34.7671232876712,1.67101163603993,"IBM","Clinical incidence
+(per person-year)"
+34.8493150684931,1.64605001984915,"IBM","Clinical incidence
+(per person-year)"
+34.9315068493151,1.71345251078761,"IBM","Clinical incidence
+(per person-year)"
+35.013698630137,1.70558045967908,"IBM","Clinical incidence
+(per person-year)"
+35.0958904109589,1.62067871868062,"IBM","Clinical incidence
+(per person-year)"
+35.1780821917808,1.59323106120512,"IBM","Clinical incidence
+(per person-year)"
+35.2602739726027,1.65628409252613,"IBM","Clinical incidence
+(per person-year)"
+35.3424657534247,1.66254027202463,"IBM","Clinical incidence
+(per person-year)"
+35.4246575342466,1.65682633399994,"IBM","Clinical incidence
+(per person-year)"
+35.5068493150685,1.6143554425261,"IBM","Clinical incidence
+(per person-year)"
+35.5890410958904,1.85141154279012,"IBM","Clinical incidence
+(per person-year)"
+35.6712328767123,1.7120619474655,"IBM","Clinical incidence
+(per person-year)"
+35.7534246575342,1.76668205773242,"IBM","Clinical incidence
+(per person-year)"
+35.8356164383562,1.80402098180833,"IBM","Clinical incidence
+(per person-year)"
+35.9178082191781,1.80229687325783,"IBM","Clinical incidence
+(per person-year)"
+0,33.9545412260845,"IBM","Severe incidence
+(per 1000 person-years)"
+0.0821917808219178,50.8104931015282,"IBM","Severe incidence
+(per 1000 person-years)"
+0.164383561643836,45.2131365839308,"IBM","Severe incidence
+(per 1000 person-years)"
+0.246575342465753,33.9698149498209,"IBM","Severe incidence
+(per 1000 person-years)"
+0.328767123287671,56.9156401060346,"IBM","Severe incidence
+(per 1000 person-years)"
+0.410958904109589,22.7339966677567,"IBM","Severe incidence
+(per 1000 person-years)"
+0.493150684931507,17.0200198955484,"IBM","Severe incidence
+(per 1000 person-years)"
+0.575342465753425,33.991432296517,"IBM","Severe incidence
+(per 1000 person-years)"
+0.657534246575342,33.9582267293111,"IBM","Severe incidence
+(per 1000 person-years)"
+0.73972602739726,62.4475067657946,"IBM","Severe incidence
+(per 1000 person-years)"
+0.821917808219178,28.419708483867,"IBM","Severe incidence
+(per 1000 person-years)"
+0.904109589041096,56.8757304246202,"IBM","Severe incidence
+(per 1000 person-years)"
+0.986301369863014,57.1965838752644,"IBM","Severe incidence
+(per 1000 person-years)"
+1.06849315068493,22.9794601400803,"IBM","Severe incidence
+(per 1000 person-years)"
+1.15068493150685,17.2348663707621,"IBM","Severe incidence
+(per 1000 person-years)"
+1.23287671232877,17.2362228273702,"IBM","Severe incidence
+(per 1000 person-years)"
+1.31506849315068,17.272383115654,"IBM","Severe incidence
+(per 1000 person-years)"
+1.3972602739726,28.7415153471818,"IBM","Severe incidence
+(per 1000 person-years)"
+1.47945205479452,40.1900177748415,"IBM","Severe incidence
+(per 1000 person-years)"
+1.56164383561644,34.4778727624805,"IBM","Severe incidence
+(per 1000 person-years)"
+1.64383561643836,28.7677926827346,"IBM","Severe incidence
+(per 1000 person-years)"
+1.72602739726027,22.965363198792,"IBM","Severe incidence
+(per 1000 person-years)"
+1.80821917808219,22.8639438737159,"IBM","Severe incidence
+(per 1000 person-years)"
+1.89041095890411,51.4551549136932,"IBM","Severe incidence
+(per 1000 person-years)"
+1.97260273972603,5.72629861470639,"IBM","Severe incidence
+(per 1000 person-years)"
+2.05479452054795,28.7804954976266,"IBM","Severe incidence
+(per 1000 person-years)"
+2.13698630136986,28.827320401845,"IBM","Severe incidence
+(per 1000 person-years)"
+2.21917808219178,63.3500583798794,"IBM","Severe incidence
+(per 1000 person-years)"
+2.3013698630137,34.4822156791737,"IBM","Severe incidence
+(per 1000 person-years)"
+2.38356164383562,68.5972028629152,"IBM","Severe incidence
+(per 1000 person-years)"
+2.46575342465753,17.1498378987925,"IBM","Severe incidence
+(per 1000 person-years)"
+2.54794520547945,40.0407459645824,"IBM","Severe incidence
+(per 1000 person-years)"
+2.63013698630137,34.1818976416051,"IBM","Severe incidence
+(per 1000 person-years)"
+2.71232876712329,51.3979941482953,"IBM","Severe incidence
+(per 1000 person-years)"
+2.79452054794521,22.9246156986512,"IBM","Severe incidence
+(per 1000 person-years)"
+2.87671232876712,22.9292961020197,"IBM","Severe incidence
+(per 1000 person-years)"
+2.95890410958904,40.0551836581122,"IBM","Severe incidence
+(per 1000 person-years)"
+3.04109589041096,69.0046318177522,"IBM","Severe incidence
+(per 1000 person-years)"
+3.12328767123288,34.3104231618857,"IBM","Severe incidence
+(per 1000 person-years)"
+3.20547945205479,68.7220522475877,"IBM","Severe incidence
+(per 1000 person-years)"
+3.28767123287671,34.3728909327767,"IBM","Severe incidence
+(per 1000 person-years)"
+3.36986301369863,40.2768144271392,"IBM","Severe incidence
+(per 1000 person-years)"
+3.45205479452055,46.1514145724672,"IBM","Severe incidence
+(per 1000 person-years)"
+3.53424657534247,28.8469137753892,"IBM","Severe incidence
+(per 1000 person-years)"
+3.61643835616438,63.5687143761875,"IBM","Severe incidence
+(per 1000 person-years)"
+3.6986301369863,23.0840988505384,"IBM","Severe incidence
+(per 1000 person-years)"
+3.78082191780822,34.8809429003743,"IBM","Severe incidence
+(per 1000 person-years)"
+3.86301369863014,64.2739366385452,"IBM","Severe incidence
+(per 1000 person-years)"
+3.94520547945205,11.7173079083803,"IBM","Severe incidence
+(per 1000 person-years)"
+4.02739726027397,29.2289951632019,"IBM","Severe incidence
+(per 1000 person-years)"
+4.10958904109589,29.2895087387055,"IBM","Severe incidence
+(per 1000 person-years)"
+4.19178082191781,41.0890611430961,"IBM","Severe incidence
+(per 1000 person-years)"
+4.27397260273973,47.0808274616662,"IBM","Severe incidence
+(per 1000 person-years)"
+4.35616438356164,52.9573922716061,"IBM","Severe incidence
+(per 1000 person-years)"
+4.43835616438356,29.2341454819229,"IBM","Severe incidence
+(per 1000 person-years)"
+4.52054794520548,35.0248692564812,"IBM","Severe incidence
+(per 1000 person-years)"
+4.6027397260274,87.9066182845766,"IBM","Severe incidence
+(per 1000 person-years)"
+4.68493150684932,29.4397573841364,"IBM","Severe incidence
+(per 1000 person-years)"
+4.76712328767123,41.0600070709993,"IBM","Severe incidence
+(per 1000 person-years)"
+4.84931506849315,23.459091201234,"IBM","Severe incidence
+(per 1000 person-years)"
+4.93150684931507,35.2293932179396,"IBM","Severe incidence
+(per 1000 person-years)"
+5.01369863013699,35.4632898273796,"IBM","Severe incidence
+(per 1000 person-years)"
+5.0958904109589,47.3672257729617,"IBM","Severe incidence
+(per 1000 person-years)"
+5.17808219178082,35.4472176362047,"IBM","Severe incidence
+(per 1000 person-years)"
+5.26027397260274,64.7497097148755,"IBM","Severe incidence
+(per 1000 person-years)"
+5.34246575342466,41.0197954629377,"IBM","Severe incidence
+(per 1000 person-years)"
+5.42465753424658,46.802372175028,"IBM","Severe incidence
+(per 1000 person-years)"
+5.50684931506849,35.0719856509136,"IBM","Severe incidence
+(per 1000 person-years)"
+5.58904109589041,29.1724611966304,"IBM","Severe incidence
+(per 1000 person-years)"
+5.67123287671233,46.7866241527936,"IBM","Severe incidence
+(per 1000 person-years)"
+5.75342465753425,35.1186658114176,"IBM","Severe incidence
+(per 1000 person-years)"
+5.83561643835616,58.5020275360228,"IBM","Severe incidence
+(per 1000 person-years)"
+5.91780821917808,52.7812590378868,"IBM","Severe incidence
+(per 1000 person-years)"
+6,52.6560446253967,"IBM","Severe incidence
+(per 1000 person-years)"
+6.08219178082192,23.2509993152103,"IBM","Severe incidence
+(per 1000 person-years)"
+6.16438356164384,34.9349157733538,"IBM","Severe incidence
+(per 1000 person-years)"
+6.24657534246575,23.3361038296784,"IBM","Severe incidence
+(per 1000 person-years)"
+6.32876712328767,35.0203885823939,"IBM","Severe incidence
+(per 1000 person-years)"
+6.41095890410959,46.7028133646818,"IBM","Severe incidence
+(per 1000 person-years)"
+6.49315068493151,29.1794576618061,"IBM","Severe incidence
+(per 1000 person-years)"
+6.57534246575342,11.6427432216906,"IBM","Severe incidence
+(per 1000 person-years)"
+6.65753424657534,64.2286957495481,"IBM","Severe incidence
+(per 1000 person-years)"
+6.73972602739726,17.5466709398285,"IBM","Severe incidence
+(per 1000 person-years)"
+6.82191780821918,29.2674321637052,"IBM","Severe incidence
+(per 1000 person-years)"
+6.9041095890411,35.1113462555914,"IBM","Severe incidence
+(per 1000 person-years)"
+6.98630136986301,46.8609577609449,"IBM","Severe incidence
+(per 1000 person-years)"
+7.06849315068493,29.2622701107958,"IBM","Severe incidence
+(per 1000 person-years)"
+7.15068493150685,41.1055874640024,"IBM","Severe incidence
+(per 1000 person-years)"
+7.23287671232877,11.7779929009358,"IBM","Severe incidence
+(per 1000 person-years)"
+7.31506849315068,47.2125210192731,"IBM","Severe incidence
+(per 1000 person-years)"
+7.3972602739726,17.7664562815375,"IBM","Severe incidence
+(per 1000 person-years)"
+7.47945205479452,35.6062823139206,"IBM","Severe incidence
+(per 1000 person-years)"
+7.56164383561644,17.7658797761012,"IBM","Severe incidence
+(per 1000 person-years)"
+7.64383561643836,23.6494695067628,"IBM","Severe incidence
+(per 1000 person-years)"
+7.72602739726027,23.5913842971868,"IBM","Severe incidence
+(per 1000 person-years)"
+7.80821917808219,70.377273603702,"IBM","Severe incidence
+(per 1000 person-years)"
+7.89041095890411,46.9710130939742,"IBM","Severe incidence
+(per 1000 person-years)"
+7.97260273972603,88.103245739665,"IBM","Severe incidence
+(per 1000 person-years)"
+8.05479452054795,58.7317167361256,"IBM","Severe incidence
+(per 1000 person-years)"
+8.13698630136986,41.2935966641885,"IBM","Severe incidence
+(per 1000 person-years)"
+8.21917808219178,41.104264869126,"IBM","Severe incidence
+(per 1000 person-years)"
+8.3013698630137,17.6325663032801,"IBM","Severe incidence
+(per 1000 person-years)"
+8.38356164383562,35.1716827803296,"IBM","Severe incidence
+(per 1000 person-years)"
+8.46575342465753,35.0237489804731,"IBM","Severe incidence
+(per 1000 person-years)"
+8.54794520547945,52.4676569238141,"IBM","Severe incidence
+(per 1000 person-years)"
+8.63013698630137,34.8692800050951,"IBM","Severe incidence
+(per 1000 person-years)"
+8.71232876712329,34.8243675163388,"IBM","Severe incidence
+(per 1000 person-years)"
+8.79452054794521,17.3443365593271,"IBM","Severe incidence
+(per 1000 person-years)"
+8.87671232876712,23.0106069441599,"IBM","Severe incidence
+(per 1000 person-years)"
+8.95890410958904,17.282196969697,"IBM","Severe incidence
+(per 1000 person-years)"
+9.04109589041096,40.3939796370075,"IBM","Severe incidence
+(per 1000 person-years)"
+9.12328767123288,40.2933291278978,"IBM","Severe incidence
+(per 1000 person-years)"
+9.20547945205479,28.7139305830895,"IBM","Severe incidence
+(per 1000 person-years)"
+9.28767123287671,34.3491695029565,"IBM","Severe incidence
+(per 1000 person-years)"
+9.36986301369863,51.3795045045045,"IBM","Severe incidence
+(per 1000 person-years)"
+9.45205479452055,51.4076462027198,"IBM","Severe incidence
+(per 1000 person-years)"
+9.53424657534247,11.3723107600754,"IBM","Severe incidence
+(per 1000 person-years)"
+9.61643835616438,34.0548609815264,"IBM","Severe incidence
+(per 1000 person-years)"
+9.6986301369863,45.272019721236,"IBM","Severe incidence
+(per 1000 person-years)"
+9.78082191780822,28.2945736434109,"IBM","Severe incidence
+(per 1000 person-years)"
+9.86301369863014,22.7432042994003,"IBM","Severe incidence
+(per 1000 person-years)"
+9.94520547945205,34.1355446100131,"IBM","Severe incidence
+(per 1000 person-years)"
+10.027397260274,28.4618143821837,"IBM","Severe incidence
+(per 1000 person-years)"
+10.1095890410959,51.3851303790142,"IBM","Severe incidence
+(per 1000 person-years)"
+10.1917808219178,51.5884856384566,"IBM","Severe incidence
+(per 1000 person-years)"
+10.2739726027397,34.2428269877257,"IBM","Severe incidence
+(per 1000 person-years)"
+10.3561643835616,56.9991879567743,"IBM","Severe incidence
+(per 1000 person-years)"
+10.4383561643836,17.1224844021204,"IBM","Severe incidence
+(per 1000 person-years)"
+10.5205479452055,11.4076759594949,"IBM","Severe incidence
+(per 1000 person-years)"
+10.6027397260274,17.1356139087978,"IBM","Severe incidence
+(per 1000 person-years)"
+10.6849315068493,39.7931689691155,"IBM","Severe incidence
+(per 1000 person-years)"
+10.7671232876712,45.3162828232665,"IBM","Severe incidence
+(per 1000 person-years)"
+10.8493150684932,51.0457780402151,"IBM","Severe incidence
+(per 1000 person-years)"
+10.9315068493151,28.308618229199,"IBM","Severe incidence
+(per 1000 person-years)"
+11.013698630137,28.2932576779375,"IBM","Severe incidence
+(per 1000 person-years)"
+11.0958904109589,22.6500566251416,"IBM","Severe incidence
+(per 1000 person-years)"
+11.1780821917808,45.6521059379006,"IBM","Severe incidence
+(per 1000 person-years)"
+11.2602739726027,34.4469611174028,"IBM","Severe incidence
+(per 1000 person-years)"
+11.3424657534247,51.6160457552284,"IBM","Severe incidence
+(per 1000 person-years)"
+11.4246575342466,45.6342694609843,"IBM","Severe incidence
+(per 1000 person-years)"
+11.5068493150685,57.03125,"IBM","Severe incidence
+(per 1000 person-years)"
+11.5890410958904,62.9576780142066,"IBM","Severe incidence
+(per 1000 person-years)"
+11.6712328767123,22.8854473634711,"IBM","Severe incidence
+(per 1000 person-years)"
+11.7534246575342,45.796019510359,"IBM","Severe incidence
+(per 1000 person-years)"
+11.8356164383562,28.735632183908,"IBM","Severe incidence
+(per 1000 person-years)"
+11.9178082191781,34.429631492894,"IBM","Severe incidence
+(per 1000 person-years)"
+12,45.9133935029403,"IBM","Severe incidence
+(per 1000 person-years)"
+12.0821917808219,34.4800440840746,"IBM","Severe incidence
+(per 1000 person-years)"
+12.1643835616438,28.7193529097032,"IBM","Severe incidence
+(per 1000 person-years)"
+12.2465753424658,57.6200549363811,"IBM","Severe incidence
+(per 1000 person-years)"
+12.3287671232877,34.7244244307731,"IBM","Severe incidence
+(per 1000 person-years)"
+12.4109589041096,69.3454925429847,"IBM","Severe incidence
+(per 1000 person-years)"
+12.4931506849315,40.4284945726131,"IBM","Severe incidence
+(per 1000 person-years)"
+12.5753424657534,23.1001692957613,"IBM","Severe incidence
+(per 1000 person-years)"
+12.6575342465753,28.8793239864544,"IBM","Severe incidence
+(per 1000 person-years)"
+12.7397260273973,28.9237206206317,"IBM","Severe incidence
+(per 1000 person-years)"
+12.8219178082192,40.6749980100295,"IBM","Severe incidence
+(per 1000 person-years)"
+12.9041095890411,75.360523473731,"IBM","Severe incidence
+(per 1000 person-years)"
+12.986301369863,28.855123563173,"IBM","Severe incidence
+(per 1000 person-years)"
+13.0684931506849,34.4615965632819,"IBM","Severe incidence
+(per 1000 person-years)"
+13.1506849315068,22.8693159568302,"IBM","Severe incidence
+(per 1000 person-years)"
+13.2328767123288,17.1991329752144,"IBM","Severe incidence
+(per 1000 person-years)"
+13.3150684931507,40.2438256048387,"IBM","Severe incidence
+(per 1000 person-years)"
+13.3972602739726,34.4919912431292,"IBM","Severe incidence
+(per 1000 person-years)"
+13.4794520547945,17.3106108511446,"IBM","Severe incidence
+(per 1000 person-years)"
+13.5616438356164,28.855123563173,"IBM","Severe incidence
+(per 1000 person-years)"
+13.6438356164384,63.2851536024463,"IBM","Severe incidence
+(per 1000 person-years)"
+13.7260273972603,28.782311101298,"IBM","Severe incidence
+(per 1000 person-years)"
+13.8082191780822,11.5154670073983,"IBM","Severe incidence
+(per 1000 person-years)"
+13.8904109589041,51.7233235187605,"IBM","Severe incidence
+(per 1000 person-years)"
+13.972602739726,40.0847191716348,"IBM","Severe incidence
+(per 1000 person-years)"
+14.0547945205479,62.8364842869663,"IBM","Severe incidence
+(per 1000 person-years)"
+14.1369863013699,39.9856020532724,"IBM","Severe incidence
+(per 1000 person-years)"
+14.2191780821918,22.7460389175378,"IBM","Severe incidence
+(per 1000 person-years)"
+14.3013698630137,51.2328638936977,"IBM","Severe incidence
+(per 1000 person-years)"
+14.3835616438356,68.5800178495937,"IBM","Severe incidence
+(per 1000 person-years)"
+14.4657534246575,34.3550967903868,"IBM","Severe incidence
+(per 1000 person-years)"
+14.5479452054795,63.2203816841973,"IBM","Severe incidence
+(per 1000 person-years)"
+14.6301369863014,40.1256380054967,"IBM","Severe incidence
+(per 1000 person-years)"
+14.7123287671233,22.9383022514101,"IBM","Severe incidence
+(per 1000 person-years)"
+14.7945205479452,11.4702323900508,"IBM","Severe incidence
+(per 1000 person-years)"
+14.8767123287671,28.6036706737928,"IBM","Severe incidence
+(per 1000 person-years)"
+14.958904109589,34.3018247317723,"IBM","Severe incidence
+(per 1000 person-years)"
+15.041095890411,28.5522075158797,"IBM","Severe incidence
+(per 1000 person-years)"
+15.1232876712329,62.2635072265988,"IBM","Severe incidence
+(per 1000 person-years)"
+15.2054794520548,28.1409979645963,"IBM","Severe incidence
+(per 1000 person-years)"
+15.2876712328767,56.2195798164007,"IBM","Severe incidence
+(per 1000 person-years)"
+15.3698630136986,28.0536169951118,"IBM","Severe incidence
+(per 1000 person-years)"
+15.4520547945205,33.4657701711492,"IBM","Severe incidence
+(per 1000 person-years)"
+15.5342465753425,38.9749065670048,"IBM","Severe incidence
+(per 1000 person-years)"
+15.6164383561644,16.698436904308,"IBM","Severe incidence
+(per 1000 person-years)"
+15.6986301369863,27.9912268593077,"IBM","Severe incidence
+(per 1000 person-years)"
+15.7808219178082,16.8534137782429,"IBM","Severe incidence
+(per 1000 person-years)"
+15.8630136986301,28.1197516217007,"IBM","Severe incidence
+(per 1000 person-years)"
+15.9452054794521,45.1062778052397,"IBM","Severe incidence
+(per 1000 person-years)"
+16.027397260274,39.5284434611755,"IBM","Severe incidence
+(per 1000 person-years)"
+16.1095890410959,22.5817428156031,"IBM","Severe incidence
+(per 1000 person-years)"
+16.1917808219178,50.8356545961003,"IBM","Severe incidence
+(per 1000 person-years)"
+16.2739726027397,33.7208407113712,"IBM","Severe incidence
+(per 1000 person-years)"
+16.3561643835616,33.7910816232063,"IBM","Severe incidence
+(per 1000 person-years)"
+16.4383561643836,22.627940857382,"IBM","Severe incidence
+(per 1000 person-years)"
+16.5205479452055,33.9703418750388,"IBM","Severe incidence
+(per 1000 person-years)"
+16.6027397260274,56.7263458908367,"IBM","Severe incidence
+(per 1000 person-years)"
+16.6849315068493,17.0914823544102,"IBM","Severe incidence
+(per 1000 person-years)"
+16.7671232876712,39.6979537297432,"IBM","Severe incidence
+(per 1000 person-years)"
+16.8493150684932,16.9741125406914,"IBM","Severe incidence
+(per 1000 person-years)"
+16.9315068493151,56.6383216435975,"IBM","Severe incidence
+(per 1000 person-years)"
+17.013698630137,33.8815229667218,"IBM","Severe incidence
+(per 1000 person-years)"
+17.0958904109589,50.6124335567368,"IBM","Severe incidence
+(per 1000 person-years)"
+17.1780821917808,50.5828187795451,"IBM","Severe incidence
+(per 1000 person-years)"
+17.2602739726027,33.6312540311435,"IBM","Severe incidence
+(per 1000 person-years)"
+17.3424657534247,33.6809080003691,"IBM","Severe incidence
+(per 1000 person-years)"
+17.4246575342466,28.0419784576144,"IBM","Severe incidence
+(per 1000 person-years)"
+17.5068493150685,33.5323840146991,"IBM","Severe incidence
+(per 1000 person-years)"
+17.5890410958904,27.8791952460243,"IBM","Severe incidence
+(per 1000 person-years)"
+17.6712328767123,27.8928303963074,"IBM","Severe incidence
+(per 1000 person-years)"
+17.7534246575342,22.3645108912104,"IBM","Severe incidence
+(per 1000 person-years)"
+17.8356164383562,67.0996997365035,"IBM","Severe incidence
+(per 1000 person-years)"
+17.9178082191781,33.7021590926579,"IBM","Severe incidence
+(per 1000 person-years)"
+18,56.5032973157064,"IBM","Severe incidence
+(per 1000 person-years)"
+18.0821917808219,45.3268344173484,"IBM","Severe incidence
+(per 1000 person-years)"
+18.1643835616438,45.2874668486437,"IBM","Severe incidence
+(per 1000 person-years)"
+18.2465753424658,16.9891238576948,"IBM","Severe incidence
+(per 1000 person-years)"
+18.3287671232877,16.9751651009208,"IBM","Severe incidence
+(per 1000 person-years)"
+18.4109589041096,45.5623517663213,"IBM","Severe incidence
+(per 1000 person-years)"
+18.4931506849315,45.6635286022582,"IBM","Severe incidence
+(per 1000 person-years)"
+18.5753424657534,79.7191887675507,"IBM","Severe incidence
+(per 1000 person-years)"
+18.6575342465753,45.5929424623312,"IBM","Severe incidence
+(per 1000 person-years)"
+18.7397260273973,17.123019906488,"IBM","Severe incidence
+(per 1000 person-years)"
+18.8219178082192,28.5539944300153,"IBM","Severe incidence
+(per 1000 person-years)"
+18.9041095890411,45.7708947269421,"IBM","Severe incidence
+(per 1000 person-years)"
+18.986301369863,45.8067957205158,"IBM","Severe incidence
+(per 1000 person-years)"
+19.0684931506849,45.654961068201,"IBM","Severe incidence
+(per 1000 person-years)"
+19.1506849315068,22.8274805341005,"IBM","Severe incidence
+(per 1000 person-years)"
+19.2328767123288,45.5872480602001,"IBM","Severe incidence
+(per 1000 person-years)"
+19.3150684931507,45.5659067147293,"IBM","Severe incidence
+(per 1000 person-years)"
+19.3972602739726,11.3190578822508,"IBM","Severe incidence
+(per 1000 person-years)"
+19.4794520547945,39.7387044093631,"IBM","Severe incidence
+(per 1000 person-years)"
+19.5616438356164,39.8720349563046,"IBM","Severe incidence
+(per 1000 person-years)"
+19.6438356164384,39.8689240851993,"IBM","Severe incidence
+(per 1000 person-years)"
+19.7260273972603,34.2744459747089,"IBM","Severe incidence
+(per 1000 person-years)"
+19.8082191780822,22.8646600056379,"IBM","Severe incidence
+(per 1000 person-years)"
+19.8904109589041,40.0332173858544,"IBM","Severe incidence
+(per 1000 person-years)"
+19.972602739726,34.4512962496854,"IBM","Severe incidence
+(per 1000 person-years)"
+20.0547945205479,23.0921312771847,"IBM","Severe incidence
+(per 1000 person-years)"
+20.1369863013699,17.4299221622654,"IBM","Severe incidence
+(per 1000 person-years)"
+20.2191780821918,23.2702698394989,"IBM","Severe incidence
+(per 1000 person-years)"
+20.3013698630137,11.7109168204059,"IBM","Severe incidence
+(per 1000 person-years)"
+20.3835616438356,17.4998401841079,"IBM","Severe incidence
+(per 1000 person-years)"
+20.4657534246575,17.4959256063656,"IBM","Severe incidence
+(per 1000 person-years)"
+20.5479452054795,23.2684155165269,"IBM","Severe incidence
+(per 1000 person-years)"
+20.6301369863014,52.4651430214173,"IBM","Severe incidence
+(per 1000 person-years)"
+20.7123287671233,52.2431972518647,"IBM","Severe incidence
+(per 1000 person-years)"
+20.7945205479452,23.1441117258215,"IBM","Severe incidence
+(per 1000 person-years)"
+20.8767123287671,74.8682508125848,"IBM","Severe incidence
+(per 1000 person-years)"
+20.958904109589,23.0768014920891,"IBM","Severe incidence
+(per 1000 person-years)"
+21.041095890411,34.6360056303279,"IBM","Severe incidence
+(per 1000 person-years)"
+21.1232876712329,28.8779530673924,"IBM","Severe incidence
+(per 1000 person-years)"
+21.2054794520548,63.402078135363,"IBM","Severe incidence
+(per 1000 person-years)"
+21.2876712328767,57.8465244540239,"IBM","Severe incidence
+(per 1000 person-years)"
+21.3698630136986,28.8994457640538,"IBM","Severe incidence
+(per 1000 person-years)"
+21.4520547945205,57.6464456623024,"IBM","Severe incidence
+(per 1000 person-years)"
+21.5342465753425,34.4822156791737,"IBM","Severe incidence
+(per 1000 person-years)"
+21.6164383561644,63.1815821360568,"IBM","Severe incidence
+(per 1000 person-years)"
+21.6986301369863,40.1685349096797,"IBM","Severe incidence
+(per 1000 person-years)"
+21.7808219178082,46.0771318563403,"IBM","Severe incidence
+(per 1000 person-years)"
+21.8630136986301,40.1080011930364,"IBM","Severe incidence
+(per 1000 person-years)"
+21.9452054794521,28.5446156252444,"IBM","Severe incidence
+(per 1000 person-years)"
+22.027397260274,34.3141863307323,"IBM","Severe incidence
+(per 1000 person-years)"
+22.1095890410959,17.1915722046033,"IBM","Severe incidence
+(per 1000 person-years)"
+22.1917808219178,34.4496704472165,"IBM","Severe incidence
+(per 1000 person-years)"
+22.2739726027397,34.51536643026,"IBM","Severe incidence
+(per 1000 person-years)"
+22.3561643835616,46.1368304629483,"IBM","Severe incidence
+(per 1000 person-years)"
+22.4383561643836,57.8401077569131,"IBM","Severe incidence
+(per 1000 person-years)"
+22.5205479452055,34.8864994026284,"IBM","Severe incidence
+(per 1000 person-years)"
+22.6027397260274,46.6811612738202,"IBM","Severe incidence
+(per 1000 person-years)"
+22.6849315068493,40.9606104814274,"IBM","Severe incidence
+(per 1000 person-years)"
+22.7671232876712,40.7580519086892,"IBM","Severe incidence
+(per 1000 person-years)"
+22.8493150684932,29.0156923223683,"IBM","Severe incidence
+(per 1000 person-years)"
+22.9315068493151,28.8387086579334,"IBM","Severe incidence
+(per 1000 person-years)"
+23.013698630137,86.2585076884295,"IBM","Severe incidence
+(per 1000 person-years)"
+23.0958904109589,46.321266537644,"IBM","Severe incidence
+(per 1000 person-years)"
+23.1780821917808,40.692489010639,"IBM","Severe incidence
+(per 1000 person-years)"
+23.2602739726027,34.8764989728154,"IBM","Severe incidence
+(per 1000 person-years)"
+23.3424657534247,58.065542475342,"IBM","Severe incidence
+(per 1000 person-years)"
+23.4246575342466,57.8300272514101,"IBM","Severe incidence
+(per 1000 person-years)"
+23.5068493150685,69.2752981368424,"IBM","Severe incidence
+(per 1000 person-years)"
+23.5890410958904,75.1849915228724,"IBM","Severe incidence
+(per 1000 person-years)"
+23.6712328767123,28.8455459315926,"IBM","Severe incidence
+(per 1000 person-years)"
+23.7534246575342,57.6883564350176,"IBM","Severe incidence
+(per 1000 person-years)"
+23.8356164383562,5.77577339979429,"IBM","Severe incidence
+(per 1000 person-years)"
+23.9178082191781,28.9063118713867,"IBM","Severe incidence
+(per 1000 person-years)"
+24,34.779018247074,"IBM","Severe incidence
+(per 1000 person-years)"
+24.0821917808219,34.9193188341093,"IBM","Severe incidence
+(per 1000 person-years)"
+24.1643835616438,58.0074058770243,"IBM","Severe incidence
+(per 1000 person-years)"
+24.2465753424658,40.4900003169472,"IBM","Severe incidence
+(per 1000 person-years)"
+24.3287671232877,52.1967108921904,"IBM","Severe incidence
+(per 1000 person-years)"
+24.4109589041096,58.1506500127454,"IBM","Severe incidence
+(per 1000 person-years)"
+24.4931506849315,5.81274982880257,"IBM","Severe incidence
+(per 1000 person-years)"
+24.5753424657534,34.9773206414106,"IBM","Severe incidence
+(per 1000 person-years)"
+24.6575342465753,34.8637289862455,"IBM","Severe incidence
+(per 1000 person-years)"
+24.7397260273973,34.6562856057729,"IBM","Severe incidence
+(per 1000 person-years)"
+24.8219178082192,28.8967002343404,"IBM","Severe incidence
+(per 1000 person-years)"
+24.9041095890411,51.8858984078848,"IBM","Severe incidence
+(per 1000 person-years)"
+24.986301369863,57.5855105389373,"IBM","Severe incidence
+(per 1000 person-years)"
+25.0684931506849,45.8456321045029,"IBM","Severe incidence
+(per 1000 person-years)"
+25.1506849315068,22.8815020295579,"IBM","Severe incidence
+(per 1000 person-years)"
+25.2328767123288,51.476925487738,"IBM","Severe incidence
+(per 1000 person-years)"
+25.3150684931507,39.9549627034888,"IBM","Severe incidence
+(per 1000 person-years)"
+25.3972602739726,22.825696105561,"IBM","Severe incidence
+(per 1000 person-years)"
+25.4794520547945,51.535070517547,"IBM","Severe incidence
+(per 1000 person-years)"
+25.5616438356164,46.0662280909335,"IBM","Severe incidence
+(per 1000 person-years)"
+25.6438356164384,68.9481472153134,"IBM","Severe incidence
+(per 1000 person-years)"
+25.7260273972603,46.158710085362,"IBM","Severe incidence
+(per 1000 person-years)"
+25.8082191780822,34.582951710198,"IBM","Severe incidence
+(per 1000 person-years)"
+25.8904109589041,40.3888713246917,"IBM","Severe incidence
+(per 1000 person-years)"
+25.972602739726,46.1135150500616,"IBM","Severe incidence
+(per 1000 person-years)"
+26.0547945205479,17.270476160434,"IBM","Severe incidence
+(per 1000 person-years)"
+26.1369863013699,34.7194698543051,"IBM","Severe incidence
+(per 1000 person-years)"
+26.2191780821918,23.2417459963705,"IBM","Severe incidence
+(per 1000 person-years)"
+26.3013698630137,69.2720112606557,"IBM","Severe incidence
+(per 1000 person-years)"
+26.3835616438356,17.3454355367581,"IBM","Severe incidence
+(per 1000 person-years)"
+26.4657534246575,11.5405896767054,"IBM","Severe incidence
+(per 1000 person-years)"
+26.5479452054795,40.569722760329,"IBM","Severe incidence
+(per 1000 person-years)"
+26.6301369863014,52.1461680106673,"IBM","Severe incidence
+(per 1000 person-years)"
+26.7123287671233,23.2387864896699,"IBM","Severe incidence
+(per 1000 person-years)"
+26.7945205479452,40.6983226875229,"IBM","Severe incidence
+(per 1000 person-years)"
+26.8767123287671,29.177125133895,"IBM","Severe incidence
+(per 1000 person-years)"
+26.958904109589,52.4860995718029,"IBM","Severe incidence
+(per 1000 person-years)"
+27.041095890411,40.8486282535013,"IBM","Severe incidence
+(per 1000 person-years)"
+27.1232876712329,29.2580479671669,"IBM","Severe incidence
+(per 1000 person-years)"
+27.2054794520548,58.6854460093897,"IBM","Severe incidence
+(per 1000 person-years)"
+27.2876712328767,29.3017356260938,"IBM","Severe incidence
+(per 1000 person-years)"
+27.3698630136986,29.2350820985182,"IBM","Severe incidence
+(per 1000 person-years)"
+27.4520547945205,40.9192825112108,"IBM","Severe incidence
+(per 1000 person-years)"
+27.5342465753425,63.9779463318248,"IBM","Severe incidence
+(per 1000 person-years)"
+27.6164383561644,23.3387150918362,"IBM","Severe incidence
+(per 1000 person-years)"
+27.6986301369863,17.4774947328098,"IBM","Severe incidence
+(per 1000 person-years)"
+27.7808219178082,29.2458575045672,"IBM","Severe incidence
+(per 1000 person-years)"
+27.8630136986301,35.0837845631348,"IBM","Severe incidence
+(per 1000 person-years)"
+27.9452054794521,58.6119407778527,"IBM","Severe incidence
+(per 1000 person-years)"
+28.027397260274,23.507817154266,"IBM","Severe incidence
+(per 1000 person-years)"
+28.1095890410959,35.1665997591329,"IBM","Severe incidence
+(per 1000 person-years)"
+28.1917808219178,29.2646162727302,"IBM","Severe incidence
+(per 1000 person-years)"
+28.2739726027397,29.3031470777136,"IBM","Severe incidence
+(per 1000 person-years)"
+28.3561643835616,46.9491116649248,"IBM","Severe incidence
+(per 1000 person-years)"
+28.4383561643836,35.3271389856756,"IBM","Severe incidence
+(per 1000 person-years)"
+28.5205479452055,41.3283297208114,"IBM","Severe incidence
+(per 1000 person-years)"
+28.6027397260274,23.5765268223363,"IBM","Severe incidence
+(per 1000 person-years)"
+28.6849315068493,29.4316862340343,"IBM","Severe incidence
+(per 1000 person-years)"
+28.7671232876712,46.849679914002,"IBM","Severe incidence
+(per 1000 person-years)"
+28.8493150684932,46.7858745113119,"IBM","Severe incidence
+(per 1000 person-years)"
+28.9315068493151,40.8545067877644,"IBM","Severe incidence
+(per 1000 person-years)"
+29.013698630137,52.4567650863101,"IBM","Severe incidence
+(per 1000 person-years)"
+29.0958904109589,34.7972543536291,"IBM","Severe incidence
+(per 1000 person-years)"
+29.1780821917808,51.9663365710127,"IBM","Severe incidence
+(per 1000 person-years)"
+29.2602739726027,57.9521458171253,"IBM","Severe incidence
+(per 1000 person-years)"
+29.3424657534247,63.7129663424155,"IBM","Severe incidence
+(per 1000 person-years)"
+29.4246575342466,34.7205707491082,"IBM","Severe incidence
+(per 1000 person-years)"
+29.5068493150685,57.784251021119,"IBM","Severe incidence
+(per 1000 person-years)"
+29.5890410958904,40.3346751914121,"IBM","Severe incidence
+(per 1000 person-years)"
+29.6712328767123,57.3962543047191,"IBM","Severe incidence
+(per 1000 person-years)"
+29.7534246575342,51.7388017388017,"IBM","Severe incidence
+(per 1000 person-years)"
+29.8356164383562,40.0564396017873,"IBM","Severe incidence
+(per 1000 person-years)"
+29.9178082191781,45.8456321045029,"IBM","Severe incidence
+(per 1000 person-years)"
+30,22.8901117852719,"IBM","Severe incidence
+(per 1000 person-years)"
+30.0821917808219,11.4233850776164,"IBM","Severe incidence
+(per 1000 person-years)"
+30.1643835616438,5.72207938797266,"IBM","Severe incidence
+(per 1000 person-years)"
+30.2465753424658,0,"IBM","Severe incidence
+(per 1000 person-years)"
+30.3287671232877,5.68535825545171,"IBM","Severe incidence
+(per 1000 person-years)"
+30.4109589041096,0,"IBM","Severe incidence
+(per 1000 person-years)"
+30.4931506849315,5.64849347715068,"IBM","Severe incidence
+(per 1000 person-years)"
+30.5753424657534,5.62230437461491,"IBM","Severe incidence
+(per 1000 person-years)"
+30.6575342465753,0,"IBM","Severe incidence
+(per 1000 person-years)"
+30.7397260273973,0,"IBM","Severe incidence
+(per 1000 person-years)"
+30.8219178082192,5.60314390101624,"IBM","Severe incidence
+(per 1000 person-years)"
+30.9041095890411,5.61901536377352,"IBM","Severe incidence
+(per 1000 person-years)"
+30.986301369863,5.62507705585008,"IBM","Severe incidence
+(per 1000 person-years)"
+31.0684931506849,0,"IBM","Severe incidence
+(per 1000 person-years)"
+31.1506849315068,0,"IBM","Severe incidence
+(per 1000 person-years)"
+31.2328767123288,16.7572117223965,"IBM","Severe incidence
+(per 1000 person-years)"
+31.3150684931507,22.3023341072956,"IBM","Severe incidence
+(per 1000 person-years)"
+31.3972602739726,5.58112509365587,"IBM","Severe incidence
+(per 1000 person-years)"
+31.4794520547945,33.4729312505732,"IBM","Severe incidence
+(per 1000 person-years)"
+31.5616438356164,22.2917779983205,"IBM","Severe incidence
+(per 1000 person-years)"
+31.6438356164384,11.1143252995539,"IBM","Severe incidence
+(per 1000 person-years)"
+31.7260273972603,27.8855850624943,"IBM","Severe incidence
+(per 1000 person-years)"
+31.8082191780822,44.5624637548454,"IBM","Severe incidence
+(per 1000 person-years)"
+31.8904109589041,22.3108543834716,"IBM","Severe incidence
+(per 1000 person-years)"
+31.972602739726,22.2863335928317,"IBM","Severe incidence
+(per 1000 person-years)"
+32.0547945205479,27.896667685723,"IBM","Severe incidence
+(per 1000 person-years)"
+32.1369863013699,27.9137350871826,"IBM","Severe incidence
+(per 1000 person-years)"
+32.2191780821918,44.5692655229257,"IBM","Severe incidence
+(per 1000 person-years)"
+32.3013698630137,16.7423512682904,"IBM","Severe incidence
+(per 1000 person-years)"
+32.3835616438356,44.8086425436577,"IBM","Severe incidence
+(per 1000 person-years)"
+32.4657534246575,22.3453426796045,"IBM","Severe incidence
+(per 1000 person-years)"
+32.5479452054795,33.557561177426,"IBM","Severe incidence
+(per 1000 person-years)"
+32.6301369863014,55.8967212361598,"IBM","Severe incidence
+(per 1000 person-years)"
+32.7123287671233,22.3645108912104,"IBM","Severe incidence
+(per 1000 person-years)"
+32.7945205479452,33.6788361578446,"IBM","Severe incidence
+(per 1000 person-years)"
+32.8767123287671,50.635838150289,"IBM","Severe incidence
+(per 1000 person-years)"
+32.958904109589,28.1796704908667,"IBM","Severe incidence
+(per 1000 person-years)"
+33.041095890411,45.0763364670649,"IBM","Severe incidence
+(per 1000 person-years)"
+33.1232876712329,16.8760114047931,"IBM","Severe incidence
+(per 1000 person-years)"
+33.2054794520548,39.4095508390918,"IBM","Severe incidence
+(per 1000 person-years)"
+33.2876712328767,28.1531531531532,"IBM","Severe incidence
+(per 1000 person-years)"
+33.3698630136986,50.5890505890506,"IBM","Severe incidence
+(per 1000 person-years)"
+33.4520547945205,72.9551045510455,"IBM","Severe incidence
+(per 1000 person-years)"
+33.5342465753425,39.0129941518682,"IBM","Severe incidence
+(per 1000 person-years)"
+33.6164383561644,55.8155182432639,"IBM","Severe incidence
+(per 1000 person-years)"
+33.6986301369863,28.1279861903147,"IBM","Severe incidence
+(per 1000 person-years)"
+33.7808219178082,67.6656882434729,"IBM","Severe incidence
+(per 1000 person-years)"
+33.8630136986301,22.6349570555952,"IBM","Severe incidence
+(per 1000 person-years)"
+33.9452054794521,73.8130794598967,"IBM","Severe incidence
+(per 1000 person-years)"
+34.027397260274,56.8819349208328,"IBM","Severe incidence
+(per 1000 person-years)"
+34.1095890410959,56.854468138133,"IBM","Severe incidence
+(per 1000 person-years)"
+34.1917808219178,51.5342620481928,"IBM","Severe incidence
+(per 1000 person-years)"
+34.2739726027397,45.87732528909,"IBM","Severe incidence
+(per 1000 person-years)"
+34.3561643835616,22.9041164658634,"IBM","Severe incidence
+(per 1000 person-years)"
+34.4383561643836,51.4882211877557,"IBM","Severe incidence
+(per 1000 person-years)"
+34.5205479452055,51.6460711253655,"IBM","Severe incidence
+(per 1000 person-years)"
+34.6027397260274,63.5144113645711,"IBM","Severe incidence
+(per 1000 person-years)"
+34.6849315068493,58.0609242026565,"IBM","Severe incidence
+(per 1000 person-years)"
+34.7671232876712,52.2191136262479,"IBM","Severe incidence
+(per 1000 person-years)"
+34.8493150684931,34.7757046447003,"IBM","Severe incidence
+(per 1000 person-years)"
+34.9315068493151,51.9228033572004,"IBM","Severe incidence
+(per 1000 person-years)"
+35.013698630137,34.6897720612694,"IBM","Severe incidence
+(per 1000 person-years)"
+35.0958904109589,63.6695210910244,"IBM","Severe incidence
+(per 1000 person-years)"
+35.1780821917808,46.1806104697137,"IBM","Severe incidence
+(per 1000 person-years)"
+35.2602739726027,34.6261482758075,"IBM","Severe incidence
+(per 1000 person-years)"
+35.3424657534247,40.5497627323081,"IBM","Severe incidence
+(per 1000 person-years)"
+35.4246575342466,63.7240897692283,"IBM","Severe incidence
+(per 1000 person-years)"
+35.5068493150685,17.2966654556368,"IBM","Severe incidence
+(per 1000 person-years)"
+35.5890410958904,34.7139664273147,"IBM","Severe incidence
+(per 1000 person-years)"
+35.6712328767123,46.4287985753355,"IBM","Severe incidence
+(per 1000 person-years)"
+35.7534246575342,17.4343624118331,"IBM","Severe incidence
+(per 1000 person-years)"
+35.8356164383562,52.3748026976611,"IBM","Severe incidence
+(per 1000 person-years)"
+35.9178082191781,63.9524696962457,"IBM","Severe incidence
+(per 1000 person-years)"
+0,1.52396298001449,"ODE","Clinical incidence
+(per person-year)"
+0.0821917808219178,1.52396298001449,"ODE","Clinical incidence
+(per person-year)"
+0.164383561643836,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+0.246575342465753,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+0.328767123287671,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+0.410958904109589,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+0.493150684931507,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+0.575342465753425,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+0.657534246575342,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+0.73972602739726,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+0.821917808219178,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+0.904109589041096,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+0.986301369863014,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+1.06849315068493,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+1.15068493150685,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+1.23287671232877,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+1.31506849315068,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+1.3972602739726,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+1.47945205479452,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+1.56164383561644,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+1.64383561643836,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+1.72602739726027,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+1.80821917808219,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+1.89041095890411,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+1.97260273972603,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+2.05479452054795,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+2.13698630136986,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+2.21917808219178,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+2.3013698630137,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+2.38356164383562,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+2.46575342465753,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+2.54794520547945,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+2.63013698630137,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+2.71232876712329,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+2.79452054794521,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+2.87671232876712,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+2.95890410958904,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+3.04109589041096,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+3.12328767123288,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+3.20547945205479,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+3.28767123287671,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+3.36986301369863,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+3.45205479452055,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+3.53424657534247,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+3.61643835616438,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+3.6986301369863,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+3.78082191780822,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+3.86301369863014,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+3.94520547945205,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+4.02739726027397,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+4.10958904109589,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+4.19178082191781,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+4.27397260273973,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+4.35616438356164,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+4.43835616438356,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+4.52054794520548,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+4.6027397260274,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+4.68493150684932,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+4.76712328767123,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+4.84931506849315,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+4.93150684931507,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+5.01369863013699,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+5.0958904109589,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+5.17808219178082,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+5.26027397260274,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+5.34246575342466,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+5.42465753424658,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+5.50684931506849,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+5.58904109589041,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+5.67123287671233,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+5.75342465753425,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+5.83561643835616,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+5.91780821917808,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+6,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+6.08219178082192,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+6.16438356164384,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+6.24657534246575,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+6.32876712328767,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+6.41095890410959,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+6.49315068493151,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+6.57534246575342,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+6.65753424657534,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+6.73972602739726,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+6.82191780821918,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+6.9041095890411,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+6.98630136986301,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+7.06849315068493,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+7.15068493150685,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+7.23287671232877,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+7.31506849315068,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+7.3972602739726,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+7.47945205479452,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+7.56164383561644,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+7.64383561643836,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+7.72602739726027,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+7.80821917808219,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+7.89041095890411,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+7.97260273972603,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+8.05479452054795,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+8.13698630136986,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+8.21917808219178,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+8.3013698630137,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+8.38356164383562,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+8.46575342465753,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+8.54794520547945,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+8.63013698630137,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+8.71232876712329,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+8.79452054794521,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+8.87671232876712,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+8.95890410958904,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+9.04109589041096,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+9.12328767123288,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+9.20547945205479,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+9.28767123287671,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+9.36986301369863,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+9.45205479452055,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+9.53424657534247,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+9.61643835616438,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+9.6986301369863,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+9.78082191780822,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+9.86301369863014,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+9.94520547945205,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+10.027397260274,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+10.1095890410959,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+10.1917808219178,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+10.2739726027397,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+10.3561643835616,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+10.4383561643836,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+10.5205479452055,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+10.6027397260274,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+10.6849315068493,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+10.7671232876712,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+10.8493150684932,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+10.9315068493151,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+11.013698630137,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+11.0958904109589,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+11.1780821917808,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+11.2602739726027,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+11.3424657534247,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+11.4246575342466,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+11.5068493150685,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+11.5890410958904,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+11.6712328767123,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+11.7534246575342,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+11.8356164383562,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+11.9178082191781,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+12,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+12.0821917808219,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+12.1643835616438,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+12.2465753424658,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+12.3287671232877,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+12.4109589041096,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+12.4931506849315,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+12.5753424657534,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+12.6575342465753,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+12.7397260273973,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+12.8219178082192,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+12.9041095890411,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+12.986301369863,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+13.0684931506849,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+13.1506849315068,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+13.2328767123288,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+13.3150684931507,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+13.3972602739726,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+13.4794520547945,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+13.5616438356164,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+13.6438356164384,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+13.7260273972603,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+13.8082191780822,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+13.8904109589041,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+13.972602739726,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+14.0547945205479,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+14.1369863013699,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+14.2191780821918,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+14.3013698630137,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+14.3835616438356,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+14.4657534246575,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+14.5479452054795,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+14.6301369863014,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+14.7123287671233,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+14.7945205479452,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+14.8767123287671,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+14.958904109589,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+15.041095890411,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+15.1232876712329,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+15.2054794520548,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+15.2876712328767,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+15.3698630136986,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+15.4520547945205,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+15.5342465753425,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+15.6164383561644,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+15.6986301369863,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+15.7808219178082,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+15.8630136986301,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+15.9452054794521,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+16.027397260274,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+16.1095890410959,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+16.1917808219178,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+16.2739726027397,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+16.3561643835616,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+16.4383561643836,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+16.5205479452055,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+16.6027397260274,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+16.6849315068493,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+16.7671232876712,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+16.8493150684932,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+16.9315068493151,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+17.013698630137,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+17.0958904109589,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+17.1780821917808,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+17.2602739726027,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+17.3424657534247,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+17.4246575342466,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+17.5068493150685,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+17.5890410958904,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+17.6712328767123,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+17.7534246575342,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+17.8356164383562,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+17.9178082191781,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+18,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+18.0821917808219,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+18.1643835616438,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+18.2465753424658,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+18.3287671232877,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+18.4109589041096,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+18.4931506849315,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+18.5753424657534,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+18.6575342465753,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+18.7397260273973,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+18.8219178082192,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+18.9041095890411,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+18.986301369863,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+19.0684931506849,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+19.1506849315068,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+19.2328767123288,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+19.3150684931507,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+19.3972602739726,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+19.4794520547945,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+19.5616438356164,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+19.6438356164384,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+19.7260273972603,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+19.8082191780822,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+19.8904109589041,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+19.972602739726,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+20.0547945205479,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+20.1369863013699,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+20.2191780821918,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+20.3013698630137,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+20.3835616438356,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+20.4657534246575,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+20.5479452054795,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+20.6301369863014,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+20.7123287671233,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+20.7945205479452,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+20.8767123287671,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+20.958904109589,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+21.041095890411,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+21.1232876712329,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+21.2054794520548,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+21.2876712328767,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+21.3698630136986,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+21.4520547945205,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+21.5342465753425,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+21.6164383561644,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+21.6986301369863,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+21.7808219178082,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+21.8630136986301,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+21.9452054794521,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+22.027397260274,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+22.1095890410959,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+22.1917808219178,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+22.2739726027397,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+22.3561643835616,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+22.4383561643836,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+22.5205479452055,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+22.6027397260274,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+22.6849315068493,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+22.7671232876712,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+22.8493150684932,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+22.9315068493151,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+23.013698630137,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+23.0958904109589,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+23.1780821917808,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+23.2602739726027,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+23.3424657534247,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+23.4246575342466,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+23.5068493150685,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+23.5890410958904,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+23.6712328767123,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+23.7534246575342,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+23.8356164383562,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+23.9178082191781,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+24,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+24.0821917808219,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+24.1643835616438,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+24.2465753424658,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+24.3287671232877,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+24.4109589041096,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+24.4931506849315,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+24.5753424657534,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+24.6575342465753,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+24.7397260273973,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+24.8219178082192,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+24.9041095890411,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+24.986301369863,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+25.0684931506849,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+25.1506849315068,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+25.2328767123288,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+25.3150684931507,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+25.3972602739726,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+25.4794520547945,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+25.5616438356164,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+25.6438356164384,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+25.7260273972603,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+25.8082191780822,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+25.8904109589041,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+25.972602739726,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+26.0547945205479,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+26.1369863013699,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+26.2191780821918,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+26.3013698630137,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+26.3835616438356,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+26.4657534246575,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+26.5479452054795,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+26.6301369863014,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+26.7123287671233,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+26.7945205479452,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+26.8767123287671,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+26.958904109589,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+27.041095890411,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+27.1232876712329,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+27.2054794520548,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+27.2876712328767,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+27.3698630136986,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+27.4520547945205,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+27.5342465753425,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+27.6164383561644,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+27.6986301369863,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+27.7808219178082,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+27.8630136986301,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+27.9452054794521,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+28.027397260274,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+28.1095890410959,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+28.1917808219178,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+28.2739726027397,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+28.3561643835616,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+28.4383561643836,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+28.5205479452055,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+28.6027397260274,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+28.6849315068493,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+28.7671232876712,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+28.8493150684932,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+28.9315068493151,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+29.013698630137,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+29.0958904109589,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+29.1780821917808,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+29.2602739726027,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+29.3424657534247,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+29.4246575342466,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+29.5068493150685,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+29.5890410958904,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+29.6712328767123,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+29.7534246575342,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+29.8356164383562,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+29.9178082191781,1.5239629800145,"ODE","Clinical incidence
+(per person-year)"
+30,0.84888985472287,"ODE","Clinical incidence
+(per person-year)"
+30.0821917808219,0.0841286292661282,"ODE","Clinical incidence
+(per person-year)"
+30.1643835616438,0.0860452263420784,"ODE","Clinical incidence
+(per person-year)"
+30.2465753424658,0.0943537931647648,"ODE","Clinical incidence
+(per person-year)"
+30.3287671232877,0.102856803780708,"ODE","Clinical incidence
+(per person-year)"
+30.4109589041096,0.111916171366013,"ODE","Clinical incidence
+(per person-year)"
+30.4931506849315,0.121793034513117,"ODE","Clinical incidence
+(per person-year)"
+30.5753424657534,0.132751287497052,"ODE","Clinical incidence
+(per person-year)"
+30.6575342465753,0.145059593504605,"ODE","Clinical incidence
+(per person-year)"
+30.7397260273973,0.158993181087684,"ODE","Clinical incidence
+(per person-year)"
+30.8219178082192,0.174834863213813,"ODE","Clinical incidence
+(per person-year)"
+30.9041095890411,0.192871608120447,"ODE","Clinical incidence
+(per person-year)"
+30.986301369863,0.213385645954473,"ODE","Clinical incidence
+(per person-year)"
+31.0684931506849,0.236643994596423,"ODE","Clinical incidence
+(per person-year)"
+31.1506849315068,0.2628866366983,"ODE","Clinical incidence
+(per person-year)"
+31.2328767123288,0.292309141046368,"ODE","Clinical incidence
+(per person-year)"
+31.3150684931507,0.325047674032293,"ODE","Clinical incidence
+(per person-year)"
+31.3972602739726,0.361160218477051,"ODE","Clinical incidence
+(per person-year)"
+31.4794520547945,0.40061172086911,"ODE","Clinical incidence
+(per person-year)"
+31.5616438356164,0.443262611639131,"ODE","Clinical incidence
+(per person-year)"
+31.6438356164384,0.488863854769139,"ODE","Clinical incidence
+(per person-year)"
+31.7260273972603,0.537060492648579,"ODE","Clinical incidence
+(per person-year)"
+31.8082191780822,0.58740478102281,"ODE","Clinical incidence
+(per person-year)"
+31.8904109589041,0.639378482775458,"ODE","Clinical incidence
+(per person-year)"
+31.972602739726,0.692422095175584,"ODE","Clinical incidence
+(per person-year)"
+32.0547945205479,0.745967251781089,"ODE","Clinical incidence
+(per person-year)"
+32.1369863013699,0.79946781050481,"ODE","Clinical incidence
+(per person-year)"
+32.2191780821918,0.85242553375751,"ODE","Clinical incidence
+(per person-year)"
+32.3013698630137,0.90440759087098,"ODE","Clinical incidence
+(per person-year)"
+32.3835616438356,0.95505566935272,"ODE","Clinical incidence
+(per person-year)"
+32.4657534246575,1.00408559790462,"ODE","Clinical incidence
+(per person-year)"
+32.5479452054795,1.05127963883656,"ODE","Clinical incidence
+(per person-year)"
+32.6301369863014,1.09648133998071,"ODE","Clinical incidence
+(per person-year)"
+32.7123287671233,1.13957698979319,"ODE","Clinical incidence
+(per person-year)"
+32.7945205479452,1.18049894953654,"ODE","Clinical incidence
+(per person-year)"
+32.8767123287671,1.21920574805178,"ODE","Clinical incidence
+(per person-year)"
+32.958904109589,1.25567838302732,"ODE","Clinical incidence
+(per person-year)"
+33.041095890411,1.2899157082625,"ODE","Clinical incidence
+(per person-year)"
+33.1232876712329,1.32193077489035,"ODE","Clinical incidence
+(per person-year)"
+33.2054794520548,1.35174855734672,"ODE","Clinical incidence
+(per person-year)"
+33.2876712328767,1.37940448696656,"ODE","Clinical incidence
+(per person-year)"
+33.3698630136986,1.40494350538756,"ODE","Clinical incidence
+(per person-year)"
+33.4520547945205,1.42841932346861,"ODE","Clinical incidence
+(per person-year)"
+33.5342465753425,1.44989337056419,"ODE","Clinical incidence
+(per person-year)"
+33.6164383561644,1.46943548649649,"ODE","Clinical incidence
+(per person-year)"
+33.6986301369863,1.48712251318723,"ODE","Clinical incidence
+(per person-year)"
+33.7808219178082,1.5030373466231,"ODE","Clinical incidence
+(per person-year)"
+33.8630136986301,1.51726825241775,"ODE","Clinical incidence
+(per person-year)"
+33.9452054794521,1.52990788898038,"ODE","Clinical incidence
+(per person-year)"
+34.027397260274,1.54105225518465,"ODE","Clinical incidence
+(per person-year)"
+34.1095890410959,1.55079958754696,"ODE","Clinical incidence
+(per person-year)"
+34.1917808219178,1.55924924159136,"ODE","Clinical incidence
+(per person-year)"
+34.2739726027397,1.56650059195933,"ODE","Clinical incidence
+(per person-year)"
+34.3561643835616,1.57265198363302,"ODE","Clinical incidence
+(per person-year)"
+34.4383561643836,1.57779976247888,"ODE","Clinical incidence
+(per person-year)"
+34.5205479452055,1.58203775146924,"ODE","Clinical incidence
+(per person-year)"
+34.6027397260274,1.58546187626902,"ODE","Clinical incidence
+(per person-year)"
+34.6849315068493,1.58814577596129,"ODE","Clinical incidence
+(per person-year)"
+34.7671232876712,1.59017493533235,"ODE","Clinical incidence
+(per person-year)"
+34.8493150684931,1.59162778501325,"ODE","Clinical incidence
+(per person-year)"
+34.9315068493151,1.59257833546107,"ODE","Clinical incidence
+(per person-year)"
+35.013698630137,1.59308021917658,"ODE","Clinical incidence
+(per person-year)"
+35.0958904109589,1.59319858654261,"ODE","Clinical incidence
+(per person-year)"
+35.1780821917808,1.5929884291242,"ODE","Clinical incidence
+(per person-year)"
+35.2602739726027,1.59249898279271,"ODE","Clinical incidence
+(per person-year)"
+35.3424657534247,1.59177445592461,"ODE","Clinical incidence
+(per person-year)"
+35.4246575342466,1.59085430031394,"ODE","Clinical incidence
+(per person-year)"
+35.5068493150685,1.58977352160358,"ODE","Clinical incidence
+(per person-year)"
+35.5890410958904,1.58856300021462,"ODE","Clinical incidence
+(per person-year)"
+35.6712328767123,1.58724981938859,"ODE","Clinical incidence
+(per person-year)"
+35.7534246575342,1.5858575935652,"ODE","Clinical incidence
+(per person-year)"
+35.8356164383562,1.58440679092645,"ODE","Clinical incidence
+(per person-year)"
+35.9178082191781,1.58291504498069,"ODE","Clinical incidence
+(per person-year)"
+0,38.1921216458635,"ODE","Severe incidence
+(per 1000 person-years)"
+0.0821917808219178,38.1921216458635,"ODE","Severe incidence
+(per 1000 person-years)"
+0.164383561643836,38.1921216458636,"ODE","Severe incidence
+(per 1000 person-years)"
+0.246575342465753,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+0.328767123287671,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+0.410958904109589,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+0.493150684931507,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+0.575342465753425,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+0.657534246575342,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+0.73972602739726,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+0.821917808219178,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+0.904109589041096,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+0.986301369863014,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+1.06849315068493,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+1.15068493150685,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+1.23287671232877,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+1.31506849315068,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+1.3972602739726,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+1.47945205479452,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+1.56164383561644,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+1.64383561643836,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+1.72602739726027,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+1.80821917808219,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+1.89041095890411,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+1.97260273972603,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+2.05479452054795,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+2.13698630136986,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+2.21917808219178,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+2.3013698630137,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+2.38356164383562,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+2.46575342465753,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+2.54794520547945,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+2.63013698630137,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+2.71232876712329,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+2.79452054794521,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+2.87671232876712,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+2.95890410958904,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+3.04109589041096,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+3.12328767123288,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+3.20547945205479,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+3.28767123287671,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+3.36986301369863,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+3.45205479452055,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+3.53424657534247,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+3.61643835616438,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+3.6986301369863,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+3.78082191780822,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+3.86301369863014,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+3.94520547945205,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+4.02739726027397,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+4.10958904109589,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+4.19178082191781,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+4.27397260273973,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+4.35616438356164,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+4.43835616438356,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+4.52054794520548,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+4.6027397260274,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+4.68493150684932,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+4.76712328767123,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+4.84931506849315,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+4.93150684931507,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+5.01369863013699,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+5.0958904109589,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+5.17808219178082,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+5.26027397260274,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+5.34246575342466,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+5.42465753424658,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+5.50684931506849,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+5.58904109589041,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+5.67123287671233,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+5.75342465753425,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+5.83561643835616,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+5.91780821917808,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+6,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+6.08219178082192,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+6.16438356164384,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+6.24657534246575,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+6.32876712328767,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+6.41095890410959,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+6.49315068493151,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+6.57534246575342,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+6.65753424657534,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+6.73972602739726,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+6.82191780821918,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+6.9041095890411,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+6.98630136986301,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+7.06849315068493,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+7.15068493150685,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+7.23287671232877,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+7.31506849315068,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+7.3972602739726,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+7.47945205479452,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+7.56164383561644,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+7.64383561643836,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+7.72602739726027,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+7.80821917808219,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+7.89041095890411,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+7.97260273972603,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+8.05479452054795,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+8.13698630136986,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+8.21917808219178,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+8.3013698630137,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+8.38356164383562,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+8.46575342465753,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+8.54794520547945,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+8.63013698630137,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+8.71232876712329,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+8.79452054794521,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+8.87671232876712,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+8.95890410958904,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+9.04109589041096,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+9.12328767123288,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+9.20547945205479,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+9.28767123287671,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+9.36986301369863,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+9.45205479452055,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+9.53424657534247,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+9.61643835616438,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+9.6986301369863,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+9.78082191780822,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+9.86301369863014,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+9.94520547945205,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+10.027397260274,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+10.1095890410959,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+10.1917808219178,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+10.2739726027397,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+10.3561643835616,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+10.4383561643836,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+10.5205479452055,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+10.6027397260274,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+10.6849315068493,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+10.7671232876712,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+10.8493150684932,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+10.9315068493151,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+11.013698630137,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+11.0958904109589,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+11.1780821917808,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+11.2602739726027,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+11.3424657534247,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+11.4246575342466,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+11.5068493150685,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+11.5890410958904,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+11.6712328767123,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+11.7534246575342,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+11.8356164383562,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+11.9178082191781,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+12,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+12.0821917808219,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+12.1643835616438,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+12.2465753424658,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+12.3287671232877,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+12.4109589041096,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+12.4931506849315,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+12.5753424657534,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+12.6575342465753,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+12.7397260273973,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+12.8219178082192,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+12.9041095890411,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+12.986301369863,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+13.0684931506849,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+13.1506849315068,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+13.2328767123288,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+13.3150684931507,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+13.3972602739726,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+13.4794520547945,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+13.5616438356164,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+13.6438356164384,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+13.7260273972603,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+13.8082191780822,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+13.8904109589041,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+13.972602739726,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+14.0547945205479,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+14.1369863013699,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+14.2191780821918,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+14.3013698630137,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+14.3835616438356,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+14.4657534246575,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+14.5479452054795,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+14.6301369863014,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+14.7123287671233,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+14.7945205479452,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+14.8767123287671,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+14.958904109589,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+15.041095890411,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+15.1232876712329,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+15.2054794520548,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+15.2876712328767,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+15.3698630136986,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+15.4520547945205,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+15.5342465753425,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+15.6164383561644,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+15.6986301369863,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+15.7808219178082,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+15.8630136986301,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+15.9452054794521,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+16.027397260274,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+16.1095890410959,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+16.1917808219178,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+16.2739726027397,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+16.3561643835616,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+16.4383561643836,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+16.5205479452055,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+16.6027397260274,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+16.6849315068493,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+16.7671232876712,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+16.8493150684932,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+16.9315068493151,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+17.013698630137,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+17.0958904109589,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+17.1780821917808,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+17.2602739726027,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+17.3424657534247,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+17.4246575342466,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+17.5068493150685,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+17.5890410958904,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+17.6712328767123,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+17.7534246575342,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+17.8356164383562,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+17.9178082191781,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+18,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+18.0821917808219,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+18.1643835616438,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+18.2465753424658,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+18.3287671232877,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+18.4109589041096,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+18.4931506849315,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+18.5753424657534,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+18.6575342465753,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+18.7397260273973,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+18.8219178082192,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+18.9041095890411,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+18.986301369863,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+19.0684931506849,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+19.1506849315068,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+19.2328767123288,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+19.3150684931507,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+19.3972602739726,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+19.4794520547945,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+19.5616438356164,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+19.6438356164384,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+19.7260273972603,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+19.8082191780822,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+19.8904109589041,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+19.972602739726,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+20.0547945205479,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+20.1369863013699,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+20.2191780821918,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+20.3013698630137,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+20.3835616438356,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+20.4657534246575,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+20.5479452054795,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+20.6301369863014,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+20.7123287671233,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+20.7945205479452,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+20.8767123287671,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+20.958904109589,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+21.041095890411,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+21.1232876712329,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+21.2054794520548,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+21.2876712328767,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+21.3698630136986,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+21.4520547945205,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+21.5342465753425,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+21.6164383561644,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+21.6986301369863,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+21.7808219178082,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+21.8630136986301,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+21.9452054794521,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+22.027397260274,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+22.1095890410959,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+22.1917808219178,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+22.2739726027397,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+22.3561643835616,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+22.4383561643836,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+22.5205479452055,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+22.6027397260274,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+22.6849315068493,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+22.7671232876712,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+22.8493150684932,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+22.9315068493151,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+23.013698630137,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+23.0958904109589,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+23.1780821917808,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+23.2602739726027,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+23.3424657534247,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+23.4246575342466,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+23.5068493150685,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+23.5890410958904,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+23.6712328767123,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+23.7534246575342,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+23.8356164383562,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+23.9178082191781,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+24,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+24.0821917808219,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+24.1643835616438,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+24.2465753424658,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+24.3287671232877,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+24.4109589041096,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+24.4931506849315,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+24.5753424657534,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+24.6575342465753,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+24.7397260273973,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+24.8219178082192,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+24.9041095890411,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+24.986301369863,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+25.0684931506849,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+25.1506849315068,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+25.2328767123288,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+25.3150684931507,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+25.3972602739726,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+25.4794520547945,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+25.5616438356164,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+25.6438356164384,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+25.7260273972603,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+25.8082191780822,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+25.8904109589041,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+25.972602739726,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+26.0547945205479,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+26.1369863013699,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+26.2191780821918,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+26.3013698630137,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+26.3835616438356,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+26.4657534246575,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+26.5479452054795,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+26.6301369863014,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+26.7123287671233,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+26.7945205479452,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+26.8767123287671,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+26.958904109589,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+27.041095890411,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+27.1232876712329,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+27.2054794520548,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+27.2876712328767,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+27.3698630136986,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+27.4520547945205,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+27.5342465753425,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+27.6164383561644,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+27.6986301369863,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+27.7808219178082,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+27.8630136986301,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+27.9452054794521,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+28.027397260274,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+28.1095890410959,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+28.1917808219178,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+28.2739726027397,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+28.3561643835616,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+28.4383561643836,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+28.5205479452055,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+28.6027397260274,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+28.6849315068493,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+28.7671232876712,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+28.8493150684932,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+28.9315068493151,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+29.013698630137,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+29.0958904109589,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+29.1780821917808,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+29.2602739726027,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+29.3424657534247,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+29.4246575342466,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+29.5068493150685,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+29.5890410958904,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+29.6712328767123,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+29.7534246575342,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+29.8356164383562,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+29.9178082191781,38.1921216458637,"ODE","Severe incidence
+(per 1000 person-years)"
+30,21.2689715946347,"ODE","Severe incidence
+(per 1000 person-years)"
+30.0821917808219,2.14555437350143,"ODE","Severe incidence
+(per 1000 person-years)"
+30.1643835616438,2.26758075359477,"ODE","Severe incidence
+(per 1000 person-years)"
+30.2465753424658,2.57007469089595,"ODE","Severe incidence
+(per 1000 person-years)"
+30.3287671232877,2.89743438439477,"ODE","Severe incidence
+(per 1000 person-years)"
+30.4109589041096,3.26050391087024,"ODE","Severe incidence
+(per 1000 person-years)"
+30.4931506849315,3.66771187755986,"ODE","Severe incidence
+(per 1000 person-years)"
+30.5753424657534,4.12793746265068,"ODE","Severe incidence
+(per 1000 person-years)"
+30.6575342465753,4.65078094298375,"ODE","Severe incidence
+(per 1000 person-years)"
+30.7397260273973,5.24675785933892,"ODE","Severe incidence
+(per 1000 person-years)"
+30.8219178082192,5.92731559426364,"ODE","Severe incidence
+(per 1000 person-years)"
+30.9041095890411,6.70453563386973,"ODE","Severe incidence
+(per 1000 person-years)"
+30.986301369863,7.59054654254232,"ODE","Severe incidence
+(per 1000 person-years)"
+31.0684931506849,8.59686061219727,"ODE","Severe incidence
+(per 1000 person-years)"
+31.1506849315068,9.73366776452282,"ODE","Severe incidence
+(per 1000 person-years)"
+31.2328767123288,11.0088828740109,"ODE","Severe incidence
+(per 1000 person-years)"
+31.3150684931507,12.4272134672461,"ODE","Severe incidence
+(per 1000 person-years)"
+31.3972602739726,13.9890557075881,"ODE","Severe incidence
+(per 1000 person-years)"
+31.4794520547945,15.6895556280374,"ODE","Severe incidence
+(per 1000 person-years)"
+31.5616438356164,17.5178676932461,"ODE","Severe incidence
+(per 1000 person-years)"
+31.6438356164384,19.4567907726593,"ODE","Severe incidence
+(per 1000 person-years)"
+31.7260273972603,21.4829319847519,"ODE","Severe incidence
+(per 1000 person-years)"
+31.8082191780822,23.5675126482245,"ODE","Severe incidence
+(per 1000 person-years)"
+31.8904109589041,25.6778392007068,"ODE","Severe incidence
+(per 1000 person-years)"
+31.972602739726,27.7793305002924,"ODE","Severe incidence
+(per 1000 person-years)"
+32.0547945205479,29.8378565924858,"ODE","Severe incidence
+(per 1000 person-years)"
+32.1369863013699,31.8220505332907,"ODE","Severe incidence
+(per 1000 person-years)"
+32.2191780821918,33.7052442760544,"ODE","Severe incidence
+(per 1000 person-years)"
+32.3013698630137,35.4667585853267,"ODE","Severe incidence
+(per 1000 person-years)"
+32.3835616438356,37.092449832756,"ODE","Severe incidence
+(per 1000 person-years)"
+32.4657534246575,38.5744735987545,"ODE","Severe incidence
+(per 1000 person-years)"
+32.5479452054795,39.9104427485282,"ODE","Severe incidence
+(per 1000 person-years)"
+32.6301369863014,41.1024865375805,"ODE","Severe incidence
+(per 1000 person-years)"
+32.7123287671233,42.1557478423387,"ODE","Severe incidence
+(per 1000 person-years)"
+32.7945205479452,43.0777645960927,"ODE","Severe incidence
+(per 1000 person-years)"
+32.8767123287671,43.8770989715951,"ODE","Severe incidence
+(per 1000 person-years)"
+32.958904109589,44.5627523734755,"ODE","Severe incidence
+(per 1000 person-years)"
+33.041095890411,45.1436998680714,"ODE","Severe incidence
+(per 1000 person-years)"
+33.1232876712329,45.6285950833616,"ODE","Severe incidence
+(per 1000 person-years)"
+33.2054794520548,46.0256286110027,"ODE","Severe incidence
+(per 1000 person-years)"
+33.2876712328767,46.3424847866552,"ODE","Severe incidence
+(per 1000 person-years)"
+33.3698630136986,46.5863574800277,"ODE","Severe incidence
+(per 1000 person-years)"
+33.4520547945205,46.7639918770965,"ODE","Severe incidence
+(per 1000 person-years)"
+33.5342465753425,46.8817205240431,"ODE","Severe incidence
+(per 1000 person-years)"
+33.6164383561644,46.9455517403527,"ODE","Severe incidence
+(per 1000 person-years)"
+33.6986301369863,46.9611785111041,"ODE","Severe incidence
+(per 1000 person-years)"
+33.7808219178082,46.9339945946363,"ODE","Severe incidence
+(per 1000 person-years)"
+33.8630136986301,46.8691110457323,"ODE","Severe incidence
+(per 1000 person-years)"
+33.9452054794521,46.7713570588062,"ODE","Severe incidence
+(per 1000 person-years)"
+34.027397260274,46.6452748755972,"ODE","Severe incidence
+(per 1000 person-years)"
+34.1095890410959,46.4951117080143,"ODE","Severe incidence
+(per 1000 person-years)"
+34.1917808219178,46.3248113777839,"ODE","Severe incidence
+(per 1000 person-years)"
+34.2739726027397,46.1380077317943,"ODE","Severe incidence
+(per 1000 person-years)"
+34.3561643835616,45.9380212233058,"ODE","Severe incidence
+(per 1000 person-years)"
+34.4383561643836,45.7278594270512,"ODE","Severe incidence
+(per 1000 person-years)"
+34.5205479452055,45.5102316190844,"ODE","Severe incidence
+(per 1000 person-years)"
+34.6027397260274,45.2877104336696,"ODE","Severe incidence
+(per 1000 person-years)"
+34.6849315068493,45.06205921977,"ODE","Severe incidence
+(per 1000 person-years)"
+34.7671232876712,44.8352556315928,"ODE","Severe incidence
+(per 1000 person-years)"
+34.8493150684931,44.6089612570054,"ODE","Severe incidence
+(per 1000 person-years)"
+34.9315068493151,44.3846217828127,"ODE","Severe incidence
+(per 1000 person-years)"
+35.013698630137,44.163049106592,"ODE","Severe incidence
+(per 1000 person-years)"
+35.0958904109589,43.9453434093052,"ODE","Severe incidence
+(per 1000 person-years)"
+35.1780821917808,43.7322904957603,"ODE","Severe incidence
+(per 1000 person-years)"
+35.2602739726027,43.5245043199619,"ODE","Severe incidence
+(per 1000 person-years)"
+35.3424657534247,43.3224605883018,"ODE","Severe incidence
+(per 1000 person-years)"
+35.4246575342466,43.1265145405739,"ODE","Severe incidence
+(per 1000 person-years)"
+35.5068493150685,42.9369175980426,"ODE","Severe incidence
+(per 1000 person-years)"
+35.5890410958904,42.7538323276746,"ODE","Severe incidence
+(per 1000 person-years)"
+35.6712328767123,42.5773458982268,"ODE","Severe incidence
+(per 1000 person-years)"
+35.7534246575342,42.4074820999534,"ODE","Severe incidence
+(per 1000 person-years)"
+35.8356164383562,42.2442120020809,"ODE","Severe incidence
+(per 1000 person-years)"
+35.9178082191781,42.0874633313299,"ODE","Severe incidence
+(per 1000 person-years)"

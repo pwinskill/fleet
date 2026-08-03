@@ -1,0 +1,12 @@
+^comparison$
+^_pkgdown\.yml$
+^\.github$
+^pkgdown$
+^docs$
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.git$
+^\.gitignore$
+^LICENSE\.md$
+^cran-comments\.md$
+^\.vscode$

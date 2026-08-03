@@ -1,0 +1,228 @@
+/* =========================================================================
+   malariaode pkgdown theme — "malaria sunset"
+   Warm sunset corals + ambers paired with deep teal + indigo.
+   Colourful and fun, but legible and colourblind-safe in light AND dark mode.
+   Everything colour-critical is driven by CSS custom properties that are
+   redefined for [data-bs-theme="dark"], so both modes stay readable.
+   ========================================================================= */
+
+/* ---- Palette (Sass) ---------------------------------------------------- */
+$mo-coral:        #ff6b5c;
+$mo-coral-deep:   #d94a37;
+$mo-amber:        #ffb020;
+$mo-amber-deep:   #f59e0b;
+$mo-teal:         #0e9c92;
+$mo-teal-deep:    #0e7c7b;
+$mo-indigo:       #4338ca;
+$mo-indigo-deep:  #312e81;
+$mo-indigo-soft:  #a5b4fc;
+
+/* ---- Theme-aware custom properties ------------------------------------- */
+:root {
+  --mo-coral:  #{$mo-coral};
+  --mo-amber:  #{$mo-amber};
+  --mo-teal:   #{$mo-teal};
+  --mo-indigo: #{$mo-indigo};
+
+  --mo-link:        #{$mo-indigo};
+  --mo-link-hover:  #{$mo-coral-deep};
+  --mo-heading:     #1f2350;
+  --mo-code-color:  #b5179e;
+  --mo-code-bg:     #fff2f7;
+  --mo-callout-bg:  #fff6ec;
+  --mo-callout-bd:  #{$mo-coral};
+  --mo-card-bg:     #ffffff;
+  --mo-card-shadow: 0 .35rem 1.1rem rgba(49, 46, 129, .10);
+  --mo-rule:        linear-gradient(90deg, #{$mo-coral}, #{$mo-amber});
+  --mo-hero:        linear-gradient(120deg, #{$mo-indigo} 0%, #{$mo-teal} 55%, #{$mo-coral} 100%);
+  --mo-navbar:      linear-gradient(120deg, #312e81 0%, #3b2f9e 42%, #0e7c7b 100%);
+  --mo-glow-warm:   rgba(255, 176, 32, .07);
+  --mo-glow-cool:   rgba(67, 56, 202, .07);
+}
+
+[data-bs-theme="dark"] {
+  --mo-link:        #{$mo-indigo-soft};
+  --mo-link-hover:  #ffb884;
+  --mo-heading:     #eef0ff;
+  --mo-code-color:  #ff9ecb;
+  --mo-code-bg:     rgba(255, 107, 92, .12);
+  --mo-callout-bg:  rgba(255, 176, 32, .09);
+  --mo-callout-bd:  #{$mo-amber};
+  --mo-card-bg:     #1b1e2b;
+  --mo-card-shadow: 0 .35rem 1.1rem rgba(0, 0, 0, .45);
+  --mo-hero:        linear-gradient(120deg, #a5b4fc 0%, #34d3c6 55%, #ffb884 100%);
+  --mo-navbar:      linear-gradient(120deg, #1e1b4b 0%, #2a2566 45%, #0b5e63 100%);
+  --mo-glow-warm:   rgba(255, 176, 32, .10);
+  --mo-glow-cool:   rgba(99, 102, 241, .12);
+}
+
+/* ---- Subtle full-page aurora (both modes) ------------------------------ */
+body {
+  background-image:
+    radial-gradient(1100px 420px at 100% -8%, var(--mo-glow-warm), transparent 60%),
+    radial-gradient(900px 380px at -8% 0%,   var(--mo-glow-cool), transparent 55%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* ---- Links ------------------------------------------------------------- */
+main a {
+  color: var(--mo-link);
+  text-decoration-color: color-mix(in srgb, var(--mo-link) 40%, transparent);
+  text-underline-offset: .15em;
+}
+main a:hover,
+main a:focus {
+  color: var(--mo-link-hover);
+  text-decoration-color: currentColor;
+}
+
+/* ---- Headings ---------------------------------------------------------- */
+main h1, main h2, main h3, main h4 {
+  color: var(--mo-heading);
+  letter-spacing: .1px;
+}
+main h2 {
+  padding-bottom: .2rem;
+}
+main h2::after {
+  content: "";
+  display: block;
+  width: 2.6rem;
+  height: .22rem;
+  margin-top: .35rem;
+  border-radius: 1rem;
+  background: var(--mo-rule);
+}
+
+/* ---- Home hero: gradient wordmark title -------------------------------- */
+.template-home main > h1:first-of-type,
+.template-home .page-header h1 {
+  font-size: clamp(2.3rem, 5.5vw, 3.6rem);
+  line-height: 1.05;
+  background: var(--mo-hero);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.template-home main > h1:first-of-type::after {
+  content: none;                 /* no rule under the big hero title */
+}
+/* Larger, softer lead paragraph on the home page */
+.template-home main > p:first-of-type,
+.template-home .lead {
+  font-size: 1.12rem;
+}
+
+/* ---- Page headers (reference / articles) ------------------------------- */
+.page-header {
+  border-bottom: 2px solid transparent;
+  border-image: var(--mo-rule) 1;
+}
+
+/* ---- Navbar: bold sunset-to-teal gradient ------------------------------ */
+.navbar {
+  background-image: var(--mo-navbar) !important;
+  box-shadow: 0 .15rem .6rem rgba(31, 35, 80, .18);
+}
+.navbar .navbar-brand,
+.navbar .nav-link,
+.navbar .navbar-toggler-icon { color: #fff; }
+.navbar .nav-link { position: relative; font-weight: 600; }
+.navbar .nav-link:hover,
+.navbar .nav-link:focus { color: #ffd27a; }
+.navbar .nav-link::after {
+  content: "";
+  position: absolute;
+  left: .6rem; right: .6rem; bottom: .3rem;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--mo-coral), var(--mo-amber));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .18s ease;
+}
+.navbar .nav-link:hover::after,
+.navbar .nav-link.active::after { transform: scaleX(1); }
+/* Keep the search box + light-switch legible on the gradient */
+.navbar .form-control { background: rgba(255, 255, 255, .92); }
+
+/* ---- Inline code ------------------------------------------------------- */
+main :not(pre) > code {
+  color: var(--mo-code-color);
+  background: var(--mo-code-bg);
+  padding: .12em .38em;
+  border-radius: .35rem;
+  font-size: .875em;
+}
+/* Linked code (e.g. cross-references) reads as a link, not plain code */
+main a > code { color: inherit; background: transparent; padding: 0; }
+
+/* ---- Code blocks ------------------------------------------------------- */
+main div.sourceCode,
+main pre {
+  border-radius: .6rem;
+  border: 1px solid var(--bs-border-color);
+  box-shadow: var(--mo-card-shadow);
+}
+main pre { padding: .9rem 1rem; }
+
+/* ---- Callouts / blockquotes / alerts ----------------------------------- */
+main blockquote,
+main .alert {
+  border: 1px solid transparent;
+  border-left: .35rem solid var(--mo-callout-bd);
+  background: var(--mo-callout-bg);
+  border-radius: .55rem;
+  padding: .8rem 1rem;
+}
+main blockquote > :last-child { margin-bottom: 0; }
+
+/* ---- Cards (home sidebar, layouts) ------------------------------------- */
+.card {
+  background: var(--mo-card-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: .75rem;
+  box-shadow: var(--mo-card-shadow);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 .6rem 1.4rem rgba(49, 46, 129, .16);
+}
+
+/* ---- Buttons ----------------------------------------------------------- */
+.btn-primary {
+  background-image: linear-gradient(120deg, var(--mo-indigo), #6d5ee6);
+  border: none;
+}
+.btn-primary:hover,
+.btn-primary:focus { filter: brightness(1.07); }
+.btn-outline-primary { border-color: var(--mo-indigo); color: var(--mo-link); }
+
+/* ---- Reference index: function names pop ------------------------------- */
+.ref-index td:first-child code a,
+.template-reference-index .ref-index .icon + a { font-weight: 600; }
+
+/* ---- Home sidebar: friendly section headings --------------------------- */
+.template-home aside .h2,
+.template-home aside h2 {
+  font-size: 1.05rem;
+  color: var(--mo-teal-deep, #0e7c7b);
+}
+
+/* ---- Tables ------------------------------------------------------------ */
+main table.table thead th {
+  background: color-mix(in srgb, var(--mo-teal) 12%, var(--bs-body-bg));
+  border-bottom: 2px solid color-mix(in srgb, var(--mo-teal) 45%, transparent);
+}
+
+/* ---- Footer: colourful top rule ---------------------------------------- */
+footer {
+  border-top: 3px solid transparent;
+  border-image: linear-gradient(90deg, var(--mo-coral), var(--mo-amber), var(--mo-teal)) 1;
+  margin-top: 2.5rem;
+}
+
+/* ---- Text selection ---------------------------------------------------- */
+::selection { background: rgba(255, 176, 32, .35); }

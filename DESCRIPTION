@@ -1,0 +1,44 @@
+Package: malariaode
+Title: Mean-Field (ODE) Twin of the 'malariasimulation' Malaria Model
+Version: 0.0.0.9000
+Authors@R: c(
+  person("Peter", "Winskill", role = c("aut", "cre"), email = "p.winskill@imperial.ac.uk"))
+Description: Provides a fast, deterministic mean-field (ordinary differential
+  equation) counterpart to the 'malariasimulation' individual-based model of
+  Plasmodium falciparum malaria. The human population is structured by age and
+  biting heterogeneity with the full acquired- and maternal-immunity model,
+  coupled to a compartmental larval-and-adult mosquito model and driven by the
+  same intervention modules: clinical treatment and antimalarial resistance,
+  bed nets and indoor residual spraying, chemoprevention (MDA, SMC, PMC),
+  pre-erythrocytic and transmission-blocking vaccines, seasonality, and custom
+  demography. It accepts an unmodified 'malariasimulation' parameter list, is
+  seeded at and validated against the 'malariaEquilibrium' fixed point, and
+  returns 'malariasimulation'-style outputs that feed directly into 'postie'.
+  Built on the 'odin2' and 'dust2' stack, a single multi-decade run completes in
+  seconds, independent of population size.
+License: MIT + file LICENSE
+URL: https://pwinskill.github.io/malariaode, https://github.com/pwinskill/malariaode
+BugReports: https://github.com/pwinskill/malariaode/issues
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+VignetteBuilder: knitr
+Remotes:
+    mrc-ide/odin2,
+    mrc-ide/dust2,
+    mrc-ide/malariaEquilibrium,
+    mrc-ide/malariasimulation,
+    mrc-ide/postie
+Imports:
+    odin2,
+    dust2,
+    malariaEquilibrium,
+    stats
+Suggests:
+    malariasimulation,
+    postie,
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Config/Needs/website: pkgdown

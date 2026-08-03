@@ -1,0 +1,83 @@
+url: https://pwinskill.github.io/malariaode
+
+template:
+  bootstrap: 5
+  light-switch: true
+  # Colourful-but-legible syntax highlighting, in light and dark flavours.
+  theme: arrow-light
+  theme-dark: arrow-dark
+  bslib:
+    # --- Fun, friendly, readable type ---
+    heading_font: {google: "Baloo 2"}      # rounded, cheerful display font
+    base_font: {google: "Nunito Sans"}     # clean, highly legible body font
+    code_font: {google: "Fira Code"}       # crisp monospace with ligatures
+    # --- Core colours (sunset coral/amber + deep teal/indigo) ---
+    primary: "#4338CA"                      # deep indigo: links, buttons, active nav
+    secondary: "#0E7C7B"                    # deep teal accent
+    success: "#0E9C92"
+    info: "#0E7C7B"
+    warning: "#F59E0B"
+    danger: "#E5533F"
+    # --- Rounded, friendly shapes ---
+    border-radius: "0.6rem"
+    btn-border-radius: "0.5rem"
+    # --- A deep-indigo navbar in both light and dark (gradient added in SCSS) ---
+    navbar-bg: "#312E81"
+
+navbar:
+  structure:
+    left:  [intro, reference, articles, news]
+    right: [search, lightswitch, github]
+  components:
+    intro:
+      text: Get started
+      href: articles/malariaode.html
+    github:
+      icon: fab fa-github
+      href: https://github.com/pwinskill/malariaode
+      aria-label: GitHub repository
+
+home:
+  title: malariaode • a fast ODE twin of malariasimulation
+  description: >
+    A fast, deterministic mean-field (ODE) counterpart to the malariasimulation
+    individual-based model of Plasmodium falciparum malaria, built on odin2 / dust2.
+  sidebar:
+    structure: [glance, links, citation, license, authors, dev]
+    components:
+      glance:
+        title: At a glance
+        text: >
+          A single multi-decade run finishes in **seconds**, independent of
+          population size. Feed it an unmodified `malariasimulation` parameter
+          list and get `postie`-style outputs straight back.
+
+articles:
+- title: Articles
+  navbar: ~
+  contents:
+  - malariaode
+
+reference:
+- title: Run the model
+  desc: >
+    Simulate malaria transmission dynamics with the deterministic mean-field
+    ODE model.
+  contents:
+  - run_simulation_ode
+- title: Post-process outputs
+  desc: >
+    Turn a raw run into tidy, postie-style epidemiological outputs
+    (prevalence, incidence, and rates).
+  contents:
+  - get_epi_outputs
+- title: Age grid
+  desc: >
+    The default graded age discretisation used throughout the model.
+  contents:
+  - default_age_lower
+- title: Package overview
+  desc: >
+    Background, scope, and pointers to the mean-field approximations.
+  contents:
+  - malariaode-package
