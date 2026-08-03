@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 181 209" width="181" height="209" role="img" aria-label="blink hex logo: a mosquito over a sunset with a smooth ODE epidemic curve"><metadata><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/"><rdf:Description><dc:creator>RealFaviconGenerator</dc:creator><dc:source>https://realfavicongenerator.net</dc:source></rdf:Description></rdf:RDF></metadata><title>blink</title><defs>
+    <!-- Sunset sky: indigo night at the top fading to a coral horizon -->
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#23255f"></stop>
+      <stop offset="0.36" stop-color="#3a2f92"></stop>
+      <stop offset="0.60" stop-color="#7a3f8f"></stop>
+      <stop offset="0.80" stop-color="#d1567a"></stop>
+      <stop offset="1" stop-color="#ff7e5f"></stop>
+    </linearGradient>
+    <!-- Glowing setting sun -->
+    <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffe9a8"></stop>
+      <stop offset="0.45" stop-color="#ffc247"></stop>
+      <stop offset="1" stop-color="#ff7e5f" stop-opacity="0"></stop>
+    </radialGradient>
+    <!-- Teal "landscape" hills -->
+    <linearGradient id="hillBack" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#12657a"></stop>
+      <stop offset="1" stop-color="#0e4f5e"></stop>
+    </linearGradient>
+    <linearGradient id="hillFront" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0e7c7b"></stop>
+      <stop offset="1" stop-color="#093f45"></stop>
+    </linearGradient>
+    <!-- The ODE curve: bright amber-to-coral -->
+    <linearGradient id="ode" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffe08a"></stop>
+      <stop offset="0.5" stop-color="#ffb020"></stop>
+      <stop offset="1" stop-color="#ff6b5c"></stop>
+    </linearGradient>
+    <!-- Fun tri-colour hex rim -->
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff6b5c"></stop>
+      <stop offset="0.5" stop-color="#ffb020"></stop>
+      <stop offset="1" stop-color="#12b6a8"></stop>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-60%" width="160%" height="240%">
+      <feGaussianBlur stdDeviation="2.2" result="b"></feGaussianBlur>
+      <feMerge>
+        <feMergeNode in="b"></feMergeNode>
+        <feMergeNode in="SourceGraphic"></feMergeNode>
+      </feMerge>
+    </filter>
+    <filter id="soft" x="-30%" y="-40%" width="160%" height="200%">
+      <feDropShadow dx="0" dy="1.2" stdDeviation="1.2" flood-color="#0a1626" flood-opacity="0.55"></feDropShadow>
+    </filter>
+    <clipPath id="hexClip">
+      <path d="M90.5,6 L175,53.5 L175,155.5 L90.5,203 L6,155.5 L6,53.5 Z"></path>
+    </clipPath>
+  </defs><g clip-path="url(#hexClip)">
+    <rect x="0" y="0" width="181" height="209" fill="url(#sky)"></rect>
+
+    <!-- Stars -->
+    <g fill="#fff6e6">
+      <circle cx="34" cy="34" r="1.3" opacity="0.9"></circle>
+      <circle cx="58" cy="24" r="1" opacity="0.7"></circle>
+      <circle cx="150" cy="40" r="1.2" opacity="0.85"></circle>
+      <circle cx="128" cy="26" r="0.9" opacity="0.65"></circle>
+      <circle cx="96" cy="20" r="1" opacity="0.8"></circle>
+      <circle cx="20" cy="70" r="1" opacity="0.6"></circle>
+    </g>
+
+    <!-- Setting sun -->
+    <circle cx="128" cy="108" r="46" fill="url(#sun)"></circle>
+    <circle cx="128" cy="108" r="20" fill="#ffd782" opacity="0.95"></circle>
+
+    <!-- Faint companion ODE solution -->
+    <path d="M2,140 C34,140 44,139 62,131 C78,124 88,92 108,92 C128,92 136,134 156,137 C165,138 172,137 180,137" fill="none" stroke="#7fe8db" stroke-width="2" stroke-linecap="round" opacity="0.5"></path>
+
+    <!-- The star of the show: a smooth ODE epidemic curve -->
+    <path d="M2,132 C30,132 40,130 58,120 C74,111 82,66 102,66 C122,66 132,116 150,128 C162,135 170,133 180,133" fill="none" stroke="url(#ode)" stroke-width="4" stroke-linecap="round" filter="url(#glow)"></path>
+    <circle cx="102" cy="66" r="3.2" fill="#fff3d6" stroke="#ff8a3c" stroke-width="1.4"></circle>
+
+    <!-- Landscape hills (dark band that also backs the wordmark) -->
+    <path d="M0,136 C30,126 55,138 90,136 C125,134 150,127 181,135 L181,209 L0,209 Z" fill="url(#hillBack)"></path>
+    <path d="M0,146 C40,136 70,148 100,145 C135,142 160,150 181,145 L181,209 L0,209 Z" fill="url(#hillFront)"></path>
+
+    <!-- Mosquito -->
+    <g transform="translate(50,50) rotate(-18)" filter="url(#soft)">
+      <g stroke="#ffe9d6" stroke-width="1.1" stroke-linecap="round" opacity="0.95" fill="none">
+        <path d="M-2,2 C-6,7 -10,10 -15,11"></path>
+        <path d="M-1,2 C-4,8 -6,13 -8,17"></path>
+        <path d="M4,2 C4,8 5,13 7,17"></path>
+        <path d="M5,1 C9,6 13,8 18,9"></path>
+        <path d="M2,2 C0,9 -1,14 -3,18"></path>
+        <path d="M6,1 C10,4 13,5 17,4"></path>
+      </g>
+      <!-- wings -->
+      <ellipse cx="2" cy="-6" rx="10" ry="3.4" fill="#fff6ec" opacity="0.55" transform="rotate(-24 2 -6)"></ellipse>
+      <ellipse cx="6" cy="-6" rx="10" ry="3.4" fill="#fff6ec" opacity="0.45" transform="rotate(-8 6 -6)"></ellipse>
+      <!-- body -->
+      <ellipse cx="7" cy="0" rx="9.5" ry="3.1" fill="#ffe9d6"></ellipse>
+      <circle cx="-3" cy="0" r="3.1" fill="#ffe9d6"></circle>
+      <circle cx="-8" cy="-1" r="2.2" fill="#ffe9d6"></circle>
+      <!-- proboscis -->
+      <line x1="-10" y1="-1" x2="-20" y2="-3" stroke="#ffe9d6" stroke-width="1.2" stroke-linecap="round"></line>
+    </g>
+
+    <!-- Wordmark, sitting on the dark hill band -->
+    <g filter="url(#soft)">
+      <text x="90.5" y="168" text-anchor="middle" font-family="'Baloo 2','Nunito Sans','Trebuchet MS',Verdana,sans-serif" font-weight="800" font-size="17" letter-spacing="0.2">
+        <tspan fill="#fff4e6">malaria</tspan><tspan fill="#ffc46b">ode</tspan>
+      </text>
+    </g>
+  </g><path d="M90.5,6 L175,53.5 L175,155.5 L90.5,203 L6,155.5 L6,53.5 Z" fill="none" stroke="url(#rim)" stroke-width="7" stroke-linejoin="round"></path><path d="M90.5,12 L169.8,56.6 L169.8,152.4 L90.5,197 L11.2,152.4 L11.2,56.6 Z" fill="none" stroke="#ffffff" stroke-opacity="0.18" stroke-width="1.4" stroke-linejoin="round"></path></svg>

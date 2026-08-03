@@ -1,0 +1,341 @@
+# blink
+
+> A fast, deterministic **mean-field (ODE) twin** of the
+> [malariasimulation](https://github.com/mrc-ide/malariasimulation)
+> individual-based model of *Plasmodium falciparum* malaria — same
+> inputs, seconds per run, population-independent.
+
+## What it is
+
+`blink` reproduces the Griffin-style, age- and
+biting-heterogeneity-structured human model — states
+`S / D / A / U / Tr` plus two prophylaxis compartments (`Ph`,
+treatment-linked, and `Ph_c`, chemoprevention) and the six immunity
+functions `IB / ICA / ICM / ID / IVA / IVM` — coupled to the
+compartmental mosquito model (`E / L / P / Sm / EIP-chain / Im` per
+species). It is written in [odin2](https://github.com/mrc-ide/odin2) /
+[dust2](https://github.com/mrc-ide/dust2).
+
+It exists to give the malariasimulation ecosystem a **deterministic,
+Monte-Carlo-free companion** that:
+
+- **Takes the same inputs as the IBM.**
+  [`run_simulation_ode()`](https://pwinskill.github.io/blink/reference/run_simulation_ode.md)
+  accepts a
+  [`malariasimulation::get_parameters()`](https://rdrr.io/pkg/malariasimulation/man/get_parameters.html)
+  list (with the usual `set_*` intervention builders layered on)
+  unchanged. *P. falciparum only.*
+- **Is seeded at, and validated against, equilibrium.** Initial
+  conditions come from `malariaEquilibrium`; with no interventions the
+  model holds flat at that equilibrium to machine precision, and
+  reproduces the IBM’s equilibrium PfPR within the IBM’s Monte-Carlo
+  error.
+- **Produces postie-compatible outputs.** The returned wide count table
+  feeds straight into
+  [`postie::get_rates()`](https://rdrr.io/pkg/postie/man/get_rates.html)
+  /
+  [`postie::get_prevalence()`](https://rdrr.io/pkg/postie/man/get_prevalence.html);
+  [`get_epi_outputs()`](https://pwinskill.github.io/blink/reference/get_epi_outputs.md)
+  returns both as a list.
+- **Is fast and population-independent.** All human/mosquito
+  compartments are per-capita densities, so a 20-year daily run takes on
+  the order of a couple of seconds regardless of the modelled population
+  size.
+
+Reach for the IBM instead when you need stochastic variation, individual
+heterogeneity beyond the mean field, or *P. vivax*.
+
+## Install
+
+``` r
+
+# install.packages("remotes")
+remotes::install_github("pwinskill/blink")
+```
+
+The GitHub-only core dependencies (`odin2`, `dust2`,
+`malariaEquilibrium`) are pulled automatically from `DESCRIPTION`
+`Remotes`. The examples below also need two suggested packages:
+
+``` r
+
+remotes::install_github(c("mrc-ide/malariasimulation", "mrc-ide/postie"))
+```
+
+`malariasimulation` is used to build the parameter list; `postie` powers
+[`get_epi_outputs()`](https://pwinskill.github.io/blink/reference/get_epi_outputs.md).
+
+## Quick start
+
+``` r
+
+library(blink)
+
+p <- malariasimulation::get_parameters()
+
+# 10-year daily wide count table (malariasimulation-style columns)
+out <- run_simulation_ode(timesteps = 3650, parameters = p, init_EIR = 20)
+
+# postie-format rates (long) and prevalence (wide)
+epi <- get_epi_outputs(out)
+
+epi$prevalence$lm_prevalence_2_10
+epi$rates[, c("time", "age_lower", "age_upper", "clinical", "severe", "dalys")]
+```
+
+The output has `timesteps + 1` rows: row 1 is the seeded equilibrium
+(day 0), rows 2..N are integrated days. Incidence columns
+(`n_inc_clinical_*`, `n_inc_severe_*`) are **per-day counts** — pass the
+table to postie unthinned.
+
+Layer interventions with the ordinary malariasimulation builders and
+re-run; everything is applied automatically from the parameter list (no
+extra arguments):
+
+``` r
+
+p <- malariasimulation::set_drugs(p, list(malariasimulation::AL_params))
+p <- malariasimulation::set_clinical_treatment(p, drug = 1, timesteps = 1, coverages = 0.4)
+p <- malariasimulation::set_bednets(
+  p, timesteps = 365, coverages = 0.6, retention = 3 * 365,
+  dn0 = matrix(0.387, 1, 1), rn = matrix(0.563, 1, 1),
+  rnm = matrix(0.24, 1, 1), gamman = 2.64 * 365)
+
+out <- run_simulation_ode(timesteps = 3650, parameters = p, init_EIR = 20)
+```
+
+If you have already called
+[`malariasimulation::set_equilibrium()`](https://rdrr.io/pkg/malariasimulation/man/set_equilibrium.html),
+`init_EIR` is read from the parameter list and can be omitted. For a
+step-by-step tour see
+[`vignette("blink")`](https://pwinskill.github.io/blink/articles/blink.md).
+
+### Exported functions
+
+| Function | Purpose |
+|----|----|
+| [`run_simulation_ode()`](https://pwinskill.github.io/blink/reference/run_simulation_ode.md) | Run the model; returns a wide, malariasimulation-style daily count table. |
+| [`get_epi_outputs()`](https://pwinskill.github.io/blink/reference/get_epi_outputs.md) | Post-process a run into postie `rates` (long) + `prevalence` (wide). |
+| [`default_age_lower()`](https://pwinskill.github.io/blink/reference/default_age_lower.md) | The default graded age grid (fine in infancy, coarse in adulthood). |
+
+## Feature support
+
+Everything malariasimulation models for *P. falciparum* is represented,
+each seeded so the equilibrium is preserved until the intervention’s
+scheduled start.
+
+| Module | Status | How it is modelled |
+|----|----|----|
+| Core transmission (human + mosquito + 6 immunity functions) | ✅ Full | odin2 ODEs over `[age, heterogeneity]` |
+| Biting heterogeneity | ✅ Full | Gauss–Hermite log-normal nodes (`n_heterogeneity_groups`) |
+| Custom demography (`set_demography`) | ✅ Full¹ | Age-specific mortality → equilibrium age structure |
+| Clinical treatment (time-varying, multi-drug) | ✅ Full | Summed coverage `ft(t)`; drug-linked efficacy/infectivity/prophylaxis |
+| Antimalarial resistance | ✅ Full² | Early-treatment-failure + slow-parasite-clearance, coverage-weighted |
+| Bed nets | ✅ Full³ | Mean-field per-species `a(t)`, `mu(t)` |
+| IRS (spraying) | ✅ Full | Mean-field per-species `a(t)`, `mu(t)` |
+| Chemoprevention (MDA / SMC / PMC) | ✅ Full | Pulsed mass drug administration between ODE segments |
+| Vaccines — PEV (RTS,S / R21, EPI + mass, boosters) | ✅ Full | Per-(age, time) infection-hazard multiplier |
+| Vaccines — TBV | ✅ Full | Per-infection-state transmission-blocking (TBA) |
+| Seasonality + flexible carrying capacity | ✅ Full | Fourier rainfall drives larval `K(t)` |
+| **P. vivax** | ⛔ Not supported | Rejected at input |
+| **Individual-mosquito path** | ⛔ N/A | Model is always compartmental |
+
+¹ Age-specific mortality is **time-varying**: `mu_age(t)` is
+interpolated over `deathrate_timesteps`, and the baseline (`t = 0`) row
+seeds the equilibrium age structure. Match
+`default_age_lower(max_age =)` to the top `deathrate_agegroups` (see
+Approximations). ² The two arms malariasimulation actually implements.
+Its partner-drug and late-failure / reinfection-during-prophylaxis arms
+are individual-level and are rejected upstream by
+`set_antimalarial_resistance`, so they never reach this model. ³ Both
+exponential (log-uniform) and logistic net retention are supported. With
+repeated distributions, net usage is the full mean-field mixture over
+all past distributions (most-recent-receipt × retention survival), not
+just the latest.
+
+## Mean-field approximations
+
+The model is honest about where and how much it departs from the IBM.
+Every item below is **exact at equilibrium**; the caveats concern
+transient dynamics or diagnostic conventions.
+
+**Numerics & lags.** The human EIR/FOIM lags and the mosquito EIP are
+implemented as Erlang (linear-chain) filters rather than `delay()` —
+robust, pure-ODE, and exact at equilibrium. Stage counts (`n_eir`,
+`n_foim`, `n_eip`; defaults 10 / 10 / 20) are tunable: larger values
+sharpen the gamma-shaped lags toward the IBM’s fixed delays. The
+disease-state seed re-solves the prophylaxis aging recursion with a
+corrected `bP` term (upstream
+[`malariaEquilibrium::human_equilibrium_no_het`](https://rdrr.io/pkg/malariaEquilibrium/man/human_equilibrium_no_het.html)
+has a small artifact), so the model holds flat even under treatment
+(`ft > 0`).
+
+**Treatment & resistance.** Drug prophylaxis is a **single mean-duration
+compartment** (the Weibull is represented by its mean, so decay is
+exponential rather than the sharper Weibull), and slow parasite
+clearance a **blended treated-recovery rate** (not two
+sub-compartments); both are equilibrium-exact, transient-approximate.
+Antimalarial resistance (early-treatment-failure and
+slow-parasite-clearance) is blended across all treatment drugs by their
+share of treatment and also applies to a drug used for chemoprevention
+(SMC/MDA/PMC). The multi-drug blend uses fixed **peak-coverage**
+weights, so a first-line **switch** (several clinical drugs whose
+relative shares change over time) is approximated by a constant drug
+mixture — **warned**, and exact for a single drug or constant shares.
+
+**Vector control.** Net/IRS efficacy is population-averaged over the
+net-using / sprayed fractions into per-species `a(t)`, `mu(t)`. Both
+exponential (log-uniform) and logistic net retention are supported, and
+**repeated distributions accumulate** as the full mean-field mixture
+over all past rounds (each weighted by most-recent-receipt probability,
+with its own net-age efficacy decay); IRS accumulates the same way but
+without a retention factor (sprayed protection never expires in the
+IBM). Because coverage is population-averaged rather than
+per-individual, under nets/IRS the ODE tends to **under-suppress**
+transmission relative to the IBM through the intervention era (the
+correlated protection of the same individuals across bites is a
+mean-field gap; larger than the ≤ ~5% single-round equilibrium bias).
+
+**Chemoprevention.** MDA/SMC/PMC are applied as **pulses between ODE
+segments**: a fraction (coverage × drug efficacy × (1 − resistance ETF))
+of the target age band is cleared and moved to the chemoprevention
+prophylaxis compartment `Ph_c`. The target band is mapped onto the model
+age groups by **fractional overlap**, so narrow bands (e.g. PMC dose
+ages) are captured rather than dropped and coarse groups are not
+over-treated. Co-deployed chemoprevention types share a
+coverage-weighted `Ph_c` decay. PMC (age-triggered in the IBM) is
+approximated as ~monthly pulses over each dose-age band; pulses take
+effect the day **after** their scheduled timestep.
+
+**Vaccines.** PEV reduces the infection hazard by a per-age, per-time
+factor built from the profile’s **point-estimate (median) antibody
+trajectory** → Hill efficacy curve (any `create_pev_profile()`,
+including RTS,S and R21; individual antibody variation is not modelled —
+for R21 this can overstate efficacy by ~5 pp). The **full booster
+sequence** is modelled — the vaccinated are partitioned by the most
+recent booster each has reached, each stratum carrying its own decayed
+efficacy — for EPI and mass campaigns. EPI uses **time-varying
+coverage** (each cohort protected at the coverage in force on its
+vaccination date); mass campaigns apply **every** target age band at
+every campaign, with decaying efficacy (the vaccinated cohort does not
+age out of the band). Seasonal PEV boosters are approximated as a fixed
+days-since-primary schedule (**warned**). TBV reduces onward infectivity
+via the state-specific transmission-blocking-activity transform over the
+exact target `ages`, matching the IBM.
+
+**Seasonality.** Rainfall is the truncated Fourier series (matching the
+IBM), driving `K(t) = K0 · scaler(t) · rainfall(t) / R̄`. The seed is the
+**annual-mean** state, so the first ~10 years are a transient onto the
+limit cycle and the seasonal annual-mean EIR sits a few percent below
+the aseasonal `init_EIR` target (nonlinear averaging) — **burn in before
+calibrating**. A carrying-capacity `scaler` of exactly 0 is floored at a
+small residual (`K0 · 1e-4`), so complete vector elimination is not
+reproduced exactly.
+
+**Demography.** Custom demography is **time-varying**: `mu_age(t)` is a
+constant-interpolated series over `deathrate_timesteps` (the baseline
+row seeds the equilibrium age structure, then the age-specific mortality
+evolves with the demographic transition). If the oldest model age group
+exceeds the top `deathrate_agegroups`, ages above it take the top death
+rate here whereas the IBM removes them — raise
+`default_age_lower(max_age =)` or extend `deathrate_agegroups` to match
+(a warning fires when they diverge).
+
+**Diagnostic conventions.**
+
+- **PCR prevalence** counts all of `D / Tr / A / U` (the
+  malariasimulation IBM convention), not malariaEquilibrium’s
+  sub-patent-weighted `pos_PCR`. LM prevalence and clinical incidence
+  match the IBM to under ~1%.
+- **Severe incidence** follows the malariaEquilibrium convention and is
+  far more sensitive to the immunity model than prevalence or clinical
+  incidence: the steep severe Hill function amplifies the small
+  differences in acquired immunity and disease-pool composition between
+  the mean field and the IBM, so it can differ by ~5–20% (largest at low
+  EIR). (A separate, smaller, opposite-signed effect: the IBM adds a
+  `+0.5` offset to acquired immunity before the severe Hill function,
+  which the ODE omits.) Treat severe incidence — and the DALYs derived
+  from it — as indicative.
+- Reported **`EIR`** is per adult per year (equals `init_EIR` at
+  equilibrium). Compare with a malariasimulation run as
+  `EIR_<species> / human_population × 365`.
+
+## Validation
+
+The `comparison/` directory runs each scenario through **both** models
+on the same parameter list — the IBM burned in ~30 years to its
+stochastic steady state, the ODE seeded at the `malariaEquilibrium`
+fixed point — and renders IBM-vs-ODE figures. Reproduce with:
+
+``` r
+
+source("comparison/run_comparison.R")   # equilibrium + intervention scenarios (Figures A-F)
+source("comparison/run_incidence.R")    # clinical & severe incidence time series (inc_* figures)
+```
+
+Across the equilibrium and intervention scenarios the ODE tracks the IBM
+closely — for example equilibrium PfPR(2–10) agrees to ≤ 0.012 across
+EIR 1–120, the age-prevalence profile at EIR 20 to
+`max |IBM − ODE| = 0.008`, and the custom-demography under-5 population
+fraction to within 0.002 (IBM 0.090 vs ODE 0.088). In the figures,
+**colour, line type and point shape all encode the IBM/ODE
+distinction**, so they stay legible in greyscale and under colour-vision
+deficiency.
+
+**Equilibrium & structure**
+
+|  |  |
+|----|----|
+| ![PfPR vs EIR](reference/figures/A_pfpr_eir.png) | **A.** Equilibrium PfPR(2–10) across EIR 1–120 (log x). |
+| ![Age profile](reference/figures/B_age_profile.png) | **B.** Age-prevalence profile at EIR 20. |
+| ![Demography structure](reference/figures/F_demog_structure.png) | **F1.** Custom-demography equilibrium age structure (density per year of age) under high infant & elderly mortality. |
+| ![Demography prevalence](reference/figures/F_demog_prevalence.png) | **F2.** Age-prevalence under that custom demography. |
+
+**Interventions (prevalence)**
+
+|  |  |
+|----|----|
+| ![Bed nets](reference/figures/C_bednets.png) | **C.** Bed-net campaign (80% coverage at year 30), monthly LM prevalence (2–10). |
+| ![Seasonal](reference/figures/D_seasonal.png) | **D.** Seasonal transmission, settled annual cycle (EIR ≈ 20). |
+| ![SMC](reference/figures/E_smc.png) | **E.** Seasonal SMC in under-5s (4 rounds/yr × 3 yr from year 30). |
+
+**Interventions (clinical & severe incidence, under-5,
+monthly-annualised)**
+
+|  |  |
+|----|----|
+| ![Incidence — nets](reference/figures/inc_nets.png) | **inc_nets.** Bed-net campaign: clinical drops to ~0.1/child/yr and recovers as nets decay. |
+| ![Incidence — seasonal](reference/figures/inc_seasonal.png) | **inc_seasonal.** Seasonal transmission cycle in clinical & severe incidence. |
+| ![Incidence — SMC](reference/figures/inc_smc.png) | **inc_smc.** Seasonal SMC suppressing under-5 incidence. |
+
+## Notes & conventions
+
+- **Deterministic seed.** The equilibrium seed is deterministic; there
+  is no random component to a `blink` run.
+- **Column stability.** Output column names are stable across parameter
+  sets (interventions on/off), so runs are directly comparable and
+  `rbind`-able.
+- **Population conservation.** Under constant-hazard or custom
+  demography the total human population is conserved to numerical
+  tolerance (a useful sanity check:
+  `S_count + D_count + A_count + U_count + Tr_count + Ph_count`).
+
+## Further reading
+
+- Getting started:
+  [`vignette("blink")`](https://pwinskill.github.io/blink/articles/blink.md).
+- Function reference:
+  [`?run_simulation_ode`](https://pwinskill.github.io/blink/reference/run_simulation_ode.md),
+  [`?get_epi_outputs`](https://pwinskill.github.io/blink/reference/get_epi_outputs.md),
+  [`?default_age_lower`](https://pwinskill.github.io/blink/reference/default_age_lower.md).
+- Model source: `inst/odin/malaria_ode.R` (the odin2 model).
+- Parameter translation & equilibrium seeding: `R/build_inputs.R`,
+  `R/translate_params.R`, `R/mosquito_equilibrium.R`.
+- Intervention time-series builders: `R/interventions.R`; run loop &
+  rendering: `R/run.R`; post-processing: `R/postie.R`.
+- Validation harness: `comparison/run_comparison.R`,
+  `comparison/run_incidence.R`, `comparison/plot_helpers.R`.
+
+## License
+
+MIT © Peter Winskill.
