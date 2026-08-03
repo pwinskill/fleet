@@ -1,5 +1,5 @@
 /* =========================================================================
-   malariaode pkgdown theme — "malaria sunset"
+   blink pkgdown theme — "malaria sunset"
    Warm sunset corals + ambers paired with deep teal + indigo.
    Colourful and fun, but legible and colourblind-safe in light AND dark mode.
    Everything colour-critical is driven by CSS custom properties that are
@@ -34,7 +34,9 @@ $mo-indigo-soft:  #a5b4fc;
   --mo-card-bg:     #ffffff;
   --mo-card-shadow: 0 .35rem 1.1rem rgba(49, 46, 129, .10);
   --mo-rule:        linear-gradient(90deg, #{$mo-coral}, #{$mo-amber});
-  --mo-hero:        linear-gradient(120deg, #{$mo-indigo} 0%, #{$mo-teal} 55%, #{$mo-coral} 100%);
+  /* Ends at deep coral, not #ff6b5c: the hero title uses background-clip:text on
+     white, and light coral there falls below the WCAG AA large-text 3:1 ratio. */
+  --mo-hero:        linear-gradient(120deg, #{$mo-indigo} 0%, #{$mo-teal} 55%, #{$mo-coral-deep} 100%);
   --mo-navbar:      linear-gradient(120deg, #312e81 0%, #3b2f9e 42%, #0e7c7b 100%);
   --mo-glow-warm:   rgba(255, 176, 32, .07);
   --mo-glow-cool:   rgba(67, 56, 202, .07);
@@ -128,6 +130,16 @@ main h2::after {
 .navbar .navbar-brand,
 .navbar .nav-link,
 .navbar .navbar-toggler-icon { color: #fff; }
+/* Secondary navbar text (version tag, muted labels, dropdown carets) must also
+   stay high-contrast on the dark gradient — the Bootstrap defaults are dark and
+   fail WCAG AA here. Excludes .form-control (dark text on its light input). */
+.navbar .navbar-brand small,
+.navbar .navbar-brand .version,
+.navbar small,
+.navbar .nav-text,
+.navbar .dropdown-toggle,
+.navbar .navbar-toggler,
+.navbar .text-muted { color: rgba(255, 255, 255, .85) !important; }
 .navbar .nav-link { position: relative; font-weight: 600; }
 .navbar .nav-link:hover,
 .navbar .nav-link:focus { color: #ffd27a; }

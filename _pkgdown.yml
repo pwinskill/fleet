@@ -1,4 +1,4 @@
-url: https://pwinskill.github.io/malariaode
+url: https://pwinskill.github.io/blink
 
 template:
   bootstrap: 5
@@ -31,14 +31,14 @@ navbar:
   components:
     intro:
       text: Get started
-      href: articles/malariaode.html
+      href: articles/blink.html
     github:
       icon: fab fa-github
-      href: https://github.com/pwinskill/malariaode
+      href: https://github.com/pwinskill/blink
       aria-label: GitHub repository
 
 home:
-  title: malariaode • a fast ODE twin of malariasimulation
+  title: blink • a fast ODE twin of malariasimulation
   description: >
     A fast, deterministic mean-field (ODE) counterpart to the malariasimulation
     individual-based model of Plasmodium falciparum malaria, built on odin2 / dust2.
@@ -56,7 +56,7 @@ articles:
 - title: Articles
   navbar: ~
   contents:
-  - malariaode
+  - blink
 
 reference:
 - title: Run the model
@@ -80,4 +80,4 @@ reference:
   desc: >
     Background, scope, and pointers to the mean-field approximations.
   contents:
-  - malariaode-package
+  - blink-package

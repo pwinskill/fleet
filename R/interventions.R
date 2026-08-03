@@ -38,25 +38,49 @@ treatment_series <- function(p) {
 # defined even for later-onset treatment): drug_eff (efficacy), cT (treated
 # infectivity = cd*drug_rel_c), and rP (prophylaxis rate). rP subtracts the
 # ~1/rT days already spent refractory in Tr from the Weibull mean protection.
-drug_mix <- function(p, eqp) {
+# Drug-linked efficacy, treated infectivity (cT) and prophylaxis rate (rP),
+# coverage-weighted across clinical-treatment drugs. With `t = NULL` the weights are
+# each drug's PEAK scheduled coverage (used only as a fallback when no drug is
+# active); otherwise they are the INSTANTANEOUS coverage shares at time `t`, so a
+# first-line drug switch changes the mix over time.
+drug_mix <- function(p, eqp, t = NULL) {
   drugs <- p$clinical_treatment_drugs
-  if (is.null(drugs) || length(drugs) == 0) {
+  if (is.null(drugs) || length(drugs) == 0)
     return(list(drug_eff = 1, cT = eqp[["cT"]], rP = eqp[["rP"]]))
-  }
-  di <- w <- numeric(length(drugs))
-  for (d in seq_along(drugs)) {
-    di[d] <- p$clinical_treatment_drugs[[d]]
-    w[d] <- max(p$clinical_treatment_coverages[[d]])   # peak coverage
-  }
+  di <- vapply(drugs, function(x) x[[1]], numeric(1))
+  peak <- vapply(p$clinical_treatment_coverages, max, numeric(1))
+  w <- if (is.null(t)) peak else vapply(seq_along(drugs), function(d)
+    .cov_at(p$clinical_treatment_timesteps[[d]], p$clinical_treatment_coverages[[d]], t),
+    numeric(1))
+  if (sum(w) == 0) w <- peak                          # no drug active at t: hold the mix
   if (sum(w) == 0) return(list(drug_eff = 1, cT = eqp[["cT"]], rP = eqp[["rP"]]))
   wn <- w / sum(w)
-  drug_eff <- sum(wn * p$drug_efficacy[di])
-  cT <- p$cd * sum(wn * p$drug_rel_c[di])
-  mean_dur <- sum(wn * .weibull_mean(p$drug_prophylaxis_shape[di],
-                                     p$drug_prophylaxis_scale[di]))
   dt <- 1 / eqp[["rT"]]                                # mean days in Tr (refractory)
-  rP <- 1 / max(mean_dur - dt, 1e-6)
-  list(drug_eff = drug_eff, cT = cT, rP = rP)
+  mean_dur <- sum(wn * .weibull_mean(p$drug_prophylaxis_shape[di], p$drug_prophylaxis_scale[di]))
+  list(drug_eff = sum(wn * p$drug_efficacy[di]),
+       cT = p$cd * sum(wn * p$drug_rel_c[di]),
+       rP = 1 / max(mean_dur - dt, 1e-6))
+}
+
+# Time-varying drug_eff/cT/rP over the clinical-treatment change times, so a
+# first-line drug switch is reflected in treated infectivity and prophylaxis (not
+# just total coverage). Anchored at the first active treatment time so the t = 0
+# value equals the equilibrium-seed blend; single-drug/constant-share cases give a
+# flat series identical to the old scalar behaviour.
+drug_mix_series <- function(p, eqp) {
+  drugs <- p$clinical_treatment_drugs
+  base_t <- if (length(unlist(p$clinical_treatment_timesteps)))
+    min(unlist(p$clinical_treatment_timesteps)) else 0
+  seed <- drug_mix(p, eqp, if (is.null(drugs) || !length(drugs)) NULL else base_t)
+  if (is.null(drugs) || length(drugs) <= 1)
+    return(list(times = 0, drug_eff = seed$drug_eff, cT = seed$cT, rP = seed$rP, seed = seed))
+  ts <- sort(unique(c(0, unlist(p$clinical_treatment_timesteps))))
+  m <- lapply(ts, function(t) drug_mix(p, eqp, max(t, base_t)))   # t<base_t -> baseline blend
+  list(times = ts,
+       drug_eff = vapply(m, `[[`, numeric(1), "drug_eff"),
+       cT = vapply(m, `[[`, numeric(1), "cT"),
+       rP = vapply(m, `[[`, numeric(1), "rP"),
+       seed = seed)
 }
 
 # ---- antimalarial resistance ETF(t)/SPC(t) and slow-clearance rate ----------
@@ -70,32 +94,37 @@ resistance_series <- function(p, eqp) {
   none <- list(times = 0, etf = 0, spc = 0, rT_slow = rT_base)
   if (!isTRUE(p$antimalarial_resistance)) return(none)
   cdrugs <- vapply(p$clinical_treatment_drugs, function(x) x[[1]], numeric(1))
-  cw <- vapply(p$clinical_treatment_coverages, function(x) max(x), numeric(1))  # peak coverage
-  if (length(cdrugs) == 0 || sum(cw) == 0) return(none)
-  wn <- cw / sum(cw)
+  if (length(cdrugs) == 0) return(none)
   rdrug <- vapply(p$antimalarial_resistance_drug, function(x) x[[1]], numeric(1))
-  all_ts <- sort(unique(c(0, unlist(p$antimalarial_resistance_timesteps))))
   step_at <- function(ts, vals, t) if (t < min(ts)) 0 else vals[max(which(ts <= t))]
+  # Instantaneous treatment-coverage share of each clinical drug (as in drug_mix),
+  # so ETF/SPC track a first-line drug SWITCH over time rather than freezing at each
+  # drug's peak coverage. The grid spans both resistance and coverage change times.
+  all_ts <- sort(unique(c(0, unlist(p$antimalarial_resistance_timesteps),
+                          unlist(p$clinical_treatment_timesteps))))
   nT <- length(all_ts)
   etf <- spc <- slow_num <- numeric(nT)     # slow_num = sum wn*spc_c*dt_slow_c
-  for (ci in seq_along(cdrugs)) {
-    k <- which(rdrug == cdrugs[ci])          # resistance entry for this treatment drug
-    if (!length(k)) next
-    k <- k[1]
-    ts   <- p$antimalarial_resistance_timesteps[[k]]
-    art  <- p$artemisinin_resistance_proportion[[k]]
-    etfp <- p$early_treatment_failure_probability[[k]]
-    spcp <- p$slow_parasite_clearance_probability[[k]]
-    dts  <- p$dt_slow_parasite_clearance[[k]]
-    dts  <- if (length(dts)) dts[length(dts)] else 1 / rT_base
-    for (i in seq_len(nT)) {
-      t <- all_ts[i]; a <- step_at(ts, art, t)
-      e <- a * step_at(ts, etfp, t); s <- a * step_at(ts, spcp, t)
+  for (i in seq_len(nT)) {
+    t <- all_ts[i]
+    covs <- vapply(seq_along(cdrugs), function(ci)
+      .cov_at(p$clinical_treatment_timesteps[[ci]], p$clinical_treatment_coverages[[ci]], t),
+      numeric(1))
+    tot <- sum(covs)
+    if (tot <= 0) next                       # no treatment active at t -> etf/spc = 0
+    wn <- covs / tot
+    for (ci in seq_along(cdrugs)) {
+      k <- which(rdrug == cdrugs[ci])         # resistance entry for this treatment drug
+      if (!length(k)) next
+      k <- k[1]
+      ts  <- p$antimalarial_resistance_timesteps[[k]]
+      a   <- step_at(ts, p$artemisinin_resistance_proportion[[k]], t)
+      e   <- a * step_at(ts, p$early_treatment_failure_probability[[k]], t)
+      s   <- a * step_at(ts, p$slow_parasite_clearance_probability[[k]], t)
+      dts <- p$dt_slow_parasite_clearance[[k]]
+      dts <- if (length(dts)) dts[length(dts)] else 1 / rT_base
       etf[i] <- etf[i] + wn[ci] * e
-      # slow fraction of the treated cohort. The IBM applies SPC to post-ETF
-      # survivors; here spc is the slow fraction of the (already ETF-net) Tr inflow
-      # -> exact for a single drug (the common case), a small over-count only for
-      # multiple drugs at high resistance.
+      # slow fraction of the (already ETF-net) Tr inflow -> exact for a single drug
+      # (common case); small over-count only for multiple drugs at high resistance.
       spc[i] <- spc[i] + wn[ci] * s
       slow_num[i] <- slow_num[i] + wn[ci] * s * dts
     }
@@ -250,8 +279,9 @@ chemoprevention_events <- function(p, timesteps) {
     n <- length(ts); cov <- recycle(cov, n); lo <- recycle(lo, n); hi <- recycle(hi, n)
     eff <- p$drug_efficacy[drug]
     for (k in seq_len(n)) {
-      ev[[length(ev) + 1L]] <<- list(time = ts[k], lo = lo[k], hi = hi[k],
-        frac = cov[k] * eff * (1 - .drug_etf_at(p, drug, ts[k])))   # resistance ETF
+      fr <- cov[k] * eff * (1 - .drug_etf_at(p, drug, ts[k]))       # resistance ETF
+      if (fr <= 0) next                                             # zero-coverage round: no-op
+      ev[[length(ev) + 1L]] <<- list(time = ts[k], lo = lo[k], hi = hi[k], frac = fr)
     }
   }
   add(p$mda, p$mda_drug, p$mda_timesteps, p$mda_coverages, p$mda_min_ages, p$mda_max_ages)
@@ -263,7 +293,7 @@ chemoprevention_events <- function(p, timesteps) {
   if (isTRUE(p$pmc)) {
     pts <- p$pmc_timesteps; pcv <- p$pmc_coverages; drug <- p$pmc_drug
     eff <- p$drug_efficacy[drug]; band <- 30
-    grid <- seq(min(pts), timesteps, by = band)
+    grid <- if (min(pts) <= timesteps) seq(min(pts), timesteps, by = band) else numeric(0)
     for (t in grid) {
       idx <- which(pts <= t)
       cv <- if (length(idx)) pcv[max(idx)] else 0
@@ -306,8 +336,13 @@ apply_chemoprevention_pulse <- function(sys, uidx, meta, event) {
   # that overlaps the target band). Weighting by overlap (not midpoint membership)
   # stops narrow bands from being silently dropped and coarse groups from being
   # fully treated when only partly targeted.
-  ov <- pmax(0, pmin(event$hi, meta$age_hi) - pmax(event$lo, meta$age_lo)) /
-        (meta$age_hi - meta$age_lo)
+  w <- meta$age_hi - meta$age_lo
+  num <- pmax(0, pmin(event$hi, meta$age_hi) - pmax(event$lo, meta$age_lo))
+  # finite groups: fraction of the group overlapping [lo, hi). The absorbing top
+  # group has width Inf (num/w would be Inf/Inf = NaN when hi = Inf): treat it as
+  # fully covered iff the band reaches its lower edge, else not at all.
+  ov <- ifelse(is.finite(w), num / w,
+               as.numeric(event$lo <= meta$age_lo & event$hi > meta$age_lo))
   arows <- which(ov > 0)
   if (length(arows) == 0) return(invisible())
   fr <- event$frac * ov[arows]                       # length(arows) vector
@@ -368,12 +403,20 @@ pev_protection <- function(prof, bprofs, bspace, bcov, tsince) {
   prot + cumc[nb] *                            # most recent booster reached
     pev_efficacy_curve(bprofs[[min(nb, length(bprofs))]], tsince - bspace[nb])
 }
-# booster-coverage row for a cohort vaccinated at `vd` (matrix rows align with `ts`)
-.booster_cov_row <- function(bcovm, ts, vd) {
+# Per-booster conditional coverage: booster j is read at ITS administration date
+# admin_times[j] (coverage-matrix rows align with the distribution `ts`), matching ms
+# coverage[match_timestep(distribution_timesteps, admin_time), booster_number]. Reduces
+# to the old single-row lookup when the coverage matrix has one row (the usual case).
+.booster_cov_vec <- function(bcovm, ts, admin_times) {
   if (is.null(bcovm)) return(numeric(0))
   bcovm <- as.matrix(bcovm)
-  r <- if (length(ts) > 1) { i <- which(ts <= vd); if (length(i)) max(i) else 1L } else 1L
-  bcovm[min(r, nrow(bcovm)), ]
+  vapply(seq_len(ncol(bcovm)), function(j) {
+    at <- if (j <= length(admin_times)) admin_times[j] else admin_times[length(admin_times)]
+    r <- if (nrow(bcovm) > 1 && length(ts) > 1) {
+      i <- which(ts <= at); if (length(i)) max(i) else 1L
+    } else 1L
+    bcovm[min(r, nrow(bcovm)), j]
+  }, numeric(1))
 }
 
 # Per-(age,time) PEV FOI multiplier [n_age, n_time] (time last for interpolate).
@@ -389,25 +432,27 @@ pev_series <- function(p, age_mid, timesteps) {
   grid <- grid[grid >= 0]
   ng <- length(grid)
   red <- matrix(0, n_age, ng)
-  or0 <- function(x) if (is.null(x)) 0 else x
 
   # --- EPI (age-based) primary + boosters ---
   if (!is.null(p$pev_epi_coverages)) {
     prof <- p$pev_profiles[[p$pev_epi_profile_indices[1]]]
     bidx <- p$pev_epi_profile_indices[-1]
     bprofs <- if (length(bidx)) lapply(bidx, function(ix) p$pev_profiles[[ix]]) else list(prof)
+    # booster spacing is measured from the final primary dose; min_wait guards ms's
+    # re-vaccination / seasonal timing only, NOT the primary-series booster schedule.
     bspace <- p$pev_epi_booster_spacing
-    if (length(bspace)) bspace <- pmax(bspace, or0(p$pev_epi_min_wait))   # min_wait floor
     bcovm <- p$pev_epi_booster_coverage
     vax_complete <- p$pev_epi_age + last_dose
     start <- p$pev_epi_timesteps[1]
     for (i in seq_len(n_age)) {
       if (age_mid[i] < vax_complete) next
       tsince <- age_mid[i] - vax_complete
-      for (g in seq_len(ng)) if (grid[g] >= start + tsince) {
-        vd <- grid[g] - tsince                          # this cohort's vaccination date
-        cov <- .cov_at(p$pev_epi_timesteps, p$pev_epi_coverages, vd)
-        bcov <- .booster_cov_row(bcovm, p$pev_epi_timesteps, vd)
+      # eligible once the FIRST dose (last_dose before efficacy onset) falls in-programme
+      for (g in seq_len(ng)) if (grid[g] >= start + tsince + last_dose) {
+        vd <- grid[g] - tsince                          # cohort's efficacy-onset (final-dose) date
+        fdose <- vd - last_dose                          # cohort's FIRST-dose date (ms samples here)
+        cov <- .cov_at(p$pev_epi_timesteps, p$pev_epi_coverages, fdose)
+        bcov <- .booster_cov_vec(bcovm, p$pev_epi_timesteps, vd + bspace)
         red[i, g] <- .combine(red[i, g], cov * pev_protection(prof, bprofs, bspace, bcov, tsince))
       }
     }
@@ -418,15 +463,15 @@ pev_series <- function(p, age_mid, timesteps) {
     prof <- p$pev_profiles[[p$mass_pev_profile_indices[1]]]
     bidx <- p$mass_pev_profile_indices[-1]
     bprofs <- if (length(bidx)) lapply(bidx, function(ix) p$pev_profiles[[ix]]) else list(prof)
-    bspace <- p$mass_pev_booster_spacing
-    if (length(bspace)) bspace <- pmax(bspace, or0(p$mass_pev_min_wait))
+    bspace <- p$mass_pev_booster_spacing               # from final primary dose (no min_wait floor)
     bcovm <- p$mass_pev_booster_coverage
     lo <- p$mass_pev_min_ages; hi <- p$mass_pev_max_ages   # bands applied at EVERY campaign
     nc <- length(p$mass_pev_timesteps)
     cov <- .recycle(p$mass_pev_coverages, nc)
     for (k in seq_len(nc)) {
       tc <- p$mass_pev_timesteps[k]
-      bcov <- if (!is.null(bcovm)) as.matrix(bcovm)[min(k, nrow(as.matrix(bcovm))), ] else numeric(0)
+      # each booster read at its admin date tc + last_dose + bspace[j] (final dose + spacing)
+      bcov <- .booster_cov_vec(bcovm, p$mass_pev_timesteps, tc + last_dose + bspace)
       for (b in seq_along(lo)) {
         inband <- which(age_mid >= lo[b] & age_mid < hi[b])
         if (!length(inband)) next

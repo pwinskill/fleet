@@ -35,9 +35,13 @@ test_that("time-varying EPI coverage: protection tracks each cohort's vaccinatio
   # 5*365 => grid = 5*365 + tsince), not the calendar step-up (grid = 5*365). The
   # largest drop in the multiplier is the 0.2->0.9 step; pin its calendar time.
   tsince <- age_mid[i] - vax_complete
+  last_dose <- max(epi$pev_doses)
   step_g <- ps$times[which.min(diff(ps$vals[i, ])) + 1]
-  expect_gt(step_g, 5 * 365 + tsince - 45)   # after the cohort's own vaccination date
-  expect_lt(step_g, 5 * 365 + tsince + 45)   # (a current-time bug would step at 5*365)
+  # ms samples EPI coverage at the FIRST-dose date, so the 0.2->0.9 step lands when this
+  # cohort's first dose (last_dose before efficacy onset) crosses year 5:
+  # grid - tsince - last_dose = 5*365  =>  grid = 5*365 + tsince + last_dose.
+  expect_gt(step_g, 5 * 365 + tsince + last_dose - 45)   # after the cohort's first-dose date
+  expect_lt(step_g, 5 * 365 + tsince + last_dose + 45)   # (a current-time bug would step at 5*365)
   # and the deepest protection (highest coverage) must beat a constant-0.2 program
   epi_lo <- malariasimulation::set_pev_epi(gp(), profile = malariasimulation::rtss_profile,
     timesteps = 1, coverages = 0.2, min_wait = 0, age = 180, booster_spacing = 360,
@@ -130,8 +134,9 @@ test_that("custom demography changes the equilibrium age structure", {
   expect_equal(sum(prop), 1, tolerance = 1e-10)               # normalised
   # high infant/elderly mortality => fewer under-5s than constant-hazard (~0.21)
   expect_lt(sum(prop[am < 5 * 365]), 0.15)
-  # default (constant hazard) still holds flat at equilibrium
-  o <- run_simulation_ode(400, gp(), init_EIR = 20)
+  # default (constant hazard) still holds flat at equilibrium (offset 0 = exact seed)
+  pflat <- gp(); pflat$acquired_immunity_offset <- 0
+  o <- run_simulation_ode(400, pflat, init_EIR = 20)
   expect_lt(max(abs(o$EIR - o$EIR[1])), 1e-6)
 })
 
@@ -162,6 +167,7 @@ test_that("carrying-capacity scaler = 1 is a no-op (flat)", {
   p <- malariasimulation::set_carrying_capacity(
     malariasimulation::get_parameters(), timesteps = 365,
     carrying_capacity_scalers = matrix(1, 1, 1))
+  p$acquired_immunity_offset <- 0                        # flat-machinery check
   o <- run_simulation_ode(800, p, init_EIR = 20)
   expect_lt(max(abs(o$EIR - o$EIR[1])), 1e-6)
 })

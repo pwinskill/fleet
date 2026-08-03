@@ -1,4 +1,4 @@
-#' malariaode: a mean-field (ODE) twin of malariasimulation
+#' blink: a mean-field (ODE) twin of malariasimulation
 #'
 #' A fast, deterministic mean-field (ODE) counterpart to the
 #' \pkg{malariasimulation} individual-based model of *Plasmodium falciparum*
@@ -19,7 +19,7 @@
 #'     and `prevalence` (wide).
 #'   \item [default_age_lower()] — the default graded age grid.
 #' }
-#' See `vignette("malariaode")` for a worked tour, and the README's *Mean-field
+#' See `vignette("blink")` for a worked tour, and the README's *Mean-field
 #' approximations* section for where and how much the ODE departs from the IBM.
 #'
 #' @keywords internal

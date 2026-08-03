@@ -1,9 +1,9 @@
-# Validation harness — malariaode vs malariasimulation
+# Validation harness — blink vs malariasimulation
 
 Scripts that run each scenario through **both** models on the *same* parameter
 list and render IBM-vs-ODE figures. The IBM (`malariasimulation`) is burned in
 ~30 years at a population of 10,000 to reach its stochastic steady state; the ODE
-(`malariaode`) is seeded at the `malariaEquilibrium` fixed point. Prevalence /
+(`blink`) is seeded at the `malariaEquilibrium` fixed point. Prevalence /
 incidence age bands are set once on the shared parameter list, so both models
 emit identical `n_detect_lm_*` / `n_age_*` / `n_inc_*` columns.
 

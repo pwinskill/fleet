@@ -1,4 +1,4 @@
-# malariaode 0.0.0.9000
+# blink 0.0.0.9000
 
 First development release: a deterministic mean-field (ODE) twin of the
 `malariasimulation` individual-based model of *P. falciparum* malaria, built on

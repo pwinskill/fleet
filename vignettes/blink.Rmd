@@ -1,8 +1,8 @@
 ---
-title: "Getting started with malariaode"
+title: "Getting started with blink"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Getting started with malariaode}
+  %\VignetteIndexEntry{Getting started with blink}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -17,7 +17,7 @@ can_run <- requireNamespace("malariasimulation", quietly = TRUE) &&
 knitr::opts_chunk$set(eval = can_run)
 ```
 
-`malariaode` is a fast, deterministic **mean-field (ODE) twin** of the
+`blink` is a fast, deterministic **mean-field (ODE) twin** of the
 [malariasimulation](https://github.com/mrc-ide/malariasimulation) individual-based
 model of *Plasmodium falciparum* malaria. It reproduces the same age- and
 biting-heterogeneity-structured human model and compartmental mosquito model,
@@ -34,11 +34,11 @@ heterogeneity beyond the mean field, or *P. vivax* — see **Scope** at the end.
 
 ```{r install, eval = FALSE}
 # install.packages("remotes")
-remotes::install_github("mrc-ide/malariaode")
+remotes::install_github("mrc-ide/blink")
 ```
 
 ```{r load}
-library(malariaode)
+library(blink)
 ```
 
 `malariasimulation` (for parameter lists and the `set_*` builders) and `postie`
@@ -230,7 +230,7 @@ mean(final_year$EIR)    # a few % below the aseasonal target of 20
 
 ## The validation story
 
-`malariaode` is checked two ways. **First, self-consistency:** with no
+`blink` is checked two ways. **First, self-consistency:** with no
 interventions it holds flat at the `malariaEquilibrium` seed to machine precision
 (and still holds flat with treatment, `ft > 0`, thanks to a corrected
 prophylaxis-aging recursion). **Second, agreement with the IBM:** the same

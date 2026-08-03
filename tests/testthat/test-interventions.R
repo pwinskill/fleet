@@ -5,6 +5,7 @@ test_that("no intervention (multi-species) holds flat at equilibrium", {
     p, list(malariasimulation::arab_params, malariasimulation::fun_params),
     c(0.6, 0.4)
   )
+  p$acquired_immunity_offset <- 0                    # flat-machinery check (exact seed)
   o <- run_simulation_ode(1000, p, init_EIR = 20)
   expect_lt(max(abs(o$EIR - o$EIR[1])), 1e-6)
   expect_lt(max(abs(o$p_detect_lm_730_3650 - o$p_detect_lm_730_3650[1])), 1e-6)
@@ -210,8 +211,9 @@ test_that("mass PEV: higher coverage -> larger reduction; only target ages affec
 
 test_that("seasonality: aseasonal is flat, seasonal oscillates around the mean", {
   skip_if_not_installed("malariasimulation")
-  o0 <- run_simulation_ode(1000, malariasimulation::get_parameters(), init_EIR = 20)
-  expect_lt(max(abs(o0$EIR - o0$EIR[1])), 1e-6)          # aseasonal flat
+  p0 <- malariasimulation::get_parameters(); p0$acquired_immunity_offset <- 0
+  o0 <- run_simulation_ode(1000, p0, init_EIR = 20)
+  expect_lt(max(abs(o0$EIR - o0$EIR[1])), 1e-6)          # aseasonal flat (machinery)
   p <- malariasimulation::get_parameters(overrides = list(
     model_seasonality = TRUE, g0 = 2, g = c(0.3, 0.6, 0.9), h = c(0.1, 0.4, 0.7)))
   o <- run_simulation_ode(1825, p, init_EIR = 20)

@@ -6,7 +6,8 @@
 \usage{
 run_simulation_ode(
   timesteps,
-  parameters,
+  parameters = NULL,
+  correlations = NULL,
   init_EIR = NULL,
   age_lower = default_age_lower(),
   n_eir = 10L,
@@ -31,6 +32,12 @@ carrying capacity, and custom demography (\code{set_demography}: age-specific
 mortality and the resulting equilibrium age structure). P. vivax is rejected;
 the model is always compartmental (the individual-mosquito path does not
 apply). See the README for the mean-field approximations used by each module.}
+
+\item{correlations}{accepted so the first three arguments mirror
+\code{malariasimulation::run_simulation(timesteps, parameters, correlations)}
+exactly (drop-in call compatibility). Intervention correlation is an
+individual-level feature with no mean-field analogue, so a non-NULL value is
+ignored with a warning (the ODE assumes independence between interventions).}
 
 \item{init_EIR}{target adult EIR (bites/adult/year). If NULL, taken from
 \code{parameters$init_EIR} (set by malariasimulation::set_equilibrium()).}

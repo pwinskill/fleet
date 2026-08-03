@@ -1,4 +1,4 @@
 library(testthat)
-library(malariaode)
+library(blink)
 
-test_check("malariaode")
+test_check("blink")

@@ -1,4 +1,4 @@
-# ODE (malariaode) vs IBM (malariasimulation) comparison.
+# ODE (blink) vs IBM (malariasimulation) comparison.
 #
 # For each scenario the SAME parameter list is passed to both models: the IBM is
 # burned in ~30 years to settle onto its own dynamic steady state, the ODE (seeded
@@ -13,9 +13,9 @@ suppressMessages({
   library(pkgload); library(malariasimulation)
   library(ggplot2); library(dplyr); library(tidyr)
 })
-pkgload::load_all("C:/Users/pwinskil/Documents/dev/blink2/malariaode", quiet = TRUE)
+pkgload::load_all("C:/Users/pwinskil/Documents/dev/blink2/blink", quiet = TRUE)
 
-ROOT   <- "C:/Users/pwinskil/Documents/dev/blink2/malariaode/comparison"
+ROOT   <- "C:/Users/pwinskil/Documents/dev/blink2/blink/comparison"
 DDIR   <- file.path(ROOT, "data"); PDIR <- file.path(ROOT, "plots")
 # shared figure builders + constants (POP, BURN_Y, AGE_EDGES, band_lo/hi, themes)
 source(file.path(ROOT, "plot_helpers.R"))

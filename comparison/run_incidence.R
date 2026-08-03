@@ -1,4 +1,4 @@
-# Clinical & severe incidence time series: ODE (malariaode) vs IBM (malariasimulation).
+# Clinical & severe incidence time series: ODE (blink) vs IBM (malariasimulation).
 # Reuses the (already-validated) dynamic scenario configs — bed nets, seasonality,
 # seasonal SMC — but renders clinical AND severe incidence and extracts monthly,
 # annualised rates for the under-5 band. Both models get the same rendering bands
@@ -8,9 +8,9 @@
 
 .libPaths("C:/Users/pwinskil/Documents/r_packages_arm64")
 suppressMessages({library(pkgload); library(malariasimulation)})
-ROOT <- "C:/Users/pwinskil/Documents/dev/blink2/malariaode/comparison"
+ROOT <- "C:/Users/pwinskil/Documents/dev/blink2/blink/comparison"
 source(file.path(ROOT, "plot_helpers.R"))
-pkgload::load_all("C:/Users/pwinskil/Documents/dev/blink2/malariaode", quiet = TRUE)
+pkgload::load_all("C:/Users/pwinskil/Documents/dev/blink2/blink", quiet = TRUE)
 DDIR <- file.path(ROOT, "data"); PDIR <- file.path(ROOT, "plots")
 set.seed(1L)
 log_msg <- function(...) cat(sprintf("[%s] %s\n", format(Sys.time(), "%H:%M:%S"), sprintf(...)))

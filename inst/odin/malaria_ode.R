@@ -1,5 +1,5 @@
 # =============================================================================
-# malariaode: mean-field (ODE) twin of malariasimulation (P. falciparum)
+# blink: mean-field (ODE) twin of malariasimulation (P. falciparum)
 # Core transmission model (Phase 1): human S/D/A/U/Tr/Ph over [age, het] with
 # the six Griffin immunity functions, coupled to the compartmental mosquito
 # model (E/L/P/Sm/[EIP chain]/Im per species).
@@ -37,16 +37,24 @@ dim(zeta, het_wt) <- n_het
 
 ## ---- human rate constants (from eq_params) --------------------------------
 rA <- parameter(); rD <- parameter(); rU <- parameter()
-rT <- parameter(); rP <- parameter()
+rT <- parameter()
 d_ib <- parameter(); d_ica <- parameter(); d_id <- parameter(); d_iva <- parameter()
 ub <- parameter(); uc <- parameter(); ud <- parameter(); uv <- parameter()
+# malariasimulation adds +0.5 to POSITIVE acquired immunity before the b/phi/theta
+# Hill calls (human_infection.R blood_immunity/clinical_immunity/severe_immunity),
+# but NOT before q and NOT on the maternal term. That is a PER-INDIVIDUAL detail: in
+# the mean field it does NOT translate to +0.5 on the stratum mean. An A/B against the
+# ms 3.0.0 IBM ensemble mean (controlled burn-in over an EIR sweep) shows offset 0 is a
+# markedly better match for clinical/severe incidence than 0.5, so the default is 0.
+# Set 0.5 to reproduce the IBM's literal per-individual Hill functions instead.
+acq_offset <- parameter(0)
 b0 <- parameter(); b1 <- parameter(); ib0 <- parameter(); kb <- parameter()
 phi0 <- parameter(); phi1 <- parameter(); ic0 <- parameter(); kc <- parameter()
 d1 <- parameter(); id0 <- parameter(); kd <- parameter()
 fd0 <- parameter(); ad0 <- parameter(); gd <- parameter()
 theta0 <- parameter(); theta1 <- parameter(); iv0 <- parameter(); kv <- parameter()
 fv0 <- parameter(); av <- parameter(); gammav <- parameter()
-cD <- parameter(); cU <- parameter(); cT <- parameter(); g_inf <- parameter()
+cD <- parameter(); cU <- parameter(); g_inf <- parameter()
 PM <- parameter(); PVM <- parameter()
 
 ## ---- clinical treatment coverage ft(t) (time-varying, step) ---------------
@@ -54,7 +62,15 @@ n_ftt <- parameter(constant = TRUE)
 ft_times <- parameter(); ft_vals <- parameter()
 dim(ft_times, ft_vals) <- n_ftt
 ft <- interpolate(ft_times, ft_vals, "constant")
-drug_eff <- parameter()          # coverage-weighted drug efficacy (fraction cured)
+# drug-linked efficacy / treated infectivity (cT) / prophylaxis rate (rP), all
+# time-varying so a first-line drug switch changes the mix, not just total ft.
+n_dmix <- parameter(constant = TRUE)
+dmix_times <- parameter(); dim(dmix_times) <- n_dmix
+cT_vals <- parameter(); drug_eff_vals <- parameter(); rP_vals <- parameter()
+dim(cT_vals, drug_eff_vals, rP_vals) <- n_dmix
+cT <- interpolate(dmix_times, cT_vals, "constant")
+drug_eff <- interpolate(dmix_times, drug_eff_vals, "constant")
+rP <- interpolate(dmix_times, rP_vals, "constant")
 
 ## ---- antimalarial resistance (time-varying, step) -------------------------
 # etf_t = fraction of would-be-treated that fail early (-> stay clinical D);
@@ -85,8 +101,11 @@ vc_times <- parameter(); dim(vc_times) <- n_vct
 a_vals <- parameter(); mum_vals <- parameter()
 dim(a_vals) <- c(n_spp, n_vct)
 dim(mum_vals) <- c(n_spp, n_vct)
-a_spp <- interpolate(vc_times, a_vals, "constant")
-mum <- interpolate(vc_times, mum_vals, "constant")
+# linear (not constant): the IBM recomputes a/mu every timestep, so IRS logistic
+# phase decay within a spray round is a ramp, not a step. Flat at baseline (equal
+# knots), so the equilibrium is preserved.
+a_spp <- interpolate(vc_times, a_vals, "linear")
+mum <- interpolate(vc_times, mum_vals, "linear")
 dim(a_spp) <- n_spp
 dim(mum) <- n_spp
 # oviposition rate: eggs_laid(beta, mu, f) is algebraically identical to beta for
@@ -133,12 +152,13 @@ IVM[, ] <- PVM * IVA20[j] * ivm_factor[i]
 dim(ICM, IVM) <- c(n_age, n_het)
 
 ## ---- immunity -> probability (Hill) functions -----------------------------
-b[, ] <- b0 * (b1 + (1 - b1) / (1 + (IB[i, j] / ib0)^kb))
-phi[, ] <- phi0 * (phi1 + (1 - phi1) / (1 + ((ICA[i, j] + ICM[i, j]) / ic0)^kc))
-q[, ] <- d1 + (1 - d1) / (1 + (ID[i, j] / id0)^kd * fd[i])
+b[, ] <- b0 * (b1 + (1 - b1) / (1 + ((IB[i, j] + acq_offset) / ib0)^kb))
+phi[, ] <- phi0 * (phi1 + (1 - phi1) /
+  (1 + (((ICA[i, j] + acq_offset) + ICM[i, j]) / ic0)^kc))
+q[, ] <- d1 + (1 - d1) / (1 + (ID[i, j] / id0)^kd * fd[i])       # ms adds NO +0.5 to q
 cA[, ] <- cU + (cD - cU) * q[i, j]^g_inf
 theta[, ] <- theta0 * (theta1 + (1 - theta1) /
-  (1 + fv[i] * ((IVA[i, j] + IVM[i, j]) / iv0)^kv))
+  (1 + fv[i] * (((IVA[i, j] + acq_offset) + IVM[i, j]) / iv0)^kv))
 dim(b, phi, q, cA, theta) <- c(n_age, n_het)
 
 ## ---- mosquito -> human EIR (via EIR-lag chain) ----------------------------

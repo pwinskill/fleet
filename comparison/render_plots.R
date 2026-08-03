@@ -2,7 +2,7 @@
 # shared builders in plot_helpers.R. No model runs — pure re-plot, so it is cheap
 # to iterate on figure design without repeating the 30-year IBM burn-in sweep.
 .libPaths("C:/Users/pwinskil/Documents/r_packages_arm64")
-ROOT <- "C:/Users/pwinskil/Documents/dev/blink2/malariaode/comparison"
+ROOT <- "C:/Users/pwinskil/Documents/dev/blink2/blink/comparison"
 source(file.path(ROOT, "plot_helpers.R"))
 DDIR <- file.path(ROOT, "data"); PDIR <- file.path(ROOT, "plots")
 rd <- function(f) read.csv(file.path(DDIR, f))

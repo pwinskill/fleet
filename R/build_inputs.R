@@ -102,23 +102,10 @@ solve_disease_block <- function(FOI, phi, prop, r, eta, rA, rD, rU, rT, rP, ft) 
 #' approximations rather than errors. Kept as an extension point.
 #' @noRd
 check_unsupported <- function(p) {
-  # Surface the two remaining mean-field approximations so they are never silent.
-  # (1) A first-line drug SWITCH — several clinical-treatment drugs whose relative
-  # coverage shares change over time — is blended at fixed peak-coverage weights,
-  # so drug efficacy / treated infectivity / prophylaxis duration cannot vary in
-  # time. Exact for a single drug or constant drug shares.
-  cd <- p$clinical_treatment_drugs
-  if (!is.null(cd) && length(cd) > 1) {
-    shares <- vapply(p$clinical_treatment_coverages,
-                     function(x) length(unique(x)) > 1, logical(1))
-    if (any(shares)) warning(
-      "Multiple clinical-treatment drugs with time-varying coverage: drug ",
-      "properties (efficacy, treated infectivity, prophylaxis) are blended at ",
-      "fixed peak-coverage weights, so a first-line switch is approximated by a ",
-      "constant drug mixture.", call. = FALSE)
-  }
-  # (2) Seasonal PEV boosters are scheduled at a fixed delay from the primary
-  # series, not aligned to the transmission season.
+  # Surface the remaining mean-field approximation so it is never silent: seasonal
+  # PEV boosters are scheduled at a fixed delay from the primary series, not aligned
+  # to the transmission season. (Clinical-drug mixes, incl. first-line switches, are
+  # now modelled time-varyingly via drug_mix_series().)
   if (isTRUE(p$pev) && isTRUE(p$pev_epi_seasonal_boosters)) warning(
     "seasonal_boosters is approximated as a fixed days-since-primary schedule ",
     "(not aligned to the transmission season).", call. = FALSE)
@@ -141,7 +128,7 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
                          n_eir = 10L, n_foim = 10L, n_eip = 20L, timesteps = 3650) {
   p <- parameters
   if (!is.null(p$parasite) && p$parasite == "vivax") {
-    stop("malariaode supports P. falciparum only (parasite = 'vivax' not supported)")
+    stop("blink supports P. falciparum only (parasite = 'vivax' not supported)")
   }
   if (length(init_EIR) != 1 || is.na(init_EIR) || init_EIR <= 0) {
     stop("init_EIR must be a single positive number (bites per adult per year).")
@@ -153,11 +140,11 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
   # IBM parameter names.
   if (!is.null(p$eq_params)) eqp <- utils::modifyList(eqp, as.list(p$eq_params))
   ft <- get_ft(p, 1)                       # baseline treatment coverage at t=1
-  dmix <- drug_mix(p, eqp)                 # drug-linked efficacy, treated infectivity, prophylaxis
-  eqp[["cT"]] <- dmix$cT                    # drug-linked treated infectivity for the seed
-  rP <- dmix$rP                            # drug-linked prophylaxis rate (seed + model)
+  dser <- drug_mix_series(p, eqp)          # time-varying drug_eff/cT/rP; seed = t=0 blend
+  eqp[["cT"]] <- dser$seed$cT              # drug-linked treated infectivity for the seed
+  rP <- dser$seed$rP                       # drug-linked prophylaxis rate for the seed
   rP_c <- chemoprevention_prophylaxis_rate(p, eqp)  # chemoprevention prophylaxis rate
-  ft_seed <- ft * dmix$drug_eff            # effective treated fraction = coverage * efficacy
+  ft_seed <- ft * dser$seed$drug_eff       # effective treated fraction = coverage * efficacy
 
   ## heterogeneity nodes
   n_het <- p$n_heterogeneity_groups
@@ -204,7 +191,11 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
               "them. Raise default_age_lower(max_age=) or extend deathrate_agegroups ",
               "to match.", call. = FALSE)
     }
-    grp <- pmin(findInterval(age_mid, p$deathrate_agegroups) + 1, ncol(p$deathrates))
+    # right-closed bins (edge_{g-1}, edge_g], matching ms .bincode(age, c(0, agegroups));
+    # ages above the top edge cap to the last rate here (the warned divergence from the
+    # IBM, which removes them).
+    grp <- pmin(pmax(findInterval(age_mid, c(0, p$deathrate_agegroups),
+                                  left.open = TRUE), 1L), ncol(p$deathrates))
     mu_age <- p$deathrates[1, grp]                    # baseline (seed) hazard by model age
     mu_age_z <- t(p$deathrates[, grp, drop = FALSE])  # [n_age, n_mut] (time last)
     mu_age_t <- p$deathrate_timesteps
@@ -332,19 +323,25 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
     icm_factor = icm_factor, ivm_factor = ivm_factor, mean_psi = mean_psi,
     zeta = zeta, het_wt = het_wt,
     rA = eqp[["rA"]], rD = eqp[["rD"]], rU = eqp[["rU"]],
-    rT = eqp[["rT"]], rP = rP, rP_c = rP_c, rT_slow = res$rT_slow,
+    rT = eqp[["rT"]], rP_c = rP_c, rT_slow = res$rT_slow,
     d_ib = eqp[["db"]], d_ica = eqp[["dc"]], d_id = eqp[["dd"]], d_iva = eqp[["dv"]],
     ub = eqp[["ub"]], uc = eqp[["uc"]], ud = eqp[["ud"]], uv = eqp[["uv"]],
+    # Acquired-immunity offset in the b/phi/theta Hill calls. The IBM adds +0.5 per
+    # individual; empirically (A/B vs the ms 3.0.0 IBM ensemble mean) offset 0 is the
+    # better mean-field match, so default 0. Set parameters$acquired_immunity_offset =
+    # 0.5 to reproduce the IBM's literal per-individual Hill functions.
+    acq_offset = if (!is.null(p$acquired_immunity_offset)) p$acquired_immunity_offset else 0,
     b0 = eqp[["b0"]], b1 = eqp[["b1"]], ib0 = eqp[["IB0"]], kb = eqp[["kb"]],
     phi0 = eqp[["phi0"]], phi1 = eqp[["phi1"]], ic0 = eqp[["IC0"]], kc = eqp[["kc"]],
     d1 = eqp[["d1"]], id0 = eqp[["ID0"]], kd = eqp[["kd"]],
     fd0 = eqp[["fd0"]], ad0 = eqp[["ad0"]], gd = eqp[["gd"]],
     theta0 = eqp[["theta0"]], theta1 = eqp[["theta1"]], iv0 = eqp[["IV0"]], kv = eqp[["kv"]],
     fv0 = eqp[["fv0"]], av = eqp[["av"]], gammav = eqp[["gammav"]],
-    cD = eqp[["cD"]], cU = eqp[["cU"]], cT = eqp[["cT"]], g_inf = eqp[["g_inf"]],
+    cD = eqp[["cD"]], cU = eqp[["cU"]], g_inf = eqp[["g_inf"]],
     PM = eqp[["PM"]], PVM = eqp[["PVM"]],
     n_ftt = length(trt$times), ft_times = trt$times, ft_vals = trt$vals,
-    drug_eff = dmix$drug_eff,
+    n_dmix = length(dser$times), dmix_times = dser$times,
+    cT_vals = dser$cT, drug_eff_vals = dser$drug_eff, rP_vals = dser$rP,
     n_rest = length(res$times), res_times = res$times,
     etf_vals = res$etf, spc_vals = res$spc,
     del = p$del, dl = p$dl, dpl = p$dpl, me = p$me, ml = p$ml, mup = p$mup,

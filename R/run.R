@@ -1,9 +1,9 @@
-.malariaode_env <- new.env(parent = emptyenv())
+.blink_env <- new.env(parent = emptyenv())
 
 #' Locate the odin model source (installed or in-development).
 #' @noRd
 odin_model_path <- function() {
-  path <- system.file("odin", "malaria_ode.R", package = "malariaode")
+  path <- system.file("odin", "malaria_ode.R", package = "blink")
   if (nzchar(path) && file.exists(path)) return(path)
   # development fallbacks
   for (cand in c(
@@ -21,11 +21,11 @@ odin_model_path <- function() {
 get_generator <- function(odin_file = NULL) {
   if (is.null(odin_file)) odin_file <- odin_model_path()
   key <- normalizePath(odin_file, mustWork = TRUE)
-  if (is.null(.malariaode_env$generators)) .malariaode_env$generators <- list()
-  if (is.null(.malariaode_env$generators[[key]])) {
-    .malariaode_env$generators[[key]] <- odin2::odin(odin_file, quiet = TRUE)
+  if (is.null(.blink_env$generators)) .blink_env$generators <- list()
+  if (is.null(.blink_env$generators[[key]])) {
+    .blink_env$generators[[key]] <- odin2::odin(odin_file, quiet = TRUE)
   }
-  .malariaode_env$generators[[key]]
+  .blink_env$generators[[key]]
 }
 
 #' Run the mean-field (ODE) malaria model.
@@ -41,6 +41,11 @@ get_generator <- function(odin_file = NULL) {
 #'   mortality and the resulting equilibrium age structure). P. vivax is rejected;
 #'   the model is always compartmental (the individual-mosquito path does not
 #'   apply). See the README for the mean-field approximations used by each module.
+#' @param correlations accepted so the first three arguments mirror
+#'   `malariasimulation::run_simulation(timesteps, parameters, correlations)`
+#'   exactly (drop-in call compatibility). Intervention correlation is an
+#'   individual-level feature with no mean-field analogue, so a non-NULL value is
+#'   ignored with a warning (the ODE assumes independence between interventions).
 #' @details Seasonal runs oscillate around a limit cycle rather than holding flat;
 #'   the state is seeded at the annual-mean (aseasonal) equilibrium, so the first
 #'   ~10 years are a transient onto the cycle and the seasonal annual-mean EIR
@@ -85,11 +90,21 @@ get_generator <- function(odin_file = NULL) {
 #' out2 <- run_simulation_ode(timesteps = 3650, parameters = p2)
 #' }
 #' @export
-run_simulation_ode <- function(timesteps, parameters, init_EIR = NULL,
+run_simulation_ode <- function(timesteps, parameters = NULL, correlations = NULL,
+                               init_EIR = NULL,
                                age_lower = default_age_lower(),
                                n_eir = 10L, n_foim = 10L, n_eip = 20L,
                                atol = 1e-8, rtol = 1e-8, step_size_max = 1,
                                odin_file = NULL) {
+  if (is.null(parameters)) {
+    stop("`parameters` is required (a malariasimulation::get_parameters() list).")
+  }
+  if (!is.null(correlations)) {
+    warning("`correlations` is accepted for run_simulation() signature ",
+            "compatibility but not modelled: intervention correlation is an ",
+            "individual-level feature with no mean-field analogue (the ODE ",
+            "assumes independence). Ignoring it.", call. = FALSE)
+  }
   if (is.null(init_EIR)) {
     init_EIR <- parameters$init_EIR
     if (is.null(init_EIR)) {

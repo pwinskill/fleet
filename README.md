@@ -1,10 +1,10 @@
-# malariaode
+# blink
 
 > A fast, deterministic **mean-field (ODE) twin** of the [malariasimulation](https://github.com/mrc-ide/malariasimulation) individual-based model of *Plasmodium falciparum* malaria — same inputs, seconds per run, population-independent.
 
 ## What it is
 
-`malariaode` reproduces the Griffin-style, age- and biting-heterogeneity-structured human model — states `S / D / A / U / Tr` plus two prophylaxis compartments (`Ph`, treatment-linked, and `Ph_c`, chemoprevention) and the six immunity functions `IB / ICA / ICM / ID / IVA / IVM` — coupled to the compartmental mosquito model (`E / L / P / Sm / EIP-chain / Im` per species). It is written in [odin2](https://github.com/mrc-ide/odin2) / [dust2](https://github.com/mrc-ide/dust2).
+`blink` reproduces the Griffin-style, age- and biting-heterogeneity-structured human model — states `S / D / A / U / Tr` plus two prophylaxis compartments (`Ph`, treatment-linked, and `Ph_c`, chemoprevention) and the six immunity functions `IB / ICA / ICM / ID / IVA / IVM` — coupled to the compartmental mosquito model (`E / L / P / Sm / EIP-chain / Im` per species). It is written in [odin2](https://github.com/mrc-ide/odin2) / [dust2](https://github.com/mrc-ide/dust2).
 
 It exists to give the malariasimulation ecosystem a **deterministic, Monte-Carlo-free companion** that:
 
@@ -19,7 +19,7 @@ Reach for the IBM instead when you need stochastic variation, individual heterog
 
 ```r
 # install.packages("remotes")
-remotes::install_github("pwinskill/malariaode")
+remotes::install_github("pwinskill/blink")
 ```
 
 The GitHub-only core dependencies (`odin2`, `dust2`, `malariaEquilibrium`) are pulled automatically from `DESCRIPTION` `Remotes`. The examples below also need two suggested packages:
@@ -33,7 +33,7 @@ remotes::install_github(c("mrc-ide/malariasimulation", "mrc-ide/postie"))
 ## Quick start
 
 ```r
-library(malariaode)
+library(blink)
 
 p <- malariasimulation::get_parameters()
 
@@ -62,7 +62,7 @@ p <- malariasimulation::set_bednets(
 out <- run_simulation_ode(timesteps = 3650, parameters = p, init_EIR = 20)
 ```
 
-If you have already called `malariasimulation::set_equilibrium()`, `init_EIR` is read from the parameter list and can be omitted. For a step-by-step tour see `vignette("malariaode")`.
+If you have already called `malariasimulation::set_equilibrium()`, `init_EIR` is read from the parameter list and can be omitted. For a step-by-step tour see `vignette("blink")`.
 
 ### Exported functions
 
@@ -158,13 +158,13 @@ Across the equilibrium and intervention scenarios the ODE tracks the IBM closely
 
 ## Notes & conventions
 
-- **Deterministic seed.** The equilibrium seed is deterministic; there is no random component to a `malariaode` run.
+- **Deterministic seed.** The equilibrium seed is deterministic; there is no random component to a `blink` run.
 - **Column stability.** Output column names are stable across parameter sets (interventions on/off), so runs are directly comparable and `rbind`-able.
 - **Population conservation.** Under constant-hazard or custom demography the total human population is conserved to numerical tolerance (a useful sanity check: `S_count + D_count + A_count + U_count + Tr_count + Ph_count`).
 
 ## Further reading
 
-- Getting started: `vignette("malariaode")`.
+- Getting started: `vignette("blink")`.
 - Function reference: `?run_simulation_ode`, `?get_epi_outputs`, `?default_age_lower`.
 - Model source: `inst/odin/malaria_ode.R` (the odin2 model).
 - Parameter translation & equilibrium seeding: `R/build_inputs.R`, `R/translate_params.R`, `R/mosquito_equilibrium.R`.

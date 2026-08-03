@@ -1,4 +1,4 @@
-Package: malariaode
+Package: blink
 Title: Mean-Field (ODE) Twin of the 'malariasimulation' Malaria Model
 Version: 0.0.0.9000
 Authors@R: c(
@@ -17,8 +17,9 @@ Description: Provides a fast, deterministic mean-field (ordinary differential
   Built on the 'odin2' and 'dust2' stack, a single multi-decade run completes in
   seconds, independent of population size.
 License: MIT + file LICENSE
-URL: https://pwinskill.github.io/malariaode, https://github.com/pwinskill/malariaode
-BugReports: https://github.com/pwinskill/malariaode/issues
+SystemRequirements: C++17
+URL: https://pwinskill.github.io/blink, https://github.com/pwinskill/blink
+BugReports: https://github.com/pwinskill/blink/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3

@@ -91,17 +91,27 @@ test_that("resistance on a chemoprevention drug reduces its clearance", {
   expect_equal(ev[[1]]$frac, 0.9 * p$drug_efficacy[1] * 0.8, tolerance = 1e-9)
 })
 
-test_that("remaining mean-field approximations are surfaced, not silent", {
+test_that("multi-drug first-line switch is modelled as a time-varying blend", {
   skip_if_not_installed("malariasimulation")
   gp <- malariasimulation::get_parameters
-  # multi-drug first-line switch (time-varying shares) -> warn
+  # AL, then switch to SP-AQ at t=1000. The drug blend (cT/drug_eff/rP) must vary
+  # in time, not freeze at peak-coverage weights (the old approximation, which used
+  # to warn). No "peak-coverage" warning should be emitted now that it is modelled.
   p <- malariasimulation::set_drugs(gp(), list(malariasimulation::AL_params,
                                                malariasimulation::SP_AQ_params))
   p <- malariasimulation::set_clinical_treatment(p, drug = 1, timesteps = c(1, 1000),
                                                  coverages = c(0.6, 0))
   p <- malariasimulation::set_clinical_treatment(p, drug = 2, timesteps = c(1, 1000),
                                                  coverages = c(0, 0.6))
-  expect_warning(build_inputs(p, 20), "peak-coverage")
+  wmsgs <- character(0)
+  inp <- withCallingHandlers(
+    build_inputs(p, 20, timesteps = 1200),
+    warning = function(w) { wmsgs <<- c(wmsgs, conditionMessage(w)); invokeRestart("muffleWarning") })
+  expect_false(any(grepl("peak-coverage", wmsgs)))
+  # the odin model receives a genuine time-varying drug series spanning the switch
+  expect_true(inp$pars$n_dmix > 1)
+  # AL and SP-AQ differ in prophylaxis / efficacy, so the blended series changes
+  expect_gt(length(unique(round(c(inp$pars$rP_vals, inp$pars$drug_eff_vals), 8))), 1)
 })
 
 test_that("custom eq_params are honoured by the seed", {
