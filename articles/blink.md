@@ -333,34 +333,20 @@ sessionInfo()
 #> [1] blink_0.0.0.9000
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] tidyr_1.3.2               sass_0.4.10              
-#>  [3] generics_0.1.4            stringi_1.8.7            
-#>  [5] digest_0.6.39             magrittr_2.0.5           
-#>  [7] evaluate_1.0.5            pkgload_1.5.3            
-#>  [9] fastmap_1.2.0             odin2_0.3.46             
-#> [11] rprojroot_2.1.1           jsonlite_2.0.0           
-#> [13] processx_3.9.0            pkgbuild_1.4.8           
-#> [15] brio_1.1.5                malariaEquilibrium_1.0.1 
-#> [17] cpp11_0.5.5               ps_1.9.3                 
-#> [19] malariasimulation_3.0.0   decor_1.0.2              
-#> [21] purrr_1.2.2               textshaping_1.0.5        
-#> [23] jquerylib_0.1.4           cli_3.6.6                
-#> [25] rlang_1.3.0               withr_3.0.3              
-#> [27] cachem_1.1.0              yaml_2.3.12              
-#> [29] otel_0.2.0                tools_4.6.1              
-#> [31] odin.system13166c34_0.0.1 dplyr_1.2.1              
-#> [33] vctrs_0.7.3               R6_2.6.1                 
-#> [35] lifecycle_1.0.5           stringr_1.6.0            
-#> [37] fs_2.1.0                  MASS_7.3-65              
-#> [39] ragg_1.5.2                postie_1.1.0             
-#> [41] pkgconfig_2.0.3           desc_1.4.3               
-#> [43] callr_3.8.0               pkgdown_2.2.1            
-#> [45] pillar_1.11.1             bslib_0.11.0             
-#> [47] glue_1.8.1                dust2_0.3.28             
-#> [49] monty_0.4.14              Rcpp_1.1.2               
-#> [51] statmod_1.5.2             systemfonts_1.3.2        
-#> [53] tidyselect_1.2.1          xfun_0.60                
-#> [55] tibble_3.3.1              knitr_1.51               
-#> [57] htmltools_0.5.9           rmarkdown_2.31           
-#> [59] compiler_4.6.1
+#>  [1] jsonlite_2.0.0           dplyr_1.2.1              compiler_4.6.1          
+#>  [4] tidyselect_1.2.1         Rcpp_1.1.2               stringr_1.6.0           
+#>  [7] tidyr_1.3.2              jquerylib_0.1.4          systemfonts_1.3.2       
+#> [10] textshaping_1.0.5        yaml_2.3.12              fastmap_1.2.0           
+#> [13] statmod_1.5.2            malariaEquilibrium_1.0.1 R6_2.6.1                
+#> [16] generics_0.1.4           postie_1.1.0             knitr_1.51              
+#> [19] MASS_7.3-65              tibble_3.3.1             desc_1.4.3              
+#> [22] monty_0.4.14             bslib_0.12.0             pillar_1.11.1           
+#> [25] rlang_1.3.0              cachem_1.1.0             stringi_1.8.7           
+#> [28] malariasimulation_3.0.0  dust2_0.3.28             xfun_0.60               
+#> [31] fs_2.1.0                 sass_0.4.10              otel_0.2.0              
+#> [34] cli_3.6.6                withr_3.0.3              pkgdown_2.2.1           
+#> [37] magrittr_2.0.5           digest_0.6.39            lifecycle_1.0.5         
+#> [40] vctrs_0.7.3              evaluate_1.0.5           glue_1.8.1              
+#> [43] ragg_1.5.2               purrr_1.2.2              rmarkdown_2.31          
+#> [46] tools_4.6.1              pkgconfig_2.0.3          htmltools_0.5.9
 ```
