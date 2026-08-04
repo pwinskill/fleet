@@ -27,25 +27,24 @@ VignetteBuilder: knitr
 Remotes:
     mrc-ide/odin2,
     mrc-ide/dust2,
+    mrc-ide/monty,
     mrc-ide/malariaEquilibrium,
     mrc-ide/malariasimulation,
     mrc-ide/postie
 Imports:
-    odin2,
     dust2,
     malariaEquilibrium,
     stats
+LinkingTo:
+    cpp11,
+    dust2,
+    monty
 Suggests:
+    odin2,
     malariasimulation,
     postie,
     knitr,
     rmarkdown,
-    testthat (>= 3.0.0),
-    cpp11,
-    decor,
-    glue,
-    pkgbuild,
-    fs,
-    withr
+    testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Config/Needs/website: pkgdown
