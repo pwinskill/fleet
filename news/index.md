@@ -18,6 +18,26 @@ built on odin2/dust2.
   (`ft > 0`), via a corrected prophylaxis-aging recursion.
 - Lags (human EIR/FOIM, mosquito EIP) implemented as tunable Erlang
   chains, exact at equilibrium for any stage count.
+- Infection hazard reproduces the IBM’s **per-timestep bite
+  deduplication**: the IBM collects the day’s bitten individuals in a
+  bitset, so a person bitten repeatedly in one timestep is infected at
+  most once. The daily infection probability is therefore
+  `(1 - exp(-EPS)) * b`, converted to a hazard with `-log(1 - p)`. This
+  saturates, where the unbounded `b * EPS` over-predicts infection as
+  exposure approaches one bite/person/day — i.e. at seasonal peaks and
+  in high-`zeta` strata. Across five countries (36,936 sub-site-months)
+  it moves the monthly clinical regression slope vs the IBM from 1.14 to
+  1.10, with the effect correctly gated by exposure: largest in the
+  highest-EIR setting (BFA slope 1.10 -\> 1.04) and nil at low
+  transmission (MMR unchanged). `parameters$bite_dedup = 0` restores the
+  linear form, for which the `malariaEquilibrium` seed is an exact fixed
+  point.
+- `parameters$acquired_immunity_offset` exposes the IBM’s `+0.5`
+  acquired-immunity offset in the `b`/`phi`/`theta` Hill functions.
+  Default `0`: an A/B against a live malariasimulation 3.0.0 ensemble
+  mean showed `0` matches clinical (~2.4x closer) and severe (~9x
+  closer) incidence better than `0.5`, because the offset is a
+  per-individual detail that does not carry over to a stratum mean.
 
 ### Interventions
 

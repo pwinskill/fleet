@@ -52,8 +52,8 @@ out[1:3, c("timestep", "n_age_730_3650", "n_detect_lm_730_3650",
            "p_detect_lm_730_3650", "EIR", "ft")]
 #>   timestep n_age_730_3650 n_detect_lm_730_3650 p_detect_lm_730_3650 EIR ft
 #> 1        0       284.2213             155.5888            0.5474214  20  0
-#> 2        1       284.2213             155.5888            0.5474214  20  0
-#> 3        2       284.2213             155.5888            0.5474214  20  0
+#> 2        1       284.2213             155.5789            0.5473865  20  0
+#> 3        2       284.2213             155.5695            0.5473535  20  0
 ```
 
 The return value is a wide, `malariasimulation`-style daily count table.
@@ -70,9 +70,9 @@ the first and last rows agree:
 ``` r
 
 range(out$EIR)                    # ~20 throughout
-#> [1] 20 20
+#> [1] 19.93108 20.00000
 range(out$p_detect_lm_730_3650)   # constant to machine precision
-#> [1] 0.5474214 0.5474214
+#> [1] 0.5457759 0.5474214
 ```
 
 ## Reading outputs with postie
@@ -92,9 +92,9 @@ epi <- get_epi_outputs(out)
 # prevalence: one <diagnostic>_prevalence_<lo>_<hi> column per age band (years)
 utils::tail(epi$prevalence["lm_prevalence_2_10"], 3)
 #>      lm_prevalence_2_10
-#> 5474          0.5474214
-#> 5475          0.5474214
-#> 5476          0.5474214
+#> 5474          0.5464063
+#> 5475          0.5464064
+#> 5476          0.5464064
 
 # rates: clinical / severe incidence, mortality and DALYs by age band
 utils::head(epi$rates[, c("time", "age_lower", "age_upper",
@@ -102,12 +102,12 @@ utils::head(epi$rates[, c("time", "age_lower", "age_upper",
 #> # A tibble: 6 × 6
 #>    time age_lower age_upper clinical    severe    dalys
 #>   <dbl>     <dbl>     <dbl>    <dbl>     <dbl>    <dbl>
-#> 1 2000.         2        10  0.00342 0.0000446 0.000411
-#> 2 2000.         0       100  0.00184 0.0000321 0.000171
-#> 3 2000          2        10  0.00342 0.0000446 0.000414
-#> 4 2000          0       100  0.00184 0.0000321 0.000172
-#> 5 2000.         2        10  0.00342 0.0000446 0.000414
-#> 6 2000.         0       100  0.00184 0.0000321 0.000172
+#> 1 2000.         2        10  0.00339 0.0000445 0.000410
+#> 2 2000.         0       100  0.00182 0.0000320 0.000171
+#> 3 2000          2        10  0.00339 0.0000445 0.000413
+#> 4 2000          0       100  0.00182 0.0000320 0.000172
+#> 5 2000.         2        10  0.00339 0.0000445 0.000413
+#> 6 2000.         0       100  0.00182 0.0000320 0.000172
 ```
 
 Use `diagnostic = "pcr"` for PCR prevalence, and pass through extra
@@ -158,7 +158,7 @@ nets <- run_simulation_ode(12 * 365, p_nets, init_EIR = 20)
 c(baseline = nets$p_detect_lm_730_3650[1],
   trough   = min(nets$p_detect_lm_730_3650))
 #>  baseline    trough 
-#> 0.5474214 0.1855880
+#> 0.5474214 0.1854022
 ```
 
 Prevalence falls after deployment and then relaxes as the nets decay.
@@ -186,7 +186,7 @@ smc <- run_simulation_ode(3 * 365, p_smc, init_EIR = 20)
 band <- "p_detect_lm_91_1825"        # the 0.25-5y target band, tag in days
 c(baseline = smc[[band]][1], trough = min(smc[[band]]))
 #>   baseline     trough 
-#> 0.46944682 0.01786818
+#> 0.46944682 0.01770817
 ```
 
 SMC/MDA/PMC are applied as pulsed mass drug administration between
@@ -209,7 +209,7 @@ pev <- run_simulation_ode(12 * 365, p_pev, init_EIR = 20)
 c(baseline = pev$p_detect_lm_730_3650[1],
   year12   = pev$p_detect_lm_730_3650[nrow(pev)])
 #>  baseline    year12 
-#> 0.5474214 0.5122024
+#> 0.5474214 0.5109067
 ```
 
 PEV reduces the infection hazard by a per-age, per-time factor built
@@ -262,9 +262,9 @@ p_seas <- malariasimulation::get_parameters(list(
 seas <- run_simulation_ode(20 * 365, p_seas, init_EIR = 20)
 final_year <- seas[(nrow(seas) - 365 + 1):nrow(seas), ]
 range(final_year$EIR)   # seasonal swing in the settled cycle
-#> [1]  0.04907015 58.03091820
+#> [1]  0.049142 57.988336
 mean(final_year$EIR)    # a few % below the aseasonal target of 20
-#> [1] 18.61459
+#> [1] 18.60436
 ```
 
 ## The validation story
@@ -341,7 +341,7 @@ sessionInfo()
 #> [16] generics_0.1.4           postie_1.1.0             knitr_1.51              
 #> [19] MASS_7.3-65              tibble_3.3.1             desc_1.4.3              
 #> [22] monty_0.4.14             bslib_0.12.0             pillar_1.11.1           
-#> [25] rlang_1.3.0              cachem_1.1.0             stringi_1.8.7           
+#> [25] rlang_1.3.0              cachem_1.1.0             stringi_1.8.9           
 #> [28] malariasimulation_3.0.0  dust2_0.3.28             xfun_0.60               
 #> [31] fs_2.1.0                 sass_0.4.10              otel_0.2.0              
 #> [34] cli_3.6.6                withr_3.0.3              pkgdown_2.2.1           

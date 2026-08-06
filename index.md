@@ -170,6 +170,20 @@ corrected `bP` term (upstream
 has a small artifact), so the model holds flat even under treatment
 (`ft > 0`).
 
+**Infection hazard.** malariasimulation draws each day’s bites from a
+Poisson and collects the bitten in a **bitset**, so an individual bitten
+several times in one timestep is infected at most once. `blink`
+reproduces that cap: the daily infection probability is
+`(1 - exp(-EPS)) * b`, converted to a hazard with `-log(1 - p)`
+(matching the IBM’s `prob_to_rate`). This **saturates**, whereas the
+unbounded product `b * EPS` over-predicts infection wherever exposure
+approaches one infectious bite per person per day — at seasonal peaks
+and in high-`zeta` strata. The two forms agree to \<2% at low exposure.
+Because `malariaEquilibrium` assumes the linear form, the seed is an
+exact fixed point only with `parameters$bite_dedup = 0`; with the
+default the model relaxes off the seed over the first years, exactly as
+the IBM does (it is seeded the same way).
+
 **Treatment & resistance.** Drug prophylaxis is a **single mean-duration
 compartment** (the Weibull is represented by its mean, so decay is
 exponential rather than the sharper Weibull), and slow parasite
@@ -178,10 +192,11 @@ sub-compartments); both are equilibrium-exact, transient-approximate.
 Antimalarial resistance (early-treatment-failure and
 slow-parasite-clearance) is blended across all treatment drugs by their
 share of treatment and also applies to a drug used for chemoprevention
-(SMC/MDA/PMC). The multi-drug blend uses fixed **peak-coverage**
-weights, so a first-line **switch** (several clinical drugs whose
-relative shares change over time) is approximated by a constant drug
-mixture — **warned**, and exact for a single drug or constant shares.
+(SMC/MDA/PMC). The multi-drug blend is **time-varying**: drug efficacy,
+treated infectivity (`cT`) and the prophylaxis rate are interpolated
+over the treatment-coverage change times using each drug’s
+*instantaneous* share, so a first-line **switch** is modelled rather
+than frozen at a constant mixture.
 
 **Vector control.** Net/IRS efficacy is population-averaged over the
 net-using / sprayed fractions into per-species `a(t)`, `mu(t)`. Both

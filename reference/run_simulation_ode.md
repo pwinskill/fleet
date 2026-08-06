@@ -41,6 +41,26 @@ run_simulation_ode(
   (the individual-mosquito path does not apply). See the README for the
   mean-field approximations used by each module.
 
+  Two optional fields on the list tune how faithfully the mean field
+  mirrors the IBM's per-individual arithmetic. Both default to the
+  validated choice, so you normally leave them alone:
+
+  - `bite_dedup` (default `1`) — reproduce the IBM's per-timestep bite
+    deduplication. malariasimulation collects the day's bitten
+    individuals in a bitset, so a person bitten repeatedly in one
+    timestep is infected at most once: the daily infection probability
+    is `(1 - exp(-EPS)) * b`, which saturates. Setting `0` uses the
+    unbounded `b * EPS` instead, which over-predicts infection where
+    exposure approaches one bite/person/day (seasonal peaks, high-`zeta`
+    strata) but makes the `malariaEquilibrium` seed an exact fixed point
+    — useful for equilibrium tests.
+
+  - `acquired_immunity_offset` (default `0`) — the IBM adds `+0.5` to
+    positive acquired immunity inside the `b`/`phi`/`theta` Hill
+    functions. That is a per-individual detail which does not carry over
+    to a stratum mean; an A/B against the IBM ensemble mean favours `0`.
+    Set `0.5` to reproduce the IBM's literal Hill calls.
+
 - correlations:
 
   accepted so the first three arguments mirror
