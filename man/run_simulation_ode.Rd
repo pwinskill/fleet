@@ -31,7 +31,26 @@ MDA/SMC/PMC, PEV (EPI + mass) and TBV vaccines, seasonality and flexible
 carrying capacity, and custom demography (\code{set_demography}: age-specific
 mortality and the resulting equilibrium age structure). P. vivax is rejected;
 the model is always compartmental (the individual-mosquito path does not
-apply). See the README for the mean-field approximations used by each module.}
+apply). See the README for the mean-field approximations used by each module.
+
+Two optional fields on the list tune how faithfully the mean field mirrors the
+IBM's per-individual arithmetic. Both default to the validated choice, so you
+normally leave them alone:
+\itemize{
+\item \code{bite_dedup} (default \code{1}) — reproduce the IBM's per-timestep bite
+deduplication. malariasimulation collects the day's bitten individuals in a
+bitset, so a person bitten repeatedly in one timestep is infected at most
+once: the daily infection probability is \code{(1 - exp(-EPS)) * b}, which
+saturates. Setting \code{0} uses the unbounded \code{b * EPS} instead, which
+over-predicts infection where exposure approaches one bite/person/day
+(seasonal peaks, high-\code{zeta} strata) but makes the \code{malariaEquilibrium}
+seed an exact fixed point — useful for equilibrium tests.
+\item \code{acquired_immunity_offset} (default \code{0}) — the IBM adds \code{+0.5} to
+positive acquired immunity inside the \code{b}/\code{phi}/\code{theta} Hill functions. That
+is a per-individual detail which does not carry over to a stratum mean; an
+A/B against the IBM ensemble mean favours \code{0}. Set \code{0.5} to reproduce the
+IBM's literal Hill calls.
+}}
 
 \item{correlations}{accepted so the first three arguments mirror
 \code{malariasimulation::run_simulation(timesteps, parameters, correlations)}

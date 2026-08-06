@@ -6,7 +6,7 @@ test_that("model holds flat at the malariaEquilibrium equilibrium (ft = 0)", {
   # default acq_offset is 0 (the validated best mean-field match), for which the seed IS
   # the exact fixed point; this verifies the numerical machinery (equilibrium seeding,
   # immunity flux-aging, Erlang-lag seeding) holds flat. Set explicitly for clarity.
-  p$acquired_immunity_offset <- 0
+  p$acquired_immunity_offset <- 0; p$bite_dedup <- 0
   out <- run_simulation_ode(3650, p, init_EIR = 20)
 
   # adult EIR is reproduced and held flat
@@ -25,7 +25,7 @@ test_that("model holds flat at the malariaEquilibrium equilibrium (ft = 0)", {
 test_that("model holds flat at equilibrium with treatment (ft > 0)", {
   skip_if_not_installed("malariasimulation")
   p <- malariasimulation::get_parameters()
-  p$acquired_immunity_offset <- 0                    # test the machinery at the fixed point
+  p$acquired_immunity_offset <- 0; p$bite_dedup <- 0                    # test the machinery at the fixed point
   p <- malariasimulation::set_drugs(p, list(malariasimulation::AL_params))
   p <- malariasimulation::set_clinical_treatment(p, drug = 1, timesteps = 1,
                                                  coverages = 0.4)
@@ -39,6 +39,7 @@ test_that("model holds flat at equilibrium with treatment (ft > 0)", {
 test_that("acquired-immunity offset toggle: default 0 holds flat, 0.5 shifts like the IBM Hill", {
   skip_if_not_installed("malariasimulation")
   p <- malariasimulation::get_parameters()
+  p$bite_dedup <- 0                          # isolate the offset: linear FOI => exact seed
   off <- run_simulation_ode(3650, p, init_EIR = 20)             # default offset 0 -> flat seed
   p_on <- p; p_on$acquired_immunity_offset <- 0.5
   on  <- run_simulation_ode(3650, p_on, init_EIR = 20)          # +0.5 -> literal IBM Hill calls
@@ -52,6 +53,26 @@ test_that("acquired-immunity offset toggle: default 0 holds flat, 0.5 shifts lik
   # +0.5 raises effective acquired immunity => lower severe susceptibility (theta)
   sev_col <- grep("^n_inc_severe_", names(on))[1]
   expect_lt(sum(on[[sev_col]]), sum(off[[sev_col]]))
+})
+
+test_that("bite deduplication saturates the infection hazard at high exposure", {
+  skip_if_not_installed("malariasimulation")
+  gp <- malariasimulation::get_parameters
+  # High EIR => expected bites/person/day approaches 1, where the IBM's one-infection-
+  # per-timestep cap binds: the saturating hazard must give LESS infection (and so less
+  # clinical incidence) than the unbounded linear form.
+  p_sat <- gp(); p_sat$bite_dedup <- 1
+  p_lin <- gp(); p_lin$bite_dedup <- 0
+  sat <- run_simulation_ode(1825, p_sat, init_EIR = 200)
+  lin <- run_simulation_ode(1825, p_lin, init_EIR = 200)
+  cc <- grep("^n_inc_clinical_", names(sat))[1]
+  rows <- 1000:1826                                  # settled window
+  expect_lt(sum(sat[[cc]][rows]), sum(lin[[cc]][rows]))
+  # ... and negligibly different at low exposure, where 1 - exp(-EPS) ~ EPS
+  sat_lo <- run_simulation_ode(1095, p_sat, init_EIR = 0.5)
+  lin_lo <- run_simulation_ode(1095, p_lin, init_EIR = 0.5)
+  r <- sum(sat_lo[[cc]]) / sum(lin_lo[[cc]])
+  expect_gt(r, 0.98); expect_lte(r, 1.001)
 })
 
 test_that("PfPR increases monotonically with EIR (simulated, not seed)", {

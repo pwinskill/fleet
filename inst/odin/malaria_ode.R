@@ -48,6 +48,10 @@ ub <- parameter(); uc <- parameter(); ud <- parameter(); uv <- parameter()
 # markedly better match for clinical/severe incidence than 0.5, so the default is 0.
 # Set 0.5 to reproduce the IBM's literal per-individual Hill functions instead.
 acq_offset <- parameter(0)
+# 1 = reproduce the IBM's per-timestep bite deduplication (saturating infection
+# hazard, see the FOI block); 0 = the plain linear b*EPS, for which the
+# malariaEquilibrium seed is an exact fixed point.
+bite_dedup <- parameter(1)
 b0 <- parameter(); b1 <- parameter(); ib0 <- parameter(); kb <- parameter()
 phi0 <- parameter(); phi1 <- parameter(); ic0 <- parameter(); kc <- parameter()
 d1 <- parameter(); id0 <- parameter(); kd <- parameter()
@@ -170,9 +174,21 @@ deriv(Xe[1]) <- reir * (eir_now - Xe[1])
 deriv(Xe[2:n_eir]) <- reir * (Xe[i - 1] - Xe[i])
 dim(Xe) <- n_eir
 eir_lag <- Xe[n_eir]
-EPS[, ] <- eir_lag * zeta[j] * psi[i]
-FOI[, ] <- b[i, j] * EPS[i, j] * pev_factor[i]     # PEV reduces infection hazard
-dim(EPS, FOI) <- c(n_age, n_het)
+EPS[, ] <- eir_lag * zeta[j] * psi[i]              # expected infectious bites/person/day
+# malariasimulation draws the day's bites from a Poisson, scatters them over individuals
+# and collects the bitten in a BITSET (biting_process.R): a person bitten several times
+# in one timestep counts ONCE, so can be infected at most once per day. Its daily
+# infection probability is therefore p = (1 - exp(-EPS)) * b * pev, which SATURATES,
+# converted to a hazard by -log(1 - p) (ms prob_to_rate / rate_to_prob are exact
+# inverses). The plain product b*EPS instead grows without bound, over-predicting
+# infection where EPS approaches 1 -- at seasonal peaks and in high-zeta strata (the
+# clinical incidence "peaks too high" bias; severe is spared because young children
+# have small psi). bite_dedup = 0 restores the linear form, which is what
+# malariaEquilibrium assumes -- the seed is an exact fixed point only then.
+p_inf[, ] <- (1 - exp(-EPS[i, j])) * b[i, j] * pev_factor[i]
+FOI[, ] <- bite_dedup * (-log(1 - p_inf[i, j])) +
+  (1 - bite_dedup) * (b[i, j] * EPS[i, j] * pev_factor[i])
+dim(EPS, FOI, p_inf) <- c(n_age, n_het)
 
 ## ---- human -> mosquito infectivity (via FOIM-lag chain) -------------------
 # TBV reduces onward infectivity, per infection state (state-specific TBA)

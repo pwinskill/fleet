@@ -33,6 +33,7 @@
 // [[dust2::parameter(ud, type = "real_type", rank = 0, required = TRUE, constant = FALSE)]]
 // [[dust2::parameter(uv, type = "real_type", rank = 0, required = TRUE, constant = FALSE)]]
 // [[dust2::parameter(acq_offset, type = "real_type", rank = 0, required = FALSE, constant = FALSE)]]
+// [[dust2::parameter(bite_dedup, type = "real_type", rank = 0, required = FALSE, constant = FALSE)]]
 // [[dust2::parameter(b0, type = "real_type", rank = 0, required = TRUE, constant = FALSE)]]
 // [[dust2::parameter(b1, type = "real_type", rank = 0, required = TRUE, constant = FALSE)]]
 // [[dust2::parameter(ib0, type = "real_type", rank = 0, required = TRUE, constant = FALSE)]]
@@ -210,6 +211,7 @@ public:
     real_type ud;
     real_type uv;
     real_type acq_offset;
+    real_type bite_dedup;
     real_type b0;
     real_type b1;
     real_type ib0;
@@ -350,10 +352,11 @@ public:
     std::vector<real_type> ICM;
     std::vector<real_type> cA;
     std::vector<real_type> aIm;
-    std::vector<real_type> FOI;
+    std::vector<real_type> p_inf;
     std::vector<real_type> foim;
     std::vector<real_type> deaths;
     std::vector<real_type> phi;
+    std::vector<real_type> FOI;
     std::vector<real_type> inf;
     std::vector<real_type> infw;
     std::vector<real_type> detpcr;
@@ -370,13 +373,13 @@ public:
     std::vector<real_type> IVM;
     std::vector<real_type> detlm;
     std::vector<real_type> theta;
-    std::vector<real_type> inc_a;
     std::vector<real_type> det_lm_g;
     std::vector<real_type> clin_inc_a;
     std::vector<real_type> sev_inc_a;
-    std::vector<real_type> inc_g;
+    std::vector<real_type> inc_a;
     std::vector<real_type> clin_g;
     std::vector<real_type> sev_g;
+    std::vector<real_type> inc_g;
   };
   using data_type = dust2::no_data;
   static dust2::packing packing_state(const shared_state& shared) {
@@ -405,6 +408,7 @@ public:
     const real_type ud = dust2::r::read_real(parameters, "ud");
     const real_type uv = dust2::r::read_real(parameters, "uv");
     const real_type acq_offset = dust2::r::read_real(parameters, "acq_offset", 0);
+    const real_type bite_dedup = dust2::r::read_real(parameters, "bite_dedup", 1);
     const real_type b0 = dust2::r::read_real(parameters, "b0");
     const real_type b1 = dust2::r::read_real(parameters, "b1");
     const real_type ib0 = dust2::r::read_real(parameters, "ib0");
@@ -668,7 +672,7 @@ public:
       {"ft_out", {}}
     };
     odin.packing.state.copy_offset(odin.offset.state.begin());
-    return shared_state{odin, dim, n_age, n_het, n_spp, n_eir, n_foim, n_eip, mean_psi, n_mut, rA, rD, rU, rT, d_ib, d_ica, d_id, d_iva, ub, uc, ud, uv, acq_offset, b0, b1, ib0, kb, phi0, phi1, ic0, kc, d1, id0, kd, fd0, ad0, gd, theta0, theta1, iv0, kv, fv0, av, gammav, cD, cU, g_inf, PM, PVM, n_ftt, n_dmix, n_rest, rT_slow, del, dl, dpl, me, ml, mup, mosq_gamma, n_cct, n_vct, n_pevt, n_tbvt, de, tl, dem, rP_c, Xe0, Xf0, reir, rfoim, reip, r_age, psi, age_mid, mask20, icm_factor, ivm_factor, mu_age_t, mu_age_z, zeta, het_wt, ft_times, ft_vals, dmix_times, cT_vals, drug_eff_vals, rP_vals, res_times, etf_vals, spc_vals, cc_times, K_vals, vc_times, a_vals, mum_vals, beta_eff, pev_times, pev_vals, tbv_times, tbv_fU_vals, tbv_fA_vals, tbv_fD_vals, tbv_fT_vals, S0, D0, A0, U0, Tr0, Ph0, Phc0, IB_init, ICA_init, ID_init, IVA_init, ME0, ML0, MP0, Sm0, Im0, Em0, interpolate_mu_age, interpolate_ft, interpolate_cT, interpolate_drug_eff, interpolate_rP, interpolate_etf, interpolate_spc, interpolate_Kcap, interpolate_a_spp, interpolate_mum, interpolate_pev_factor, interpolate_tbv_fU, interpolate_tbv_fA, interpolate_tbv_fD, interpolate_tbv_fT, fd, fv};
+    return shared_state{odin, dim, n_age, n_het, n_spp, n_eir, n_foim, n_eip, mean_psi, n_mut, rA, rD, rU, rT, d_ib, d_ica, d_id, d_iva, ub, uc, ud, uv, acq_offset, bite_dedup, b0, b1, ib0, kb, phi0, phi1, ic0, kc, d1, id0, kd, fd0, ad0, gd, theta0, theta1, iv0, kv, fv0, av, gammav, cD, cU, g_inf, PM, PVM, n_ftt, n_dmix, n_rest, rT_slow, del, dl, dpl, me, ml, mup, mosq_gamma, n_cct, n_vct, n_pevt, n_tbvt, de, tl, dem, rP_c, Xe0, Xf0, reir, rfoim, reip, r_age, psi, age_mid, mask20, icm_factor, ivm_factor, mu_age_t, mu_age_z, zeta, het_wt, ft_times, ft_vals, dmix_times, cT_vals, drug_eff_vals, rP_vals, res_times, etf_vals, spc_vals, cc_times, K_vals, vc_times, a_vals, mum_vals, beta_eff, pev_times, pev_vals, tbv_times, tbv_fU_vals, tbv_fA_vals, tbv_fD_vals, tbv_fT_vals, S0, D0, A0, U0, Tr0, Ph0, Phc0, IB_init, ICA_init, ID_init, IVA_init, ME0, ML0, MP0, Sm0, Im0, Em0, interpolate_mu_age, interpolate_ft, interpolate_cT, interpolate_drug_eff, interpolate_rP, interpolate_etf, interpolate_spc, interpolate_Kcap, interpolate_a_spp, interpolate_mum, interpolate_pev_factor, interpolate_tbv_fU, interpolate_tbv_fA, interpolate_tbv_fD, interpolate_tbv_fT, fd, fv};
   }
   static internal_state build_internal(const shared_state& shared) {
     std::vector<real_type> b(shared.dim.b.size);
@@ -693,10 +697,11 @@ public:
     std::vector<real_type> ICM(shared.dim.ICM.size);
     std::vector<real_type> cA(shared.dim.b.size);
     std::vector<real_type> aIm(shared.dim.aIm.size);
-    std::vector<real_type> FOI(shared.dim.EPS.size);
+    std::vector<real_type> p_inf(shared.dim.EPS.size);
     std::vector<real_type> foim(shared.dim.foim.size);
     std::vector<real_type> deaths(shared.dim.Npop.size);
     std::vector<real_type> phi(shared.dim.b.size);
+    std::vector<real_type> FOI(shared.dim.EPS.size);
     std::vector<real_type> inf(shared.dim.inf.size);
     std::vector<real_type> infw(shared.dim.inf.size);
     std::vector<real_type> detpcr(shared.dim.clin_inc_a.size);
@@ -713,14 +718,14 @@ public:
     std::vector<real_type> IVM(shared.dim.ICM.size);
     std::vector<real_type> detlm(shared.dim.clin_inc_a.size);
     std::vector<real_type> theta(shared.dim.b.size);
-    std::vector<real_type> inc_a(shared.dim.clin_inc_a.size);
     std::vector<real_type> det_lm_g(shared.dim.n_g.size);
     std::vector<real_type> clin_inc_a(shared.dim.clin_inc_a.size);
     std::vector<real_type> sev_inc_a(shared.dim.clin_inc_a.size);
-    std::vector<real_type> inc_g(shared.dim.n_g.size);
+    std::vector<real_type> inc_a(shared.dim.clin_inc_a.size);
     std::vector<real_type> clin_g(shared.dim.n_g.size);
     std::vector<real_type> sev_g(shared.dim.n_g.size);
-    return internal_state{b, Npop, nL, Em_tot, ICAmask, EPS, Mtot, ICA20, q, mu_age, Kcap, a_spp, mum, pev_factor, tbv_fU, tbv_fA, tbv_fD, tbv_fT, re, ICM, cA, aIm, FOI, foim, deaths, phi, inf, infw, detpcr, S_g, D_g, A_g, U_g, Tr_g, Ph_g, IVAmask, n_g, det_pcr_g, IVA20, IVM, detlm, theta, inc_a, det_lm_g, clin_inc_a, sev_inc_a, inc_g, clin_g, sev_g};
+    std::vector<real_type> inc_g(shared.dim.n_g.size);
+    return internal_state{b, Npop, nL, Em_tot, ICAmask, EPS, Mtot, ICA20, q, mu_age, Kcap, a_spp, mum, pev_factor, tbv_fU, tbv_fA, tbv_fD, tbv_fT, re, ICM, cA, aIm, p_inf, foim, deaths, phi, FOI, inf, infw, detpcr, S_g, D_g, A_g, U_g, Tr_g, Ph_g, IVAmask, n_g, det_pcr_g, IVA20, IVM, detlm, theta, det_lm_g, clin_inc_a, sev_inc_a, inc_a, clin_g, sev_g, inc_g};
   }
   static void update_shared(cpp11::list parameters, shared_state& shared) {
     shared.mean_psi = dust2::r::read_real(parameters, "mean_psi", shared.mean_psi);
@@ -737,6 +742,7 @@ public:
     shared.ud = dust2::r::read_real(parameters, "ud", shared.ud);
     shared.uv = dust2::r::read_real(parameters, "uv", shared.uv);
     shared.acq_offset = dust2::r::read_real(parameters, "acq_offset", shared.acq_offset);
+    shared.bite_dedup = dust2::r::read_real(parameters, "bite_dedup", shared.bite_dedup);
     shared.b0 = dust2::r::read_real(parameters, "b0", shared.b0);
     shared.b1 = dust2::r::read_real(parameters, "b1", shared.b1);
     shared.ib0 = dust2::r::read_real(parameters, "ib0", shared.ib0);
@@ -1029,7 +1035,7 @@ public:
     }
     for (size_t i = 1; i <= shared.dim.EPS.dim[0]; ++i) {
       for (size_t j = 1; j <= shared.dim.EPS.dim[1]; ++j) {
-        internal.FOI[i - 1 + (j - 1) * shared.dim.EPS.mult[1]] = internal.b[i - 1 + (j - 1) * shared.dim.b.mult[1]] * internal.EPS[i - 1 + (j - 1) * shared.dim.EPS.mult[1]] * internal.pev_factor[i - 1];
+        internal.p_inf[i - 1 + (j - 1) * shared.dim.EPS.mult[1]] = (1 - monty::math::exp<real_type>(-internal.EPS[i - 1 + (j - 1) * shared.dim.EPS.mult[1]])) * internal.b[i - 1 + (j - 1) * shared.dim.b.mult[1]] * internal.pev_factor[i - 1];
       }
     }
     for (size_t i = 1; i <= shared.dim.foim.size; ++i) {
@@ -1047,6 +1053,11 @@ public:
       }
     }
     const real_type eir_now = dust2::array::sum<real_type>(internal.aIm.data(), shared.dim.aIm);
+    for (size_t i = 1; i <= shared.dim.EPS.dim[0]; ++i) {
+      for (size_t j = 1; j <= shared.dim.EPS.dim[1]; ++j) {
+        internal.FOI[i - 1 + (j - 1) * shared.dim.EPS.mult[1]] = shared.bite_dedup * (-monty::math::log<real_type>(1 - internal.p_inf[i - 1 + (j - 1) * shared.dim.EPS.mult[1]])) + (1 - shared.bite_dedup) * (internal.b[i - 1 + (j - 1) * shared.dim.b.mult[1]] * internal.EPS[i - 1 + (j - 1) * shared.dim.EPS.mult[1]] * internal.pev_factor[i - 1]);
+      }
+    }
     for (size_t i = 1; i <= shared.dim.inf.dim[0]; ++i) {
       for (size_t j = 1; j <= shared.dim.inf.dim[1]; ++j) {
         internal.inf[i - 1 + (j - 1) * shared.dim.inf.mult[1]] = shared.cD * D[i - 1 + (j - 1) * shared.dim.S.mult[1]] * internal.tbv_fD[i - 1] + internal.cA[i - 1 + (j - 1) * shared.dim.b.mult[1]] * A[i - 1 + (j - 1) * shared.dim.S.mult[1]] * internal.tbv_fA[i - 1] + shared.cU * U[i - 1 + (j - 1) * shared.dim.S.mult[1]] * internal.tbv_fU[i - 1] + cT * Tr[i - 1 + (j - 1) * shared.dim.S.mult[1]] * internal.tbv_fT[i - 1];
@@ -1279,7 +1290,7 @@ public:
     }
     for (size_t i = 1; i <= shared.dim.EPS.dim[0]; ++i) {
       for (size_t j = 1; j <= shared.dim.EPS.dim[1]; ++j) {
-        internal.FOI[i - 1 + (j - 1) * shared.dim.EPS.mult[1]] = internal.b[i - 1 + (j - 1) * shared.dim.b.mult[1]] * internal.EPS[i - 1 + (j - 1) * shared.dim.EPS.mult[1]] * internal.pev_factor[i - 1];
+        internal.p_inf[i - 1 + (j - 1) * shared.dim.EPS.mult[1]] = (1 - monty::math::exp<real_type>(-internal.EPS[i - 1 + (j - 1) * shared.dim.EPS.mult[1]])) * internal.b[i - 1 + (j - 1) * shared.dim.b.mult[1]] * internal.pev_factor[i - 1];
       }
     }
     for (size_t i = 1; i <= shared.dim.foim.size; ++i) {
@@ -1302,9 +1313,9 @@ public:
       }
     }
     const real_type eir_now = dust2::array::sum<real_type>(internal.aIm.data(), shared.dim.aIm);
-    for (size_t i = 1; i <= shared.dim.clin_inc_a.dim[0]; ++i) {
-      for (size_t j = 1; j <= shared.dim.clin_inc_a.dim[1]; ++j) {
-        internal.inc_a[i - 1 + (j - 1) * shared.dim.clin_inc_a.mult[1]] = internal.FOI[i - 1 + (j - 1) * shared.dim.EPS.mult[1]] * (S[i - 1 + (j - 1) * shared.dim.S.mult[1]] + A[i - 1 + (j - 1) * shared.dim.S.mult[1]] + U[i - 1 + (j - 1) * shared.dim.S.mult[1]]);
+    for (size_t i = 1; i <= shared.dim.EPS.dim[0]; ++i) {
+      for (size_t j = 1; j <= shared.dim.EPS.dim[1]; ++j) {
+        internal.FOI[i - 1 + (j - 1) * shared.dim.EPS.mult[1]] = shared.bite_dedup * (-monty::math::log<real_type>(1 - internal.p_inf[i - 1 + (j - 1) * shared.dim.EPS.mult[1]])) + (1 - shared.bite_dedup) * (internal.b[i - 1 + (j - 1) * shared.dim.b.mult[1]] * internal.EPS[i - 1 + (j - 1) * shared.dim.EPS.mult[1]] * internal.pev_factor[i - 1]);
       }
     }
     for (size_t i = 1; i <= shared.dim.n_g.size; ++i) {
@@ -1321,8 +1332,10 @@ public:
         internal.sev_inc_a[i - 1 + (j - 1) * shared.dim.clin_inc_a.mult[1]] = internal.theta[i - 1 + (j - 1) * shared.dim.b.mult[1]] * internal.FOI[i - 1 + (j - 1) * shared.dim.EPS.mult[1]] * (S[i - 1 + (j - 1) * shared.dim.S.mult[1]] + A[i - 1 + (j - 1) * shared.dim.S.mult[1]] + U[i - 1 + (j - 1) * shared.dim.S.mult[1]]);
       }
     }
-    for (size_t i = 1; i <= shared.dim.n_g.size; ++i) {
-      internal.inc_g[i - 1] = dust2::array::sum<real_type>(internal.inc_a.data(), shared.dim.clin_inc_a, {i - 1, i - 1}, {0, shared.dim.clin_inc_a.dim[1] - 1});
+    for (size_t i = 1; i <= shared.dim.clin_inc_a.dim[0]; ++i) {
+      for (size_t j = 1; j <= shared.dim.clin_inc_a.dim[1]; ++j) {
+        internal.inc_a[i - 1 + (j - 1) * shared.dim.clin_inc_a.mult[1]] = internal.FOI[i - 1 + (j - 1) * shared.dim.EPS.mult[1]] * (S[i - 1 + (j - 1) * shared.dim.S.mult[1]] + A[i - 1 + (j - 1) * shared.dim.S.mult[1]] + U[i - 1 + (j - 1) * shared.dim.S.mult[1]]);
+      }
     }
     const real_type EIR_yr = eir_now * 365;
     for (size_t i = 1; i <= shared.dim.n_g.size; ++i) {
@@ -1330,6 +1343,9 @@ public:
     }
     for (size_t i = 1; i <= shared.dim.n_g.size; ++i) {
       internal.sev_g[i - 1] = dust2::array::sum<real_type>(internal.sev_inc_a.data(), shared.dim.clin_inc_a, {i - 1, i - 1}, {0, shared.dim.clin_inc_a.dim[1] - 1});
+    }
+    for (size_t i = 1; i <= shared.dim.n_g.size; ++i) {
+      internal.inc_g[i - 1] = dust2::array::sum<real_type>(internal.inc_a.data(), shared.dim.clin_inc_a, {i - 1, i - 1}, {0, shared.dim.clin_inc_a.dim[1] - 1});
     }
     std::copy(internal.n_g.begin(), internal.n_g.end(), state + shared.odin.offset.state[19]);
     std::copy(internal.det_lm_g.begin(), internal.det_lm_g.end(), state + shared.odin.offset.state[20]);

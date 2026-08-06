@@ -135,7 +135,7 @@ test_that("custom demography changes the equilibrium age structure", {
   # high infant/elderly mortality => fewer under-5s than constant-hazard (~0.21)
   expect_lt(sum(prop[am < 5 * 365]), 0.15)
   # default (constant hazard) still holds flat at equilibrium (offset 0 = exact seed)
-  pflat <- gp(); pflat$acquired_immunity_offset <- 0
+  pflat <- gp(); pflat$acquired_immunity_offset <- 0; pflat$bite_dedup <- 0
   o <- run_simulation_ode(400, pflat, init_EIR = 20)
   expect_lt(max(abs(o$EIR - o$EIR[1])), 1e-6)
 })
@@ -167,7 +167,7 @@ test_that("carrying-capacity scaler = 1 is a no-op (flat)", {
   p <- malariasimulation::set_carrying_capacity(
     malariasimulation::get_parameters(), timesteps = 365,
     carrying_capacity_scalers = matrix(1, 1, 1))
-  p$acquired_immunity_offset <- 0                        # flat-machinery check
+  p$acquired_immunity_offset <- 0; p$bite_dedup <- 0                        # flat-machinery check
   o <- run_simulation_ode(800, p, init_EIR = 20)
   expect_lt(max(abs(o$EIR - o$EIR[1])), 1e-6)
 })

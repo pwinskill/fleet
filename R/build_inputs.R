@@ -331,6 +331,10 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
     # better mean-field match, so default 0. Set parameters$acquired_immunity_offset =
     # 0.5 to reproduce the IBM's literal per-individual Hill functions.
     acq_offset = if (!is.null(p$acquired_immunity_offset)) p$acquired_immunity_offset else 0,
+    # Reproduce the IBM's per-timestep bite deduplication (saturating hazard) by default;
+    # parameters$bite_dedup = 0 restores the linear b*EPS form, for which the
+    # malariaEquilibrium seed is an exact fixed point (used by the flat-equilibrium tests).
+    bite_dedup = if (!is.null(p$bite_dedup)) p$bite_dedup else 1,
     b0 = eqp[["b0"]], b1 = eqp[["b1"]], ib0 = eqp[["IB0"]], kb = eqp[["kb"]],
     phi0 = eqp[["phi0"]], phi1 = eqp[["phi1"]], ic0 = eqp[["IC0"]], kc = eqp[["kc"]],
     d1 = eqp[["d1"]], id0 = eqp[["ID0"]], kd = eqp[["kd"]],
