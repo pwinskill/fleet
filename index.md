@@ -156,8 +156,20 @@ just the latest.
 ## Mean-field approximations
 
 The model is honest about where and how much it departs from the IBM.
-Every item below is **exact at equilibrium**; the caveats concern
-transient dynamics or diagnostic conventions.
+
+**Seeding.** `blink` starts each run at the `malariaEquilibrium`
+analytic fixed point. That solution encodes *simplified* forms — a
+linear force of infection, refractory immunity boosting on the raw rate,
+exponential incubation survival — whereas `blink` now reproduces
+malariasimulation’s own per-day semantics (bite deduplication, the
+integer refractory window, a fixed-delay EIP with `exp(-mu*dem)`
+survival, whole-day state sojourns). The seed is therefore a close
+**approximation** to `blink`’s true fixed point rather than the fixed
+point itself: an undisturbed run relaxes by up to ~0.5% over the first
+years and then holds. malariasimulation behaves the same way — it is
+seeded from `malariaEquilibrium` too and drifts off it. Burn in before
+calibrating, and set `parameters$bite_dedup = 0` if you need the
+exactly-flat (approximate-dynamics) behaviour for a numerical test.
 
 **Numerics & lags.** The human EIR/FOIM lags and the mosquito EIP are
 implemented as Erlang (linear-chain) filters rather than `delay()` —
@@ -296,6 +308,15 @@ fraction to within 0.002 (IBM 0.090 vs ODE 0.088). In the figures,
 **colour, line type and point shape all encode the IBM/ODE
 distinction**, so they stay legible in greyscale and under colour-vision
 deficiency.
+
+> **Note.** The figures below were generated *before* the
+> exact-replication pass described in `NEWS.md`. The prevalence-based
+> panels are unaffected (they plot per-band prevalence directly), but
+> the incidence panels predate the output-band fix and the model
+> changes, and should be regenerated with
+> `source("comparison/run_comparison.R")` / `run_incidence.R`. For the
+> current, broader picture see the validation table in `NEWS.md` (63
+> countries, monthly, clinical slope 1.02 / severe 0.967).
 
 **Equilibrium & structure**
 

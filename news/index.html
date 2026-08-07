@@ -40,7 +40,66 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.0.9000" id="blink-0009000">blink 0.0.0.9000<a class="anchor" aria-label="anchor" href="#blink-0009000"></a></h2>
-<p>First development release: a deterministic mean-field (ODE) twin of the <code>malariasimulation</code> individual-based model of <em>P. falciparum</em> malaria, built on odin2/dust2.</p>
+<div class="section level3">
+<h3 id="exact-replication-pass-malariasimulation-v300-0-0-0-9000">Exact-replication pass (malariasimulation v3.0.0)<a class="anchor" aria-label="anchor" href="#exact-replication-pass-malariasimulation-v300-0-0-0-9000"></a></h3>
+<p>A systematic audit replaced every place <code>blink</code> approximated a mechanism whose malariasimulation implementation is known. No tuned constants were introduced.</p>
+<ul><li>
+<strong>Output bands — bug fix, affects every user.</strong> <code>render_output()</code> emitted <code>n_inc_clinical_*</code>/<code>n_inc_severe_*</code>/<code>n_inc_*</code> over the <em>union</em> of all rendering bands plus hardcoded extras, producing OVERLAPPING strata (e.g. a 2-10y prevalence band alongside a 0-5/5-15/15-100 clinical partition, and the 2-10y band twice). <code>postie</code> treats each column as an independent stratum, so any person-day-weighted aggregate double-counted the overlapped ages — inflating all-age clinical by ~1.21x and severe by ~1.10x. Each family is now emitted only over its own <code>*_rendering_ages</code>, exactly as malariasimulation does, with <code>n_age_*</code> over the union.</li>
+<li>
+<strong>Maternal immunity source band.</strong> <code>which.min(abs(age_mid - 20*365))</code> hit an exact tie on the default grid (17.5y and 22.5y are equidistant from the 20y band edge) and silently took the first, drawing <code>ICM</code>/<code>IVM</code> from 15-20 year-olds instead of the 20-21y mothers the IBM uses; they ran 9-15% low. Now selects the band containing 20y.</li>
+<li>
+<strong>EIP survival.</strong> The Erlang chain carried mortality in every stage, giving through-survival <code>(reip/(reip+mum))^n_eip</code> instead of the IBM’s <code>exp(-mum*dem)</code> (+4% at baseline, worsening as vector control raises <code>mum</code>). The chain is now a loss-free delay with the survival applied at the exit, matching <code>adult_mosquito_eqs.cpp</code>; <code>total_M</code> needs no compensation.</li>
+<li>
+<strong>Slow parasite clearance.</strong> The IBM assigns each treated individual to <code>dt</code> or <code>dt_slow</code> by a Bernoulli draw — a two-component mixture. <code>blink</code> collapsed this into one exponential at the blended mean; <code>Tr</code> is now split into parallel <code>Tr</code>/<code>Tr_slow</code>.</li>
+<li>
+<strong>Clinical event counting.</strong> The IBM resolves at most one infection outcome per person per day, so clinical episodes are <code>phi*p*N</code>. Using <code>phi*FOI</code> over-counted (the ODE re-exposes within the day); the clinical hazard is now <code>-log(1 - phi*p)</code>, which integrates to exactly <code>phi*p*N</code>.</li>
+<li>
+<strong>State sojourns.</strong> The IBM exits states with per-day probability <code>1-exp(-1/d)</code>, so its realised mean dwell is <code>1/(1-exp(-1/d))</code> (5.52 d for <code>dd = 5</code>, not 5). Rates now use that form.</li>
+<li>
+<strong>Immunity boosting.</strong> Boost rate is now <code>q/(q*u_eff + 1)</code> with the deduplicated per-day event probability <code>q = 1-exp(-rate)</code> and the integer refractory window <code>u_eff = ceil(u) - 1</code> — the IBM boosts on a per-day event and tests <code>(timestep - last_boosted) &gt;= u</code> with an integer timestep. <code>ICA</code>/<code>ID</code>/<code>IVA</code> are boosted only for individuals eligible to be infected (<code>S</code>/<code>A</code>/<code>U</code>), as in the IBM; <code>IB</code> is boosted for everyone bitten.</li>
+<li>
+<strong>PEV antibodies.</strong> Efficacy is integrated over the per-individual antibody distribution the IBM samples (4-D Gauss-Hermite over <code>cs</code>/<code>rho</code>/<code>ds</code>/<code>dl</code>), instead of being evaluated at the profile median — the latter overstated R21 efficacy by up to ~4.7 pp. Validated against a Monte-Carlo of the IBM’s own sampler to &lt;5e-4.</li>
+<li>
+<strong>PEV gating.</strong> malariasimulation never reads <code>parameters$pev</code>; it gates on <code>pev_epi_coverages</code>/<code>pev_epi_timesteps</code>/<code>mass_pev_timesteps</code>. <code>blink</code> gated on <code>pev$pev</code>, so the same list could mean “PEV on” to one model and “off” to the other.</li>
+<li>
+<strong>Seeding consequence.</strong> Because <code>malariaEquilibrium</code> encodes the simplified forms, the analytic seed is now a close approximation rather than an exact fixed point: an undisturbed run relaxes by up to ~0.5% over the first years, as malariasimulation itself does. See the README “Seeding” note.</li>
+</ul><div class="section level4">
+<h4 id="validation-after-this-pass-0-0-0-9000">Validation after this pass<a class="anchor" aria-label="anchor" href="#validation-after-this-pass-0-0-0-9000"></a></h4>
+<p>Monthly, <em>P. falciparum</em> only on both sides, 63 countries / 1,391 sub-sites / 450,684 sub-site-months, against pre-run malariasimulation output:</p>
+<table class="table"><thead><tr><th>metric</th>
+<th>before</th>
+<th>after</th>
+</tr></thead><tbody><tr><td>clinical slope</td>
+<td>1.16</td>
+<td><strong>1.02</strong></td>
+</tr><tr><td>clinical bias</td>
+<td>+0.070</td>
+<td><strong>+0.030</strong></td>
+</tr><tr><td>clinical RMSE</td>
+<td>0.125</td>
+<td><strong>0.084</strong></td>
+</tr><tr><td>clinical r</td>
+<td>0.982</td>
+<td>0.980</td>
+</tr><tr><td>severe slope</td>
+<td>1.02</td>
+<td><strong>0.967</strong></td>
+</tr><tr><td>severe r</td>
+<td>0.935</td>
+<td><strong>0.954</strong></td>
+</tr></tbody></table><p>Per-site median monthly clinical r = 0.99. Note the “before” column was measured through the overlapping-band artefact, which inflated blink’s side by ~1.21x (clinical) and ~1.10x (severe) — the apparently unbiased severe slope of 1.02 was two opposite-signed errors cancelling, and severe now shows its genuine ~3% negative bias.</p>
+<p>Known remaining discrepancies, all characterised rather than tuned away:</p>
+<ul><li>
+<strong>Severe under-predicts by ~3%</strong>, concentrated in 5-15y and adults rather than infants.</li>
+<li>
+<strong>Stochastic elimination.</strong> Where the IBM’s transmission dies out (e.g. Guinea-Bissau, ratios 2.3-2.9 with r ~ 0.53), a deterministic mean field cannot follow it to zero. This is structural, not a defect.</li>
+<li>
+<strong>Very low transmission (EIR ~ 1)</strong> over-predicts against the pre-run files, but matches a <em>live</em> malariasimulation 3.0.0 run at the same site — check the baseline before reading this as a model error.</li>
+<li>
+<strong>Very high transmission (EIR &gt; 200)</strong> under-predicts (~0.78-0.91).</li>
+</ul><p>First development release: a deterministic mean-field (ODE) twin of the <code>malariasimulation</code> individual-based model of <em>P. falciparum</em> malaria, built on odin2/dust2.</p>
+</div>
+</div>
 <div class="section level3">
 <h3 id="model-0-0-0-9000">Model<a class="anchor" aria-label="anchor" href="#model-0-0-0-9000"></a></h3>
 <ul><li>Age- and biting-heterogeneity-structured human model (<code>S</code>/<code>D</code>/<code>A</code>/<code>U</code>/<code>Tr</code> plus treatment (<code>Ph</code>) and chemoprevention (<code>Ph_c</code>) prophylaxis compartments) with the full immunity system (<code>IB</code>/<code>ICA</code>/<code>ICM</code>/<code>ID</code>/<code>IVA</code>/<code>IVM</code>), coupled to the compartmental mosquito model (<code>E</code>/<code>L</code>/<code>P</code>/<code>Sm</code>/EIP-chain/<code>Im</code>) per species.</li>

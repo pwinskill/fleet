@@ -51,9 +51,9 @@ out <- run_simulation_ode(timesteps = 15 * 365, parameters = p, init_EIR = 20)
 out[1:3, c("timestep", "n_age_730_3650", "n_detect_lm_730_3650",
            "p_detect_lm_730_3650", "EIR", "ft")]
 #>   timestep n_age_730_3650 n_detect_lm_730_3650 p_detect_lm_730_3650 EIR ft
-#> 1        0       284.2213             155.5888            0.5474214  20  0
-#> 2        1       284.2213             155.5789            0.5473865  20  0
-#> 3        2       284.2213             155.5695            0.5473535  20  0
+#> 1        0       284.2213             155.9074            0.5485424  20  0
+#> 2        1       284.2213             155.8974            0.5485073  20  0
+#> 3        2       284.2213             155.8880            0.5484741  20  0
 ```
 
 The return value is a wide, `malariasimulation`-style daily count table.
@@ -70,9 +70,9 @@ the first and last rows agree:
 ``` r
 
 range(out$EIR)                    # ~20 throughout
-#> [1] 19.93108 20.00000
+#> [1] 19.93161 20.02801
 range(out$p_detect_lm_730_3650)   # constant to machine precision
-#> [1] 0.5457759 0.5474214
+#> [1] 0.5469938 0.5485424
 ```
 
 ## Reading outputs with postie
@@ -92,9 +92,9 @@ epi <- get_epi_outputs(out)
 # prevalence: one <diagnostic>_prevalence_<lo>_<hi> column per age band (years)
 utils::tail(epi$prevalence["lm_prevalence_2_10"], 3)
 #>      lm_prevalence_2_10
-#> 5474          0.5464063
-#> 5475          0.5464064
-#> 5476          0.5464064
+#> 5474          0.5482791
+#> 5475          0.5482791
+#> 5476          0.5482791
 
 # rates: clinical / severe incidence, mortality and DALYs by age band
 utils::head(epi$rates[, c("time", "age_lower", "age_upper",
@@ -102,12 +102,12 @@ utils::head(epi$rates[, c("time", "age_lower", "age_upper",
 #> # A tibble: 6 × 6
 #>    time age_lower age_upper clinical    severe    dalys
 #>   <dbl>     <dbl>     <dbl>    <dbl>     <dbl>    <dbl>
-#> 1 2000.         2        10  0.00339 0.0000445 0.000410
-#> 2 2000.         0       100  0.00182 0.0000320 0.000171
-#> 3 2000          2        10  0.00339 0.0000445 0.000413
-#> 4 2000          0       100  0.00182 0.0000320 0.000172
-#> 5 2000.         2        10  0.00339 0.0000445 0.000413
-#> 6 2000.         0       100  0.00182 0.0000320 0.000172
+#> 1 2000.         2        10  0.00337 0.0000444 0.000409
+#> 2 2000.         0       100  0.00180 0.0000314 0.000168
+#> 3 2000          2        10  0.00337 0.0000444 0.000412
+#> 4 2000          0       100  0.00180 0.0000314 0.000169
+#> 5 2000.         2        10  0.00337 0.0000444 0.000412
+#> 6 2000.         0       100  0.00180 0.0000314 0.000169
 ```
 
 Use `diagnostic = "pcr"` for PCR prevalence, and pass through extra
@@ -131,7 +131,6 @@ p_bands$clinical_incidence_rendering_max_ages <- c(2, 10) * 365
 out_bands <- run_simulation_ode(10 * 365, p_bands, init_EIR = 20)
 grep("^p_detect_lm_", names(out_bands), value = TRUE)
 #> [1] "p_detect_lm_0_730"      "p_detect_lm_730_3650"   "p_detect_lm_3650_36500"
-#> [4] "p_detect_lm_0_36500"
 ```
 
 ## Layering interventions
@@ -158,7 +157,7 @@ nets <- run_simulation_ode(12 * 365, p_nets, init_EIR = 20)
 c(baseline = nets$p_detect_lm_730_3650[1],
   trough   = min(nets$p_detect_lm_730_3650))
 #>  baseline    trough 
-#> 0.5474214 0.1854022
+#> 0.5485424 0.1800651
 ```
 
 Prevalence falls after deployment and then relaxes as the nets decay.
@@ -186,7 +185,7 @@ smc <- run_simulation_ode(3 * 365, p_smc, init_EIR = 20)
 band <- "p_detect_lm_91_1825"        # the 0.25-5y target band, tag in days
 c(baseline = smc[[band]][1], trough = min(smc[[band]]))
 #>   baseline     trough 
-#> 0.46944682 0.01770817
+#> 0.47057773 0.01776261
 ```
 
 SMC/MDA/PMC are applied as pulsed mass drug administration between
@@ -209,7 +208,7 @@ pev <- run_simulation_ode(12 * 365, p_pev, init_EIR = 20)
 c(baseline = pev$p_detect_lm_730_3650[1],
   year12   = pev$p_detect_lm_730_3650[nrow(pev)])
 #>  baseline    year12 
-#> 0.5474214 0.5109067
+#> 0.5485424 0.5113764
 ```
 
 PEV reduces the infection hazard by a per-age, per-time factor built
@@ -262,9 +261,9 @@ p_seas <- malariasimulation::get_parameters(list(
 seas <- run_simulation_ode(20 * 365, p_seas, init_EIR = 20)
 final_year <- seas[(nrow(seas) - 365 + 1):nrow(seas), ]
 range(final_year$EIR)   # seasonal swing in the settled cycle
-#> [1]  0.049142 57.988336
+#> [1]  0.04953752 58.12753634
 mean(final_year$EIR)    # a few % below the aseasonal target of 20
-#> [1] 18.60436
+#> [1] 18.65741
 ```
 
 ## The validation story
