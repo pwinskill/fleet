@@ -106,7 +106,7 @@ check_unsupported <- function(p) {
   # PEV boosters are scheduled at a fixed delay from the primary series, not aligned
   # to the transmission season. (Clinical-drug mixes, incl. first-line switches, are
   # now modelled time-varyingly via drug_mix_series().)
-  if (isTRUE(p$pev) && isTRUE(p$pev_epi_seasonal_boosters)) warning(
+  if (length(p$pev_epi_timesteps) > 0 && isTRUE(p$pev_epi_seasonal_boosters)) warning(
     "seasonal_boosters is approximated as a fixed days-since-primary schedule ",
     "(not aligned to the transmission season).", call. = FALSE)
   invisible(NULL)
@@ -139,6 +139,18 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
   # eq_params) explicitly, rather than relying on it round-tripping through the
   # IBM parameter names.
   if (!is.null(p$eq_params)) eqp <- utils::modifyList(eqp, as.list(p$eq_params))
+  # Disease-progression rates: malariasimulation advances states once per whole day
+  # with exit probability rate_to_prob(1/d) = 1 - exp(-1/d) (competing_hazards.R:78,
+  # utils.R:118), so the REALISED mean dwell is 1/(1 - exp(-1/d)) -- e.g. 5.517 d for
+  # dd = dt = 5, not 5. Use that exit rate so blink's dwell matches the IBM's. Must be
+  # applied AFTER the eq_params merge above, or set_equilibrium's stored rates silently
+  # overwrite it. Not applied to rP: ms models prophylaxis as a hazard multiplier, not
+  # a compartment, so there is no per-day census of it.
+  for (nm in c("rA", "rD", "rU", "rT")) {
+    if (!is.null(eqp[[nm]]) && is.finite(eqp[[nm]]) && eqp[[nm]] > 0) {
+      eqp[[nm]] <- 1 - exp(-eqp[[nm]])
+    }
+  }
   ft <- get_ft(p, 1)                       # baseline treatment coverage at t=1
   dser <- drug_mix_series(p, eqp)          # time-varying drug_eff/cT/rP; seed = t=0 blend
   eqp[["cT"]] <- dser$seed$cT              # drug-linked treated infectivity for the seed
@@ -215,7 +227,13 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
   prop <- prop / sum(prop)
   mean_psi <- sum(prop * psi)
   resc <- prop / prop_ce           # rescale the constant-eta seed to this age structure
-  age20 <- which.min(abs(age_mid - 20 * 365))
+  # Maternal immunity is inherited from mothers aged [20, 21) years:
+  # malariasimulation selects them with trunc(age / 365) == 20
+  # (mortality_processes.R:42). Pick the model group CONTAINING age 20, not the
+  # nearest midpoint: on the default grid 20 y is a band EDGE, so the midpoints
+  # 17.5 y and 22.5 y are exactly equidistant and which.min() silently took the
+  # FIRST, sourcing ICM/IVM from 15-20 year-olds and running them ~9-15% low.
+  age20 <- max(1L, findInterval(20 * 365, age_days))
   mask20 <- numeric(n_age); mask20[age20] <- 1
 
   dm <- eqp[["dm"]]; dvm <- eqp[["dvm"]]
@@ -277,24 +295,28 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
     mum_v[s] <- p$mum[[s]]
     beta_eff[s] <- eggs_laid(p$beta, mum_v[s], fmr)
     a_spp[s] <- p$Q0[[s]] * fmr
-    g_s[s] <- (reip / (reip + mum_v[s]))^n_eip
+    # incubation survival exactly as malariasimulation (adult_mosquito_eqs.cpp:
+    # incubation_survival = exp(-mu * tau)); the EIP chain is loss-free, so no
+    # chain-survival compensation is needed and this stays correct as mum varies.
+    g_s[s] <- exp(-mum_v[s] * dem)
   }
   ## per-species FOIM consistent with THIS model's seeded human infectivity
   foim0 <- a_spp * Xf0
   denom <- sum(a_spp * species_prop * foim0 * g_s / (foim0 + mum_v))
   total_M <- (init_EIR / 365) * hp / denom
 
-  ME0 <- ML0 <- MP0 <- Sm0 <- Im0 <- K0 <- numeric(n_spp)
-  Em0 <- matrix(0, n_spp, n_eip)
+  ME0 <- ML0 <- MP0 <- Sm0 <- Im0 <- Em_inc0 <- K0 <- numeric(n_spp)
+  Xi0 <- matrix(0, n_spp, n_eip)
   for (s in seq_len(n_spp)) {
     m_s <- species_prop[s] * total_M
     counts <- initial_mosquito_counts(p, s, foim0[s], m_s) / hp
     ME0[s] <- counts[["E"]]; ML0[s] <- counts[["L"]]; MP0[s] <- counts[["P"]]
     Sm0[s] <- counts[["Sm"]]                       # = m_s*mum/(foim+mum)/hp
-    lam <- reip; mm <- mum_v[s]
-    Em0[s, 1] <- Sm0[s] * foim0[s] / (lam + mm)
-    if (n_eip >= 2) for (k in 2:n_eip) Em0[s, k] <- Em0[s, k - 1] * lam / (lam + mm)
-    Im0[s] <- lam * Em0[s, n_eip] / mm
+    # the EIP chain is a loss-free delay of Sm*foim, so at equilibrium every stage
+    # holds the (constant) inflow; survival exp(-mum*dem) is applied at the exit.
+    Xi0[s, ] <- Sm0[s] * foim0[s]
+    Em_inc0[s] <- counts[["Pm"]]                   # incubating stock (ms E state)
+    Im0[s] <- counts[["Im"]]                       # = m_s*foim/(foim+mum)*exp(-mum*dem)/hp
     K0[s] <- calculate_carrying_capacity(p, m_s, s) / hp
   }
   # A species with proportion 0 (common in site files: one dominant vector, others
@@ -324,8 +346,15 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
     zeta = zeta, het_wt = het_wt,
     rA = eqp[["rA"]], rD = eqp[["rD"]], rU = eqp[["rU"]],
     rT = eqp[["rT"]], rP_c = rP_c, rT_slow = res$rT_slow,
+    # slow-clearance fraction at t = 0, used to split the Tr seed between the fast
+    # and slow treated compartments (the IBM assigns each treated individual to one
+    # or the other by a Bernoulli draw, so Tr is a two-component mixture).
+    spc0 = if (length(res$spc)) res$spc[1] else 0,
     d_ib = eqp[["db"]], d_ica = eqp[["dc"]], d_id = eqp[["dd"]], d_iva = eqp[["dv"]],
-    ub = eqp[["ub"]], uc = eqp[["uc"]], ud = eqp[["ud"]], uv = eqp[["uv"]],
+    # integer refractory windows: ms tests (timestep - last_boosted) >= u with an
+    # integer timestep, so the realised wait is ceil(u) days -> u_eff = ceil(u) - 1.
+    ub_eff = ceiling(eqp[["ub"]]) - 1, uc_eff = ceiling(eqp[["uc"]]) - 1,
+    ud_eff = ceiling(eqp[["ud"]]) - 1, uv_eff = ceiling(eqp[["uv"]]) - 1,
     # Acquired-immunity offset in the b/phi/theta Hill calls. The IBM adds +0.5 per
     # individual; empirically (A/B vs the ms 3.0.0 IBM ensemble mean) offset 0 is the
     # better mean-field match, so default 0. Set parameters$acquired_immunity_offset =
@@ -360,7 +389,7 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
     de = p$de, tl = p$delay_gam, dem = p$dem,
     S0 = S0, D0 = D0, A0 = A0, U0 = U0, Tr0 = Tr0, Ph0 = Ph0, Phc0 = Phc0,
     IB_init = IB_init, ICA_init = ICA_init, ID_init = ID_init, IVA_init = IVA_init,
-    ME0 = ME0, ML0 = ML0, MP0 = MP0, Sm0 = Sm0, Em0 = Em0, Im0 = Im0,
+    ME0 = ME0, ML0 = ML0, MP0 = MP0, Sm0 = Sm0, Xi0 = Xi0, Em_inc0 = Em_inc0, Im0 = Im0,
     Xe0 = Xe0, Xf0 = Xf0
   )
 

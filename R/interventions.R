@@ -366,17 +366,56 @@ apply_chemoprevention_pulse <- function(sys, uidx, meta, event) {
 }
 
 # ---- vaccines: PEV (pre-erythrocytic) and TBV (transmission-blocking) -------
-# Mean-field: point-estimate antibody trajectories (means of the profile
-# distributions), giving a per-(age,time) FOI reduction (PEV) or infectivity
-# reduction (TBV). Factors are 1 with no vaccine, preserving the equilibrium.
+# PEV gives a per-(age,time) FOI reduction; TBV an infectivity reduction. Factors
+# are 1 with no vaccine, preserving the equilibrium.
 .invlogit <- function(x) 1 / (1 + exp(-x))
 
-# PEV efficacy as a function of days since the last primary dose.
-pev_efficacy_curve <- function(profile, t) {
-  cs <- exp(profile$cs[1]); rho <- .invlogit(profile$rho[1])
-  ds <- exp(profile$ds[1]); dl <- exp(profile$dl[1])
+# PEV efficacy `t` days after the last dose, for ONE realisation of the antibody
+# parameters (the IBM's per-individual draw).
+.pev_eff_one <- function(cs, rho, ds, dl, vmax, alpha, beta, t) {
   ab <- cs * (rho * exp(-t * log(2) / ds) + (1 - rho) * exp(-t * log(2) / dl))
-  profile$vmax * (1 - 1 / (1 + (ab / profile$beta)^profile$alpha))
+  vmax * (1 - 1 / (1 + (ab / beta)^alpha))
+}
+
+# MEAN PEV efficacy across the vaccinated, `t` days after the last dose.
+# malariasimulation draws each individual's antibody parameters independently
+# (R/pev.R sample_pev_param: rnorm(mu, sigma), then exp() for cs/ds/dl and
+# invlogit() for rho -- R/human_infection.R:262-265). The population efficacy is
+# therefore E[Hill(antibody)] over that 4-dimensional distribution, NOT
+# Hill(antibody at the median parameters): all four sigmas are substantial
+# (e.g. RTS,S rho sigma ~ 1.0, R21 cs sigma ~ 0.84) and the Hill function is
+# nonlinear, so the two differ materially. Integrate with a tensor Gauss-Hermite
+# rule over the four independent normal variates -- the same quadrature idiom
+# blink already uses for biting heterogeneity.
+pev_efficacy_curve <- function(profile, t, n_gq = getOption("blink.pev_gq", 7L)) {
+  g <- malariaEquilibrium::gq_normal(n_gq)          # standard-normal nodes/weights
+  z <- g$nodes; w <- g$weights / sum(g$weights)
+  sig <- function(f) if (length(profile[[f]]) > 1L) profile[[f]][2] else 0
+  grd <- expand.grid(a = seq_len(n_gq), b = seq_len(n_gq),
+                     c = seq_len(n_gq), d = seq_len(n_gq))
+  wt <- w[grd$a] * w[grd$b] * w[grd$c] * w[grd$d]
+  cs  <- exp(profile$cs[1]  + sig("cs")  * z[grd$a])
+  rho <- .invlogit(profile$rho[1] + sig("rho") * z[grd$b])
+  ds  <- exp(profile$ds[1]  + sig("ds")  * z[grd$c])
+  dl  <- exp(profile$dl[1]  + sig("dl")  * z[grd$d])
+  out <- numeric(length(t))
+  for (k in seq_along(wt)) {
+    out <- out + wt[k] * .pev_eff_one(cs[k], rho[k], ds[k], dl[k],
+                                      profile$vmax, profile$alpha, profile$beta, t)
+  }
+  out
+}
+
+# The quadrature above is ~n_gq^4 evaluations, so memoise the resulting mean-efficacy
+# curve per profile on a daily grid and interpolate: pev_series() calls it thousands
+# of times (per age x time x booster stratum).
+.pev_eff_fun <- function(profile, tmax) {
+  grid <- seq(0, max(tmax, 1) + 365, by = 1)
+  vals <- pev_efficacy_curve(profile, grid)
+  function(t) {
+    tt <- pmin(pmax(t, 0), max(grid))
+    stats::approx(grid, vals, xout = tt, rule = 2)$y
+  }
 }
 
 .combine <- function(a, b) 1 - (1 - a) * (1 - b)
@@ -387,21 +426,22 @@ pev_efficacy_curve <- function(profile, t) {
 # booster j's spacing (from primary), conditional coverage (of those who reached
 # the previous dose), and profile. The vaccinated are partitioned by the most
 # recent booster each has reached; each stratum carries its own decayed efficacy.
+# `prof`/`bprofs` are memoised mean-efficacy FUNCTIONS from .pev_eff_fun().
 pev_protection <- function(prof, bprofs, bspace, bcov, tsince) {
   nb <- 0L                                    # boosters actually reached (contiguous)
   for (j in seq_along(bspace)) {
     if (!is.na(bspace[j]) && bspace[j] <= tsince && !is.na(bcov[j]) && bcov[j] > 0) nb <- j
     else break
   }
-  eff0 <- pev_efficacy_curve(prof, tsince)
+  eff0 <- prof(tsince)
   if (nb == 0L) return(eff0)
   cumc <- cumprod(bcov[seq_len(nb)])          # fraction reaching booster j
   prot <- (1 - bcov[1]) * eff0                # primary-only stratum
   if (nb >= 2L) for (j in seq_len(nb - 1L))   # reached j, not j+1
     prot <- prot + cumc[j] * (1 - bcov[j + 1L]) *
-      pev_efficacy_curve(bprofs[[min(j, length(bprofs))]], tsince - bspace[j])
+      bprofs[[min(j, length(bprofs))]](tsince - bspace[j])
   prot + cumc[nb] *                            # most recent booster reached
-    pev_efficacy_curve(bprofs[[min(nb, length(bprofs))]], tsince - bspace[nb])
+    bprofs[[min(nb, length(bprofs))]](tsince - bspace[nb])
 }
 # Per-booster conditional coverage: booster j is read at ITS administration date
 # admin_times[j] (coverage-matrix rows align with the distribution `ts`), matching ms
@@ -423,7 +463,17 @@ pev_protection <- function(prof, bprofs, bspace, bcov, tsince) {
 # Models the primary series AND a full booster sequence (EPI + mass).
 pev_series <- function(p, age_mid, timesteps) {
   n_age <- length(age_mid)
-  if (!isTRUE(p$pev)) return(list(times = c(0, timesteps), vals = matrix(1, n_age, 2)))
+  # Gate on the SCHEDULE, not on p$pev. malariasimulation never reads parameters$pev
+  # (it is only ever written, pev_parameters.R:166,242); the EPI and mass processes are
+  # gated on pev_epi_coverages/pev_epi_timesteps and mass_pev_timesteps
+  # (processes.R:179). Gating on p$pev made the same parameter list mean "PEV on" to ms
+  # and "PEV off" to blink.
+  has_epi <- length(p$pev_epi_timesteps) > 0 &&
+    !is.null(p$pev_epi_coverages) && any(unlist(p$pev_epi_coverages) > 0)
+  has_mass <- length(p$mass_pev_timesteps) > 0 &&
+    !is.null(p$mass_pev_coverages) && any(unlist(p$mass_pev_coverages) > 0)
+  if (!has_epi && !has_mass)
+    return(list(times = c(0, timesteps), vals = matrix(1, n_age, 2)))
   last_dose <- if (length(p$pev_doses)) max(p$pev_doses) else 0
   onsets <- c(p$pev_epi_timesteps, p$mass_pev_timesteps) + last_dose
   grid <- sort(unique(c(seq(0, timesteps, by = 30), timesteps, timesteps + 365,
@@ -435,9 +485,9 @@ pev_series <- function(p, age_mid, timesteps) {
 
   # --- EPI (age-based) primary + boosters ---
   if (!is.null(p$pev_epi_coverages)) {
-    prof <- p$pev_profiles[[p$pev_epi_profile_indices[1]]]
+    prof <- .pev_eff_fun(p$pev_profiles[[p$pev_epi_profile_indices[1]]], timesteps)
     bidx <- p$pev_epi_profile_indices[-1]
-    bprofs <- if (length(bidx)) lapply(bidx, function(ix) p$pev_profiles[[ix]]) else list(prof)
+    bprofs <- if (length(bidx)) lapply(bidx, function(ix) .pev_eff_fun(p$pev_profiles[[ix]], timesteps)) else list(prof)
     # booster spacing is measured from the final primary dose; min_wait guards ms's
     # re-vaccination / seasonal timing only, NOT the primary-series booster schedule.
     bspace <- p$pev_epi_booster_spacing
@@ -460,9 +510,9 @@ pev_series <- function(p, age_mid, timesteps) {
 
   # --- Mass campaigns: primary + boosters, over ALL age bands x ALL campaigns ---
   if (!is.null(p$mass_pev_timesteps)) {
-    prof <- p$pev_profiles[[p$mass_pev_profile_indices[1]]]
+    prof <- .pev_eff_fun(p$pev_profiles[[p$mass_pev_profile_indices[1]]], timesteps)
     bidx <- p$mass_pev_profile_indices[-1]
-    bprofs <- if (length(bidx)) lapply(bidx, function(ix) p$pev_profiles[[ix]]) else list(prof)
+    bprofs <- if (length(bidx)) lapply(bidx, function(ix) .pev_eff_fun(p$pev_profiles[[ix]], timesteps)) else list(prof)
     bspace <- p$mass_pev_booster_spacing               # from final primary dose (no min_wait floor)
     bcovm <- p$mass_pev_booster_coverage
     lo <- p$mass_pev_min_ages; hi <- p$mass_pev_max_ages   # bands applied at EVERY campaign

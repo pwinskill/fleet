@@ -39,7 +39,8 @@ dim(zeta, het_wt) <- n_het
 rA <- parameter(); rD <- parameter(); rU <- parameter()
 rT <- parameter()
 d_ib <- parameter(); d_ica <- parameter(); d_id <- parameter(); d_iva <- parameter()
-ub <- parameter(); uc <- parameter(); ud <- parameter(); uv <- parameter()
+# effective refractory in whole days: ceil(u) - 1 (see the boosting block below)
+ub_eff <- parameter(); uc_eff <- parameter(); ud_eff <- parameter(); uv_eff <- parameter()
 # malariasimulation adds +0.5 to POSITIVE acquired immunity before the b/phi/theta
 # Hill calls (human_infection.R blood_immunity/clinical_immunity/severe_immunity),
 # but NOT before q and NOT on the maternal term. That is a PER-INDIVIDUAL detail: in
@@ -85,6 +86,7 @@ dim(res_times, etf_vals, spc_vals) <- n_rest
 etf <- interpolate(res_times, etf_vals, "constant")
 spc <- interpolate(res_times, spc_vals, "constant")
 rT_slow <- parameter()          # 1/dt_slow_parasite_clearance
+spc0 <- parameter(0)            # slow-clearance fraction at t = 0 (splits the Tr seed)
 ft_eff <- ft * drug_eff * (1 - etf)   # coverage * efficacy * (1 - early-treatment-failure)
 
 ## ---- mosquito parameters (data + time-varying vector control) -------------
@@ -188,12 +190,23 @@ EPS[, ] <- eir_lag * zeta[j] * psi[i]              # expected infectious bites/p
 p_inf[, ] <- (1 - exp(-EPS[i, j])) * b[i, j] * pev_factor[i]
 FOI[, ] <- bite_dedup * (-log(1 - p_inf[i, j])) +
   (1 - bite_dedup) * (b[i, j] * EPS[i, j] * pev_factor[i])
-dim(EPS, FOI, p_inf) <- c(n_age, n_het)
+# Split FOI into the CLINICAL and NON-CLINICAL hazards separately. In the IBM each
+# person resolves at most ONE infection outcome per day (competing_hazards.R), so
+# the daily clinical count is exactly phi*p*N. Clinical infections leave the
+# at-risk pool (to D/Tr) while non-clinical ones do not (S/U -> A, A -> A), so the
+# pool depletes only through the clinical route: taking h_c = -log(1 - phi*p)
+# integrates to exactly phi*p*N over a day. Using phi*FOI instead over-counts by
+# FOI/(1-exp(-FOI)) because the ODE re-exposes within the same day.
+# h_c + h_a = FOI exactly, so occupancies and the immunity boosting are unchanged.
+h_c[, ] <- bite_dedup * (-log(1 - phi[i, j] * p_inf[i, j])) +
+  (1 - bite_dedup) * (phi[i, j] * FOI[i, j])
+h_a[, ] <- FOI[i, j] - h_c[i, j]
+dim(EPS, FOI, p_inf, h_c, h_a) <- c(n_age, n_het)
 
 ## ---- human -> mosquito infectivity (via FOIM-lag chain) -------------------
 # TBV reduces onward infectivity, per infection state (state-specific TBA)
 inf[, ] <- cD * D[i, j] * tbv_fD[i] + cA[i, j] * A[i, j] * tbv_fA[i] +
-  cU * U[i, j] * tbv_fU[i] + cT * Tr[i, j] * tbv_fT[i]
+  cU * U[i, j] * tbv_fU[i] + cT * (Tr[i, j] + Tr_slow[i, j]) * tbv_fT[i]
 infw[, ] <- zeta[j] * psi[i] * inf[i, j]
 dim(inf, infw) <- c(n_age, n_het)
 inf_sum <- sum(infw) / mean_psi
@@ -205,7 +218,7 @@ foim[] <- a_spp[i] * inf_lag
 dim(foim) <- n_spp
 
 ## ---- demography bookkeeping (constant population) -------------------------
-Npop[, ] <- S[i, j] + D[i, j] + A[i, j] + U[i, j] + Tr[i, j] + Ph[i, j] + Ph_c[i, j]
+Npop[, ] <- S[i, j] + D[i, j] + A[i, j] + U[i, j] + Tr[i, j] + Tr_slow[i, j] + Ph[i, j] + Ph_c[i, j]
 deaths[, ] <- mu_age[i] * Npop[i, j]
 dim(Npop, deaths) <- c(n_age, n_het)
 births <- sum(deaths)
@@ -216,34 +229,41 @@ deriv(S[1, ]) <- births * het_wt[j] + rU * U[1, j] + rP * Ph[1, j] + rP_c * Ph_c
 deriv(S[2:n_age, ]) <- r_age[i - 1] * S[i - 1, j] + rU * U[i, j] + rP * Ph[i, j] +
   rP_c * Ph_c[i, j] - FOI[i, j] * S[i, j] - re[i] * S[i, j]
 
-# effective treated-recovery rate: mean-field blend of fast (rT) and slow
-# (rT_slow) clearance for a fraction `spc` of the treated (SPC resistance).
-rT_eff <- 1 / ((1 - spc) / rT + spc / rT_slow)
-deriv(Tr[1, ]) <- ft_eff * phi[1, j] * FOI[1, j] * (S[1, j] + A[1, j] + U[1, j]) -
-  rT_eff * Tr[1, j] - re[1] * Tr[1, j]
+# Treated. malariasimulation assigns each successfully-treated individual to slow
+# parasite clearance by a Bernoulli draw with probability `spc` (= artemisinin
+# resistance proportion x slow_parasite_clearance_probability) and gives them
+# dt_slow, everyone else dt (human_infection.R calculate_successful_treatments ->
+# dt_spc_combined). That is a MIXTURE OF TWO EXPONENTIALS, not one exponential at
+# the blended mean, so Tr is split into two parallel compartments exactly as the
+# IBM splits the treated.
+trt_in[, ] <- ft_eff * h_c[i, j] * (S[i, j] + A[i, j] + U[i, j])
+dim(trt_in) <- c(n_age, n_het)
+deriv(Tr[1, ]) <- (1 - spc) * trt_in[1, j] - rT * Tr[1, j] - re[1] * Tr[1, j]
 deriv(Tr[2:n_age, ]) <- r_age[i - 1] * Tr[i - 1, j] +
-  ft_eff * phi[i, j] * FOI[i, j] * (S[i, j] + A[i, j] + U[i, j]) -
-  rT_eff * Tr[i, j] - re[i] * Tr[i, j]
+  (1 - spc) * trt_in[i, j] - rT * Tr[i, j] - re[i] * Tr[i, j]
+deriv(Tr_slow[1, ]) <- spc * trt_in[1, j] - rT_slow * Tr_slow[1, j] - re[1] * Tr_slow[1, j]
+deriv(Tr_slow[2:n_age, ]) <- r_age[i - 1] * Tr_slow[i - 1, j] +
+  spc * trt_in[i, j] - rT_slow * Tr_slow[i, j] - re[i] * Tr_slow[i, j]
 
 # Untreated clinical (D): (1 - ft_eff) includes early-treatment-failure diversions
-deriv(D[1, ]) <- (1 - ft_eff) * phi[1, j] * FOI[1, j] * (S[1, j] + A[1, j] + U[1, j]) -
+deriv(D[1, ]) <- (1 - ft_eff) * h_c[1, j] * (S[1, j] + A[1, j] + U[1, j]) -
   rD * D[1, j] - re[1] * D[1, j]
 deriv(D[2:n_age, ]) <- r_age[i - 1] * D[i - 1, j] +
-  (1 - ft_eff) * phi[i, j] * FOI[i, j] * (S[i, j] + A[i, j] + U[i, j]) -
+  (1 - ft_eff) * h_c[i, j] * (S[i, j] + A[i, j] + U[i, j]) -
   rD * D[i, j] - re[i] * D[i, j]
 
-deriv(A[1, ]) <- (1 - phi[1, j]) * FOI[1, j] * (S[1, j] + U[1, j]) -
-  phi[1, j] * FOI[1, j] * A[1, j] + rD * D[1, j] - rA * A[1, j] - re[1] * A[1, j]
+deriv(A[1, ]) <- h_a[1, j] * (S[1, j] + U[1, j]) -
+  h_c[1, j] * A[1, j] + rD * D[1, j] - rA * A[1, j] - re[1] * A[1, j]
 deriv(A[2:n_age, ]) <- r_age[i - 1] * A[i - 1, j] +
-  (1 - phi[i, j]) * FOI[i, j] * (S[i, j] + U[i, j]) -
-  phi[i, j] * FOI[i, j] * A[i, j] + rD * D[i, j] - rA * A[i, j] - re[i] * A[i, j]
+  h_a[i, j] * (S[i, j] + U[i, j]) -
+  h_c[i, j] * A[i, j] + rD * D[i, j] - rA * A[i, j] - re[i] * A[i, j]
 
 deriv(U[1, ]) <- rA * A[1, j] - FOI[1, j] * U[1, j] - rU * U[1, j] - re[1] * U[1, j]
 deriv(U[2:n_age, ]) <- r_age[i - 1] * U[i - 1, j] + rA * A[i, j] -
   FOI[i, j] * U[i, j] - rU * U[i, j] - re[i] * U[i, j]
 
-deriv(Ph[1, ]) <- rT_eff * Tr[1, j] - rP * Ph[1, j] - re[1] * Ph[1, j]
-deriv(Ph[2:n_age, ]) <- r_age[i - 1] * Ph[i - 1, j] + rT_eff * Tr[i, j] -
+deriv(Ph[1, ]) <- rT * Tr[1, j] + rT_slow * Tr_slow[1, j] - rP * Ph[1, j] - re[1] * Ph[1, j]
+deriv(Ph[2:n_age, ]) <- r_age[i - 1] * Ph[i - 1, j] + rT * Tr[i, j] + rT_slow * Tr_slow[i, j] -
   rP * Ph[i, j] - re[i] * Ph[i, j]
 
 # chemoprevention prophylaxis compartment (filled by MDA/SMC/PMC pulses; decays
@@ -254,23 +274,44 @@ deriv(Ph_c[2:n_age, ]) <- r_age[i - 1] * Ph_c[i - 1, j] - rP_c * Ph_c[i, j] -
   re[i] * Ph_c[i, j]
 
 ## ---- immunity ODEs (aging uses re[i]; boundary I0 = 0) --------------------
-deriv(IB[1, ]) <- EPS[1, j] / (EPS[1, j] * ub + 1) - IB[1, j] / d_ib - re[1] * IB[1, j]
-deriv(IB[2:n_age, ]) <- EPS[i, j] / (EPS[i, j] * ub + 1) - IB[i, j] / d_ib +
+# Immunity boosting, matching the IBM's refractory renewal process exactly.
+# malariasimulation boosts on a per-DAY EVENT with an integer refractory window:
+# boost_immunity() fires only if (timestep - last_boosted) >= u, and timestep is an
+# integer, so the effective wait is ceil(u) days and the person then boosts on the
+# first subsequent day carrying an event -- geometric with mean 1/q. Mean inter-boost
+# gap = (ceil(u) - 1) + 1/q, i.e. boost rate = q / (q * u_eff + 1) with
+# u_eff = ceil(u) - 1. The event probability q is the DEDUPLICATED per-day one:
+#   IB          -> bitten at least once, q = 1 - exp(-EPS)  (bitten_humans is a Bitset)
+#   ICA/ID/IVA  -> infected that day,    q = 1 - exp(-FOI)  (one outcome per person/day)
+# blink previously used the raw rates EPS/FOI, over-boosting where exposure is high.
+# ICA/ID/IVA are boosted only for individuals eligible to be INFECTED (ms restricts
+# source_humans to S/A/U), so their boost is scaled by the at-risk fraction; IB is
+# boosted for everyone bitten, whatever their state, so it is not scaled.
+q_b[, ] <- 1 - exp(-EPS[i, j])
+q_f[, ] <- 1 - exp(-FOI[i, j])
+at_risk[, ] <- (S[i, j] + A[i, j] + U[i, j]) / Npop[i, j]
+bst_b[, ] <- q_b[i, j] / (q_b[i, j] * ub_eff + 1)
+bst_c[, ] <- at_risk[i, j] * q_f[i, j] / (q_f[i, j] * uc_eff + 1)
+bst_d[, ] <- at_risk[i, j] * q_f[i, j] / (q_f[i, j] * ud_eff + 1)
+bst_v[, ] <- at_risk[i, j] * q_f[i, j] / (q_f[i, j] * uv_eff + 1)
+dim(q_b, q_f, at_risk, bst_b, bst_c, bst_d, bst_v) <- c(n_age, n_het)
+deriv(IB[1, ]) <- bst_b[1, j] - IB[1, j] / d_ib - re[1] * IB[1, j]
+deriv(IB[2:n_age, ]) <- bst_b[i, j] - IB[i, j] / d_ib +
   re[i] * (IB[i - 1, j] - IB[i, j])
-deriv(ICA[1, ]) <- FOI[1, j] / (FOI[1, j] * uc + 1) - ICA[1, j] / d_ica - re[1] * ICA[1, j]
-deriv(ICA[2:n_age, ]) <- FOI[i, j] / (FOI[i, j] * uc + 1) - ICA[i, j] / d_ica +
+deriv(ICA[1, ]) <- bst_c[1, j] - ICA[1, j] / d_ica - re[1] * ICA[1, j]
+deriv(ICA[2:n_age, ]) <- bst_c[i, j] - ICA[i, j] / d_ica +
   re[i] * (ICA[i - 1, j] - ICA[i, j])
-deriv(ID[1, ]) <- FOI[1, j] / (FOI[1, j] * ud + 1) - ID[1, j] / d_id - re[1] * ID[1, j]
-deriv(ID[2:n_age, ]) <- FOI[i, j] / (FOI[i, j] * ud + 1) - ID[i, j] / d_id +
+deriv(ID[1, ]) <- bst_d[1, j] - ID[1, j] / d_id - re[1] * ID[1, j]
+deriv(ID[2:n_age, ]) <- bst_d[i, j] - ID[i, j] / d_id +
   re[i] * (ID[i - 1, j] - ID[i, j])
-deriv(IVA[1, ]) <- FOI[1, j] / (FOI[1, j] * uv + 1) - IVA[1, j] / d_iva - re[1] * IVA[1, j]
-deriv(IVA[2:n_age, ]) <- FOI[i, j] / (FOI[i, j] * uv + 1) - IVA[i, j] / d_iva +
+deriv(IVA[1, ]) <- bst_v[1, j] - IVA[1, j] / d_iva - re[1] * IVA[1, j]
+deriv(IVA[2:n_age, ]) <- bst_v[i, j] - IVA[i, j] / d_iva +
   re[i] * (IVA[i - 1, j] - IVA[i, j])
 
 ## ---- mosquito ODEs (per species) ------------------------------------------
 Mtot[] <- Sm[i] + Em_tot[i] + Im[i]
 nL[] <- ME[i] + ML[i]
-Em_tot[] <- sum(Em[i, ])          # total incubating (all EIP stages) per species
+Em_tot[] <- Em_inc[i]                # total incubating per species (ms E state)
 dim(Mtot, nL, Em_tot) <- n_spp
 
 deriv(ME[]) <- beta_eff[i] * Mtot[i] - ME[i] / del - ME[i] * me * (1 + nL[i] / Kcap[i])
@@ -279,12 +320,29 @@ deriv(MP[]) <- ML[i] / dl - MP[i] / dpl - MP[i] * mup
 dim(ME, ML, MP) <- n_spp
 
 deriv(Sm[]) <- 0.5 * MP[i] / dpl - Sm[i] * foim[i] - Sm[i] * mum[i]
-# EIP as an Erlang chain Em[species, stage]; death mum at every stage
-deriv(Em[, 1]) <- Sm[i] * foim[i] - (reip + mum[i]) * Em[i, 1]
-deriv(Em[, 2:n_eip]) <- reip * Em[i, j - 1] - (reip + mum[i]) * Em[i, j]
-deriv(Im[]) <- reip * Em[i, n_eip] - mum[i] * Im[i]
+# EIP. malariasimulation uses a FIXED dem-day delay and applies the incubation
+# survival exp(-mu*dem) at the exit, with the CURRENT mu
+# (src/adult_mosquito_eqs.cpp: incubation_survival = exp(-model.mu * model.tau);
+#  dE/dt = S*foim - lagged_incubating*incubation_survival - E*mu;
+#  dI/dt = lagged_incubating*incubation_survival - I*mu).
+# blink substitutes an Erlang chain for the delay (odin2's delay() is unreliable
+# here), but the chain must be LOSS-FREE: putting death in every stage gives
+# through-survival (reip/(reip+mum))^n_eip instead of exp(-mum*dem), which is
+# ~4% too high at baseline mum and worsens as vector control raises mum (the
+# static total_M compensation is exact only at the seed). So Xi is a pure delay
+# of Sm*foim, survival is applied once at the exit, and the incubating stock
+# Em_tot follows malariasimulation's own E equation.
+deriv(Xi[, 1]) <- reip * (Sm[i] * foim[i] - Xi[i, 1])
+deriv(Xi[, 2:n_eip]) <- reip * (Xi[i, j - 1] - Xi[i, j])
+eip_surv[] <- exp(-mum[i] * dem)
+dim(eip_surv) <- n_spp
+matured[] <- Xi[i, n_eip] * eip_surv[i]        # survived the incubation period
+dim(matured) <- n_spp
+deriv(Em_inc[]) <- Sm[i] * foim[i] - matured[i] - mum[i] * Em_inc[i]
+deriv(Im[]) <- matured[i] - mum[i] * Im[i]
 dim(Sm, Im) <- n_spp
-dim(Em) <- c(n_spp, n_eip)
+dim(Xi) <- c(n_spp, n_eip)
+dim(Em_inc) <- n_spp
 
 ## ---- initial conditions ---------------------------------------------------
 S0 <- parameter(); D0 <- parameter(); A0 <- parameter()
@@ -293,14 +351,16 @@ IB_init <- parameter(); ICA_init <- parameter(); ID_init <- parameter(); IVA_ini
 dim(S0, D0, A0, U0, Tr0, Ph0, Phc0, IB_init, ICA_init, ID_init, IVA_init) <- c(n_age, n_het)
 ME0 <- parameter(); ML0 <- parameter(); MP0 <- parameter(); Sm0 <- parameter(); Im0 <- parameter()
 dim(ME0, ML0, MP0, Sm0, Im0) <- n_spp
-Em0 <- parameter(); dim(Em0) <- c(n_spp, n_eip)
+Xi0 <- parameter(); dim(Xi0) <- c(n_spp, n_eip)
+Em_inc0 <- parameter(); dim(Em_inc0) <- n_spp
 Xe0 <- parameter(); Xf0 <- parameter()   # scalar equilibrium lag values
 
 initial(S[, ]) <- S0[i, j]
 initial(D[, ]) <- D0[i, j]
 initial(A[, ]) <- A0[i, j]
 initial(U[, ]) <- U0[i, j]
-initial(Tr[, ]) <- Tr0[i, j]
+initial(Tr[, ]) <- (1 - spc0) * Tr0[i, j]
+initial(Tr_slow[, ]) <- spc0 * Tr0[i, j]
 initial(Ph[, ]) <- Ph0[i, j]
 initial(Ph_c[, ]) <- Phc0[i, j]
 initial(IB[, ]) <- IB_init[i, j]
@@ -311,24 +371,30 @@ initial(ME[]) <- ME0[i]
 initial(ML[]) <- ML0[i]
 initial(MP[]) <- MP0[i]
 initial(Sm[]) <- Sm0[i]
-initial(Em[, ]) <- Em0[i, j]
+initial(Xi[, ]) <- Xi0[i, j]
+initial(Em_inc[]) <- Em_inc0[i]
 initial(Im[]) <- Im0[i]
 initial(Xe[]) <- Xe0
 initial(Xf[]) <- Xf0
 
-dim(S, D, A, U, Tr, Ph, Ph_c) <- c(n_age, n_het)
+dim(S, D, A, U, Tr, Tr_slow, Ph, Ph_c) <- c(n_age, n_het)
 dim(IB, ICA, ID, IVA) <- c(n_age, n_het)
 
 ## ---- outputs (per age group; aggregated to bands in R) --------------------
 # All as fractions of the total human population (x human_population -> counts).
-clin_inc_a[, ] <- phi[i, j] * FOI[i, j] * (S[i, j] + A[i, j] + U[i, j])
+# Counted with the clinical hazard h_c (not phi*FOI): the pool depletes only via
+# the clinical route, so integrating h_c*(S+A+U) over a day gives exactly the IBM's
+# phi*p*N clinical episodes. Severe is drawn from the SAME infected set as clinical
+# in the IBM (update_severe_disease takes infected_humans), so it keeps the total
+# infection hazard; theta is the severe fraction of all infections.
+clin_inc_a[, ] <- h_c[i, j] * (S[i, j] + A[i, j] + U[i, j])
 sev_inc_a[, ] <- theta[i, j] * FOI[i, j] * (S[i, j] + A[i, j] + U[i, j])
 inc_a[, ] <- FOI[i, j] * (S[i, j] + A[i, j] + U[i, j])   # all new infections
-detlm[, ] <- D[i, j] + Tr[i, j] + q[i, j] * A[i, j]
+detlm[, ] <- D[i, j] + Tr[i, j] + Tr_slow[i, j] + q[i, j] * A[i, j]
 # PCR follows the malariasimulation IBM convention (all D/Tr/A/U count as
 # PCR-positive), NOT malariaEquilibrium's sub-patent-weighted pos_PCR
 # (D+Tr+A*q^aA+U*q^aU). We target the IBM, and this matches it to <0.3%.
-detpcr[, ] <- D[i, j] + Tr[i, j] + A[i, j] + U[i, j]
+detpcr[, ] <- D[i, j] + Tr[i, j] + Tr_slow[i, j] + A[i, j] + U[i, j]
 dim(clin_inc_a, sev_inc_a, inc_a, detlm, detpcr) <- c(n_age, n_het)
 
 n_g[] <- sum(Npop[i, ])
@@ -338,7 +404,7 @@ clin_g[] <- sum(clin_inc_a[i, ])
 sev_g[] <- sum(sev_inc_a[i, ])
 inc_g[] <- sum(inc_a[i, ])
 S_g[] <- sum(S[i, ]); D_g[] <- sum(D[i, ]); A_g[] <- sum(A[i, ])
-U_g[] <- sum(U[i, ]); Tr_g[] <- sum(Tr[i, ]); Ph_g[] <- sum(Ph[i, ]) + sum(Ph_c[i, ])
+U_g[] <- sum(U[i, ]); Tr_g[] <- sum(Tr[i, ]) + sum(Tr_slow[i, ]); Ph_g[] <- sum(Ph[i, ]) + sum(Ph_c[i, ])
 dim(n_g, det_lm_g, det_pcr_g, clin_g, sev_g, inc_g) <- n_age
 dim(S_g, D_g, A_g, U_g, Tr_g, Ph_g) <- n_age
 
