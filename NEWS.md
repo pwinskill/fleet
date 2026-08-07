@@ -50,6 +50,36 @@ malariasimulation implementation is known. No tuned constants were introduced.
   undisturbed run relaxes by up to ~0.5% over the first years, as malariasimulation
   itself does. See the README "Seeding" note.
 
+### Validation after this pass
+
+Monthly, *P. falciparum* only on both sides, 63 countries / 1,391 sub-sites /
+450,684 sub-site-months, against pre-run malariasimulation output:
+
+| metric | before | after |
+| --- | --- | --- |
+| clinical slope | 1.16 | **1.02** |
+| clinical bias | +0.070 | **+0.030** |
+| clinical RMSE | 0.125 | **0.084** |
+| clinical r | 0.982 | 0.980 |
+| severe slope | 1.02 | **0.967** |
+| severe r | 0.935 | **0.954** |
+
+Per-site median monthly clinical r = 0.99. Note the "before" column was measured
+through the overlapping-band artefact, which inflated blink's side by ~1.21x
+(clinical) and ~1.10x (severe) — the apparently unbiased severe slope of 1.02 was two
+opposite-signed errors cancelling, and severe now shows its genuine ~3% negative bias.
+
+Known remaining discrepancies, all characterised rather than tuned away:
+
+* **Severe under-predicts by ~3%**, concentrated in 5-15y and adults rather than infants.
+* **Stochastic elimination.** Where the IBM's transmission dies out (e.g. Guinea-Bissau,
+  ratios 2.3-2.9 with r ~ 0.53), a deterministic mean field cannot follow it to zero.
+  This is structural, not a defect.
+* **Very low transmission (EIR ~ 1)** over-predicts against the pre-run files, but
+  matches a *live* malariasimulation 3.0.0 run at the same site — check the baseline
+  before reading this as a model error.
+* **Very high transmission (EIR > 200)** under-predicts (~0.78-0.91).
+
 First development release: a deterministic mean-field (ODE) twin of the
 `malariasimulation` individual-based model of *P. falciparum* malaria, built on
 odin2/dust2.

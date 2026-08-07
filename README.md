@@ -135,6 +135,8 @@ source("comparison/run_incidence.R")    # clinical & severe incidence time serie
 
 Across the equilibrium and intervention scenarios the ODE tracks the IBM closely — for example equilibrium PfPR(2–10) agrees to ≤ 0.012 across EIR 1–120, the age-prevalence profile at EIR 20 to `max |IBM − ODE| = 0.008`, and the custom-demography under-5 population fraction to within 0.002 (IBM 0.090 vs ODE 0.088). In the figures, **colour, line type and point shape all encode the IBM/ODE distinction**, so they stay legible in greyscale and under colour-vision deficiency.
 
+> **Note.** The figures below were generated *before* the exact-replication pass described in `NEWS.md`. The prevalence-based panels are unaffected (they plot per-band prevalence directly), but the incidence panels predate the output-band fix and the model changes, and should be regenerated with `source("comparison/run_comparison.R")` / `run_incidence.R`. For the current, broader picture see the validation table in `NEWS.md` (63 countries, monthly, clinical slope 1.02 / severe 0.967).
+
 **Equilibrium & structure**
 
 | | |
