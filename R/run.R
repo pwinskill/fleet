@@ -177,21 +177,44 @@ simulate_with_pulses <- function(sys, times, events, meta) {
 #' Default output age bands (days), taken from the parameter list's rendering
 #' fields where present, always including 2-10y and all-ages.
 #' @noRd
-output_bands <- function(p) {
+#' Age bands per output family, mirroring malariasimulation's rendering semantics.
+#'
+#' CRITICAL: each column family must be emitted ONLY over its own rendering list,
+#' exactly as malariasimulation does (R/render.R: n_detect_* from
+#' prevalence_rendering_*, n_inc_* from incidence_rendering_*, n_inc_clinical_*
+#' from clinical_incidence_rendering_*, n_inc_severe_* from
+#' severe_incidence_rendering_*, and only n_age_* over the union). Emitting every
+#' family over the UNION produces OVERLAPPING strata — e.g. a 2-10y prevalence band
+#' alongside a 0-5/5-15/15-100 clinical partition — and postie treats each
+#' n_inc_clinical_* column as an independent age stratum. Any person-day-weighted
+#' aggregate (postie::get_rates() |> weighted.mean(clinical, person_days)) then
+#' double-counts the overlapped ages, inflating the all-age rate by
+#' (1 + w*rho)/(1 + w) — measured at ~1.21 for clinical and ~1.10 for severe on a
+#' site::site_parameters() list. Only fall back to the convenience 2-10y / all-age
+#' bands when a family's own rendering list is empty (e.g. a bare get_parameters()).
+#' @noRd
+output_bands <- function(p, family = c("all", "prevalence", "incidence",
+                                       "clinical", "severe")) {
+  family <- match.arg(family)
   gather <- function(lo, hi) {
     lo <- p[[lo]]; hi <- p[[hi]]
     if (is.null(lo) || length(lo) == 0) return(NULL)
     Map(c, lo, hi)
   }
-  bands <- c(
-    gather("prevalence_rendering_min_ages", "prevalence_rendering_max_ages"),
-    gather("incidence_rendering_min_ages", "incidence_rendering_max_ages"),
-    gather("clinical_incidence_rendering_min_ages", "clinical_incidence_rendering_max_ages"),
-    gather("severe_incidence_rendering_min_ages", "severe_incidence_rendering_max_ages"),
-    gather("age_group_rendering_min_ages", "age_group_rendering_max_ages"),
-    list(c(730, 3650), c(0, 36500))
-  )
-  unique(bands)
+  default <- list(c(730, 3650), c(0, 36500))
+  prev <- gather("prevalence_rendering_min_ages", "prevalence_rendering_max_ages")
+  inc  <- gather("incidence_rendering_min_ages", "incidence_rendering_max_ages")
+  clin <- gather("clinical_incidence_rendering_min_ages", "clinical_incidence_rendering_max_ages")
+  sev  <- gather("severe_incidence_rendering_min_ages", "severe_incidence_rendering_max_ages")
+  agrp <- gather("age_group_rendering_min_ages", "age_group_rendering_max_ages")
+  or_default <- function(x) if (length(x)) x else default
+  switch(family,
+    prevalence = unique(or_default(prev)),
+    incidence  = unique(or_default(inc)),
+    clinical   = unique(or_default(clin)),
+    severe     = unique(or_default(sev)),
+    # n_age_* spans the union of everything (matching malariasimulation)
+    all = unique(c(prev, inc, clin, sev, agrp, default)))
 }
 
 #' Render dust2 output into a wide malariasimulation-style count table that can
@@ -215,21 +238,31 @@ render_output <- function(sys, y, times, inp) {
   }
 
   out <- data.frame(timestep = times)
-  for (b in output_bands(meta$parameters)) {
-    lo <- b[1]; hi <- b[2]
-    tag <- paste0(round(lo), "_", round(hi))
-    n_age  <- band_sum(n_g, lo, hi) * hp
-    n_lm   <- band_sum(det_lm_g, lo, hi) * hp
-    n_pcr  <- band_sum(det_pcr_g, lo, hi) * hp
-    n_clin <- band_sum(clin_g, lo, hi) * hp   # per-day incidence count
-    n_sev  <- band_sum(sev_g, lo, hi) * hp
-    out[[paste0("n_age_", tag)]] <- n_age
+  p <- meta$parameters
+  tag_of <- function(b) paste0(round(b[1]), "_", round(b[2]))
+  # n_age_* over the union (as malariasimulation does): postie derives its
+  # denominators by matching these to each incidence/detection column's tag.
+  for (b in output_bands(p, "all")) {
+    out[[paste0("n_age_", tag_of(b))]] <- band_sum(n_g, b[1], b[2]) * hp
+  }
+  # every other family strictly over ITS OWN rendering bands, so the strata each
+  # postie column family sees form a partition (see output_bands()).
+  for (b in output_bands(p, "prevalence")) {
+    tag <- tag_of(b)
+    n_age <- band_sum(n_g, b[1], b[2]) * hp
+    n_lm  <- band_sum(det_lm_g, b[1], b[2]) * hp
     out[[paste0("n_detect_lm_", tag)]] <- n_lm
     out[[paste0("p_detect_lm_", tag)]] <- ifelse(n_age > 0, n_lm / n_age, 0)
-    out[[paste0("n_detect_pcr_", tag)]] <- n_pcr
-    out[[paste0("n_inc_clinical_", tag)]] <- n_clin
-    out[[paste0("n_inc_severe_", tag)]] <- n_sev
-    out[[paste0("n_inc_", tag)]] <- band_sum(inc_g, lo, hi) * hp   # all-infection incidence
+    out[[paste0("n_detect_pcr_", tag)]] <- band_sum(det_pcr_g, b[1], b[2]) * hp
+  }
+  for (b in output_bands(p, "clinical")) {
+    out[[paste0("n_inc_clinical_", tag_of(b))]] <- band_sum(clin_g, b[1], b[2]) * hp
+  }
+  for (b in output_bands(p, "severe")) {
+    out[[paste0("n_inc_severe_", tag_of(b))]] <- band_sum(sev_g, b[1], b[2]) * hp
+  }
+  for (b in output_bands(p, "incidence")) {
+    out[[paste0("n_inc_", tag_of(b))]] <- band_sum(inc_g, b[1], b[2]) * hp
   }
   out$ft <- as.numeric(st$ft_out)
   out$EIR <- as.numeric(st$EIR_yr)

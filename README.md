@@ -98,7 +98,9 @@ Everything malariasimulation models for *P. falciparum* is represented, each see
 
 ## Mean-field approximations
 
-The model is honest about where and how much it departs from the IBM. Every item below is **exact at equilibrium**; the caveats concern transient dynamics or diagnostic conventions.
+The model is honest about where and how much it departs from the IBM.
+
+**Seeding.** `blink` starts each run at the `malariaEquilibrium` analytic fixed point. That solution encodes *simplified* forms — a linear force of infection, refractory immunity boosting on the raw rate, exponential incubation survival — whereas `blink` now reproduces malariasimulation's own per-day semantics (bite deduplication, the integer refractory window, a fixed-delay EIP with `exp(-mu*dem)` survival, whole-day state sojourns). The seed is therefore a close **approximation** to `blink`'s true fixed point rather than the fixed point itself: an undisturbed run relaxes by up to ~0.5% over the first years and then holds. malariasimulation behaves the same way — it is seeded from `malariaEquilibrium` too and drifts off it. Burn in before calibrating, and set `parameters$bite_dedup = 0` if you need the exactly-flat (approximate-dynamics) behaviour for a numerical test.
 
 **Numerics & lags.** The human EIR/FOIM lags and the mosquito EIP are implemented as Erlang (linear-chain) filters rather than `delay()` — robust, pure-ODE, and exact at equilibrium. Stage counts (`n_eir`, `n_foim`, `n_eip`; defaults 10 / 10 / 20) are tunable: larger values sharpen the gamma-shaped lags toward the IBM's fixed delays. The disease-state seed re-solves the prophylaxis aging recursion with a corrected `bP` term (upstream `malariaEquilibrium::human_equilibrium_no_het` has a small artifact), so the model holds flat even under treatment (`ft > 0`).
 
