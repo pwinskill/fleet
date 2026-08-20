@@ -2,6 +2,13 @@
 
 > A fast, deterministic **mean-field (ODE) twin** of the [malariasimulation](https://github.com/mrc-ide/malariasimulation) individual-based model of *Plasmodium falciparum* malaria — same inputs, seconds per run, population-independent.
 
+![The blink model](man/figures/model_flow.png)
+
+*The model at a glance: human compartments above, mosquito below, coupled by the
+EIR and the mosquito force of infection. Solid arrows are rates in the ODE; the
+dashed arrow is the one flow applied as a discrete pulse. Each human box is an
+array over age and biting heterogeneity — see `vignette("model")`.*
+
 ## What it is
 
 `blink` reproduces the Griffin-style, age- and biting-heterogeneity-structured human model — states `S / D / A / U / Tr` plus two prophylaxis compartments (`Ph`, treatment-linked, and `Ph_c`, chemoprevention) and the six immunity functions — four acquired states (`IB / ICA / ID / IVA`) plus the two maternal terms (`ICM / IVM`), which are algebraic rather than state variables — coupled to the compartmental mosquito model (`E / L / P / Sm / EIP-chain / Im` per species). It is written in [odin2](https://github.com/mrc-ide/odin2) / [dust2](https://github.com/mrc-ide/dust2).
