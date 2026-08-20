@@ -246,6 +246,17 @@ main img {
   height: auto;
 }
 
+/* The generated figures are opaque-white PNGs with black linework, so in dark
+   mode they land as a bright slab on a dark page. Making them transparent is
+   the wrong fix (every arrow and label is black and would vanish); instead,
+   frame them so the white reads as deliberate paper. */
+[data-bs-theme="dark"] main img:not([src$=".svg"]) {
+  background: #fff;
+  padding: .75rem;
+  border-radius: .6rem;
+  box-shadow: 0 .35rem 1.1rem rgba(0, 0, 0, .45);
+}
+
 /* ---- Display maths ----------------------------------------------------- */
 /* A few of the appendix equations are wider than a narrow content column.
    Let them scroll in place rather than widening the whole page. */

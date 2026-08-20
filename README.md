@@ -4,10 +4,13 @@
 
 ![The blink model](man/figures/model_flow.png)
 
-*The model at a glance: human compartments above, mosquito below, coupled by the
-EIR and the mosquito force of infection. Solid arrows are rates in the ODE; the
-dashed arrow is the one flow applied as a discrete pulse. Each human box is an
-array over age and biting heterogeneity — see `vignette("model")`.*
+*The model at a glance: human compartments above, mosquito below. Solid black
+arrows are flows of individuals — rates in the ODE. Dashed coloured arrows are
+not flows: the two couplings set a rate in the other panel, and the
+chemoprevention pulse is a discrete jump. The dotted region is the pool of states
+infectious to mosquitoes. Every human box is an array over age × biting
+heterogeneity; the immunity arrays and Erlang lag chains are not drawn — see
+`vignette("model")`.*
 
 ## What it is
 
