@@ -11,9 +11,11 @@
 biting-heterogeneity-structured human model — states
 `S / D / A / U / Tr` plus two prophylaxis compartments (`Ph`,
 treatment-linked, and `Ph_c`, chemoprevention) and the six immunity
-functions `IB / ICA / ICM / ID / IVA / IVM` — coupled to the
-compartmental mosquito model (`E / L / P / Sm / EIP-chain / Im` per
-species). It is written in [odin2](https://github.com/mrc-ide/odin2) /
+functions — four acquired states (`IB / ICA / ID / IVA`) plus the two
+maternal terms (`ICM / IVM`), which are algebraic rather than state
+variables — coupled to the compartmental mosquito model
+(`E / L / P / Sm / EIP-chain / Im` per species). It is written in
+[odin2](https://github.com/mrc-ide/odin2) /
 [dust2](https://github.com/mrc-ide/dust2).
 
 It exists to give the malariasimulation ecosystem a **deterministic,
@@ -156,6 +158,12 @@ just the latest.
 ## Mean-field approximations
 
 The model is honest about where and how much it departs from the IBM.
+What follows is the summary;
+**[`vignette("model")`](https://pwinskill.github.io/blink/articles/model.md)
+is the canonical version**, with the full ODE system, a table of what
+each state dimension carries (and what is captured *without* one), and
+an argument-by-argument breakdown of every `malariasimulation` `set_*`
+function.
 
 **Seeding.** `blink` starts each run at the `malariaEquilibrium`
 analytic fixed point. That solution encodes *simplified* forms — a
@@ -198,17 +206,17 @@ the IBM does (it is seeded the same way).
 
 **Treatment & resistance.** Drug prophylaxis is a **single mean-duration
 compartment** (the Weibull is represented by its mean, so decay is
-exponential rather than the sharper Weibull), and slow parasite
-clearance a **blended treated-recovery rate** (not two
-sub-compartments); both are equilibrium-exact, transient-approximate.
-Antimalarial resistance (early-treatment-failure and
-slow-parasite-clearance) is blended across all treatment drugs by their
-share of treatment and also applies to a drug used for chemoprevention
-(SMC/MDA/PMC). The multi-drug blend is **time-varying**: drug efficacy,
-treated infectivity (`cT`) and the prophylaxis rate are interpolated
-over the treatment-coverage change times using each drug’s
-*instantaneous* share, so a first-line **switch** is modelled rather
-than frozen at a constant mixture.
+exponential rather than the sharper Weibull) — equilibrium-exact,
+transient-approximate. Slow parasite clearance is **not** averaged: `Tr`
+is split into two parallel compartments (`Tr`/`Tr_slow`), reproducing
+the IBM’s two-component mixture of exponentials exactly. Antimalarial
+resistance (early-treatment-failure and slow-parasite-clearance) is
+blended across all treatment drugs by their share of treatment and also
+applies to a drug used for chemoprevention (SMC/MDA/PMC). The multi-drug
+blend is **time-varying**: drug efficacy, treated infectivity (`cT`) and
+the prophylaxis rate are interpolated over the treatment-coverage change
+times using each drug’s *instantaneous* share, so a first-line
+**switch** is modelled rather than frozen at a constant mixture.
 
 **Vector control.** Net/IRS efficacy is population-averaged over the
 net-using / sprayed fractions into per-species `a(t)`, `mu(t)`. Both
@@ -235,20 +243,23 @@ approximated as ~monthly pulses over each dose-age band; pulses take
 effect the day **after** their scheduled timestep.
 
 **Vaccines.** PEV reduces the infection hazard by a per-age, per-time
-factor built from the profile’s **point-estimate (median) antibody
-trajectory** → Hill efficacy curve (any `create_pev_profile()`,
-including RTS,S and R21; individual antibody variation is not modelled —
-for R21 this can overstate efficacy by ~5 pp). The **full booster
-sequence** is modelled — the vaccinated are partitioned by the most
-recent booster each has reached, each stratum carrying its own decayed
-efficacy — for EPI and mass campaigns. EPI uses **time-varying
-coverage** (each cohort protected at the coverage in force on its
-vaccination date); mass campaigns apply **every** target age band at
-every campaign, with decaying efficacy (the vaccinated cohort does not
-age out of the band). Seasonal PEV boosters are approximated as a fixed
-days-since-primary schedule (**warned**). TBV reduces onward infectivity
-via the state-specific transmission-blocking-activity transform over the
-exact target `ages`, matching the IBM.
+factor. Efficacy is the **expectation of the Hill curve over the
+per-individual antibody distribution the IBM samples** — a 4-D
+Gauss–Hermite rule over `cs`/`rho`/`ds`/`dl` (any
+`create_pev_profile()`, including RTS,S and R21). Evaluating at the
+profile median instead would overstate R21 efficacy by up to ~4.7 pp;
+the quadrature matches a Monte-Carlo of the IBM’s own sampler to \<5e-4.
+The **full booster sequence** is modelled — the vaccinated are
+partitioned by the most recent booster each has reached, each stratum
+carrying its own decayed efficacy — for EPI and mass campaigns. EPI uses
+**time-varying coverage** (each cohort protected at the coverage in
+force on its vaccination date); mass campaigns apply **every** target
+age band at every campaign, with decaying efficacy (the vaccinated
+cohort does not age out of the band). Seasonal PEV boosters are
+approximated as a fixed days-since-primary schedule (**warned**). TBV
+reduces onward infectivity via the state-specific
+transmission-blocking-activity transform over the exact target `ages`,
+matching the IBM.
 
 **Seasonality.** Rainfall is the truncated Fourier series (matching the
 IBM), driving `K(t) = K0 · scaler(t) · rainfall(t) / R̄`. The seed is the
@@ -280,9 +291,12 @@ rate here whereas the IBM removes them — raise
   differences in acquired immunity and disease-pool composition between
   the mean field and the IBM, so it can differ by ~5–20% (largest at low
   EIR). (A separate, smaller, opposite-signed effect: the IBM adds a
-  `+0.5` offset to acquired immunity before the severe Hill function,
-  which the ODE omits.) Treat severe incidence — and the DALYs derived
-  from it — as indicative.
+  `+0.5` offset to acquired immunity before the severe Hill function.
+  That is a per-individual detail which does not carry over to a stratum
+  mean, and an A/B against the IBM ensemble mean favours omitting it —
+  hence the default `acquired_immunity_offset = 0`. Set it to `0.5` to
+  reproduce the IBM’s literal Hill calls.) Treat severe incidence — and
+  the DALYs derived from it — as indicative.
 - Reported **`EIR`** is per adult per year (equals `init_EIR` at
   equilibrium). Compare with a malariasimulation run as
   `EIR_<species> / human_population × 365`.
@@ -360,6 +374,11 @@ monthly-annualised)**
 
 - Getting started:
   [`vignette("blink")`](https://pwinskill.github.io/blink/articles/blink.md).
+- **Formal model specification:**
+  [`vignette("model")`](https://pwinskill.github.io/blink/articles/model.md)
+  — the full ODE system, what each state dimension captures (and what is
+  captured *without* one), and an argument-by-argument table of every
+  `malariasimulation` `set_*` function.
 - Function reference:
   [`?run_simulation_ode`](https://pwinskill.github.io/blink/reference/run_simulation_ode.md),
   [`?get_epi_outputs`](https://pwinskill.github.io/blink/reference/get_epi_outputs.md),

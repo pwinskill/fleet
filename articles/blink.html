@@ -39,6 +39,12 @@
       <ul class="navbar-nav me-auto">
 <li class="active nav-item"><a class="nav-link" href="../articles/blink.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+<li><a class="dropdown-item" href="../articles/model.html">The blink model: formal specification</a></li>
+  </ul>
+</li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
@@ -93,7 +99,7 @@ see <strong>Scope</strong> at the end.</p>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("remotes")</span></span>
-<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"mrc-ide/blink"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"pwinskill/blink"</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://pwinskill.github.io/blink">blink</a></span><span class="op">)</span></span></code></pre></div>
 <p><code>malariasimulation</code> (for parameter lists and the
@@ -262,10 +268,13 @@ compartment.</p>
 <span>  year12   <span class="op">=</span> <span class="va">pev</span><span class="op">$</span><span class="va">p_detect_lm_730_3650</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">pev</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  baseline    year12 </span></span>
 <span><span class="co">#&gt; 0.5485424 0.5113764</span></span></code></pre></div>
-<p>PEV reduces the infection hazard by a per-age, per-time factor built
-from the profile’s point-estimate antibody -&gt; efficacy curve; primary
-and booster doses, EPI and mass campaigns, and time-varying EPI coverage
-are all modelled. Transmission-blocking vaccines are available via
+<p>PEV reduces the infection hazard by a per-age, per-time factor.
+Efficacy is averaged over the per-individual antibody distribution the
+IBM samples (a 4-D Gauss-Hermite rule over
+<code>cs</code>/<code>rho</code>/<code>ds</code>/<code>dl</code>), not
+evaluated at the profile median; primary and booster doses, EPI and mass
+campaigns, and time-varying EPI coverage are all modelled.
+Transmission-blocking vaccines are available via
 <code>set_tbv()</code>.</p>
 </div>
 <div class="section level3">
@@ -287,8 +296,14 @@ reshapes the equilibrium age structure the model is seeded at:</p>
 <span><span class="va">under5_fraction</span> <span class="op">&lt;-</span> <span class="va">dem</span><span class="op">$</span><span class="va">n_age_0_1825</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">dem</span><span class="op">)</span><span class="op">]</span> <span class="op">/</span> <span class="va">dem</span><span class="op">$</span><span class="va">n_age_0_36500</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">dem</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="va">under5_fraction</span>     <span class="co"># ~0.09 here, vs ~0.21 under the default constant hazard</span></span>
 <span><span class="co">#&gt; [1] 0.08405595</span></span></code></pre></div>
-<p>Only the baseline (t = 0) deathrate row is used; a time-varying
-demography warns and falls back to that row.</p>
+<p>Custom demography is <strong>time-varying</strong>:
+<code>mu_age(t)</code> is interpolated over
+<code>deathrate_timesteps</code>, so a demographic transition is
+modelled rather than frozen. The baseline (<code>t = 0</code>) row
+additionally seeds the equilibrium age structure. Match
+<code>default_age_lower(max_age =)</code> to the top
+<code>deathrate_agegroups</code>; a warning fires if the model age grid
+runs past them.</p>
 </div>
 </div>
 <div class="section level2">
@@ -353,12 +368,15 @@ does not apply).</li>
 <li>
 <strong>Mean-field caveats.</strong> Vector control is
 population-averaged (slightly under-suppresses at deep troughs vs the
-IBM); drug prophylaxis and slow parasite clearance are single
-mean-duration compartments (equilibrium-exact, transient-approximate);
-vaccine efficacy uses profile point estimates (no per-person antibody
-variation). PCR prevalence follows the IBM convention (all D/Tr/A/U).
-These are documented in the README’s <em>Mean-field approximations</em>
-section.</li>
+IBM); drug prophylaxis is a single mean-duration compartment
+(equilibrium-exact, transient-approximate). PCR prevalence follows the
+IBM convention (all D/Tr/A/U).</li>
+<li>
+<strong>Full detail.</strong> <code><a href="../articles/model.html">vignette("model")</a></code> is the
+canonical specification: the ODE system, what each state dimension
+carries (and what is captured <em>without</em> a dimension), and an
+argument-by-argument table of every <code>malariasimulation</code>
+<code>set_*</code> function.</li>
 </ul>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
