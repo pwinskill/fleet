@@ -5,6 +5,17 @@
 > individual-based model of *Plasmodium falciparum* malaria — same
 > inputs, seconds per run, population-independent.
 
+![The blink model](reference/figures/model_flow.png)
+
+The blink model
+
+*The model at a glance: human compartments above, mosquito below,
+coupled by the EIR and the mosquito force of infection. Solid arrows are
+rates in the ODE; the dashed arrow is the one flow applied as a discrete
+pulse. Each human box is an array over age and biting heterogeneity —
+see
+[`vignette("model")`](https://pwinskill.github.io/blink/articles/model.md).*
+
 ## What it is
 
 `blink` reproduces the Griffin-style, age- and

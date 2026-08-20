@@ -80,6 +80,10 @@
 <blockquote>
 <p>A fast, deterministic <strong>mean-field (ODE) twin</strong> of the <a href="https://github.com/mrc-ide/malariasimulation" class="external-link">malariasimulation</a> individual-based model of <em>Plasmodium falciparum</em> malaria — same inputs, seconds per run, population-independent.</p>
 </blockquote>
+<div class="float">
+<img src="reference/figures/model_flow.png" alt="The blink model"><div class="figcaption">The blink model</div>
+</div>
+<p><em>The model at a glance: human compartments above, mosquito below, coupled by the EIR and the mosquito force of infection. Solid arrows are rates in the ODE; the dashed arrow is the one flow applied as a discrete pulse. Each human box is an array over age and biting heterogeneity — see <code><a href="articles/model.html">vignette("model")</a></code>.</em></p>
 <div class="section level2">
 <h2 id="what-it-is">What it is<a class="anchor" aria-label="anchor" href="#what-it-is"></a>
 </h2>
