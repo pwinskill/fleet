@@ -9,23 +9,29 @@
 # committed, so neither the vignette nor the README needs flodia at build time.
 #
 # ---------------------------------------------------------------------------
-# DESIGN NOTES (see git history for the review that produced them)
+# DESIGN NOTES
 #
-# * The figure is displayed at ~520-700 px, not the 2400 px it is authored at.
-#   Everything is sized for the small end: no explanatory legend blocks (they
-#   live in the caption), no compound algebra on the arrows, and a canvas kept
-#   narrow so the same cex renders larger.
-# * Flows leave the set of compartments they actually leave. Three quantities
-#   are sums over several compartments -- the at-risk pool, the infectious pool
-#   and the adult mosquito pool -- and each is drawn as a labelled bracket that
-#   the arrow departs from, never as a single representative box.
-# * Two visual grammars, kept apart: solid black = a flow of individuals;
-#   dashed colour = something that is not a flow (the chemoprevention state
-#   jump, and the two transmission couplings, which set a rate rather than
-#   moving anyone).
-# * Compartment class is encoded by border weight/style as well as fill, so it
-#   survives greyscale and colour-vision deficiency -- the standard the README
-#   already claims for the comparison figures.
+# * SCOPE. This is an overview. Antimalarial resistance is deliberately out of
+#   scope, so the treated state is drawn as a single T. The model itself splits
+#   it into T and T_slow when resistance is switched on -- see the vignette
+#   appendix, section B.4.
+# * SIZE. The figure is displayed at ~520-700 px, not the 2400 px it is authored
+#   at. Sized for the small end: no legend blocks (they live in the caption), no
+#   compound algebra on the arrows, canvas kept narrow so the same cex renders
+#   larger. ALWAYS check a 700 px render before committing.
+# * SOURCES. Flows leave the set of compartments they actually leave. Where a
+#   quantity is a sum over several compartments -- the at-risk pool, the
+#   infectious pool, the adult mosquito pool -- the arrow departs from a
+#   bracket, never from one representative box.
+# * GRAMMAR. Solid black = a flow of individuals. Dashed colour = not a flow:
+#   the two transmission couplings set a rate in the other panel, and the
+#   chemoprevention pulse is an instantaneous state jump.
+# * GEOMETRY. Every path is orthogonal, and every arrow terminates on something.
+#   No line may pass through a box; no two flows may share a lane. S takes its
+#   three returns on three different sides: P from above, P_c from below, U from
+#   the left.
+# * CLASS is encoded by border weight as well as fill, so it survives greyscale
+#   and colour-vision deficiency.
 # ---------------------------------------------------------------------------
 
 library(flodia)
@@ -39,153 +45,146 @@ col_proph <- light_palette("pu")
 col_aq    <- light_palette("gybr")
 col_mosq  <- light_palette("gnbu")
 
-COUPLE <- "#464273"   # transmission coupling (darkened for contrast)
-PULSE  <- "#B03A22"   # discrete chemoprevention pulse (>= 4.5:1 on white)
-GREY   <- "#666666"   # all annotation text (5.7:1); one tone, not five
+COUPLE <- "#464273"   # transmission coupling
+PULSE  <- "#B03A22"   # discrete chemoprevention pulse
+GREY   <- "#666666"   # all annotation text (5.7:1 on white)
 POOL   <- "#7A6E7E"   # bracket / grouping rules
+INK    <- "grey15"
 
-## Border encoding is redundant with fill, so class survives greyscale and CVD.
-##   susceptible / prophylaxis : thin solid      infectious : heavy solid
-##   treated                   : dashed          aquatic    : thin solid
-BORDER <- list(plain = list(lty = 1, lwd = 1.0),
-               inf   = list(lty = 1, lwd = 2.6),
-               treat = list(lty = 5, lwd = 2.0))
+RX <- 0.30; RY <- 0.20
 
-nd <- function(x, y, label, col, cls = "plain", rx = 0.30, ry = 0.20) {
-  b <- BORDER[[cls]]
-  node(x = x, y = y, rx = rx, ry = ry, label = label, node_col = col,
-       border_col = "grey15", label_cex = 1.45, lty = b$lty, lwd = b$lwd)
+nd <- function(x, y, label, col, heavy = FALSE) {
+  node(x = x, y = y, rx = RX, ry = RY, label = label, node_col = col,
+       border_col = INK, label_cex = 1.45, lwd = if (heavy) 2.6 else 1.0)
 }
 pt <- function(x, y) node(x = x, y = y, r = 0)
 
-## a labelled bracket: the device for "this flow leaves a SET of compartments"
-bracket <- function(x0, x1, y0, y1, label, lx, ly, cex = 0.95) {
-  rect(x0, y0, x1, y1, border = POOL, lty = 3, lwd = 1.8,
-       col = adjustcolor(POOL, alpha.f = 0.05))
-  text(lx, ly, label, col = POOL, font = 3, cex = cex, adj = c(0.5, 0.5))
+## orthogonal polyline; arrowhead on the final segment unless head = FALSE
+path <- function(xs, ys, col = INK, lty = 1, lwd = 1.2, head = TRUE) {
+  n <- length(xs)
+  if (n > 2) segments(xs[1:(n - 2)], ys[1:(n - 2)], xs[2:(n - 1)],
+                      ys[2:(n - 1)], col = col, lty = lty, lwd = lwd)
+  if (head) arrows(xs[n - 1], ys[n - 1], xs[n], ys[n], length = 0.11,
+                   angle = 20, col = col, lty = lty, lwd = lwd)
+  else segments(xs[n - 1], ys[n - 1], xs[n], ys[n], col = col, lty = lty,
+                lwd = lwd)
 }
 
-## a death outflow: short stub to nowhere, the anchor vector control acts on
-death <- function(x, y0, len = 0.42, label = NULL, lx = NULL, ly = NULL) {
-  arrows(x, y0, x, y0 - len, length = 0.10, angle = 20, col = "grey15", lwd = 1.1)
-  if (!is.null(label)) text(lx, ly, label, col = GREY, cex = 0.92, adj = c(0, 0.5))
+bracket <- function(x0, x1, y0, y1) {
+  rect(x0, y0, x1, y1, border = POOL, lty = 3, lwd = 1.8,
+       col = adjustcolor(POOL, alpha.f = 0.05))
+}
+
+death <- function(x, y0, len = 0.30) {
+  arrows(x, y0, x, y0 - len, length = 0.09, angle = 20, col = INK, lwd = 1.1)
+}
+
+lab <- function(x, y, txt, col = GREY, cex = 0.95, adj = c(0.5, 0.5), font = 1) {
+  text(x, y, txt, col = col, cex = cex, adj = adj, font = font)
 }
 
 model_flow <- function() {
 
-  SPINE <- 2.10
-  COL   <- 3.55
+  SPINE    <- 2.10   # x of the vertical infection spine
+  COL      <- 3.60   # x of the infection-outcome column
+  FOOT     <- 1.85   # y of the at-risk feeder lane and the spine foot
+  LANE_U   <- 1.26   # y of the U -> S return lane
+  LANE_CP  <- 1.00   # y of the chemoprevention lane
+  LANE_EIR <- 0.22   # y of the EIR coupling lane
+  MY       <- -0.35  # y of the mosquito row
 
   ## ======================= HUMAN =========================================
-  ## infectious pool: exactly the states entering `inf` in the odin
-  bracket(3.24, 5.94, 1.72, 5.02, "infectious to mosquitoes", 4.78, 3.02)
+  bracket(3.24, 5.62, 2.04, 4.32)                    # infectious pool
 
-  S  <- nd(0.80, 3.55, expression(bold(S)),    col_sus,   "plain")
-  Ts <- nd(COL,  4.70, expression(bold(T[s])), col_treat, "treat")
-  Tr <- nd(COL,  3.90, expression(bold(T)),    col_treat, "treat")
-  D  <- nd(COL,  3.10, expression(bold(D)),    col_clin,  "inf")
-  A  <- nd(COL,  2.30, expression(bold(A)),    col_asym,  "inf")
-  U  <- nd(5.15, 2.30, expression(bold(U)),    col_asym,  "inf")
-  Ph <- nd(6.85, 4.30, expression(bold(P)),    col_proph, "plain")
-  Pc <- nd(0.80, 1.75, expression(bold(P[c])), col_proph, "plain")
+  Ph <- nd(0.80, 4.15, expression(bold(P)),    col_proph)
+  S  <- nd(0.80, 3.15, expression(bold(S)),    col_sus)
+  Pc <- nd(0.80, 2.30, expression(bold(P[c])), col_proph)
+  Tr <- nd(COL,  4.00, expression(bold(T)),    col_treat, heavy = TRUE)
+  D  <- nd(COL,  3.15, expression(bold(D)),    col_clin,  heavy = TRUE)
+  A  <- nd(COL,  2.30, expression(bold(A)),    col_asym,  heavy = TRUE)
+  U  <- nd(5.25, 2.30, expression(bold(U)),    col_asym,  heavy = TRUE)
 
-  ## --- infection: acts on the at-risk pool S + A + U ---
-  FOOT <- 1.98
+  lab(4.66, 3.66, "infectious to\nmosquitoes", col = POOL, cex = 0.92, font = 3)
+
+  ## --- infection, out of the at-risk pool S + A + U ---
   flowx(from = S, to = pt(SPINE, S$y), label = expression(Lambda),
-        label_pos = 0.62, label_cex = 1.15)
-  flowy(from = pt(SPINE, FOOT), to = pt(SPINE, Ts$y), arr_width = 0)
-  ## A and U are at risk too. One feeder lane along the foot of the spine,
-  ## tapped from both, so the four splits are visibly fed by all three.
-  segments(A$x, A$y0, A$x, FOOT, col = "grey15", lwd = 1)
-  segments(U$x, U$y0, U$x, FOOT, col = "grey15", lwd = 1)
-  arrows(U$x, FOOT, SPINE, FOOT, length = 0.10, angle = 20,
-         col = "grey15", lwd = 1)
-  text(SPINE + 0.16, FOOT - 0.46,
-       expression(paste(Lambda, " acts on ", S + A + U)),
-       col = GREY, cex = 0.95, adj = c(0, 0.5))
+        label_pos = 0.55, label_cex = 1.2)
+  segments(SPINE, FOOT, SPINE, Tr$y, col = INK, lwd = 1.2)     # the spine
+  path(c(A$x, A$x, SPINE), c(A$y0, FOOT, FOOT), head = FALSE)  # A is at risk
+  path(c(U$x, U$x, SPINE), c(U$y0, FOOT, FOOT), head = FALSE)  # so is U
+  lab(SPINE + 0.20, FOOT - 0.26,
+      expression(paste(Lambda, " acts on ", S + A + U)), adj = c(0, 0.5),
+      cex = 0.92)
 
-  flowx(from = pt(SPINE, Ts$y), to = Ts, label = "treated, slow",
-        label_cex = 0.98)
-  flowx(from = pt(SPINE, Tr$y), to = Tr, label = "treated", label_cex = 0.98)
-  flowx(from = pt(SPINE, D$y),  to = D,  label = "untreated", label_cex = 0.98)
-  flowx(from = pt(SPINE, A$y),  to = A,  label = "asymptomatic",
-        label_cex = 0.98)
+  flowx(from = pt(SPINE, Tr$y), to = Tr, label = "treated",      label_cex = 1.0)
+  flowx(from = pt(SPINE, D$y),  to = D,  label = "untreated",    label_cex = 1.0)
+  flowx(from = pt(SPINE, A$y),  to = A,  label = "asymptomatic", label_cex = 1.0)
 
   ## --- recovery ---
-  flowy(from = D, to = A, label = expression(r[D]), label_cex = 1.15)
-  flowx(from = A, to = U, label = expression(r[A]), label_cex = 1.15)
-  ## T_s into P's LEFT face, T into its bottom: one flow per side of P
-  turnx(from = Ts, mid_x = 6.30, to = Ph, label = expression(r[T]*"(slow)"),
-        label_x = 6.02, label_y = 4.86, label_cex = 1.15)
-  bendx(from = Tr, to = Ph, label_to = expression(r[T]), label_cex = 1.15)
+  flowy(from = D, to = A, label = expression(r[D]), label_cex = 1.2)
+  flowx(from = A, to = U, label = expression(r[A]), label_cex = 1.2)
 
-  ## --- returns to S: top, bottom, left. No two share a lane. ---
-  turny(from = Ph, mid_y = Ts$y1 + 0.36, to = S, label = expression(r[P]),
-        label_cex = 1.15)
-  turny(from = U,  mid_y = 1.30, to = S, label = expression(r[U]),
-        label_x = 4.30, label_y = 1.44, label_cex = 1.15)
-  turnx(from = Pc, mid_x = 0.30, to = S, label = expression(r[P[c]]),
-        label_x = 0.52, label_y = 2.62, label_cex = 1.15)
+  ## --- returns to S, four separate lanes ---
+  path(c(Tr$x, Tr$x, Ph$x, Ph$x), c(Tr$y1, 4.62, 4.62, Ph$y1))
+  lab(2.36, 4.78, expression(r[T]), cex = 1.2)
+  flowy(from = Ph, to = S, label = expression(r[P]),      label_cex = 1.2)
+  flowy(from = Pc, to = S, label = expression(r[P[c]]),   label_cex = 1.2)
+  path(c(U$x1, 6.15, 6.15, 0.30, 0.30, S$x0),
+       c(U$y, U$y, LANE_U, LANE_U, S$y, S$y))
+  lab(5.92, LANE_U + 0.19, expression(r[U]), cex = 1.2)
 
-  ## --- chemoprevention: a discrete jump, out of S/U/A/D/T ---
-  segments(1.10, 0.92, 4.10, 0.92, col = PULSE, lty = 2, lwd = 1.6)
-  segments(4.10, 0.92, 4.10, 1.72, col = PULSE, lty = 2, lwd = 1.6)
-  arrows(1.10, 0.92, Pc$x, Pc$y0, length = 0.12, angle = 20, col = PULSE,
-         lty = 2, lwd = 1.6)
-  text(2.55, 0.72, expression(italic("MDA / SMC / PMC: a fraction of S, U, A, D, T")),
-       col = PULSE, cex = 0.95, adj = c(0.5, 0.5))
+  ## --- chemoprevention: a discrete jump, out of S, U, A, D and T ---
+  path(c(4.10, 4.10, Pc$x, Pc$x), c(2.04, LANE_CP, LANE_CP, Pc$y0),
+       col = PULSE, lty = 2, lwd = 1.6)
+  lab(3.45, 0.61,
+      expression(atop(italic("MDA / SMC / PMC"),
+                      italic("from S, U, A, D, T"))),
+      col = PULSE, cex = 0.92)
 
   ## ======================= MOSQUITO ======================================
-  MY <- -0.30
-  E  <- nd(0.80, MY, expression(bold(E)),    col_aq,   "plain")
-  L  <- nd(2.10, MY, expression(bold(L)),    col_aq,   "plain")
-  Pl <- nd(3.40, MY, expression(bold(P[L])), col_aq,   "plain")
-  Sm <- nd(4.70, MY, expression(bold(S[M])), col_mosq, "plain")
-  Em <- nd(6.00, MY, expression(bold(E[M])), col_mosq, "inf")
-  Im <- nd(7.30, MY, expression(bold(I[M])), col_mosq, "inf")
+  E  <- nd(0.90, MY, expression(bold(E)),    col_aq)
+  L  <- nd(2.20, MY, expression(bold(L)),    col_aq)
+  Pl <- nd(3.50, MY, expression(bold(P[L])), col_aq)
+  Sm <- nd(4.80, MY, expression(bold(S[M])), col_mosq)
+  Em <- nd(6.10, MY, expression(bold(E[M])), col_mosq, heavy = TRUE)
+  Im <- nd(7.75, MY, expression(bold(I[M])), col_mosq, heavy = TRUE)
 
-  bracket(4.34, 7.66, MY - 0.30, MY + 0.34, "", 6.00, MY)
+  bracket(4.44, 8.12, MY - 0.58, MY + 0.30)          # adult pool
 
-  flowx(from = E,  to = L,  label = expression(1/d[E]), label_cex = 1.15)
-  flowx(from = L,  to = Pl, label = expression(1/d[L]), label_cex = 1.15)
+  flowx(from = E,  to = L,  label = expression(1/d[E]), label_cex = 1.2)
+  flowx(from = L,  to = Pl, label = expression(1/d[L]), label_cex = 1.2)
   flowx(from = Pl, to = Sm, label = expression(paste(frac(1, 2), " ", 1/d[P])),
-        label_cex = 1.05)
-  flowx(from = Sm, to = Em, label = expression(Lambda[s]^M), label_cex = 1.15)
-  flowx(from = Em, to = Im, label = "survives EIP", label_cex = 0.98)
+        label_cex = 1.1)
+  flowx(from = Sm, to = Em, label = expression(Lambda[s]^M), label_cex = 1.2)
+  flowx(from = Em, to = Im, label = "survives EIP", label_cex = 0.88)
 
-  ## oviposition leaves ALL adults, not S_M
-  turny(from = pt(6.00, MY - 0.30), mid_y = MY - 0.80, to = E,
-        label = expression(beta[s]), label_cex = 1.15)
+  for (b in list(E, L, Pl, Sm, Em, Im)) death(b$x, b$y0)
+  lab(0.36, MY - 0.78,
+      expression(paste("death; larvae ", symbol("\265"), " ", n[L]/K[s](t),
+                       "  (seasonality)")), adj = c(0, 0.5), cex = 0.92)
+  lab(8.18, MY - 0.34, expression(mu[s](t)), adj = c(0, 0.5), cex = 1.1)
 
-  ## deaths: the anchor bed nets, IRS and seasonality act on
-  for (b in list(E, L, Pl)) death(b$x, b$y0, 0.30)
-  text(0.28, MY - 1.04,
-       expression(paste("death; larvae ", symbol("\265"), " ", n[L]/K[s](t),
-                        "  (seasonality)")),
-       col = GREY, cex = 0.92, adj = c(0, 0.5))
-  for (b in list(Sm, Em, Im)) death(b$x, b$y0 - 0.30, 0.28)
-  text(7.66, MY - 0.72, expression(mu[s](t)), col = GREY, cex = 1.05,
-       adj = c(0, 0.5))
+  ## oviposition: from ALL adults, entering E from the left
+  path(c(5.45, 5.45, 0.35, 0.35, E$x0),
+       c(MY - 0.58, MY - 1.18, MY - 1.18, MY, MY))
+  lab(2.90, MY - 1.03, expression(beta[s]), cex = 1.2)
 
   ## ======================= COUPLING ======================================
   ## dashed: these set a rate in the other panel, they are not flows
-  segments(Im$x, Im$y1 + 0.34, Im$x, 1.05, col = COUPLE, lty = 2, lwd = 1.8)
-  segments(Im$x, 1.05, SPINE + 0.55, 1.05, col = COUPLE, lty = 2, lwd = 1.8)
-  arrows(SPINE + 0.55, 1.05, SPINE + 0.10, 1.05, length = 0.11, angle = 20,
-         col = COUPLE, lty = 2, lwd = 1.8)
-  text(6.42, 1.28, expression(paste("EIR, lagged ", tau[E])),
-       col = COUPLE, cex = 1.0, adj = c(0, 0.5))
+  path(c(Im$x, Im$x, SPINE, SPINE), c(Im$y1, LANE_EIR, LANE_EIR, FOOT),
+       col = COUPLE, lty = 2, lwd = 1.8)
+  lab(6.00, LANE_EIR + 0.22, expression(paste("EIR, lagged ", tau[E])),
+      col = COUPLE, cex = 1.0)
 
-  segments(4.70, 1.72, 4.70, 0.62, col = COUPLE, lty = 2, lwd = 1.8)
-  arrows(4.70, 0.62, 4.70, MY + 0.40, length = 0.11, angle = 20,
-         col = COUPLE, lty = 2, lwd = 1.8)
+  path(c(Sm$x, Sm$x), c(2.04, Sm$y1), col = COUPLE, lty = 2, lwd = 1.8)
+  lab(Sm$x - 0.16, 1.68, expression(Lambda[s]^M), col = COUPLE, cex = 1.1,
+      adj = c(1, 0.5))
 
   ## ======================= ANNOTATION ====================================
-  text(0.28, 5.30, "HUMAN",    adj = c(0, 0.5), font = 2, cex = 1.3, col = GREY)
-  text(0.28, MY + 0.78, "MOSQUITO", adj = c(0, 0.5), font = 2, cex = 1.3,
-       col = GREY)
+  lab(0.28, 4.78, "HUMAN", adj = c(0, 0.5), font = 2, cex = 1.3)
+  lab(0.28, MY + 0.62, "MOSQUITO", adj = c(0, 0.5), font = 2, cex = 1.3)
 
-  list(x0 = 0.20, x1 = 7.95, y0 = -1.55, y1 = 5.45)
+  list(x0 = 0.20, x1 = 8.62, y0 = -1.72, y1 = 5.00)
 }
 
 flodia_png(model_flow, filepath = "vignettes/model_flow.png",
