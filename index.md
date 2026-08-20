@@ -14,8 +14,8 @@ black arrows are flows of individuals — rates in the ODE. Dashed
 coloured arrows are not flows: the two couplings set a rate in the other
 panel, and the chemoprevention pulse is a discrete jump. The dotted
 region is the pool of states infectious to mosquitoes. Every human box
-is an array over age × biting heterogeneity; the immunity arrays and
-Erlang lag chains are not drawn — see
+is an array over age × biting heterogeneity; the immunity arrays, the
+Erlang lag chains and the resistance split of T are not drawn — see
 [`vignette("model")`](https://pwinskill.github.io/blink/articles/model.md).*
 
 ## What it is

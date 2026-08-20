@@ -130,20 +130,20 @@ as a <strong>time-varying coefficient</strong> in the ODE, or as a
 <h2 id="the-model-at-a-glance">2. The model at a glance<a class="anchor" aria-label="anchor" href="#the-model-at-a-glance"></a>
 </h2>
 <div class="float">
-<img src="model_flow.png" alt="Flow diagram of the blink model. The upper half shows the human compartments: susceptible; untreated clinical disease; two treated compartments for standard and slow parasite clearance; asymptomatic and sub-patent infection; and two prophylaxis compartments, one post-treatment and one for chemoprevention. A dotted region encloses the five states that are infectious to mosquitoes. The infection hazard acts on the susceptible, asymptomatic and sub-patent states together and splits four ways; recovery returns everyone to susceptible. A dashed arrow marks the chemoprevention pulse, which is a discrete jump rather than a rate. The lower half shows the mosquito compartments: eggs, larvae and pupae, then susceptible, exposed and infectious adults, with death outflows from each. Two dashed arrows couple the halves: the entomological inoculation rate driving human infection, and human infectivity driving the mosquito force of infection."><div class="figcaption">Flow diagram of the blink model. The upper half
+<img src="model_flow.png" alt="Flow diagram of the blink model. The upper half shows the human compartments: susceptible; untreated clinical disease; treated; asymptomatic and sub-patent infection; and two prophylaxis compartments, one post-treatment and one for chemoprevention. A dotted region encloses the four states that are infectious to mosquitoes. The infection hazard acts on the susceptible, asymptomatic and sub-patent states together and splits three ways; recovery returns everyone to susceptible. A dashed arrow marks the chemoprevention pulse, which is a discrete jump rather than a rate. The lower half shows the mosquito compartments: eggs, larvae and pupae, then susceptible, exposed and infectious adults, with death outflows from each. Two dashed arrows couple the halves: the entomological inoculation rate driving human infection, and human infectivity driving the mosquito force of infection."><div class="figcaption">Flow diagram of the blink model. The upper half
 shows the human compartments: susceptible; untreated clinical disease;
-two treated compartments for standard and slow parasite clearance;
-asymptomatic and sub-patent infection; and two prophylaxis compartments,
-one post-treatment and one for chemoprevention. A dotted region encloses
-the five states that are infectious to mosquitoes. The infection hazard
-acts on the susceptible, asymptomatic and sub-patent states together and
-splits four ways; recovery returns everyone to susceptible. A dashed
-arrow marks the chemoprevention pulse, which is a discrete jump rather
-than a rate. The lower half shows the mosquito compartments: eggs,
-larvae and pupae, then susceptible, exposed and infectious adults, with
-death outflows from each. Two dashed arrows couple the halves: the
-entomological inoculation rate driving human infection, and human
-infectivity driving the mosquito force of infection.</div>
+treated; asymptomatic and sub-patent infection; and two prophylaxis
+compartments, one post-treatment and one for chemoprevention. A dotted
+region encloses the four states that are infectious to mosquitoes. The
+infection hazard acts on the susceptible, asymptomatic and sub-patent
+states together and splits three ways; recovery returns everyone to
+susceptible. A dashed arrow marks the chemoprevention pulse, which is a
+discrete jump rather than a rate. The lower half shows the mosquito
+compartments: eggs, larvae and pupae, then susceptible, exposed and
+infectious adults, with death outflows from each. Two dashed arrows
+couple the halves: the entomological inoculation rate driving human
+infection, and human infectivity driving the mosquito force of
+infection.</div>
 </div>
 <p><strong>Solid black arrows are flows of individuals</strong> — each
 is a rate in the ODE. <strong>Dashed coloured arrows are not
@@ -158,12 +158,10 @@ acts on the whole at-risk pool
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>+</mo><mi>A</mi><mo>+</mo><mi>U</mi></mrow><annotation encoding="application/x-tex">S + A + U</annotation></semantics></math>
 — asymptomatic and sub-patent people can be re-infected, and at moderate
 transmission that is where most clinical episodes come from. It splits
-four ways: untreated clinical disease
+three ways: untreated clinical disease
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>,
-one of the two treated compartments
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
-/
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>T</mi><mi>s</mi></msub><annotation encoding="application/x-tex">T_s</annotation></semantics></math>,
+treatment
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>,
 or a non-clinical infection landing in
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>.
 Recovery runs
@@ -174,8 +172,6 @@ and everyone returns to
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>
 directly, from
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
-/
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>T</mi><mi>s</mi></msub><annotation encoding="application/x-tex">T_s</annotation></semantics></math>
 via prophylaxis
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>,
 and from chemoprevention prophylaxis
@@ -218,8 +214,9 @@ through the EIR; infectious humans drive the mosquito force of infection
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi mathvariant="normal">Λ</mi><mi>s</mi><mi>M</mi></msubsup><annotation encoding="application/x-tex">\Lambda^M_s</annotation></semantics></math>.
 Both are lagged (§B.2, §C).</li>
 </ul>
-<p>Three things the figure leaves out, all of them state the model does
-integrate: the four immunity arrays
+<p><strong>What the figure leaves out.</strong> It is an overview, and
+four pieces of state the model integrates are not drawn: the four
+immunity arrays
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mi>B</mi></msub><annotation encoding="application/x-tex">I_B</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>C</mi><mi>A</mi></mrow></msub><annotation encoding="application/x-tex">I_{CA}</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mi>D</mi></msub><annotation encoding="application/x-tex">I_D</annotation></semantics></math>,
@@ -230,12 +227,19 @@ which set
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math>
 and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
-on the arrows drawn; the three Erlang lag chains behind the two
-couplings and the incubation period; and the age × heterogeneity
-structure inside every human box. All three are the subject of §3. Nor
-does it mark where interventions act — with the exception of
-chemoprevention, which is the one intervention that adds a compartment,
-they modify coefficients on arrows already drawn (§3.2).</p>
+on the arrows shown; the three Erlang lag chains behind the two
+couplings and the incubation period; the age × heterogeneity structure
+inside every human box; and the split of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
+into fast and slow parasite clearance, which only exists once
+antimalarial resistance is switched on. The first three are the subject
+of §3, the fourth of §B.4.</p>
+<p>Nor does the figure mark where interventions act. With the single
+exception of chemoprevention — the one intervention that adds a
+compartment — they modify coefficients on arrows already drawn (§3.2).
+Bed nets and IRS, in particular, act almost entirely through the
+mosquito death outflows and the biting rate
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>a</mi><mi>s</mi></msub><annotation encoding="application/x-tex">a_s</annotation></semantics></math>.</p>
 </div>
 <div class="section level2">
 <h2 id="state-space">3. State space<a class="anchor" aria-label="anchor" href="#state-space"></a>
