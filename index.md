@@ -10,12 +10,13 @@
 The blink model
 
 *The model at a glance: human compartments above, mosquito below. Solid
-black arrows are flows of individuals — rates in the ODE. Dashed
-coloured arrows are not flows: the two couplings set a rate in the other
-panel, and the chemoprevention pulse is a discrete jump. The dotted
-region is the pool of states infectious to mosquitoes. Every human box
-is an array over age × biting heterogeneity; the immunity arrays, the
-Erlang lag chains and the resistance split of T are not drawn — see
+black = a flow of individuals, a rate in the ODE. Dashed purple = a
+scalar coupling, where nobody moves. Dashed red = a discrete state jump.
+Dotted grey = a grouping, not a compartment: the infectious pool above,
+the adult females below. Every human box is an array over age × biting
+heterogeneity. Not drawn: the immunity arrays, the Erlang lag chains,
+human demography, the species dimension, and the resistance split of T —
+see
 [`vignette("model")`](https://pwinskill.github.io/blink/articles/model.md).*
 
 ## What it is

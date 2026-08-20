@@ -83,7 +83,7 @@
 <div class="float">
 <img src="reference/figures/model_flow.png" alt="The blink model"><div class="figcaption">The blink model</div>
 </div>
-<p><em>The model at a glance: human compartments above, mosquito below. Solid black arrows are flows of individuals — rates in the ODE. Dashed coloured arrows are not flows: the two couplings set a rate in the other panel, and the chemoprevention pulse is a discrete jump. The dotted region is the pool of states infectious to mosquitoes. Every human box is an array over age × biting heterogeneity; the immunity arrays, the Erlang lag chains and the resistance split of T are not drawn — see <code><a href="articles/model.html">vignette("model")</a></code>.</em></p>
+<p><em>The model at a glance: human compartments above, mosquito below. Solid black = a flow of individuals, a rate in the ODE. Dashed purple = a scalar coupling, where nobody moves. Dashed red = a discrete state jump. Dotted grey = a grouping, not a compartment: the infectious pool above, the adult females below. Every human box is an array over age × biting heterogeneity. Not drawn: the immunity arrays, the Erlang lag chains, human demography, the species dimension, and the resistance split of T — see <code><a href="articles/model.html">vignette("model")</a></code>.</em></p>
 <div class="section level2">
 <h2 id="what-it-is">What it is<a class="anchor" aria-label="anchor" href="#what-it-is"></a>
 </h2>

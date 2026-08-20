@@ -55,35 +55,51 @@ out exactly which is which.
 compartments: susceptible; untreated clinical disease; treated;
 asymptomatic and sub-patent infection; and two prophylaxis compartments,
 one post-treatment and one for chemoprevention. A dotted region encloses
-the four states that are infectious to mosquitoes. The infection hazard
-acts on the susceptible, asymptomatic and sub-patent states together and
-splits three ways; recovery returns everyone to susceptible. A dashed
-arrow marks the chemoprevention pulse, which is a discrete jump rather
-than a rate. The lower half shows the mosquito compartments: eggs,
-larvae and pupae, then susceptible, exposed and infectious adults, with
-death outflows from each. Two dashed arrows couple the halves: the
-entomological inoculation rate driving human infection, and human
-infectivity driving the mosquito force of infection.](model_flow.png)
+the four states infectious to mosquitoes. The treated state is drawn
+once; the model splits it in two when antimalarial resistance is
+switched on. The infection hazard acts on the susceptible, asymptomatic
+and sub-patent states together and splits three ways; recovery returns
+everyone to susceptible. A dashed red path marks the chemoprevention
+pulse, a discrete jump rather than a rate, drawn leaving both the
+susceptible state and the infectious pool. The lower half shows the
+mosquito compartments: early and late larvae and pupae, then
+susceptible, exposed and infectious adults, with a death outflow from
+each and a return flow in which all adult females lay eggs back into the
+first larval stage. A second dotted region encloses the adult females.
+Two dashed purple paths couple the halves: the entomological inoculation
+rate driving human infection, and human infectivity driving the mosquito
+force of infection, both lagged.](model_flow.png)
 
 Flow diagram of the blink model. The upper half shows the human
 compartments: susceptible; untreated clinical disease; treated;
 asymptomatic and sub-patent infection; and two prophylaxis compartments,
 one post-treatment and one for chemoprevention. A dotted region encloses
-the four states that are infectious to mosquitoes. The infection hazard
-acts on the susceptible, asymptomatic and sub-patent states together and
-splits three ways; recovery returns everyone to susceptible. A dashed
-arrow marks the chemoprevention pulse, which is a discrete jump rather
-than a rate. The lower half shows the mosquito compartments: eggs,
-larvae and pupae, then susceptible, exposed and infectious adults, with
-death outflows from each. Two dashed arrows couple the halves: the
-entomological inoculation rate driving human infection, and human
-infectivity driving the mosquito force of infection.
+the four states infectious to mosquitoes. The treated state is drawn
+once; the model splits it in two when antimalarial resistance is
+switched on. The infection hazard acts on the susceptible, asymptomatic
+and sub-patent states together and splits three ways; recovery returns
+everyone to susceptible. A dashed red path marks the chemoprevention
+pulse, a discrete jump rather than a rate, drawn leaving both the
+susceptible state and the infectious pool. The lower half shows the
+mosquito compartments: early and late larvae and pupae, then
+susceptible, exposed and infectious adults, with a death outflow from
+each and a return flow in which all adult females lay eggs back into the
+first larval stage. A second dotted region encloses the adult females.
+Two dashed purple paths couple the halves: the entomological inoculation
+rate driving human infection, and human infectivity driving the mosquito
+force of infection, both lagged.
 
-**Solid black arrows are flows of individuals** — each is a rate in the
-ODE. **Dashed coloured arrows are not flows**: they either set a rate in
-the other panel (the two transmission couplings) or move people
-instantaneously between integration segments (the chemoprevention
-pulse). Reading it:
+The figure uses three line grammars, not two:
+
+- **Solid black** — a flow of individuals, i.e. a term in the ODE.
+- **Dashed purple** — a *scalar coupling*: it sets a rate in the other
+  panel, and nobody moves along it.
+- **Dashed red** — people *do* move, but instantaneously, as a state
+  jump between integration segments rather than at a rate.
+- **Dotted grey** — a grouping, never a compartment. There are two: the
+  infectious pool, and the adult mosquitoes.
+
+Reading it:
 
 - **Humans, above.** The infection hazard $`\Lambda`$ acts on the whole
   at-risk pool $`S + A + U`$ — asymptomatic and sub-patent people can be
@@ -97,26 +113,33 @@ pulse). Reading it:
   to onward infectivity, weighted by $`c_D`$, $`c_A`$, $`c_U`$ and
   $`c_T`$. $`S`$, $`P`$ and $`P_c`$ contribute nothing and sit outside
   it (§C).
-- **Mosquitoes, below.** Eggs $`E`$ → larvae $`L`$ → pupae $`P_L`$ →
-  susceptible adults $`S_M`$, which become exposed $`E_M`$ and then
-  infectious $`I_M`$ on surviving the extrinsic incubation period. Every
-  stage has a death outflow; larval death is density-dependent in
-  $`K_s(t)`$, which is how seasonality enters the model. Eggs are laid
-  by *all* adults, not only susceptible ones.
+- **Mosquitoes, below.** Early larvae $`E`$ → late larvae $`L`$ → pupae
+  $`P_L`$ → susceptible adults $`S_M`$, which become exposed $`E_M`$ and
+  then infectious $`I_M`$ on surviving the extrinsic incubation period.
+  Only $`I_M`$ transmits. Every stage has a death outflow, and larval
+  death *rises with* $`n_L/K_s(t)`$ — an affine relationship, not a
+  proportional one — which is how seasonality and larval source
+  management enter the model. Oviposition is by *all* adults, into
+  $`E`$, and is untouched by vector control; nets and IRS act on
+  $`\mu_s(t)`$ and $`a_s(t)`$.
 - **The two dashed couplings** are what make this one model rather than
   two. Infectious mosquitoes drive the human hazard through the EIR;
   infectious humans drive the mosquito force of infection
   $`\Lambda^M_s`$. Both are lagged (§B.2, §C).
 
-**What the figure leaves out.** It is an overview, and four pieces of
-state the model integrates are not drawn: the four immunity arrays
-$`I_B`$, $`I_{CA}`$, $`I_D`$, $`I_{VA}`$, which set $`b`$, $`\phi`$,
-$`q`$ and $`\theta`$ on the arrows shown; the three Erlang lag chains
-behind the two couplings and the incubation period; the age ×
-heterogeneity structure inside every human box; and the split of $`T`$
-into fast and slow parasite clearance, which only exists once
-antimalarial resistance is switched on. The first three are the subject
-of §3, the fourth of §B.4.
+**What the figure leaves out.** It is an overview. Not drawn: the four
+immunity arrays $`I_B`$, $`I_{CA}`$, $`I_D`$, $`I_{VA}`$ — $`b`$ and
+$`\phi`$ set arrows that *are* shown, while $`q`$ and $`\theta`$ act on
+the infectivity coupling and the severe-incidence output; the three
+Erlang lag chains behind the two couplings and the incubation period;
+the age × heterogeneity structure inside every human box, and the ageing
+flow between age groups; human death and the births that replenish $`S`$
+(noted on the figure, not drawn, unlike the mosquito deaths — those are
+drawn because $`\mu_s`$ is where nets and IRS act); the species
+dimension, which replicates the whole mosquito panel; and the split of
+$`T`$ into fast and slow parasite clearance, which exists only once
+antimalarial resistance is switched on. Most are the subject of §3; the
+$`T`$ split is §B.4.
 
 Nor does the figure mark where interventions act. With the single
 exception of chemoprevention — the one intervention that adds a
