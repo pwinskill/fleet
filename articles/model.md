@@ -51,7 +51,29 @@ out exactly which is which.
 
 ## 2. The model at a glance
 
-![](model_flow.png)
+![Flow diagram of the blink model. The upper half shows the human
+compartments — susceptible, untreated clinical disease, two treated
+compartments for standard and slow parasite clearance, asymptomatic and
+sub-patent infection, and two prophylaxis compartments — with the
+infection hazard splitting four ways out of susceptible and recovery
+returning everyone to susceptible. A dashed arrow marks the
+chemoprevention pulse. The lower half shows the mosquito compartments:
+eggs, larvae, pupae, then susceptible, exposed and infectious adults.
+Two arrows couple the halves: the entomological inoculation rate driving
+human infection, and human infectivity driving the mosquito force of
+infection.](model_flow.png)
+
+Flow diagram of the blink model. The upper half shows the human
+compartments — susceptible, untreated clinical disease, two treated
+compartments for standard and slow parasite clearance, asymptomatic and
+sub-patent infection, and two prophylaxis compartments — with the
+infection hazard splitting four ways out of susceptible and recovery
+returning everyone to susceptible. A dashed arrow marks the
+chemoprevention pulse. The lower half shows the mosquito compartments:
+eggs, larvae, pupae, then susceptible, exposed and infectious adults.
+Two arrows couple the halves: the entomological inoculation rate driving
+human infection, and human infectivity driving the mosquito force of
+infection.
 
 Every box is a compartment the model integrates; every solid arrow is a
 rate in the differential equations. Reading it:
@@ -1030,8 +1052,10 @@ incubating stock follows the IBM’s own $`E`$ equation:
 ```
 
 ``` math
-m_s = X^{(P)}_{s,n_P}\,e^{-\mu_s(t)\tau_M},
-\qquad
+m_s = X^{(P)}_{s,n_P}\,e^{-\mu_s(t)\tau_M}
+```
+
+``` math
 \dot{E}_{M,s} = S_{M,s}\Lambda^M_s - m_s - \mu_s(t)E_{M,s},
 \qquad
 \dot{I}_{M,s} = m_s - \mu_s(t)I_{M,s}.
