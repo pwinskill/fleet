@@ -130,58 +130,71 @@ as a <strong>time-varying coefficient</strong> in the ODE, or as a
 <h2 id="the-model-at-a-glance">2. The model at a glance<a class="anchor" aria-label="anchor" href="#the-model-at-a-glance"></a>
 </h2>
 <div class="float">
-<img src="model_flow.png" alt="Flow diagram of the blink model. The upper half shows the human compartments — susceptible, untreated clinical disease, two treated compartments for standard and slow parasite clearance, asymptomatic and sub-patent infection, and two prophylaxis compartments — with the infection hazard splitting four ways out of susceptible and recovery returning everyone to susceptible. A dashed arrow marks the chemoprevention pulse. The lower half shows the mosquito compartments: eggs, larvae, pupae, then susceptible, exposed and infectious adults. Two arrows couple the halves: the entomological inoculation rate driving human infection, and human infectivity driving the mosquito force of infection."><div class="figcaption">Flow diagram of the blink model. The upper half
-shows the human compartments — susceptible, untreated clinical disease,
-two treated compartments for standard and slow parasite clearance,
-asymptomatic and sub-patent infection, and two prophylaxis compartments
-— with the infection hazard splitting four ways out of susceptible and
-recovery returning everyone to susceptible. A dashed arrow marks the
-chemoprevention pulse. The lower half shows the mosquito compartments:
-eggs, larvae, pupae, then susceptible, exposed and infectious adults.
-Two arrows couple the halves: the entomological inoculation rate driving
-human infection, and human infectivity driving the mosquito force of
-infection.</div>
+<img src="model_flow.png" alt="Flow diagram of the blink model. The upper half shows the human compartments: susceptible; untreated clinical disease; two treated compartments for standard and slow parasite clearance; asymptomatic and sub-patent infection; and two prophylaxis compartments, one post-treatment and one for chemoprevention. A dotted region encloses the five states that are infectious to mosquitoes. The infection hazard acts on the susceptible, asymptomatic and sub-patent states together and splits four ways; recovery returns everyone to susceptible. A dashed arrow marks the chemoprevention pulse, which is a discrete jump rather than a rate. The lower half shows the mosquito compartments: eggs, larvae and pupae, then susceptible, exposed and infectious adults, with death outflows from each. Two dashed arrows couple the halves: the entomological inoculation rate driving human infection, and human infectivity driving the mosquito force of infection."><div class="figcaption">Flow diagram of the blink model. The upper half
+shows the human compartments: susceptible; untreated clinical disease;
+two treated compartments for standard and slow parasite clearance;
+asymptomatic and sub-patent infection; and two prophylaxis compartments,
+one post-treatment and one for chemoprevention. A dotted region encloses
+the five states that are infectious to mosquitoes. The infection hazard
+acts on the susceptible, asymptomatic and sub-patent states together and
+splits four ways; recovery returns everyone to susceptible. A dashed
+arrow marks the chemoprevention pulse, which is a discrete jump rather
+than a rate. The lower half shows the mosquito compartments: eggs,
+larvae and pupae, then susceptible, exposed and infectious adults, with
+death outflows from each. Two dashed arrows couple the halves: the
+entomological inoculation rate driving human infection, and human
+infectivity driving the mosquito force of infection.</div>
 </div>
-<p>Every box is a compartment the model integrates; every solid arrow is
-a rate in the differential equations. Reading it:</p>
+<p><strong>Solid black arrows are flows of individuals</strong> — each
+is a rate in the ODE. <strong>Dashed coloured arrows are not
+flows</strong>: they either set a rate in the other panel (the two
+transmission couplings) or move people instantaneously between
+integration segments (the chemoprevention pulse). Reading it:</p>
 <ul>
 <li>
-<strong>Top half, humans.</strong> Infection out of
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>
-arrives at rate
+<strong>Humans, above.</strong> The infection hazard
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Λ</mi><annotation encoding="application/x-tex">\Lambda</annotation></semantics></math>
-and immediately splits four ways: into untreated clinical disease
+acts on the whole at-risk pool
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>+</mo><mi>A</mi><mo>+</mo><mi>U</mi></mrow><annotation encoding="application/x-tex">S + A + U</annotation></semantics></math>
+— asymptomatic and sub-patent people can be re-infected, and at moderate
+transmission that is where most clinical episodes come from. It splits
+four ways: untreated clinical disease
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>,
-into one of the two treated compartments
+one of the two treated compartments
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
 /
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>T</mi><mi>s</mi></msub><annotation encoding="application/x-tex">T_s</annotation></semantics></math>,
-or — if the infection is not clinical — straight into asymptomatic
-infection
+or a non-clinical infection landing in
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>.
-Recovery runs left to right,
+Recovery runs
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mo>→</mo><mi>A</mi><mo>→</mo><mi>U</mi></mrow><annotation encoding="application/x-tex">D \to A \to U</annotation></semantics></math>,
-and everyone eventually returns to
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>:
-from
+and everyone returns to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>
+— from
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>
 directly, from
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
 /
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>T</mi><mi>s</mi></msub><annotation encoding="application/x-tex">T_s</annotation></semantics></math>
-via post-treatment prophylaxis
+via prophylaxis
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>,
 and from chemoprevention prophylaxis
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mi>c</mi></msub><annotation encoding="application/x-tex">P_c</annotation></semantics></math>.</li>
 <li>
-<strong>The dashed red arrow</strong> is the one flow that is
-<em>not</em> a rate. MDA, SMC and PMC are applied as instantaneous jumps
-between integration segments, clearing a fraction of the target age band
-into
+<strong>The dotted region</strong> is the infectious pool: the
+states contributing to onward infectivity, weighted by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>D</mi></msub><annotation encoding="application/x-tex">c_D</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>A</mi></msub><annotation encoding="application/x-tex">c_A</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>U</mi></msub><annotation encoding="application/x-tex">c_U</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>T</mi></msub><annotation encoding="application/x-tex">c_T</annotation></semantics></math>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>
+and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mi>c</mi></msub><annotation encoding="application/x-tex">P_c</annotation></semantics></math>
-(§E).</li>
+contribute nothing and sit outside it (§C).</li>
 <li>
-<strong>Bottom half, mosquitoes.</strong> Eggs
+<strong>Mosquitoes, below.</strong> Eggs
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>E</mi><annotation encoding="application/x-tex">E</annotation></semantics></math>
 → larvae
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>L</mi><annotation encoding="application/x-tex">L</annotation></semantics></math>
@@ -193,21 +206,36 @@ which become exposed
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>E</mi><mi>M</mi></msub><annotation encoding="application/x-tex">E_M</annotation></semantics></math>
 and then infectious
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mi>M</mi></msub><annotation encoding="application/x-tex">I_M</annotation></semantics></math>
-after surviving the extrinsic incubation period.</li>
+on surviving the extrinsic incubation period. Every stage has a death
+outflow; larval death is density-dependent in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>K</mi><mi>s</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">K_s(t)</annotation></semantics></math>,
+which is how seasonality enters the model. Eggs are laid by <em>all</em>
+adults, not only susceptible ones.</li>
 <li>
-<strong>The two purple arrows are the transmission
-coupling</strong>, and they are what makes this one model rather than
-two. Infectious mosquitoes drive the human infection hazard through the
-EIR; infectious humans drive the mosquito force of infection
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi mathvariant="normal">Λ</mi><mi>M</mi></msup><annotation encoding="application/x-tex">\Lambda^M</annotation></semantics></math>.</li>
+<strong>The two dashed couplings</strong> are what make this one
+model rather than two. Infectious mosquitoes drive the human hazard
+through the EIR; infectious humans drive the mosquito force of infection
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi mathvariant="normal">Λ</mi><mi>s</mi><mi>M</mi></msubsup><annotation encoding="application/x-tex">\Lambda^M_s</annotation></semantics></math>.
+Both are lagged (§B.2, §C).</li>
 </ul>
-<p>What the diagram deliberately does not show is the <em>structure
-within each box</em>. Every human compartment is really an array over
-age and biting heterogeneity, and each of the four immunity functions is
-another such array — which is the subject of §3. Nor does it show where
-interventions act: bed nets, IRS, vaccines, treatment and seasonality do
-not add boxes, they modify the coefficients on the arrows already drawn
-(§3.2).</p>
+<p>Three things the figure leaves out, all of them state the model does
+integrate: the four immunity arrays
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mi>B</mi></msub><annotation encoding="application/x-tex">I_B</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>C</mi><mi>A</mi></mrow></msub><annotation encoding="application/x-tex">I_{CA}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mi>D</mi></msub><annotation encoding="application/x-tex">I_D</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>V</mi><mi>A</mi></mrow></msub><annotation encoding="application/x-tex">I_{VA}</annotation></semantics></math>,
+which set
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
+on the arrows drawn; the three Erlang lag chains behind the two
+couplings and the incubation period; and the age × heterogeneity
+structure inside every human box. All three are the subject of §3. Nor
+does it mark where interventions act — with the exception of
+chemoprevention, which is the one intervention that adds a compartment,
+they modify coefficients on arrows already drawn (§3.2).</p>
 </div>
 <div class="section level2">
 <h2 id="state-space">3. State space<a class="anchor" aria-label="anchor" href="#state-space"></a>
