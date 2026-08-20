@@ -229,6 +229,34 @@ main table.table thead th {
   border-bottom: 2px solid color-mix(in srgb, var(--mo-teal) 45%, transparent);
 }
 
+/* The parameter-support matrix in vignette("model") has some genuinely wide
+   rows. Markdown tables get no responsive wrapper from pkgdown, so without this
+   they push the whole page sideways instead of scrolling within the column.
+   `display: block` is what makes overflow-x apply to a table element. */
+main table {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* ---- Figures ----------------------------------------------------------- */
+main img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ---- Display maths ----------------------------------------------------- */
+/* A few of the appendix equations are wider than a narrow content column.
+   Let them scroll in place rather than widening the whole page. */
+main math[display="block"],
+main .math.display {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
 /* ---- Footer: colourful top rule ---------------------------------------- */
 footer {
   border-top: 3px solid transparent;
