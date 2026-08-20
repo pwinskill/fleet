@@ -57,6 +57,7 @@ articles:
   navbar: ~
   contents:
   - blink
+  - model
 
 reference:
 - title: Run the model

@@ -34,7 +34,7 @@ heterogeneity beyond the mean field, or *P. vivax* — see **Scope** at the end.
 
 ```{r install, eval = FALSE}
 # install.packages("remotes")
-remotes::install_github("mrc-ide/blink")
+remotes::install_github("pwinskill/blink")
 ```
 
 ```{r load}
@@ -180,9 +180,11 @@ c(baseline = pev$p_detect_lm_730_3650[1],
   year12   = pev$p_detect_lm_730_3650[nrow(pev)])
 ```
 
-PEV reduces the infection hazard by a per-age, per-time factor built from the
-profile's point-estimate antibody -> efficacy curve; primary and booster doses,
-EPI and mass campaigns, and time-varying EPI coverage are all modelled.
+PEV reduces the infection hazard by a per-age, per-time factor. Efficacy is
+averaged over the per-individual antibody distribution the IBM samples (a 4-D
+Gauss-Hermite rule over `cs`/`rho`/`ds`/`dl`), not evaluated at the profile
+median; primary and booster doses, EPI and mass campaigns, and time-varying EPI
+coverage are all modelled.
 Transmission-blocking vaccines are available via `set_tbv()`.
 
 ### Custom demography
@@ -205,8 +207,11 @@ under5_fraction <- dem$n_age_0_1825[nrow(dem)] / dem$n_age_0_36500[nrow(dem)]
 under5_fraction     # ~0.09 here, vs ~0.21 under the default constant hazard
 ```
 
-Only the baseline (t = 0) deathrate row is used; a time-varying demography warns
-and falls back to that row.
+Custom demography is **time-varying**: `mu_age(t)` is interpolated over
+`deathrate_timesteps`, so a demographic transition is modelled rather than
+frozen. The baseline (`t = 0`) row additionally seeds the equilibrium age
+structure. Match `default_age_lower(max_age =)` to the top `deathrate_agegroups`;
+a warning fires if the model age grid runs past them.
 
 ## Seasonality and burn-in
 
@@ -256,12 +261,13 @@ and can differ by ~5-20% (largest at low EIR); treat it as indicative.
 - **P. falciparum only.** *P. vivax* is rejected; the model is always
   compartmental (the individual-mosquito code path does not apply).
 - **Mean-field caveats.** Vector control is population-averaged (slightly
-  under-suppresses at deep troughs vs the IBM); drug prophylaxis and slow
-  parasite clearance are single mean-duration compartments (equilibrium-exact,
-  transient-approximate); vaccine efficacy uses profile point estimates (no
-  per-person antibody variation). PCR prevalence follows the IBM convention (all
-  D/Tr/A/U). These are documented in the README's *Mean-field approximations*
-  section.
+  under-suppresses at deep troughs vs the IBM); drug prophylaxis is a single
+  mean-duration compartment (equilibrium-exact, transient-approximate). PCR
+  prevalence follows the IBM convention (all D/Tr/A/U).
+- **Full detail.** `vignette("model")` is the canonical specification: the ODE
+  system, what each state dimension carries (and what is captured *without* a
+  dimension), and an argument-by-argument table of every `malariasimulation`
+  `set_*` function.
 
 ```{r session, eval = TRUE}
 sessionInfo()
