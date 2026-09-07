@@ -217,14 +217,15 @@ intercept – a small absolute addition, a few hundredths of an episode
 per person-year – which matters most in low-incidence sub-sites and
 dry-season months and hardly at all where incidence is high. Every site
 file uses `set_demography()`, so the mosquito-sizing convention
-described under *Demography* was an obvious suspect; adopting the IBM’s
-convention (together with the prophylaxis chains) moved the clinical
-excess from +10.1% to +8.7% and the slope from 1.02 to 1.00, so it
-accounts for a small part of the offset and the rest is not yet
-explained. The country files exercise every intervention builder at once
-(treatment histories, net distributions, IRS, SMC, PMC, RTS,S) on real
-seasonality and demography, so this is the most demanding comparison on
-the page.
+described under *Demography* was an obvious suspect. It is not the
+answer: re-running the 63 countries with the convention switched on and
+off, the prophylaxis chains moved the clinical excess from +10.1% to
++9.4% and the sizing convention from +9.4% to +8.7% (slope 1.02 → 1.00);
+each explains under a point, and the remaining ~9% is not yet
+understood. The country files exercise every intervention builder at
+once (treatment histories, net distributions, IRS, SMC, PMC, RTS,S) on
+real seasonality and demography, so this is the most demanding
+comparison on the page.
 
 ## Intervention impact
 
