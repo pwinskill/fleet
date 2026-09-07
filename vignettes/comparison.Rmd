@@ -142,16 +142,13 @@ The two panels tell different stories, and each needs a caveat.
 starts from the default exponential age distribution and, after 30 years, only
 people under 30 have lived their whole lives under the custom schedule. Even so
 it sits close to the analytic stable structure the death rates imply (13.1% of
-the 0–85 population aged 60–85, against the IBM's 12.4%). blink's pyramid is too
-heavy at the top -- 18.2% aged 60–85, and correspondingly light in every younger
-band. The cause is an edge case in the seed's age-group mapping, not the
-mean-field approach: the open-ended top model group (80+) is represented by its
-lower bound, 80 years, which the right-closed `set_demography()` bins assign to
-the 60–80 band, so the over-80s die at 5% per year instead of 12% and the group
-holds 2.4× too many people. blink's own aging chain with the correct rate gives
-14.5%, within 1.5 points of the analytic value (the remainder is the whole
-open-ended group being counted in the 60–85 band). This is a one-line fix in the
-seed's age-group mapping.
+the 0–85 population aged 60–85, against the IBM's 12.4%). blink's equilibrium
+structure matches it band for band through childhood and adolescence (under-5
+share 8.8% in both) and runs one to two points heavier in the oldest bands (14.5%
+aged 60–85). That residual is the price of the coarse 5-year age groups above 15:
+exponential dwell times within a group let some people linger past the age at
+which the schedule would have removed them, and the whole open-ended 80+ group
+is counted in the 60–85 band.
 
 **Right -- age-prevalence.** blink's curve is identical to the one under the
 default demography (0.29 in infants rising to 0.57 at 7–10 years), while the

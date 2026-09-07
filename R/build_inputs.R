@@ -196,7 +196,14 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
     if (!all(is.finite(p$deathrates)) || any(p$deathrates <= 0)) {
       stop("set_demography deathrates must be finite and > 0.", call. = FALSE)
     }
-    if (max(age_mid) > max(p$deathrate_agegroups)) {
+    # Age used to look up each model group's death rate. The open-ended top group is
+    # represented by its lower bound in age_mid, which a right-closed bin would assign
+    # to the band BELOW it (80 y -> the 60-80 rate on the default grid, so the over-80s
+    # died at the wrong rate and the group held ~2.4x too many people). Everyone in that
+    # group is older than its lower bound, so look it up one day above.
+    age_lookup <- age_mid
+    age_lookup[n_age] <- age_days[n_age] + 1
+    if (max(age_lookup) > max(p$deathrate_agegroups)) {
       warning("The oldest model age group (", round(max(age_mid) / 365), "y) exceeds ",
               "the top set_demography age group (", round(max(p$deathrate_agegroups) / 365),
               "y); ages above it use the top death rate here, whereas the IBM removes ",
@@ -206,7 +213,7 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
     # right-closed bins (edge_{g-1}, edge_g], matching ms .bincode(age, c(0, agegroups));
     # ages above the top edge cap to the last rate here (the warned divergence from the
     # IBM, which removes them).
-    grp <- pmin(pmax(findInterval(age_mid, c(0, p$deathrate_agegroups),
+    grp <- pmin(pmax(findInterval(age_lookup, c(0, p$deathrate_agegroups),
                                   left.open = TRUE), 1L), ncol(p$deathrates))
     mu_age <- p$deathrates[1, grp]                    # baseline (seed) hazard by model age
     mu_age_z <- t(p$deathrates[, grp, drop = FALSE])  # [n_age, n_mut] (time last)

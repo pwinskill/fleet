@@ -36,20 +36,20 @@ max |blink - IBM| prevalence across bands: 0.005; under-20 bands: clinical relat
 
 | age band (y) | IBM population share | blink population share | IBM prevalence | blink prevalence |
 | --- | --- | --- | --- | --- |
-| 0-1 | 1.8% | 1.7% | 0.229 | 0.288 |
-| 1-2 | 1.8% | 1.7% | 0.367 | 0.440 |
-| 2-3 | 1.7% | 1.7% | 0.421 | 0.492 |
-| 3-5 | 3.5% | 3.3% | 0.461 | 0.536 |
-| 5-7 | 3.4% | 3.3% | 0.506 | 0.565 |
-| 7-10 | 5.0% | 4.9% | 0.512 | 0.570 |
-| 10-15 | 8.3% | 8.0% | 0.457 | 0.502 |
-| 15-20 | 8.0% | 7.8% | 0.336 | 0.351 |
-| 20-30 | 15.7% | 14.7% | 0.230 | 0.244 |
-| 30-40 | 15.3% | 13.6% | 0.193 | 0.207 |
-| 40-60 | 23.2% | 21.1% | 0.185 | 0.198 |
-| 60-85 | 12.4% | 18.2% | 0.182 | 0.195 |
+| 0-1 | 1.8% | 1.8% | 0.229 | 0.288 |
+| 1-2 | 1.8% | 1.8% | 0.367 | 0.440 |
+| 2-3 | 1.7% | 1.8% | 0.421 | 0.492 |
+| 3-5 | 3.5% | 3.5% | 0.461 | 0.536 |
+| 5-7 | 3.4% | 3.4% | 0.506 | 0.565 |
+| 7-10 | 5.0% | 5.1% | 0.512 | 0.570 |
+| 10-15 | 8.3% | 8.4% | 0.457 | 0.502 |
+| 15-20 | 8.0% | 8.1% | 0.336 | 0.351 |
+| 20-30 | 15.7% | 15.4% | 0.230 | 0.244 |
+| 30-40 | 15.3% | 14.2% | 0.193 | 0.207 |
+| 40-60 | 23.2% | 22.1% | 0.185 | 0.198 |
+| 60-85 | 12.4% | 14.5% | 0.182 | 0.195 |
 
-under-5 share: IBM 8.8%, blink 8.4%; max |share diff| 5.77 pp; max |prevalence diff| 0.075
+under-5 share: IBM 8.8%, blink 8.8%; max |share diff| 2.05 pp; max |prevalence diff| 0.075
 
 ## Seasonal cycle (final year, weekly bins)
 
@@ -88,7 +88,7 @@ largest |blink - IBM median| gap: prevalence 1.2 pp (smc), clinical 12.1 pp (smc
 
 | model | runs | s per simulated year | mean run (s) | mean horizon (y) |
 | --- | --- | --- | --- | --- |
-| IBM | 130 | 5.98 | 202.8 | 34 |
+| IBM | 130 | 6.45 | 218.7 | 34 |
 | blink | 13 | 0.18 | 6.2 | 34 |
 
-IBM total CPU: 7.3 h across 130 runs; blink total: 80 s across 13 runs (IBM/blink per-year ratio 33x)
+IBM total CPU: 7.9 h across 130 runs; blink total: 81 s across 13 runs (IBM/blink per-year ratio 35x)

@@ -134,6 +134,11 @@ test_that("custom demography changes the equilibrium age structure", {
   expect_equal(sum(prop), 1, tolerance = 1e-10)               # normalised
   # high infant/elderly mortality => fewer under-5s than constant-hazard (~0.21)
   expect_lt(sum(prop[am < 5 * 365]), 0.15)
+  # the open-ended top group (80+) must take the 80-100 death rate (0.12/y), not the
+  # 60-80 one its lower bound would fall into with right-closed bins: at equilibrium
+  # N_last / N_prev = r_prev / mu_last = (1 / 5y) / (0.12 / y)
+  n <- length(prop)
+  expect_equal(prop[n] / prop[n - 1], (1 / 5) / 0.12, tolerance = 1e-6)
   # default (constant hazard) still holds flat at equilibrium (offset 0 = exact seed)
   pflat <- gp(); pflat$acquired_immunity_offset <- 0; pflat$bite_dedup <- 0
   o <- run_simulation_ode(400, pflat, init_EIR = 20)

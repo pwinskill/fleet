@@ -1,5 +1,16 @@
 # blink 0.0.0.9000
 
+## Bug fixes
+
+* **Custom demography: top age group's death rate.** The open-ended oldest model
+  age group is represented by its lower bound, which the right-closed
+  `set_demography()` bins assigned to the band *below* it whenever that bound
+  coincided with a bin edge — 80 y on the default grid, a very common edge. The
+  over-80s therefore died at the 60–80 rate (0.05 instead of 0.12 per year in the
+  comparison scenario) and the group held ~2.4× too many people (60–85 share 18.2%
+  against an analytic 13.1%). The death rate is now looked up one day above the
+  group's lower bound. Found by the new comparison article.
+
 ## Documentation
 
 * New article `vignette("comparison")` — *Comparison with malariasimulation* — with
@@ -13,14 +24,13 @@
   and a shared theme; the per-replicate summaries are committed so the figures can
   be redrawn without re-running the models. The pre-replication-pass figures
   (`A_`–`F_`, `inc_*`) and the scripts that made them are removed.
-* The comparison surfaced three blink-side items, documented in the article's
-  *Where the two models differ*: exponential (Weibull-mean) chemoprevention
-  prophylaxis under-estimates seasonal SMC impact (under-5 clinical reduction 40%
-  vs the IBM's 52%); the open-ended top age group takes the death rate of the band
-  below it when its lower bound coincides with a `set_demography()` edge (80 y on
-  the default grid), inflating the over-80 population 2.4×; and `set_equilibrium()`
-  conventions differ under custom demography (the IBM drifts to the transmission
-  its mosquito sizing supports, blink holds `init_EIR`).
+* The comparison surfaced three blink-side items. One is fixed above (the top
+  age group's death rate); two remain and are documented in the article's *Where
+  the two models differ*: exponential (Weibull-mean) chemoprevention prophylaxis
+  under-estimates seasonal SMC impact (under-5 clinical reduction 40% vs the IBM's
+  52%), and `set_equilibrium()` conventions differ under custom demography (the
+  IBM drifts to the transmission its mosquito sizing supports, blink holds
+  `init_EIR`).
 
 ## Exact-replication pass (malariasimulation v3.0.0)
 
