@@ -1,5 +1,27 @@
 # blink 0.0.0.9000
 
+## Documentation
+
+* New article `vignette("comparison")` — *Comparison with malariasimulation* — with
+  a redesigned figure set: equilibrium PfPR and clinical incidence across EIR
+  1–120, age profiles of prevalence / clinical / severe incidence, the settled
+  seasonal cycle, custom demography, the 63-country monthly site-file comparison,
+  and five interventions (treatment scale-up, RTS,S via EPI, seasonal SMC, IRS,
+  bed nets) as time series and a %-reduction summary. The IBM is drawn as the
+  median of 10 replicates with a 10–90% band rather than as a single realisation.
+  `comparison/` was rewritten around one runner (`run_replicates.R`), one renderer
+  and a shared theme; the per-replicate summaries are committed so the figures can
+  be redrawn without re-running the models. The pre-replication-pass figures
+  (`A_`–`F_`, `inc_*`) and the scripts that made them are removed.
+* The comparison surfaced three blink-side items, documented in the article's
+  *Where the two models differ*: exponential (Weibull-mean) chemoprevention
+  prophylaxis under-estimates seasonal SMC impact (under-5 clinical reduction 40%
+  vs the IBM's 52%); the open-ended top age group takes the death rate of the band
+  below it when its lower bound coincides with a `set_demography()` edge (80 y on
+  the default grid), inflating the over-80 population 2.4×; and `set_equilibrium()`
+  conventions differ under custom demography (the IBM drifts to the transmission
+  its mosquito sizing supports, blink holds `init_EIR`).
+
 ## Exact-replication pass (malariasimulation v3.0.0)
 
 A systematic audit replaced every place `blink` approximated a mechanism whose

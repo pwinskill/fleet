@@ -58,6 +58,7 @@ articles:
   contents:
   - blink
   - model
+  - comparison
 
 reference:
 - title: Run the model

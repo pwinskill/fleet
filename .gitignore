@@ -12,3 +12,6 @@ docs/
 .DS_Store
 *.tar.gz
 comparison/logs/
+comparison/data/*.log
+comparison/data/smoke/
+comparison/plots/
