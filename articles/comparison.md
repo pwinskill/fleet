@@ -204,21 +204,27 @@ model is most likely to slip).
 incidence for every sub-site-month in 63 countries: clinical episodes
 per person-year on the left, severe on the right, both with the mass of
 points tight along the 1:1 line. Reported statistics: clinical r = 0.98,
-slope 1.02; severe r = 0.95, slope 0.97.](cmp_core_sites.png)
+slope 1.00; severe r = 0.96, slope 0.95.](cmp_core_sites.png)
 
 Across 450,684 sub-site-months in 1,391 sub-sites of 63 countries,
 monthly clinical incidence correlates at r = 0.98 with a regression
-slope of 1.02, and monthly severe incidence at r = 0.95 with a slope of
-0.97: the two models agree on how incidence scales with transmission and
+slope of 1.00, and monthly severe incidence at r = 0.96 with a slope of
+0.95: the two models agree on how incidence scales with transmission and
 responds to the intervention histories. There is, however, a systematic
-offset. blink sits **10.1% above the IBM on average** for clinical
-incidence and 9.4% for severe. With the slope at unity that excess is an
+offset. blink sits **8.7% above the IBM on average** for clinical
+incidence and 8.8% for severe. With the slope at unity that excess is an
 intercept – a small absolute addition, a few hundredths of an episode
 per person-year – which matters most in low-incidence sub-sites and
-dry-season months and hardly at all where incidence is high. The country
-files exercise every intervention builder at once (treatment histories,
-net distributions, IRS, SMC, PMC, RTS,S) on real seasonality and
-demography, so this is the most demanding comparison on the page.
+dry-season months and hardly at all where incidence is high. Every site
+file uses `set_demography()`, so the mosquito-sizing convention
+described under *Demography* was an obvious suspect; adopting the IBM’s
+convention (together with the prophylaxis chains) moved the clinical
+excess from +10.1% to +8.7% and the slope from 1.02 to 1.00, so it
+accounts for a small part of the offset and the rest is not yet
+explained. The country files exercise every intervention builder at once
+(treatment histories, net distributions, IRS, SMC, PMC, RTS,S) on real
+seasonality and demography, so this is the most demanding comparison on
+the page.
 
 ## Intervention impact
 

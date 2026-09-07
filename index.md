@@ -387,8 +387,8 @@ across 63 countries
 
 *Every admin-1 × urban/rural sub-site in the malariaverse site files,
 monthly, 2000–2026, with its full intervention history: clinical
-incidence r = 0.98 (slope 1.02), severe r = 0.95 (slope 0.97). blink
-sits about 10% above the IBM on average, mostly in low-incidence
+incidence r = 0.98 (slope 1.00), severe r = 0.96 (slope 0.95). blink
+sits about 9% above the IBM on average, mostly in low-incidence
 sub-site-months.*
 
 The full set — age profiles, the seasonal cycle, custom demography,
