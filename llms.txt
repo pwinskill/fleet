@@ -15,8 +15,8 @@ scalar coupling, where nobody moves. Dashed red = a discrete state jump.
 Dotted grey = a grouping, not a compartment: the infectious pool above,
 the adult females below. Every human box is an array over age × biting
 heterogeneity. Not drawn: the immunity arrays, the Erlang lag chains,
-human demography, the species dimension, and the resistance split of T —
-see
+the stages of the two prophylaxis chains, human demography, the species
+dimension, and the resistance split of T — see
 [`vignette("model")`](https://pwinskill.github.io/blink/articles/model.md).*
 
 ## What it is
@@ -197,9 +197,11 @@ exactly-flat (approximate-dynamics) behaviour for a numerical test.
 implemented as Erlang (linear-chain) filters rather than `delay()` —
 robust, pure-ODE, and exact at equilibrium. Stage counts (`n_eir`,
 `n_foim`, `n_eip`; defaults 10 / 10 / 20) are tunable: larger values
-sharpen the gamma-shaped lags toward the IBM’s fixed delays. The
-disease-state seed re-solves the prophylaxis aging recursion with a
-corrected `bP` term (upstream
+sharpen the gamma-shaped lags toward the IBM’s fixed delays. The two
+prophylaxis compartments are Erlang chains as well (`n_ph`, `n_phc`; by
+default matched to the drug’s Weibull shape, see *Treatment &
+resistance*). The disease-state seed re-solves the prophylaxis aging
+recursion with a corrected `bP` term (upstream
 [`malariaEquilibrium::human_equilibrium_no_het`](https://rdrr.io/pkg/malariaEquilibrium/man/human_equilibrium_no_het.html)
 has a small artifact), so the model holds flat even under treatment
 (`ft > 0`).
@@ -218,19 +220,30 @@ exact fixed point only with `parameters$bite_dedup = 0`; with the
 default the model relaxes off the seed over the first years, exactly as
 the IBM does (it is seeded the same way).
 
-**Treatment & resistance.** Drug prophylaxis is a **single mean-duration
-compartment** (the Weibull is represented by its mean, so decay is
-exponential rather than the sharper Weibull) — equilibrium-exact,
-transient-approximate. Slow parasite clearance is **not** averaged: `Tr`
-is split into two parallel compartments (`Tr`/`Tr_slow`), reproducing
-the IBM’s two-component mixture of exponentials exactly. Antimalarial
-resistance (early-treatment-failure and slow-parasite-clearance) is
-blended across all treatment drugs by their share of treatment and also
-applies to a drug used for chemoprevention (SMC/MDA/PMC). The multi-drug
-blend is **time-varying**: drug efficacy, treated infectivity (`cT`) and
-the prophylaxis rate are interpolated over the treatment-coverage change
-times using each drug’s *instantaneous* share, so a first-line
-**switch** is modelled rather than frozen at a constant mixture.
+**Treatment & resistance.** Drug prophylaxis is an **Erlang chain**
+moment-matched to the drug’s Weibull protection curve. The IBM applies
+the Weibull survival to each treated person’s infection probability, so
+the cohort’s mean protection at a given lag *is* the Weibull survival.
+The chemoprevention chain has `k = 1/CV²` stages (14 for SP-AQ, 15 for
+DHA-PQP) and reproduces that curve to within a few points (SP-AQ at day
+30: Weibull 0.70, chain 0.67, single exponential 0.42), where a single
+compartment at the mean leaked protection between monthly SMC rounds.
+The post-treatment chain follows the exponential treated stage `Tr`, so
+its mean is the integrated protection left after `Tr` and its length
+matches the variance of the whole `Tr + Ph` sojourn: 16 stages for
+SP-AQ, 20 for DHA-PQP, and 1 for AL, whose 10-day protection is already
+less variable than `Tr` itself. `n_ph`/`n_phc` override the counts; 1
+recovers a single exponential compartment. Slow parasite clearance is
+**not** averaged: `Tr` is split into two parallel compartments
+(`Tr`/`Tr_slow`), reproducing the IBM’s two-component mixture of
+exponentials exactly. Antimalarial resistance (early-treatment-failure
+and slow-parasite-clearance) is blended across all treatment drugs by
+their share of treatment and also applies to a drug used for
+chemoprevention (SMC/MDA/PMC). The multi-drug blend is **time-varying**:
+drug efficacy, treated infectivity (`cT`) and the prophylaxis rate are
+interpolated over the treatment-coverage change times using each drug’s
+*instantaneous* share, so a first-line **switch** is modelled rather
+than frozen at a constant mixture.
 
 **Vector control.** Net/IRS efficacy is population-averaged over the
 net-using / sprayed fractions into per-species `a(t)`, `mu(t)`. Both
@@ -247,14 +260,18 @@ mean-field gap; larger than the ≤ ~5% single-round equilibrium bias).
 
 **Chemoprevention.** MDA/SMC/PMC are applied as **pulses between ODE
 segments**: a fraction (coverage × drug efficacy × (1 − resistance ETF))
-of the target age band is cleared and moved to the chemoprevention
-prophylaxis compartment `Ph_c`. The target band is mapped onto the model
-age groups by **fractional overlap**, so narrow bands (e.g. PMC dose
-ages) are captured rather than dropped and coarse groups are not
-over-treated. Co-deployed chemoprevention types share a
-coverage-weighted `Ph_c` decay. PMC (age-triggered in the IBM) is
-approximated as ~monthly pulses over each dose-age band; pulses take
-effect the day **after** their scheduled timestep.
+of the target age band — from **every** state, including people already
+under post-treatment or chemoprevention prophylaxis, whose protection
+clock is renewed exactly as the IBM resets `drug_time` for everyone it
+successfully treats — is cleared and moved to the first stage of the
+chemoprevention prophylaxis chain `Ph_c`. The target band is mapped onto
+the model age groups by **fractional overlap**, so narrow bands
+(e.g. PMC dose ages) are captured rather than dropped and coarse groups
+are not over-treated. Co-deployed chemoprevention types share one
+coverage-weighted `Ph_c` chain (mean duration and shape). PMC
+(age-triggered in the IBM) is approximated as ~monthly pulses over each
+dose-age band; pulses take effect the day **after** their scheduled
+timestep.
 
 **Vaccines.** PEV reduces the infection hazard by a per-age, per-time
 factor. Efficacy is the **expectation of the Hill curve over the
@@ -291,7 +308,18 @@ evolves with the demographic transition). If the oldest model age group
 exceeds the top `deathrate_agegroups`, ages above it take the top death
 rate here whereas the IBM removes them — raise
 `default_age_lower(max_age =)` or extend `deathrate_agegroups` to match
-(a warning fires when they diverge).
+(a warning fires when they diverge). **Mosquito sizing follows
+`set_equilibrium()`.** malariasimulation sizes the adult-mosquito
+population from the human equilibrium under its *default* exponential
+age structure — custom mortality never enters — so under
+`set_demography()` the IBM drifts to whatever transmission that density
+supports. `blink` reproduces that mosquito density exactly and seeds at
+the EIR its own equilibrium under the custom age structure then supports
+(still a fixed point: the comparison scenario seeds at EIR 13.9 for
+`init_EIR = 20`, against the IBM’s realised 13.8). `init_EIR` therefore
+means the same thing in both models; set
+`parameters$hold_init_EIR = TRUE` to make it the EIR blink realises
+instead.
 
 **Diagnostic conventions.**
 
@@ -312,7 +340,9 @@ rate here whereas the IBM removes them — raise
   reproduce the IBM’s literal Hill calls.) Treat severe incidence — and
   the DALYs derived from it — as indicative.
 - Reported **`EIR`** is per adult per year (equals `init_EIR` at
-  equilibrium). Compare with a malariasimulation run as
+  equilibrium under the default demography; under `set_demography()` it
+  is the EIR the IBM’s mosquito sizing supports — see *Demography*
+  above). Compare with a malariasimulation run as
   `EIR_<species> / human_population × 365`.
 
 ## Validation
@@ -345,12 +375,9 @@ Intervention impact: percentage reduction in PfPR(2–10) and under-5
 clinical incidence over the first three years of five interventions
 
 *Five interventions deployed with the ordinary `set_*()` builders —
-treatment scale-up, RTS,S via EPI, seasonal SMC, IRS and bed nets. Four
-of the five agree to within two percentage points of reduction. Seasonal
-SMC is the exception: blink cuts under-5 clinical incidence by 40%
-against the IBM’s 52%, because it decays SP-AQ prophylaxis exponentially
-at the Weibull mean, which lets protection leak between monthly rounds
-(see the article).*
+treatment scale-up, RTS,S via EPI, seasonal SMC, IRS and bed nets. All
+five agree to within two percentage points of reduction (seasonal SMC:
+54% against the IBM’s 52% for under-5 clinical incidence).*
 
 ![Country site files: blink against the IBM for 450,684 sub-site-months
 across 63 countries](reference/figures/cmp_core_sites.png)

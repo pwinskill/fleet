@@ -162,7 +162,7 @@ parameter list</td>
 <tr class="odd">
 <td>Numerics</td>
 <td>daily time step</td>
-<td>adaptive solver, <code>atol = rtol = 1e-6</code>,
+<td>adaptive solver, <code>atol = 1e-8</code>, <code>rtol = 1e-6</code>,
 <code>step_size_max = 10</code> days</td>
 </tr>
 </tbody>
@@ -360,23 +360,20 @@ aged 60–85). That residual is the price of the coarse 5-year age groups
 above 15: exponential dwell times within a group let some people linger
 past the age at which the schedule would have removed them, and the
 whole open-ended 80+ group is counted in the 60–85 band.</p>
-<p><strong>Right – age-prevalence.</strong> blink’s curve is identical
-to the one under the default demography (0.29 in infants rising to 0.57
-at 7–10 years), while the IBM’s is 0.06–0.08 lower through childhood and
-about 0.01 lower in adults. This is not a disagreement about
-age-prevalence at a given transmission intensity; it is a different
-transmission intensity. malariasimulation’s
-<code>set_equilibrium()</code> sizes the mosquito population from the
-equilibrium under its <em>default</em> exponential age structure. Run
-under the custom mortality, with far fewer highly infectious young
-children, the IBM drifts to a new steady state with an annual EIR of
-13.8 rather than 20 and a PfPR<sub>2–10</sub> of 0.49 rather than 0.55.
-blink re-solves its equilibrium under the custom age structure and holds
-<code>init_EIR = 20</code> exactly. Which convention a twin should
-follow is a design choice: matching the IBM’s mosquito sizing would let
-the same parameter list realise the same transmission in both models, at
-the cost of <code>init_EIR</code> no longer being the EIR blink realises
-under a custom demography.</p>
+<p><strong>Right – age-prevalence.</strong> The two curves agree to
+within 0.008 at every age. That agreement hides a convention worth
+knowing about. malariasimulation’s <code>set_equilibrium()</code> sizes
+the mosquito population from the equilibrium under its <em>default</em>
+exponential age structure, and run under the custom mortality – with far
+fewer highly infectious young children – the IBM drifts to a new steady
+state with an annual EIR of 13.8 rather than 20 and a
+PfPR<sub>2–10</sub> of 0.49 rather than 0.55. blink reproduces the IBM’s
+mosquito density exactly and seeds at the EIR its own equilibrium under
+the custom age structure then supports (13.9), so the same parameter
+list realises the same transmission in both models. An earlier version
+of blink held <code>init_EIR = 20</code> exactly instead and sat
+0.06–0.08 above the IBM through childhood here; that behaviour is still
+available via <code>parameters$hold_init_EIR = TRUE</code>.</p>
 </div>
 <div class="section level3">
 <h3 id="seasonality">Seasonality<a class="anchor" aria-label="anchor" href="#seasonality"></a>
@@ -449,12 +446,11 @@ on one birth cohort at a time, so under-5 incidence drifts down
 gradually as vaccinated children accumulate – from 1.55 to about 1.2
 episodes per child-year by year six – and 2–10 prevalence barely moves;
 blink tracks the IBM median through the ramp and ends marginally higher
-(1.27 against 1.20). <strong>Seasonal SMC</strong> is the one row with a
-visible gap: at each round both models drop sharply, but blink’s
-incidence climbs back roughly twice as fast between the monthly rounds
-(in the second to fourth months of each SMC season it runs about 2× the
-IBM median), then dips slightly below the IBM after the last round of
-the season. <strong>IRS</strong> with three annual rounds drives
+(1.27 against 1.20). <strong>Seasonal SMC</strong>: at each round both
+models drop sharply and climb back together between the monthly rounds –
+blink’s post-deployment under-5 incidence sits within 1% of the IBM
+median on average, with a slightly sharper rebound after the season’s
+last round. <strong>IRS</strong> with three annual rounds drives
 prevalence to ~0.01 by year three in both models; when the third round’s
 protection wanes both rebound together and overshoot the
 pre-intervention incidence (2.39 episodes per child-year at +4.5 years
@@ -498,9 +494,9 @@ curve as the nets age; by year six blink is fractionally above the IBM
 <tr class="odd">
 <td>Seasonal SMC</td>
 <td>23% (22–26%)</td>
-<td>22%</td>
+<td>24%</td>
 <td>52% (51–54%)</td>
-<td>40%</td>
+<td>54%</td>
 </tr>
 <tr class="even">
 <td>Indoor residual spraying</td>
@@ -519,24 +515,27 @@ curve as the nets age; by year six blink is fractionally above the IBM
 </tbody>
 </table>
 <p>Summarised as the reduction over the first three post-deployment
-years relative to the three years before, four of the five interventions
-agree to within one or two percentage points, with blink inside or at
-the edge of the IBM’s replicate range. The exception is <strong>seasonal
-SMC’s effect on under-5 clinical incidence: 40% in blink against 52% in
-the IBM</strong> (51–54% across replicates), even though the two agree
-on its effect on prevalence (22% against 23%). The cause is a documented
-approximation rather than a mystery. The IBM gives each treated child a
-protection duration drawn from a Weibull distribution – for SP-AQ, shape
-4.3 and scale 38.1 days, under which 70% are still protected 30 days
-after a round. blink decays its chemoprevention-prophylaxis compartment
-exponentially at the Weibull mean (34.7 days), which protects only 42%
-at 30 days: protection leaks between monthly rounds, which is exactly
-where the time series above shows the gap, and lingers a little too long
-after the last round, which is where blink dips below the IBM. Replacing
-the single compartment with a chain that reproduces the Weibull shape
-would close most of this gap; until then, treat blink’s SMC (and
-PMC/MDA) impact estimates as conservative – here by about a quarter of
-the IBM’s effect – for monthly-spaced rounds.</p>
+years relative to the three years before, all five interventions agree
+to within two percentage points, with blink inside or at the edge of the
+IBM’s replicate range on every outcome. The largest gaps are 1.0 point
+of prevalence reduction (IRS, 80% against 79%) and 1.8 points of
+clinical reduction (treatment scale-up, 5% against 4%, where the IBM’s
+own replicates span 1–6%).</p>
+<p>Seasonal SMC deserves a note, because it was the one intervention
+this comparison caught blink getting wrong. The IBM applies a Weibull
+protection curve to each treated child – for SP-AQ, shape 4.3 and scale
+38.1 days, under which 70% are still protected 30 days after a round. An
+earlier version of blink decayed its chemoprevention-prophylaxis
+compartment exponentially at the Weibull mean, which protects only 42%
+at 30 days: protection leaked between monthly rounds and blink’s under-5
+clinical reduction came out at 40% against the IBM’s 52%, with incidence
+between rounds running about twice the IBM’s. Prophylaxis is now an
+Erlang chain moment-matched to the Weibull (14 stages for SP-AQ), each
+round also renews the protection of children still covered from the
+previous one, and the gap has closed: 54% against 52%, with the
+between-round incidence within a few percent of the IBM median
+throughout the SMC season (see <em>Where the two models differ</em> for
+the small residual that remains).</p>
 </div>
 <div class="section level2">
 <h2 id="where-the-two-models-differ-and-why">Where the two models differ, and why<a class="anchor" aria-label="anchor" href="#where-the-two-models-differ-and-why"></a>
@@ -567,13 +566,14 @@ population. Through the intervention era the ODE therefore tends to
 <strong>under-suppress</strong> transmission slightly relative to the
 IBM.</li>
 <li>
-<strong>Chemoprevention is a pulse with exponential
-protection.</strong> SMC rounds are applied between ODE segments as
-instantaneous clearances of a fraction of the target age band, mapped by
-fractional overlap onto the model age groups, and the protection that
-follows decays exponentially at the Weibull mean rather than with the
-Weibull’s sharp shoulder. The pulse is a good approximation; the
-exponential is what makes blink’s SMC effect conservative (above).</li>
+<strong>Chemoprevention is a pulse.</strong> SMC rounds are applied
+between ODE segments as instantaneous clearances of a fraction of the
+target age band, mapped by fractional overlap onto the model age groups,
+rather than as individual treatment events; the detectable cases the IBM
+passes briefly through its treated state go straight to protection. The
+protection that follows is an Erlang chain matched to the drug’s Weibull
+survival (mean and coefficient of variation), not the Weibull itself, so
+its far tail differs slightly.</li>
 <li>
 <strong>Vaccine efficacy is an expectation.</strong> PEV protection
 is the expected Hill efficacy over the antibody distribution the IBM
@@ -583,11 +583,13 @@ individual-level heterogeneity is not carried.</li>
 <strong><code>set_equilibrium()</code> under a custom
 demography.</strong> The IBM sizes its mosquito population from the
 default exponential age structure and then drifts to whatever
-transmission the custom demography supports; blink re-solves the
-equilibrium under the custom age structure and holds the requested EIR.
-The same parameter list can therefore realise different transmission
-intensities in the two models (EIR 13.8 against 20 in the demography
-scenario above).</li>
+transmission the custom demography supports. blink reproduces that
+mosquito density and seeds at the EIR its own equilibrium under the
+custom age structure then supports, so the same parameter list realises
+the same transmission in both models (13.9 against 13.8 in the
+demography scenario above) — but <code>init_EIR</code> is then not the
+EIR blink realises. Set <code>parameters$hold_init_EIR = TRUE</code> if
+you want it to be.</li>
 <li>
 <strong>Lags are Erlang, not fixed.</strong> The human and mosquito
 delays are gamma-shaped chains that are exact at equilibrium and sharpen
@@ -599,16 +601,16 @@ smooth the sharpest incidence peaks by a few percent.</li>
 <div class="section level2">
 <h2 id="run-time">Run time<a class="anchor" aria-label="anchor" href="#run-time"></a>
 </h2>
-<p>The 120 IBM runs behind this page took 6.8 CPU-hours: 203 s per
-34-year run at 10,000 people, or 6.0 s per simulated year with ten runs
+<p>The 130 IBM runs behind this page took 7.2 CPU-hours: 201 s per
+34-year run at 10,000 people, or 5.9 s per simulated year with ten runs
 sharing twelve cores (about 2.5 s per year for a single uncontended
-run). blink ran all twelve scenarios in 76 s – 6.3 s per run, 0.19 s per
-simulated year – at <code>atol = rtol = 1e-6</code> with
-<code>step_size_max = 10</code> (the defaults, <code>1e-8</code> and 1
-day, are tighter and slower). Per simulated year that is a factor of
-13–30 at this population size; and the IBM’s cost grows with population
-while blink’s does not, so the gap widens for the 100,000-person runs
-typical of country work.</p>
+run). blink ran all thirteen scenarios in 60 s – 4.6 s per run, 0.14 s
+per simulated year – at <code>atol = 1e-8</code>,
+<code>rtol = 1e-6</code> and <code>step_size_max = 10</code> (the
+defaults, <code>1e-8</code> and a 1-day step cap, are slower). Per
+simulated year that is a factor of 18–43 at this population size; and
+the IBM’s cost grows with population while blink’s does not, so the gap
+widens for the 100,000-person runs typical of country work.</p>
 </div>
 <div class="section level2">
 <h2 id="reproducing-this-page">Reproducing this page<a class="anchor" aria-label="anchor" href="#reproducing-this-page"></a>

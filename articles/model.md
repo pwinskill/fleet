@@ -131,15 +131,16 @@ Reading it:
 immunity arrays $`I_B`$, $`I_{CA}`$, $`I_D`$, $`I_{VA}`$ — $`b`$ and
 $`\phi`$ set arrows that *are* shown, while $`q`$ and $`\theta`$ act on
 the infectivity coupling and the severe-incidence output; the three
-Erlang lag chains behind the two couplings and the incubation period;
-the age × heterogeneity structure inside every human box, and the ageing
-flow between age groups; human death and the births that replenish $`S`$
-(noted on the figure, not drawn, unlike the mosquito deaths — those are
-drawn because $`\mu_s`$ is where nets and IRS act); the species
-dimension, which replicates the whole mosquito panel; and the split of
-$`T`$ into fast and slow parasite clearance, which exists only once
-antimalarial resistance is switched on. Most are the subject of §3; the
-$`T`$ split is §B.4.
+Erlang lag chains behind the two couplings and the incubation period,
+and the stages of the two prophylaxis chains ($`P`$ and $`P_c`$ are each
+drawn as one box); the age × heterogeneity structure inside every human
+box, and the ageing flow between age groups; human death and the births
+that replenish $`S`$ (noted on the figure, not drawn, unlike the
+mosquito deaths — those are drawn because $`\mu_s`$ is where nets and
+IRS act); the species dimension, which replicates the whole mosquito
+panel; and the split of $`T`$ into fast and slow parasite clearance,
+which exists only once antimalarial resistance is switched on. Most are
+the subject of §3; the $`T`$ split is §B.4.
 
 Nor does the figure mark where interventions act. With the single
 exception of chemoprevention — the one intervention that adds a
@@ -178,8 +179,8 @@ practice — note that eight compartments are reported in six columns.
 | $`T_s`$ | `Tr_slow` | folded into `Tr_count` | Successfully treated, **slow parasite clearance**. A separate compartment, so the two clearance speeds form a genuine mixture of exponentials rather than one exponential at the blended mean (§B.4) |
 | $`A`$ | `A` | `A_count` | Asymptomatic patent infection |
 | $`U`$ | `U` | `U_count` | Sub-patent infection |
-| $`P`$ | `Ph` | `Ph_count` (with $`P_c`$) | Post-treatment prophylaxis |
-| $`P_c`$ | `Ph_c` | folded into `Ph_count` | Chemoprevention prophylaxis (MDA/SMC/PMC), separate because its drug — and hence its decay rate — differs from the clinical first line |
+| $`P_{1..k_P}`$ | `Ph` | `Ph_count` (with $`P_c`$) | Post-treatment prophylaxis, an **Erlang chain** of $`k_P`$ stages so that the exit-time distribution of the whole $`T + P`$ sojourn approximates the IBM’s Weibull protection rather than an exponential at its mean (§B.4): $`k_P`$ = 16 for SP-AQ, 20 for DHA-PQP, 1 for AL (whose 10-day protection is less variable than $`T`$ itself); 1 with no clinical drugs |
+| $`P_{c,1..k_{P_c}}`$ | `Ph_c` | folded into `Ph_count` | Chemoprevention prophylaxis (MDA/SMC/PMC), its own chain because its drug — and hence its mean duration and shape — differs from the clinical first line; $`k_{P_c} = \text{round}(1/\text{CV}_W^2)`$: 14 for SP-AQ, 15 for DHA-PQP |
 | $`I_B`$ | `IB` | — | Pre-erythrocytic (anti-infection) immunity |
 | $`I_{CA}`$ | `ICA` | — | Acquired clinical immunity |
 | $`I_D`$ | `ID` | — | Anti-parasite (detection) immunity |
@@ -201,11 +202,15 @@ Mosquito compartments, all $`[n_v]`$ except the EIP chain:
 | $`I_M`$ | Infectious adults |
 
 **Total state size.** With the defaults ($`n_a = 52`$, $`n_z = 5`$,
-$`n_v = 1`$, $`n_E = n_F = 10`$, $`n_P = 20`$):
+$`n_v = 1`$, $`n_E = n_F = 10`$, $`n_P = 20`$) and no drugs, so that
+$`k_P = k_{P_c} = 1`$:
 
 ``` math
-\underbrace{12\,n_a n_z}_{3120\ \text{human}} \;+\; \underbrace{n_E + n_F}_{20\ \text{lags}} \;+\; \underbrace{n_v(6 + n_P)}_{26\ \text{mosquito}} \;=\; 3166 .
+\underbrace{(10 + k_P + k_{P_c})\,n_a n_z}_{3120\ \text{human}} \;+\; \underbrace{n_E + n_F}_{20\ \text{lags}} \;+\; \underbrace{n_v(6 + n_P)}_{26\ \text{mosquito}} \;=\; 3166 .
 ```
+
+Every extra prophylaxis stage adds $`n_a n_z = 260`$ states: an SP-AQ
+SMC scenario ($`k_{P_c} = 14`$) has 6546.
 
 ### 3.2 What is captured *without* a dimension
 
@@ -217,7 +222,7 @@ coefficients**. Each row is a dimension that was *not* added.
 |----|----|----|----|
 | **Clinical treatment coverage** | Per-person Bernoulli draw at the moment of a clinical episode | Scalar $`f_t(t)`$, step-interpolated over the union of all drugs’ `timesteps`; splits the clinical inflow between $`T/T_s`$ and $`D`$ | None at the flow level |
 | **Which drug a person received** | Drug index stored per treated individual, driving their efficacy, infectivity and prophylaxis duration | Three scalar series $`\text{eff}(t)`$, $`c_T(t)`$, $`r_P(t)`$, each a coverage-share-weighted blend across the active clinical drugs, step-interpolated over the coverage change times | A first-line **switch** is modelled (the blend moves in time); a genuinely *mixed* first line is represented by its mean, not its mixture |
-| **Post-treatment prophylaxis clock** | Weibull hazard on days-since-treatment, per person | One compartment $`P`$ with exponential exit at $`r_P = 1/(\bar{d}_W - 1/r_T)`$, where $`\bar{d}_W`$ is the Weibull mean | Exact in the equilibrium mean; the transient decay is exponential rather than the sharper Weibull |
+| **Post-treatment prophylaxis clock** | Weibull survival $`W(t - t_{\text{drug}})`$ multiplying each treated person’s infection probability, running from the dose in parallel with the treated stage | An Erlang chain entered after $`T`$: mean $`\bar{d}_W - \int_0^\infty e^{-r_T t}W(t)\,dt`$, the protection left once the exponential $`T`$ sojourn ends, and $`k_P`$ stages chosen so the whole $`T + P`$ sojourn has the Weibull’s variance (16 for SP-AQ, 20 for DHA-PQP, 1 for AL) | The cohort’s mean protection at lag $`t`$ is exactly $`W(t)`$ in the IBM. The chain reproduces the integrated protection exactly and the curve to within a few points for the long-acting SMC drugs (SP-AQ at day 30: 0.67 against 0.70, where one exponential stage gave 0.42 and leaked protection between monthly rounds); for AL the exponential $`T`$ stage in front of the chain spreads a 10-day protection the IBM keeps sharp |
 | **Early treatment failure** | Per-person draw diverting a treated case back to clinical | Folded into $`f_t^{\text{eff}}(t) = f_t\cdot\text{eff}\cdot(1-\text{ETF}(t))`$ | None |
 | **Bed net ownership, net age, retention, repeat rounds** | Per-person net-receipt timestep; efficacy decays from that date; nets lost stochastically | Two scalars per species, $`a_s(t)`$ and $`\mu_s(t)`$, computed from the full mean-field mixture over *all past distributions* (each weighted by most-recent-receipt probability $`\times`$ retention survival, each decaying its own $`d_{n0}`$ / $`r_n`$) | Protection is population-averaged rather than correlated within individuals across bites, so nets tend to **under**-suppress transmission relative to the IBM |
 | **IRS spray status and spray age** | Per-person house-spray timestep | Folded into the same $`a_s(t)`$, $`\mu_s(t)`$; mixture over all past rounds weighted by most-recent-spray probability, with no retention factor (sprayed protection never expires in the IBM) | As above |
@@ -303,7 +308,7 @@ Where a row carries two marks, the second is a caveat on the first.
 
 | Group | Parameters | `blink` |
 |----|----|----|
-| Initial state proportions | `s_proportion`, `d_proportion`, `a_proportion`, `u_proportion`, `t_proportion` | ⛔ Ignored — `blink` seeds at the `malariaEquilibrium` fixed point for `init_EIR`, not at user-supplied proportions |
+| Initial state proportions | `s_proportion`, `d_proportion`, `a_proportion`, `u_proportion`, `t_proportion` | ⛔ Ignored — `blink` seeds at the `malariaEquilibrium` fixed point for `init_EIR` (or, under a custom demography, for the EIR the IBM’s mosquito sizing supports, §4.3), not at user-supplied proportions |
 | Initial immunity | `init_ib`, `init_ica`, `init_iva`, `init_icm`, `init_ivm`, `init_id` | ⛔ Ignored — same reason |
 | Population size | `human_population` | ✅ Scales output counts only; the ODE is per-capita, so run time is independent of it |
 |  | `human_population_timesteps` | ⛔ Ignored — population is conserved; no dynamic population size |
@@ -314,7 +319,7 @@ Where a row carries two marks, the second is a caveat on the first.
 |  | `n_heterogeneity_groups` | ✅ Number of Gauss–Hermite nodes $`n_z`$ |
 |  | `enable_heterogeneity` | ✅ `FALSE` collapses to a single node with $`\zeta = 1`$ |
 | Aquatic mosquito | `del`, `dl`, `dpl`, `me`, `ml`, `mup`, `gamma` | ✅ Used verbatim in the $`E`$/$`L`$/$`P_L`$ equations |
-| Adult mosquito | `mum`, `beta`, `total_M`, `blood_meal_rates`, `Q0`, `foraging_time`, `species`, `species_proportions` | ✅ Per-species; `total_M` is re-derived (§4.3) |
+| Adult mosquito | `mum`, `beta`, `total_M`, `blood_meal_rates`, `Q0`, `foraging_time`, `species`, `species_proportions` | ✅ Per-species; `total_M` is re-derived — from `init_EIR` under the default demography, as the IBM’s own value under a custom one (§4.3) |
 |  | `init_foim` | ⛔ Ignored — `blink` recomputes FOIM from its own seeded human infectivity, which must be self-consistent with its seed |
 | Seasonality | `model_seasonality`, `g0`, `g`, `h`, `rainfall_floor` | ✅ Truncated Fourier rainfall drives $`K_s(t) = K_{0,s}\,\text{scaler}(t)\,\text{rainfall}(t)/\bar{R}`$, on a daily grid |
 | Flexible carrying capacity | `carrying_capacity`, `carrying_capacity_timesteps` | ✅ See §4.10. (`carrying_capacity_scalers` is *not* a `get_parameters()` default and cannot be passed in `overrides` — it is created only by `set_carrying_capacity()`.) |
@@ -357,16 +362,36 @@ list and both default to the validated choice.
 
 | Argument | malariasimulation meaning | `blink` |
 |----|----|----|
-| `init_EIR` | Target EIR to seed from | ✅ Stored as `parameters$init_EIR` and read by [`run_simulation_ode()`](https://pwinskill.github.io/blink/reference/run_simulation_ode.md) when its own `init_EIR` argument is `NULL` |
+| `init_EIR` | Target EIR to seed from | ✅ Stored as `parameters$init_EIR` and read by [`run_simulation_ode()`](https://pwinskill.github.io/blink/reference/run_simulation_ode.md) when its own `init_EIR` argument is `NULL`. It means the same thing in both models: under the default demography it is the EIR `blink` realises; under `set_demography()` it sizes the mosquito population exactly as the IBM’s does and `blink` seeds at the EIR that density supports (§4.4) |
 | `eq_params` | Custom `malariaEquilibrium` parameter set | ✅ Merged over `blink`’s own back-translation and takes precedence. Note `set_equilibrium()` writes this field **even when passed `NULL`** — storing its own back-translation — so after any call to it, that stored set, not `R/translate_params.R`, supplies every shared constant (§F) |
 | `EIR_population_input` | `"adult"` (default) or `"total"` | ✅ Handled upstream — `malariasimulation` converts a total-population EIR to adult EIR before storing it, and `blink` always interprets `init_EIR` as adult EIR (bites per adult per year) |
 
 `set_equilibrium()` also calls `parameterise_mosquito_equilibrium()`
-internally. That part has **no effect** on `blink`: `parameters$total_M`
-is never read, and every species’ baseline carrying capacity is computed
-from a `total_M` that `blink` re-derives so that
-$`\sum_s a_s I_{M,s} = \text{init_EIR}/365`$ holds exactly under its own
-seeded human infectivity. Calling `parameterise_total_M()` or
+internally, which sizes the adult-mosquito population `total_M` from the
+human equilibrium under the IBM’s **default exponential age structure**
+(`equilibrium_total_M()`; custom mortality never enters). `blink` never
+reads the stored `parameters$total_M`; it re-derives the same quantity
+itself, in one of two ways:
+
+- **Default demography.** `total_M` is chosen so that
+  $`\sum_s a_s I_{M,s} = \text{init_EIR}/365`$ holds exactly under
+  `blink`’s own seeded human infectivity — the IBM’s formula evaluated
+  on `blink`’s grid, so the two agree up to discretisation and
+  `init_EIR` is the EIR realised.
+- **Custom demography** (`set_demography()`). Holding `init_EIR` here
+  would give the two models different mosquito populations, and hence
+  different transmission, from the same parameter list: the IBM’s
+  density supports less (or more) transmission under the custom age
+  structure and it drifts there. So `blink` reproduces the IBM’s
+  `total_M` exactly (`ibm_total_M()`, the same `human_equilibrium()`
+  call on the IBM’s 0–99.9 y grid and the same `equilibrium_total_M()`
+  arithmetic) and root-finds the EIR at which its own equilibrium under
+  the custom age structure has that density, seeding there. The seed is
+  still a fixed point, so no burn-in is needed.
+  `parameters$hold_init_EIR = TRUE` restores the previous behaviour
+  (`init_EIR` as the realised EIR).
+
+Calling `parameterise_total_M()` or
 `parameterise_mosquito_equilibrium()` directly is harmless but changes
 nothing.
 
@@ -376,7 +401,16 @@ nothing.
 |----|----|----|
 | `agegroups` | Upper edges of the death-rate age groups, in days | ✅ Model age groups are binned into them by midpoint using right-closed intervals, matching `.bincode(age, c(0, agegroups))` |
 | `timesteps` | When each death-rate row takes effect | ✅ Knots of a **constant**-interpolated $`\mu_i(t)`$, so custom demography is time-varying (a demographic transition is modelled, not frozen) |
-| `deathrates` | `[length(timesteps) × length(agegroups)]` daily death rates | ✅ Used directly as $`\mu_i(t)`$. The $`t = 0`$ row additionally sets the equilibrium age structure the human seed is rescaled onto. 🟡 Model ages above the top `agegroups` edge take the top rate here, whereas the IBM removes them — a warning fires; raise `default_age_lower(max_age =)` or extend `agegroups` to match |
+| `deathrates` | `[length(timesteps) × length(agegroups)]` daily death rates | ✅ Used directly as $`\mu_i(t)`$. The $`t = 0`$ row additionally sets the equilibrium age structure the human seed is rescaled onto; the open-ended top model group is looked up one day above its lower edge, so it takes the rate of the band it belongs to rather than the one below. 🟡 Model ages above the top `agegroups` edge take the top rate here, whereas the IBM removes them — a warning fires; raise `default_age_lower(max_age =)` or extend `agegroups` to match |
+
+With a custom demography the mosquito population is sized as the IBM
+sizes it (§4.3): `blink` takes the IBM’s `total_M` and seeds at the EIR
+its own equilibrium under this age structure supports, which is
+generally *not* `init_EIR` (an older population sustains less
+transmission from the same mosquitoes — the comparison article’s
+scenario seeds at EIR 13.9 for `init_EIR = 20`, matching the IBM’s
+realised 13.8). `parameters$hold_init_EIR = TRUE` makes `init_EIR` the
+realised EIR instead.
 
 ### 4.5 `set_drugs(drugs)`
 
@@ -385,7 +419,7 @@ nothing.
 | `drugs` | List of 4-element vectors `c(efficacy, rel_c, prophylaxis_shape, prophylaxis_scale)` (e.g. `AL_params`, `DHA_PQP_params`, `SP_AQ_params`) | 🟡 Each element is handled as below |
 |   `drug_efficacy` | Probability treatment clears the infection | ✅ Multiplies coverage into $`f_t^{\text{eff}}`$; also multiplies chemoprevention pulse fractions |
 |   `drug_rel_c` | Infectivity of a treated case relative to `cd` | ✅ $`c_T = c_d \times \text{rel_c}`$, coverage-share-weighted across active drugs and time-varying |
-|   `drug_prophylaxis_shape`, `drug_prophylaxis_scale` | Weibull prophylaxis hazard | 🟡 Represented by the Weibull **mean** $`\bar{d}_W`$: $`r_P = 1/(\bar{d}_W - 1/r_T)`$, subtracting the days already spent refractory in $`T`$. Equilibrium-exact, transient-approximate (exponential rather than Weibull decay) |
+|   `drug_prophylaxis_shape`, `drug_prophylaxis_scale` | Weibull prophylaxis survival | ✅ Both moments used. The chain mean is $`\bar{d}_W - \int e^{-r_T t}W\,dt`$, the protection left after the $`T`$ sojourn (§B.4), and its length $`k_P`$ matches the variance of the whole $`T + P`$ sojourn: 16 stages for SP-AQ, 20 for DHA-PQP, 1 for AL (the chemoprevention chain, with no $`T`$ stage in front, uses $`1/\text{CV}_W^2`$: 14 / 15). Capped at 20. 🟡 An Erlang chain is not a Weibull, and the exponential $`T`$ stage adds variability the IBM’s parallel clock does not have — for AL the protection curve is reproduced in its integral, not its shape. `run_simulation_ode(n_ph =)` overrides the count |
 |   `drug_hypnozoite_*` | *P. vivax* only | ⛔ Not applicable |
 
 ### 4.6 `set_clinical_treatment(drug, timesteps, coverages)`
@@ -409,7 +443,7 @@ nothing.
 | `late_clinical_failure_probability` | Late clinical failure | ⛔ `malariasimulation` requires 0 |
 | `late_parasitological_failure_probability` | Late parasitological failure | ⛔ `malariasimulation` requires 0 |
 | `reinfection_during_prophylaxis_probability` | Reinfection while prophylactic | ⛔ `malariasimulation` requires 0 |
-| `slow_parasite_clearance_time` | Mean duration of slow clearance | 🟡 $`r_T^{\text{slow}} = 1/\text{dt_slow}`$, a **single scalar**. With one resistant drug the blend is exact; with several it is the coverage-weighted blend evaluated at *peak* resistance (peak, not final, so a rise-then-fall schedule is not collapsed to zero). Note this rate does **not** carry the whole-day $`1-e^{-1/d}`$ conversion the other sojourns get, so the realised slow-clearance dwell runs ~1 day short of the IBM’s (§B.4) |
+| `slow_parasite_clearance_time` | Mean duration of slow clearance | 🟡 $`r_T^{\text{slow}} = 1 - e^{-1/\text{dt_slow}}`$, a **single scalar** carrying the same whole-day conversion as the other sojourns (§B.4). With one resistant drug the blend is exact; with several it is the coverage-weighted blend evaluated at *peak* resistance (peak, not final, so a rise-then-fall schedule is not collapsed to zero) |
 
 ### 4.8 `set_bednets()`
 
@@ -472,7 +506,7 @@ cleared cases is omitted (negligible for the fast-clearing drugs used).
 
 | Argument | malariasimulation meaning | `blink` |
 |----|----|----|
-| `drug` | Drug administered | ✅ Its `drug_efficacy` scales the cleared fraction; its Weibull mean sets $`r_{P_c}`$. Antimalarial-resistance ETF on this drug reduces the cleared fraction |
+| `drug` | Drug administered | ✅ Its `drug_efficacy` scales the cleared fraction; its Weibull mean sets $`r_{P_c}`$ and its Weibull shape the chain length $`k_{P_c}`$. Antimalarial-resistance ETF on this drug reduces the cleared fraction |
 | `timesteps` | Round dates | ✅ Integration is split at each; the pulse takes effect the day **after** the scheduled timestep |
 | `coverages` | Fraction of the target band reached | ✅ Cleared fraction $`= \text{coverage}\times\text{efficacy}\times(1-\text{ETF})\times o_i`$. A zero-coverage round is a no-op |
 | `min_ages`, `max_ages` | Per-round vectors (one entry per `timesteps` entry) giving the target band in days, **inclusive at both ends** | ✅ Per-round bands are honoured. Mapped onto the model age grid by **fractional overlap** $`o_i`$, so narrow bands are not dropped and coarse groups are not over-treated. The absorbing top group is treated as fully covered iff the band reaches its lower edge. 🟡 `blink` treats the band as half-open $`[\ell, u)`$, one day narrower than the IBM — negligible except for very narrow (PMC-style) bands |
@@ -673,10 +707,14 @@ an equilibrium test, where it cuts the drift off the seed to well under
 **Erlang stage counts (`n_eir`, `n_foim`, `n_eip`).** The defaults are
 fine. Raising them sharpens the gamma-shaped lags toward the IBM’s fixed
 delays at linear cost in state size; equilibrium is exact for any value.
+The prophylaxis chains (`n_ph`, `n_phc`) are sized from the drug’s
+Weibull by default (§B.4) and capped at 20 — each stage adds $`n_a n_z`$
+states and the solver slows steeply beyond that.
 
 **`parameterise_total_M()` / `parameterise_mosquito_equilibrium()`.**
-They have no effect — `blink` re-derives `total_M` from `init_EIR`
-(§4.3).
+They have no effect — `blink` re-derives `total_M` itself (§4.3: from
+`init_EIR` under the default demography, as the IBM’s own value under a
+custom one).
 
 ### Results to treat with caution
 
@@ -710,9 +748,9 @@ Every 🟡 in §4, and when it matters:
 
 | Mechanism | § | Matters when |
 |----|----|----|
-| Weibull prophylaxis → exponential compartment | 4.5 | Looking at the shape of post-treatment protection, not its mean |
+| Weibull prophylaxis → Erlang chain (moment-matched) | 4.5, B.4 | The far tail of chemoprevention protection; for post-treatment protection the exponential $`T`$ stage in front of the chain spreads AL’s sharp 10-day protection, reproducing its integral rather than its shape |
 | Multi-drug blend rather than parallel sub-populations | 4.6 | A genuinely mixed first line (a *switch* is modelled fine) |
-| Single scalar slow-clearance rate, no whole-day conversion | 4.7, B.4 | High artemisinin resistance with several treatment drugs |
+| Single scalar slow-clearance rate blended across drugs | 4.7, B.4 | High artemisinin resistance with several treatment drugs |
 | Population-averaged nets | 4.8 | Any nets era — the largest routine gap |
 | Population-averaged IRS | 4.9 | Any IRS era |
 | Carrying-capacity floor at $`K_0\times10^{-4}`$ | 4.10 | Modelling complete vector elimination |
@@ -930,7 +968,7 @@ $`f_t^{\text{eff}}(t) = f_t(t)\,\text{eff}(t)\,(1-\text{ETF}(t))`$ for
 the effective treated fraction:
 
 ``` math
-\dot{S}_{ij} = r_{i-1}S_{i-1,j} + r_U U_{ij} + r_P P_{ij} + r_{P_c} P_{c,ij}
+\dot{S}_{ij} = r_{i-1}S_{i-1,j} + r_U U_{ij} + k_P r_P P_{k_P,ij} + k_{P_c} r_{P_c} P_{c,k_{P_c},ij}
 - \Lambda_{ij}S_{ij} - \rho_i S_{ij}
 ```
 
@@ -959,15 +997,48 @@ the effective treated fraction:
 ```
 
 ``` math
-\dot{P}_{ij} = r_{i-1}P_{i-1,j} + r_T T_{ij} + r_T^{\text{slow}} T_{s,ij}
-- r_P P_{ij} - \rho_i P_{ij}
+\dot{P}_{1,ij} = r_{i-1}P_{1,i-1,j} + r_T T_{ij} + r_T^{\text{slow}} T_{s,ij}
+- k_P r_P P_{1,ij} - \rho_i P_{1,ij}
 ```
 
 ``` math
-\dot{P}_{c,ij} = r_{i-1}P_{c,i-1,j} - r_{P_c}P_{c,ij} - \rho_i P_{c,ij}
+\dot{P}_{m,ij} = r_{i-1}P_{m,i-1,j} + k_P r_P\left(P_{m-1,ij} - P_{m,ij}\right) - \rho_i P_{m,ij},
+\qquad m = 2,\dots,k_P
 ```
 
-Three implementation points:
+``` math
+\dot{P}_{c,1,ij} = r_{i-1}P_{c,1,i-1,j} - k_{P_c} r_{P_c} P_{c,1,ij} - \rho_i P_{c,1,ij}
+```
+
+``` math
+\dot{P}_{c,m,ij} = r_{i-1}P_{c,m,i-1,j} + k_{P_c} r_{P_c}\left(P_{c,m-1,ij} - P_{c,m,ij}\right) - \rho_i P_{c,m,ij},
+\qquad m = 2,\dots,k_{P_c}
+```
+
+Four implementation points:
+
+- **Prophylaxis chains.** The IBM does not have a prophylaxis *state*:
+  it multiplies each treated person’s infection probability by the
+  Weibull survival $`W(t - t_{\text{drug}})`$, so a treated cohort’s
+  mean protection at lag $`t`$ is exactly $`W(t)`$. A single compartment
+  reproduces only the mean of $`W`$ and decays exponentially, keeping
+  just 42% of SP-AQ recipients protected at day 30 against the Weibull’s
+  70%. The $`k`$-stage chains above, each stage left at $`k\,r`$, keep
+  the mean $`1/r`$ and are moment-matched to $`W`$. For $`P_c`$ that is
+  simply $`k_{P_c} = \text{round}(1/\text{CV}_W^2)`$ (14 for SP-AQ),
+  which puts the chain’s survival within a few points of $`W`$ (0.67 at
+  day 30). $`P`$ is entered only after the exponential $`T`$ sojourn,
+  whereas the IBM’s clock runs from the dose in parallel with $`T`$: a
+  treated person there is unprotected at lag $`t`$ with probability
+  $`F_T(t)\,(1 - W(t))`$. Matching the integrated protection gives the
+  chain mean $`\bar{d}_W - \int_0^\infty e^{-r_T t} W(t)\,dt`$ (which
+  reduces to $`\bar{d}_W - 1/r_T`$ when $`W \approx 1`$ throughout
+  $`T`$), and matching the variance of the whole $`T + P`$ sojourn gives
+  $`k_P`$ — 16 for SP-AQ, 20 for DHA-PQP, and 1 for AL, whose 10-day
+  protection is already less variable than $`T`$ itself, so no chain
+  length can sharpen it (its output is the same to five decimals at 1
+  and 20 stages). While in a chain, people are fully protected from
+  $`\Lambda`$ and are not infectious.
 
 - **Two treated compartments.** The IBM assigns each successfully
   treated individual to standard or slow parasite clearance by a
@@ -975,21 +1046,20 @@ Three implementation points:
   exponential at the blended mean. $`T`$ and $`T_s`$ reproduce that
   split structurally (but see the sojourn caveat below for
   $`r_T^{\text{slow}}`$).
+
 - **Whole-day sojourns.** The IBM advances states once per day with exit
   probability $`1 - e^{-1/d}`$, so its realised mean dwell is
   $`1/(1-e^{-1/d})`$ (5.52 d for $`d_D = 5`$, not 5). `blink` uses
-  $`r_X = 1 - e^{-1/d_X}`$ for $`X \in \{A, D, U, T\}`$ so the dwells
-  match. Two caveats. It is *not* applied to $`r_P`$, because the IBM
-  models prophylaxis as a hazard multiplier rather than a compartment
-  with a daily census. It is also *not* currently applied to
-  $`r_T^{\text{slow}}`$, which is set to $`1/\text{dt_slow}`$ — whereas
-  the IBM resolves slow clearance through the same per-day
-  `rate_to_prob` path as ordinary treatment, giving it a realised dwell
-  of $`1/(1-e^{-1/\text{dt_slow}})`$. Slow-clearance dwells therefore
-  run about a day short of the IBM’s.
-- **$`P_c`$ has no ODE inflow.** It is filled only by the
-  chemoprevention pulses of §E, and carries neither infection risk nor
-  infectivity.
+  $`r_X = 1 - e^{-1/d_X}`$ for $`X \in \{A, D, U, T, T_{\text{slow}}\}`$
+  so the dwells match (slow clearance is resolved through the same
+  per-day `rate_to_prob` path as ordinary treatment in the IBM). It is
+  *not* applied to $`r_P`$ or $`r_{P_c}`$, because the IBM models
+  prophylaxis as a hazard multiplier rather than a compartment with a
+  daily census.
+
+- **The $`P_c`$ chain has no ODE inflow.** It is filled, at stage 1,
+  only by the chemoprevention pulses of §E, and carries neither
+  infection risk nor infectivity.
 
 #### B.5 Immunity equations
 
@@ -1149,12 +1219,17 @@ and coarse groups are not over-treated. A fraction
 \text{frac}_i = o_i \times \text{coverage} \times \text{drug efficacy} \times (1 - \text{ETF})
 ```
 
-of $`S, U, A, D, T`$ in each affected cell is cleared and moved to
-$`P_c`$, which then decays to $`S`$ at $`r_{P_c}`$ — the
-coverage-weighted Weibull mean of the chemoprevention drugs, distinct
-from the clinical $`r_P`$. Pulses take effect the day **after** their
-scheduled timestep. PMC, which the IBM delivers on an age trigger, is
-approximated as ~monthly pulses over each dose-age band.
+of **every** state in each affected cell — $`S, U, A, D, T, T_s`$ and
+the existing $`P`$ and $`P_c`$ stages, because the IBM resets
+`drug_time` for everyone it successfully treats, renewing the protection
+of those already covered — is cleared and moved to the first stage of
+$`P_c`$, which then runs down its chain to $`S`$ at $`k_{P_c} r_{P_c}`$
+per stage: $`r_{P_c}`$ is 1 / the coverage-weighted Weibull mean of the
+chemoprevention drugs and $`k_{P_c}`$ their coverage-weighted
+$`1/\text{CV}_W^2`$, both distinct from the clinical chain. Pulses take
+effect the day **after** their scheduled timestep. PMC, which the IBM
+delivers on an age trigger, is approximated as ~monthly pulses over each
+dose-age band.
 
 ### F. Initial conditions
 
@@ -1174,7 +1249,9 @@ approximated as ~monthly pulses over each dose-age band.
     block is **re-solved** with a corrected prophylaxis aging recursion,
     $`b_P = (r_T b_T + r_{i-1}P_{i-1})/\beta_P`$ — upstream divides only
     the $`r_{i-1}P_{i-1}`$ term by $`\beta_P`$, leaving $`r_T b_T`$
-    undivided. The re-solve makes the seed the fixed point of the
+    undivided — and generalised to the $`k_P`$-stage chain (stage 1 fed
+    by $`r_T T`$, stage $`m`$ by $`k_P r_P P_{m-1}`$, every stage aging
+    at $`r_{i-1}`$). The re-solve makes the seed the fixed point of the
     prophylaxis ODE actually implemented here, so the model holds flat
     even under treatment.
 3.  The equilibrium age structure is recomputed under $`\mu_i(0)`$ —
@@ -1184,9 +1261,16 @@ approximated as ~monthly pulses over each dose-age band.
     slow-clearance fraction.
 5.  Mosquito compartments are seeded from `initial_mosquito_counts()` at
     the FOIM implied by the seeded human infectivity, with `total_M`
-    chosen so that $`\sum_s a_s I_{M,s} = \text{init_EIR}/365`$ exactly.
-    Lag chains are seeded at their equilibrium values, and $`K_s(0)`$ at
-    the corresponding carrying capacity (floored at $`10^{-9}`$ of the
+    chosen so that $`\sum_s a_s I_{M,s} = \text{EIR}_{\text{seed}}/365`$
+    exactly. Under the default demography
+    $`\text{EIR}_{\text{seed}} = \text{init_EIR}`$; under a custom
+    demography `total_M` is fixed to the IBM’s (`ibm_total_M()`, §4.3)
+    and $`\text{EIR}_{\text{seed}}`$ is the root of
+    `total_M(EIR) = total_M_IBM`, found by
+    [`uniroot()`](https://rdrr.io/r/stats/uniroot.html) on
+    $`\log \text{EIR}`$ (steps 2–4 are re-solved at each trial EIR). Lag
+    chains are seeded at their equilibrium values, and $`K_s(0)`$ at the
+    corresponding carrying capacity (floored at $`10^{-9}`$ of the
     maximum for species with proportion 0, which would otherwise give
     $`0/0`$ in the larval term).
 

@@ -255,9 +255,13 @@ and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
 act on the infectivity coupling and the severe-incidence output; the
 three Erlang lag chains behind the two couplings and the incubation
-period; the age × heterogeneity structure inside every human box, and
-the ageing flow between age groups; human death and the births that
-replenish
+period, and the stages of the two prophylaxis chains
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mi>c</mi></msub><annotation encoding="application/x-tex">P_c</annotation></semantics></math>
+are each drawn as one box); the age × heterogeneity structure inside
+every human box, and the ageing flow between age groups; human death and
+the births that replenish
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>
 (noted on the figure, not drawn, unlike the mosquito deaths — those are
 drawn because
@@ -440,20 +444,33 @@ of exponentials rather than one exponential at the blended mean
 <td>Sub-patent infection</td>
 </tr>
 <tr class="odd">
-<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math></td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mrow><mn>1</mn><mi>.</mi><mi>.</mi><msub><mi>k</mi><mi>P</mi></msub></mrow></msub><annotation encoding="application/x-tex">P_{1..k_P}</annotation></semantics></math></td>
 <td><code>Ph</code></td>
 <td>
 <code>Ph_count</code> (with
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mi>c</mi></msub><annotation encoding="application/x-tex">P_c</annotation></semantics></math>)</td>
-<td>Post-treatment prophylaxis</td>
+<td>Post-treatment prophylaxis, an <strong>Erlang chain</strong> of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>k</mi><mi>P</mi></msub><annotation encoding="application/x-tex">k_P</annotation></semantics></math>
+stages so that the exit-time distribution of the whole
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>+</mo><mi>P</mi></mrow><annotation encoding="application/x-tex">T + P</annotation></semantics></math>
+sojourn approximates the IBM’s Weibull protection rather than an
+exponential at its mean (§B.4):
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>k</mi><mi>P</mi></msub><annotation encoding="application/x-tex">k_P</annotation></semantics></math>
+= 16 for SP-AQ, 20 for DHA-PQP, 1 for AL (whose 10-day protection is
+less variable than
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
+itself); 1 with no clinical drugs</td>
 </tr>
 <tr class="even">
-<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mi>c</mi></msub><annotation encoding="application/x-tex">P_c</annotation></semantics></math></td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mrow><mi>c</mi><mo>,</mo><mn>1</mn><mi>.</mi><mi>.</mi><msub><mi>k</mi><msub><mi>P</mi><mi>c</mi></msub></msub></mrow></msub><annotation encoding="application/x-tex">P_{c,1..k_{P_c}}</annotation></semantics></math></td>
 <td><code>Ph_c</code></td>
 <td>folded into <code>Ph_count</code>
 </td>
-<td>Chemoprevention prophylaxis (MDA/SMC/PMC), separate because its drug
-— and hence its decay rate — differs from the clinical first line</td>
+<td>Chemoprevention prophylaxis (MDA/SMC/PMC), its own chain because its
+drug — and hence its mean duration and shape — differs from the clinical
+first line;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><msub><mi>P</mi><mi>c</mi></msub></msub><mo>=</mo><mtext mathvariant="normal">round</mtext><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mi>/</mi><msubsup><mtext mathvariant="normal">CV</mtext><mi>W</mi><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">k_{P_c} = \text{round}(1/\text{CV}_W^2)</annotation></semantics></math>:
+14 for SP-AQ, 15 for DHA-PQP</td>
 </tr>
 <tr class="odd">
 <td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mi>B</mi></msub><annotation encoding="application/x-tex">I_B</annotation></semantics></math></td>
@@ -532,10 +549,17 @@ no mortality</td>
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>z</mi></msub><mo>=</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">n_z = 5</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>v</mi></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">n_v = 1</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>E</mi></msub><mo>=</mo><msub><mi>n</mi><mi>F</mi></msub><mo>=</mo><mn>10</mn></mrow><annotation encoding="application/x-tex">n_E = n_F = 10</annotation></semantics></math>,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>P</mi></msub><mo>=</mo><mn>20</mn></mrow><annotation encoding="application/x-tex">n_P = 20</annotation></semantics></math>):</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><munder><munder><mrow><mn>12</mn><mspace width="0.167em"></mspace><msub><mi>n</mi><mi>a</mi></msub><msub><mi>n</mi><mi>z</mi></msub></mrow><mo accent="true">⏟</mo></munder><mrow><mn>3120</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">human</mtext></mrow></munder><mspace width="0.278em"></mspace><mo>+</mo><mspace width="0.278em"></mspace><munder><munder><mrow><msub><mi>n</mi><mi>E</mi></msub><mo>+</mo><msub><mi>n</mi><mi>F</mi></msub></mrow><mo accent="true">⏟</mo></munder><mrow><mn>20</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">lags</mtext></mrow></munder><mspace width="0.278em"></mspace><mo>+</mo><mspace width="0.278em"></mspace><munder><munder><mrow><msub><mi>n</mi><mi>v</mi></msub><mo stretchy="false" form="prefix">(</mo><mn>6</mn><mo>+</mo><msub><mi>n</mi><mi>P</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><mo accent="true">⏟</mo></munder><mrow><mn>26</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">mosquito</mtext></mrow></munder><mspace width="0.278em"></mspace><mo>=</mo><mspace width="0.278em"></mspace><mn>3166</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
-\underbrace{12\,n_a n_z}_{3120\ \text{human}} \;+\; \underbrace{n_E + n_F}_{20\ \text{lags}} \;+\; \underbrace{n_v(6 + n_P)}_{26\ \text{mosquito}} \;=\; 3166 .
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>P</mi></msub><mo>=</mo><mn>20</mn></mrow><annotation encoding="application/x-tex">n_P = 20</annotation></semantics></math>)
+and no drugs, so that
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><mi>P</mi></msub><mo>=</mo><msub><mi>k</mi><msub><mi>P</mi><mi>c</mi></msub></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">k_P = k_{P_c} = 1</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><munder><munder><mrow><mo stretchy="false" form="prefix">(</mo><mn>10</mn><mo>+</mo><msub><mi>k</mi><mi>P</mi></msub><mo>+</mo><msub><mi>k</mi><msub><mi>P</mi><mi>c</mi></msub></msub><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><msub><mi>n</mi><mi>a</mi></msub><msub><mi>n</mi><mi>z</mi></msub></mrow><mo accent="true">⏟</mo></munder><mrow><mn>3120</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">human</mtext></mrow></munder><mspace width="0.278em"></mspace><mo>+</mo><mspace width="0.278em"></mspace><munder><munder><mrow><msub><mi>n</mi><mi>E</mi></msub><mo>+</mo><msub><mi>n</mi><mi>F</mi></msub></mrow><mo accent="true">⏟</mo></munder><mrow><mn>20</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">lags</mtext></mrow></munder><mspace width="0.278em"></mspace><mo>+</mo><mspace width="0.278em"></mspace><munder><munder><mrow><msub><mi>n</mi><mi>v</mi></msub><mo stretchy="false" form="prefix">(</mo><mn>6</mn><mo>+</mo><msub><mi>n</mi><mi>P</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><mo accent="true">⏟</mo></munder><mrow><mn>26</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">mosquito</mtext></mrow></munder><mspace width="0.278em"></mspace><mo>=</mo><mspace width="0.278em"></mspace><mn>3166</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\underbrace{(10 + k_P + k_{P_c})\,n_a n_z}_{3120\ \text{human}} \;+\; \underbrace{n_E + n_F}_{20\ \text{lags}} \;+\; \underbrace{n_v(6 + n_P)}_{26\ \text{mosquito}} \;=\; 3166 .
 </annotation></semantics></math></p>
+<p>Every extra prophylaxis stage adds
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>a</mi></msub><msub><mi>n</mi><mi>z</mi></msub><mo>=</mo><mn>260</mn></mrow><annotation encoding="application/x-tex">n_a n_z = 260</annotation></semantics></math>
+states: an SP-AQ SMC scenario
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><msub><mi>P</mi><mi>c</mi></msub></msub><mo>=</mo><mn>14</mn></mrow><annotation encoding="application/x-tex">k_{P_c} = 14</annotation></semantics></math>)
+has 6546.</p>
 </div>
 <div class="section level3">
 <h3 id="what-is-captured-without-a-dimension">3.2 What is captured <em>without</em> a dimension<a class="anchor" aria-label="anchor" href="#what-is-captured-without-a-dimension"></a>
@@ -588,16 +612,33 @@ not its mixture</td>
 </tr>
 <tr class="odd">
 <td><strong>Post-treatment prophylaxis clock</strong></td>
-<td>Weibull hazard on days-since-treatment, per person</td>
-<td>One compartment
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>
-with exponential exit at
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mi>P</mi></msub><mo>=</mo><mn>1</mn><mi>/</mi><mo stretchy="false" form="prefix">(</mo><msub><mover><mi>d</mi><mo accent="true">‾</mo></mover><mi>W</mi></msub><mo>−</mo><mn>1</mn><mi>/</mi><msub><mi>r</mi><mi>T</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">r_P = 1/(\bar{d}_W - 1/r_T)</annotation></semantics></math>,
-where
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>d</mi><mo accent="true">‾</mo></mover><mi>W</mi></msub><annotation encoding="application/x-tex">\bar{d}_W</annotation></semantics></math>
-is the Weibull mean</td>
-<td>Exact in the equilibrium mean; the transient decay is exponential
-rather than the sharper Weibull</td>
+<td>Weibull survival
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo>−</mo><msub><mi>t</mi><mtext mathvariant="normal">drug</mtext></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">W(t - t_{\text{drug}})</annotation></semantics></math>
+multiplying each treated person’s infection probability, running from
+the dose in parallel with the treated stage</td>
+<td>An Erlang chain entered after
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>:
+mean
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>d</mi><mo accent="true">‾</mo></mover><mi>W</mi></msub><mo>−</mo><msubsup><mo>∫</mo><mn>0</mn><mi>∞</mi></msubsup><msup><mi>e</mi><mrow><mi>−</mi><msub><mi>r</mi><mi>T</mi></msub><mi>t</mi></mrow></msup><mi>W</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>d</mi><mi>t</mi></mrow><annotation encoding="application/x-tex">\bar{d}_W - \int_0^\infty e^{-r_T t}W(t)\,dt</annotation></semantics></math>,
+the protection left once the exponential
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
+sojourn ends, and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>k</mi><mi>P</mi></msub><annotation encoding="application/x-tex">k_P</annotation></semantics></math>
+stages chosen so the whole
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>+</mo><mi>P</mi></mrow><annotation encoding="application/x-tex">T + P</annotation></semantics></math>
+sojourn has the Weibull’s variance (16 for SP-AQ, 20 for DHA-PQP, 1 for
+AL)</td>
+<td>The cohort’s mean protection at lag
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
+is exactly
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">W(t)</annotation></semantics></math>
+in the IBM. The chain reproduces the integrated protection exactly and
+the curve to within a few points for the long-acting SMC drugs (SP-AQ at
+day 30: 0.67 against 0.70, where one exponential stage gave 0.42 and
+leaked protection between monthly rounds); for AL the exponential
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
+stage in front of the chain spreads a 10-day protection the IBM keeps
+sharp</td>
 </tr>
 <tr class="even">
 <td><strong>Early treatment failure</strong></td>
@@ -1029,8 +1070,9 @@ error</td>
 <code>t_proportion</code>
 </td>
 <td>⛔ Ignored — <code>blink</code> seeds at the
-<code>malariaEquilibrium</code> fixed point for <code>init_EIR</code>,
-not at user-supplied proportions</td>
+<code>malariaEquilibrium</code> fixed point for <code>init_EIR</code>
+(or, under a custom demography, for the EIR the IBM’s mosquito sizing
+supports, §4.3), not at user-supplied proportions</td>
 </tr>
 <tr class="even">
 <td>Initial immunity</td>
@@ -1115,7 +1157,9 @@ equations</td>
 <code>foraging_time</code>, <code>species</code>,
 <code>species_proportions</code>
 </td>
-<td>✅ Per-species; <code>total_M</code> is re-derived (§4.3)</td>
+<td>✅ Per-species; <code>total_M</code> is re-derived — from
+<code>init_EIR</code> under the default demography, as the IBM’s own
+value under a custom one (§4.3)</td>
 </tr>
 <tr class="odd">
 <td></td>
@@ -1426,8 +1470,11 @@ evaluate
 <td>Target EIR to seed from</td>
 <td>✅ Stored as <code>parameters$init_EIR</code> and read by
 <code><a href="../reference/run_simulation_ode.html">run_simulation_ode()</a></code> when its own <code>init_EIR</code>
-argument is <code>NULL</code>
-</td>
+argument is <code>NULL</code>. It means the same thing in both models:
+under the default demography it is the EIR <code>blink</code> realises;
+under <code>set_demography()</code> it sizes the mosquito population
+exactly as the IBM’s does and <code>blink</code> seeds at the EIR that
+density supports (§4.4)</td>
 </tr>
 <tr class="even">
 <td><code>eq_params</code></td>
@@ -1452,14 +1499,38 @@ total-population EIR to adult EIR before storing it, and
 </tbody>
 </table>
 <p><code>set_equilibrium()</code> also calls
-<code>parameterise_mosquito_equilibrium()</code> internally. That part
-has <strong>no effect</strong> on <code>blink</code>:
-<code>parameters$total_M</code> is never read, and every species’
-baseline carrying capacity is computed from a <code>total_M</code> that
-<code>blink</code> re-derives so that
+<code>parameterise_mosquito_equilibrium()</code> internally, which sizes
+the adult-mosquito population <code>total_M</code> from the human
+equilibrium under the IBM’s <strong>default exponential age
+structure</strong> (<code>equilibrium_total_M()</code>; custom mortality
+never enters). <code>blink</code> never reads the stored
+<code>parameters$total_M</code>; it re-derives the same quantity itself,
+in one of two ways:</p>
+<ul>
+<li>
+<strong>Default demography.</strong> <code>total_M</code> is chosen
+so that
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>s</mi></msub><msub><mi>a</mi><mi>s</mi></msub><msub><mi>I</mi><mrow><mi>M</mi><mo>,</mo><mi>s</mi></mrow></msub><mo>=</mo><mtext mathvariant="normal">init_EIR</mtext><mi>/</mi><mn>365</mn></mrow><annotation encoding="application/x-tex">\sum_s a_s I_{M,s} = \text{init_EIR}/365</annotation></semantics></math>
-holds exactly under its own seeded human infectivity. Calling
-<code>parameterise_total_M()</code> or
+holds exactly under <code>blink</code>’s own seeded human infectivity —
+the IBM’s formula evaluated on <code>blink</code>’s grid, so the two
+agree up to discretisation and <code>init_EIR</code> is the EIR
+realised.</li>
+<li>
+<strong>Custom demography</strong> (<code>set_demography()</code>).
+Holding <code>init_EIR</code> here would give the two models different
+mosquito populations, and hence different transmission, from the same
+parameter list: the IBM’s density supports less (or more) transmission
+under the custom age structure and it drifts there. So
+<code>blink</code> reproduces the IBM’s <code>total_M</code> exactly
+(<code>ibm_total_M()</code>, the same <code>human_equilibrium()</code>
+call on the IBM’s 0–99.9 y grid and the same
+<code>equilibrium_total_M()</code> arithmetic) and root-finds the EIR at
+which its own equilibrium under the custom age structure has that
+density, seeding there. The seed is still a fixed point, so no burn-in
+is needed. <code>parameters$hold_init_EIR = TRUE</code> restores the
+previous behaviour (<code>init_EIR</code> as the realised EIR).</li>
+</ul>
+<p>Calling <code>parameterise_total_M()</code> or
 <code>parameterise_mosquito_equilibrium()</code> directly is harmless
 but changes nothing.</p>
 </div>
@@ -1505,13 +1576,24 @@ rates</td>
 The
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">t = 0</annotation></semantics></math>
 row additionally sets the equilibrium age structure the human seed is
-rescaled onto. 🟡 Model ages above the top <code>agegroups</code> edge
-take the top rate here, whereas the IBM removes them — a warning fires;
-raise <code>default_age_lower(max_age =)</code> or extend
+rescaled onto; the open-ended top model group is looked up one day above
+its lower edge, so it takes the rate of the band it belongs to rather
+than the one below. 🟡 Model ages above the top <code>agegroups</code>
+edge take the top rate here, whereas the IBM removes them — a warning
+fires; raise <code>default_age_lower(max_age =)</code> or extend
 <code>agegroups</code> to match</td>
 </tr>
 </tbody>
 </table>
+<p>With a custom demography the mosquito population is sized as the IBM
+sizes it (§4.3): <code>blink</code> takes the IBM’s <code>total_M</code>
+and seeds at the EIR its own equilibrium under this age structure
+supports, which is generally <em>not</em> <code>init_EIR</code> (an
+older population sustains less transmission from the same mosquitoes —
+the comparison article’s scenario seeds at EIR 13.9 for
+<code>init_EIR = 20</code>, matching the IBM’s realised 13.8).
+<code>parameters$hold_init_EIR = TRUE</code> makes <code>init_EIR</code>
+the realised EIR instead.</p>
 </div>
 <div class="section level3">
 <h3 id="set_drugsdrugs">4.5 <code>set_drugs(drugs)</code><a class="anchor" aria-label="anchor" href="#set_drugsdrugs"></a>
@@ -1557,14 +1639,26 @@ coverage-share-weighted across active drugs and time-varying</td>
 <td>  <code>drug_prophylaxis_shape</code>,
 <code>drug_prophylaxis_scale</code>
 </td>
-<td>Weibull prophylaxis hazard</td>
-<td>🟡 Represented by the Weibull <strong>mean</strong>
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>d</mi><mo accent="true">‾</mo></mover><mi>W</mi></msub><annotation encoding="application/x-tex">\bar{d}_W</annotation></semantics></math>:
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mi>P</mi></msub><mo>=</mo><mn>1</mn><mi>/</mi><mo stretchy="false" form="prefix">(</mo><msub><mover><mi>d</mi><mo accent="true">‾</mo></mover><mi>W</mi></msub><mo>−</mo><mn>1</mn><mi>/</mi><msub><mi>r</mi><mi>T</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">r_P = 1/(\bar{d}_W - 1/r_T)</annotation></semantics></math>,
-subtracting the days already spent refractory in
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>.
-Equilibrium-exact, transient-approximate (exponential rather than
-Weibull decay)</td>
+<td>Weibull prophylaxis survival</td>
+<td>✅ Both moments used. The chain mean is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>d</mi><mo accent="true">‾</mo></mover><mi>W</mi></msub><mo>−</mo><mo>∫</mo><msup><mi>e</mi><mrow><mi>−</mi><msub><mi>r</mi><mi>T</mi></msub><mi>t</mi></mrow></msup><mi>W</mi><mspace width="0.167em"></mspace><mi>d</mi><mi>t</mi></mrow><annotation encoding="application/x-tex">\bar{d}_W - \int e^{-r_T t}W\,dt</annotation></semantics></math>,
+the protection left after the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
+sojourn (§B.4), and its length
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>k</mi><mi>P</mi></msub><annotation encoding="application/x-tex">k_P</annotation></semantics></math>
+matches the variance of the whole
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>+</mo><mi>P</mi></mrow><annotation encoding="application/x-tex">T + P</annotation></semantics></math>
+sojourn: 16 stages for SP-AQ, 20 for DHA-PQP, 1 for AL (the
+chemoprevention chain, with no
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
+stage in front, uses
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><msubsup><mtext mathvariant="normal">CV</mtext><mi>W</mi><mn>2</mn></msubsup></mrow><annotation encoding="application/x-tex">1/\text{CV}_W^2</annotation></semantics></math>:
+14 / 15). Capped at 20. 🟡 An Erlang chain is not a Weibull, and the
+exponential
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
+stage adds variability the IBM’s parallel clock does not have — for AL
+the protection curve is reproduced in its integral, not its shape.
+<code>run_simulation_ode(n_ph =)</code> overrides the count</td>
 </tr>
 <tr class="odd">
 <td>  <code>drug_hypnozoite_*</code>
@@ -1708,15 +1802,12 @@ diverting those cases to
 <td><code>slow_parasite_clearance_time</code></td>
 <td>Mean duration of slow clearance</td>
 <td>🟡
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>r</mi><mi>T</mi><mtext mathvariant="normal">slow</mtext></msubsup><mo>=</mo><mn>1</mn><mi>/</mi><mtext mathvariant="normal">dt_slow</mtext></mrow><annotation encoding="application/x-tex">r_T^{\text{slow}} = 1/\text{dt_slow}</annotation></semantics></math>,
-a <strong>single scalar</strong>. With one resistant drug the blend is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>r</mi><mi>T</mi><mtext mathvariant="normal">slow</mtext></msubsup><mo>=</mo><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mi>−</mi><mn>1</mn><mi>/</mi><mtext mathvariant="normal">dt_slow</mtext></mrow></msup></mrow><annotation encoding="application/x-tex">r_T^{\text{slow}} = 1 - e^{-1/\text{dt_slow}}</annotation></semantics></math>,
+a <strong>single scalar</strong> carrying the same whole-day conversion
+as the other sojourns (§B.4). With one resistant drug the blend is
 exact; with several it is the coverage-weighted blend evaluated at
 <em>peak</em> resistance (peak, not final, so a rise-then-fall schedule
-is not collapsed to zero). Note this rate does <strong>not</strong>
-carry the whole-day
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mi>−</mi><mn>1</mn><mi>/</mi><mi>d</mi></mrow></msup></mrow><annotation encoding="application/x-tex">1-e^{-1/d}</annotation></semantics></math>
-conversion the other sojourns get, so the realised slow-clearance dwell
-runs ~1 day short of the IBM’s (§B.4)</td>
+is not collapsed to zero)</td>
 </tr>
 </tbody>
 </table>
@@ -1957,7 +2048,9 @@ fast-clearing drugs used).</p>
 <td>Drug administered</td>
 <td>✅ Its <code>drug_efficacy</code> scales the cleared fraction; its
 Weibull mean sets
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><msub><mi>P</mi><mi>c</mi></msub></msub><annotation encoding="application/x-tex">r_{P_c}</annotation></semantics></math>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><msub><mi>P</mi><mi>c</mi></msub></msub><annotation encoding="application/x-tex">r_{P_c}</annotation></semantics></math>
+and its Weibull shape the chain length
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>k</mi><msub><mi>P</mi><mi>c</mi></msub></msub><annotation encoding="application/x-tex">k_{P_c}</annotation></semantics></math>.
 Antimalarial-resistance ETF on this drug reduces the cleared
 fraction</td>
 </tr>
@@ -2555,11 +2648,16 @@ drift off the seed to well under 1% (§B.2).</p>
 <p><strong>Erlang stage counts (<code>n_eir</code>, <code>n_foim</code>,
 <code>n_eip</code>).</strong> The defaults are fine. Raising them
 sharpens the gamma-shaped lags toward the IBM’s fixed delays at linear
-cost in state size; equilibrium is exact for any value.</p>
+cost in state size; equilibrium is exact for any value. The prophylaxis
+chains (<code>n_ph</code>, <code>n_phc</code>) are sized from the drug’s
+Weibull by default (§B.4) and capped at 20 — each stage adds
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>a</mi></msub><msub><mi>n</mi><mi>z</mi></msub></mrow><annotation encoding="application/x-tex">n_a n_z</annotation></semantics></math>
+states and the solver slows steeply beyond that.</p>
 <p><strong><code>parameterise_total_M()</code> /
 <code>parameterise_mosquito_equilibrium()</code>.</strong> They have no
-effect — <code>blink</code> re-derives <code>total_M</code> from
-<code>init_EIR</code> (§4.3).</p>
+effect — <code>blink</code> re-derives <code>total_M</code> itself
+(§4.3: from <code>init_EIR</code> under the default demography, as the
+IBM’s own value under a custom one).</p>
 </div>
 <div class="section level3">
 <h3 id="results-to-treat-with-caution">Results to treat with caution<a class="anchor" aria-label="anchor" href="#results-to-treat-with-caution"></a>
@@ -2607,9 +2705,13 @@ anything.</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>Weibull prophylaxis → exponential compartment</td>
-<td>4.5</td>
-<td>Looking at the shape of post-treatment protection, not its mean</td>
+<td>Weibull prophylaxis → Erlang chain (moment-matched)</td>
+<td>4.5, B.4</td>
+<td>The far tail of chemoprevention protection; for post-treatment
+protection the exponential
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
+stage in front of the chain spreads AL’s sharp 10-day protection,
+reproducing its integral rather than its shape</td>
 </tr>
 <tr class="even">
 <td>Multi-drug blend rather than parallel sub-populations</td>
@@ -2618,7 +2720,7 @@ anything.</p>
 fine)</td>
 </tr>
 <tr class="odd">
-<td>Single scalar slow-clearance rate, no whole-day conversion</td>
+<td>Single scalar slow-clearance rate blended across drugs</td>
 <td>4.7, B.4</td>
 <td>High artemisinin resistance with several treatment drugs</td>
 </tr>
@@ -3111,8 +3213,8 @@ for the at-risk pool,
 for the slow-parasite-clearance fraction of the treated (§4.7), and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>f</mi><mi>t</mi><mtext mathvariant="normal">eff</mtext></msubsup><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>f</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mtext mathvariant="normal">eff</mtext><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mtext mathvariant="normal">ETF</mtext><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">f_t^{\text{eff}}(t) = f_t(t)\,\text{eff}(t)\,(1-\text{ETF}(t))</annotation></semantics></math>
 for the effective treated fraction:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>S</mi><mo accent="true">̇</mo></mover><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><msub><mi>r</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn></mrow></msub><msub><mi>S</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn><mo>,</mo><mi>j</mi></mrow></msub><mo>+</mo><msub><mi>r</mi><mi>U</mi></msub><msub><mi>U</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>+</mo><msub><mi>r</mi><mi>P</mi></msub><msub><mi>P</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>+</mo><msub><mi>r</mi><msub><mi>P</mi><mi>c</mi></msub></msub><msub><mi>P</mi><mrow><mi>c</mi><mo>,</mo><mi>i</mi><mi>j</mi></mrow></msub><mo>−</mo><msub><mi mathvariant="normal">Λ</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><msub><mi>S</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>−</mo><msub><mi>ρ</mi><mi>i</mi></msub><msub><mi>S</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub></mrow><annotation encoding="application/x-tex">
-\dot{S}_{ij} = r_{i-1}S_{i-1,j} + r_U U_{ij} + r_P P_{ij} + r_{P_c} P_{c,ij}
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>S</mi><mo accent="true">̇</mo></mover><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><msub><mi>r</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn></mrow></msub><msub><mi>S</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn><mo>,</mo><mi>j</mi></mrow></msub><mo>+</mo><msub><mi>r</mi><mi>U</mi></msub><msub><mi>U</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>+</mo><msub><mi>k</mi><mi>P</mi></msub><msub><mi>r</mi><mi>P</mi></msub><msub><mi>P</mi><mrow><msub><mi>k</mi><mi>P</mi></msub><mo>,</mo><mi>i</mi><mi>j</mi></mrow></msub><mo>+</mo><msub><mi>k</mi><msub><mi>P</mi><mi>c</mi></msub></msub><msub><mi>r</mi><msub><mi>P</mi><mi>c</mi></msub></msub><msub><mi>P</mi><mrow><mi>c</mi><mo>,</mo><msub><mi>k</mi><msub><mi>P</mi><mi>c</mi></msub></msub><mo>,</mo><mi>i</mi><mi>j</mi></mrow></msub><mo>−</mo><msub><mi mathvariant="normal">Λ</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><msub><mi>S</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>−</mo><msub><mi>ρ</mi><mi>i</mi></msub><msub><mi>S</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub></mrow><annotation encoding="application/x-tex">
+\dot{S}_{ij} = r_{i-1}S_{i-1,j} + r_U U_{ij} + k_P r_P P_{k_P,ij} + k_{P_c} r_{P_c} P_{c,k_{P_c},ij}
 - \Lambda_{ij}S_{ij} - \rho_i S_{ij}
 </annotation></semantics></math></p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>D</mi><mo accent="true">̇</mo></mover><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><msub><mi>r</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn></mrow></msub><msub><mi>D</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn><mo>,</mo><mi>j</mi></mrow></msub><mo>+</mo><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><msubsup><mi>f</mi><mi>t</mi><mtext mathvariant="normal">eff</mtext></msubsup><mo stretchy="true" form="postfix">)</mo></mrow><msubsup><mi>h</mi><mrow><mi>i</mi><mi>j</mi></mrow><mi>c</mi></msubsup><msub><mi mathvariant="normal">Σ</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>−</mo><msub><mi>r</mi><mi>D</mi></msub><msub><mi>D</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>−</mo><msub><mi>ρ</mi><mi>i</mi></msub><msub><mi>D</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub></mrow><annotation encoding="application/x-tex">
@@ -3134,17 +3236,79 @@ for the effective treated fraction:</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>U</mi><mo accent="true">̇</mo></mover><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><msub><mi>r</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn></mrow></msub><msub><mi>U</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn><mo>,</mo><mi>j</mi></mrow></msub><mo>+</mo><msub><mi>r</mi><mi>A</mi></msub><msub><mi>A</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>−</mo><msub><mi mathvariant="normal">Λ</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><msub><mi>U</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>−</mo><msub><mi>r</mi><mi>U</mi></msub><msub><mi>U</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>−</mo><msub><mi>ρ</mi><mi>i</mi></msub><msub><mi>U</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub></mrow><annotation encoding="application/x-tex">
 \dot{U}_{ij} = r_{i-1}U_{i-1,j} + r_A A_{ij} - \Lambda_{ij}U_{ij} - r_U U_{ij} - \rho_i U_{ij}
 </annotation></semantics></math></p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>P</mi><mo accent="true">̇</mo></mover><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><msub><mi>r</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn></mrow></msub><msub><mi>P</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn><mo>,</mo><mi>j</mi></mrow></msub><mo>+</mo><msub><mi>r</mi><mi>T</mi></msub><msub><mi>T</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>+</mo><msubsup><mi>r</mi><mi>T</mi><mtext mathvariant="normal">slow</mtext></msubsup><msub><mi>T</mi><mrow><mi>s</mi><mo>,</mo><mi>i</mi><mi>j</mi></mrow></msub><mo>−</mo><msub><mi>r</mi><mi>P</mi></msub><msub><mi>P</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>−</mo><msub><mi>ρ</mi><mi>i</mi></msub><msub><mi>P</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub></mrow><annotation encoding="application/x-tex">
-\dot{P}_{ij} = r_{i-1}P_{i-1,j} + r_T T_{ij} + r_T^{\text{slow}} T_{s,ij}
-- r_P P_{ij} - \rho_i P_{ij}
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>P</mi><mo accent="true">̇</mo></mover><mrow><mn>1</mn><mo>,</mo><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><msub><mi>r</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn></mrow></msub><msub><mi>P</mi><mrow><mn>1</mn><mo>,</mo><mi>i</mi><mo>−</mo><mn>1</mn><mo>,</mo><mi>j</mi></mrow></msub><mo>+</mo><msub><mi>r</mi><mi>T</mi></msub><msub><mi>T</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>+</mo><msubsup><mi>r</mi><mi>T</mi><mtext mathvariant="normal">slow</mtext></msubsup><msub><mi>T</mi><mrow><mi>s</mi><mo>,</mo><mi>i</mi><mi>j</mi></mrow></msub><mo>−</mo><msub><mi>k</mi><mi>P</mi></msub><msub><mi>r</mi><mi>P</mi></msub><msub><mi>P</mi><mrow><mn>1</mn><mo>,</mo><mi>i</mi><mi>j</mi></mrow></msub><mo>−</mo><msub><mi>ρ</mi><mi>i</mi></msub><msub><mi>P</mi><mrow><mn>1</mn><mo>,</mo><mi>i</mi><mi>j</mi></mrow></msub></mrow><annotation encoding="application/x-tex">
+\dot{P}_{1,ij} = r_{i-1}P_{1,i-1,j} + r_T T_{ij} + r_T^{\text{slow}} T_{s,ij}
+- k_P r_P P_{1,ij} - \rho_i P_{1,ij}
 </annotation></semantics></math></p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>P</mi><mo accent="true">̇</mo></mover><mrow><mi>c</mi><mo>,</mo><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><msub><mi>r</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn></mrow></msub><msub><mi>P</mi><mrow><mi>c</mi><mo>,</mo><mi>i</mi><mo>−</mo><mn>1</mn><mo>,</mo><mi>j</mi></mrow></msub><mo>−</mo><msub><mi>r</mi><msub><mi>P</mi><mi>c</mi></msub></msub><msub><mi>P</mi><mrow><mi>c</mi><mo>,</mo><mi>i</mi><mi>j</mi></mrow></msub><mo>−</mo><msub><mi>ρ</mi><mi>i</mi></msub><msub><mi>P</mi><mrow><mi>c</mi><mo>,</mo><mi>i</mi><mi>j</mi></mrow></msub></mrow><annotation encoding="application/x-tex">
-\dot{P}_{c,ij} = r_{i-1}P_{c,i-1,j} - r_{P_c}P_{c,ij} - \rho_i P_{c,ij}
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>P</mi><mo accent="true">̇</mo></mover><mrow><mi>m</mi><mo>,</mo><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><msub><mi>r</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn></mrow></msub><msub><mi>P</mi><mrow><mi>m</mi><mo>,</mo><mi>i</mi><mo>−</mo><mn>1</mn><mo>,</mo><mi>j</mi></mrow></msub><mo>+</mo><msub><mi>k</mi><mi>P</mi></msub><msub><mi>r</mi><mi>P</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>P</mi><mrow><mi>m</mi><mo>−</mo><mn>1</mn><mo>,</mo><mi>i</mi><mi>j</mi></mrow></msub><mo>−</mo><msub><mi>P</mi><mrow><mi>m</mi><mo>,</mo><mi>i</mi><mi>j</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><msub><mi>ρ</mi><mi>i</mi></msub><msub><mi>P</mi><mrow><mi>m</mi><mo>,</mo><mi>i</mi><mi>j</mi></mrow></msub><mo>,</mo><mspace width="2.0em"></mspace><mi>m</mi><mo>=</mo><mn>2</mn><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>k</mi><mi>P</mi></msub></mrow><annotation encoding="application/x-tex">
+\dot{P}_{m,ij} = r_{i-1}P_{m,i-1,j} + k_P r_P\left(P_{m-1,ij} - P_{m,ij}\right) - \rho_i P_{m,ij},
+\qquad m = 2,\dots,k_P
 </annotation></semantics></math></p>
-<p>Three implementation points:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>P</mi><mo accent="true">̇</mo></mover><mrow><mi>c</mi><mo>,</mo><mn>1</mn><mo>,</mo><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><msub><mi>r</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn></mrow></msub><msub><mi>P</mi><mrow><mi>c</mi><mo>,</mo><mn>1</mn><mo>,</mo><mi>i</mi><mo>−</mo><mn>1</mn><mo>,</mo><mi>j</mi></mrow></msub><mo>−</mo><msub><mi>k</mi><msub><mi>P</mi><mi>c</mi></msub></msub><msub><mi>r</mi><msub><mi>P</mi><mi>c</mi></msub></msub><msub><mi>P</mi><mrow><mi>c</mi><mo>,</mo><mn>1</mn><mo>,</mo><mi>i</mi><mi>j</mi></mrow></msub><mo>−</mo><msub><mi>ρ</mi><mi>i</mi></msub><msub><mi>P</mi><mrow><mi>c</mi><mo>,</mo><mn>1</mn><mo>,</mo><mi>i</mi><mi>j</mi></mrow></msub></mrow><annotation encoding="application/x-tex">
+\dot{P}_{c,1,ij} = r_{i-1}P_{c,1,i-1,j} - k_{P_c} r_{P_c} P_{c,1,ij} - \rho_i P_{c,1,ij}
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>P</mi><mo accent="true">̇</mo></mover><mrow><mi>c</mi><mo>,</mo><mi>m</mi><mo>,</mo><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><msub><mi>r</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn></mrow></msub><msub><mi>P</mi><mrow><mi>c</mi><mo>,</mo><mi>m</mi><mo>,</mo><mi>i</mi><mo>−</mo><mn>1</mn><mo>,</mo><mi>j</mi></mrow></msub><mo>+</mo><msub><mi>k</mi><msub><mi>P</mi><mi>c</mi></msub></msub><msub><mi>r</mi><msub><mi>P</mi><mi>c</mi></msub></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>P</mi><mrow><mi>c</mi><mo>,</mo><mi>m</mi><mo>−</mo><mn>1</mn><mo>,</mo><mi>i</mi><mi>j</mi></mrow></msub><mo>−</mo><msub><mi>P</mi><mrow><mi>c</mi><mo>,</mo><mi>m</mi><mo>,</mo><mi>i</mi><mi>j</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><msub><mi>ρ</mi><mi>i</mi></msub><msub><mi>P</mi><mrow><mi>c</mi><mo>,</mo><mi>m</mi><mo>,</mo><mi>i</mi><mi>j</mi></mrow></msub><mo>,</mo><mspace width="2.0em"></mspace><mi>m</mi><mo>=</mo><mn>2</mn><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>k</mi><msub><mi>P</mi><mi>c</mi></msub></msub></mrow><annotation encoding="application/x-tex">
+\dot{P}_{c,m,ij} = r_{i-1}P_{c,m,i-1,j} + k_{P_c} r_{P_c}\left(P_{c,m-1,ij} - P_{c,m,ij}\right) - \rho_i P_{c,m,ij},
+\qquad m = 2,\dots,k_{P_c}
+</annotation></semantics></math></p>
+<p>Four implementation points:</p>
 <ul>
-<li>
-<strong>Two treated compartments.</strong> The IBM assigns each
+<li><p><strong>Prophylaxis chains.</strong> The IBM does not have a
+prophylaxis <em>state</em>: it multiplies each treated person’s
+infection probability by the Weibull survival
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo>−</mo><msub><mi>t</mi><mtext mathvariant="normal">drug</mtext></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">W(t - t_{\text{drug}})</annotation></semantics></math>,
+so a treated cohort’s mean protection at lag
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
+is exactly
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">W(t)</annotation></semantics></math>.
+A single compartment reproduces only the mean of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math>
+and decays exponentially, keeping just 42% of SP-AQ recipients protected
+at day 30 against the Weibull’s 70%. The
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>-stage
+chains above, each stage left at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mspace width="0.167em"></mspace><mi>r</mi></mrow><annotation encoding="application/x-tex">k\,r</annotation></semantics></math>,
+keep the mean
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mi>r</mi></mrow><annotation encoding="application/x-tex">1/r</annotation></semantics></math>
+and are moment-matched to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math>.
+For
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mi>c</mi></msub><annotation encoding="application/x-tex">P_c</annotation></semantics></math>
+that is simply
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><msub><mi>P</mi><mi>c</mi></msub></msub><mo>=</mo><mtext mathvariant="normal">round</mtext><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mi>/</mi><msubsup><mtext mathvariant="normal">CV</mtext><mi>W</mi><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">k_{P_c} = \text{round}(1/\text{CV}_W^2)</annotation></semantics></math>
+(14 for SP-AQ), which puts the chain’s survival within a few points of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math>
+(0.67 at day 30).
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>
+is entered only after the exponential
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
+sojourn, whereas the IBM’s clock runs from the dose in parallel with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>:
+a treated person there is unprotected at lag
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
+with probability
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mi>T</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>W</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">F_T(t)\,(1 - W(t))</annotation></semantics></math>.
+Matching the integrated protection gives the chain mean
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>d</mi><mo accent="true">‾</mo></mover><mi>W</mi></msub><mo>−</mo><msubsup><mo>∫</mo><mn>0</mn><mi>∞</mi></msubsup><msup><mi>e</mi><mrow><mi>−</mi><msub><mi>r</mi><mi>T</mi></msub><mi>t</mi></mrow></msup><mi>W</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>d</mi><mi>t</mi></mrow><annotation encoding="application/x-tex">\bar{d}_W - \int_0^\infty e^{-r_T t} W(t)\,dt</annotation></semantics></math>
+(which reduces to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>d</mi><mo accent="true">‾</mo></mover><mi>W</mi></msub><mo>−</mo><mn>1</mn><mi>/</mi><msub><mi>r</mi><mi>T</mi></msub></mrow><annotation encoding="application/x-tex">\bar{d}_W - 1/r_T</annotation></semantics></math>
+when
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi><mo>≈</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">W \approx 1</annotation></semantics></math>
+throughout
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>),
+and matching the variance of the whole
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>+</mo><mi>P</mi></mrow><annotation encoding="application/x-tex">T + P</annotation></semantics></math>
+sojourn gives
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>k</mi><mi>P</mi></msub><annotation encoding="application/x-tex">k_P</annotation></semantics></math>
+— 16 for SP-AQ, 20 for DHA-PQP, and 1 for AL, whose 10-day protection is
+already less variable than
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
+itself, so no chain length can sharpen it (its output is the same to
+five decimals at 1 and 20 stages). While in a chain, people are fully
+protected from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Λ</mi><annotation encoding="application/x-tex">\Lambda</annotation></semantics></math>
+and are not infectious.</p></li>
+<li><p><strong>Two treated compartments.</strong> The IBM assigns each
 successfully treated individual to standard or slow parasite clearance
 by a Bernoulli draw, giving a <em>mixture of two exponentials</em>, not
 one exponential at the blended mean.
@@ -3152,9 +3316,8 @@ one exponential at the blended mean.
 and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>T</mi><mi>s</mi></msub><annotation encoding="application/x-tex">T_s</annotation></semantics></math>
 reproduce that split structurally (but see the sojourn caveat below for
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>r</mi><mi>T</mi><mtext mathvariant="normal">slow</mtext></msubsup><annotation encoding="application/x-tex">r_T^{\text{slow}}</annotation></semantics></math>).</li>
-<li>
-<strong>Whole-day sojourns.</strong> The IBM advances states once
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>r</mi><mi>T</mi><mtext mathvariant="normal">slow</mtext></msubsup><annotation encoding="application/x-tex">r_T^{\text{slow}}</annotation></semantics></math>).</p></li>
+<li><p><strong>Whole-day sojourns.</strong> The IBM advances states once
 per day with exit probability
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mi>−</mi><mn>1</mn><mi>/</mi><mi>d</mi></mrow></msup></mrow><annotation encoding="application/x-tex">1 - e^{-1/d}</annotation></semantics></math>,
 so its realised mean dwell is
@@ -3164,24 +3327,20 @@ so its realised mean dwell is
 not 5). <code>blink</code> uses
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mi>X</mi></msub><mo>=</mo><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mi>−</mi><mn>1</mn><mi>/</mi><msub><mi>d</mi><mi>X</mi></msub></mrow></msup></mrow><annotation encoding="application/x-tex">r_X = 1 - e^{-1/d_X}</annotation></semantics></math>
 for
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>∈</mo><mo stretchy="false" form="prefix">{</mo><mi>A</mi><mo>,</mo><mi>D</mi><mo>,</mo><mi>U</mi><mo>,</mo><mi>T</mi><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">X \in \{A, D, U, T\}</annotation></semantics></math>
-so the dwells match. Two caveats. It is <em>not</em> applied to
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mi>P</mi></msub><annotation encoding="application/x-tex">r_P</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>∈</mo><mo stretchy="false" form="prefix">{</mo><mi>A</mi><mo>,</mo><mi>D</mi><mo>,</mo><mi>U</mi><mo>,</mo><mi>T</mi><mo>,</mo><msub><mi>T</mi><mtext mathvariant="normal">slow</mtext></msub><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">X \in \{A, D, U, T, T_{\text{slow}}\}</annotation></semantics></math>
+so the dwells match (slow clearance is resolved through the same per-day
+<code>rate_to_prob</code> path as ordinary treatment in the IBM). It is
+<em>not</em> applied to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mi>P</mi></msub><annotation encoding="application/x-tex">r_P</annotation></semantics></math>
+or
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><msub><mi>P</mi><mi>c</mi></msub></msub><annotation encoding="application/x-tex">r_{P_c}</annotation></semantics></math>,
 because the IBM models prophylaxis as a hazard multiplier rather than a
-compartment with a daily census. It is also <em>not</em> currently
-applied to
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>r</mi><mi>T</mi><mtext mathvariant="normal">slow</mtext></msubsup><annotation encoding="application/x-tex">r_T^{\text{slow}}</annotation></semantics></math>,
-which is set to
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mtext mathvariant="normal">dt_slow</mtext></mrow><annotation encoding="application/x-tex">1/\text{dt_slow}</annotation></semantics></math>
-— whereas the IBM resolves slow clearance through the same per-day
-<code>rate_to_prob</code> path as ordinary treatment, giving it a
-realised dwell of
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mi>−</mi><mn>1</mn><mi>/</mi><mtext mathvariant="normal">dt_slow</mtext></mrow></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">1/(1-e^{-1/\text{dt_slow}})</annotation></semantics></math>.
-Slow-clearance dwells therefore run about a day short of the IBM’s.</li>
-<li>
-<strong><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mi>c</mi></msub><annotation encoding="application/x-tex">P_c</annotation></semantics></math>
-has no ODE inflow.</strong> It is filled only by the chemoprevention
-pulses of §E, and carries neither infection risk nor infectivity.</li>
+compartment with a daily census.</p></li>
+<li><p><strong>The
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mi>c</mi></msub><annotation encoding="application/x-tex">P_c</annotation></semantics></math>
+chain has no ODE inflow.</strong> It is filled, at stage 1, only by the
+chemoprevention pulses of §E, and carries neither infection risk nor
+infectivity.</p></li>
 </ul>
 </div>
 <div class="section level4">
@@ -3374,20 +3533,31 @@ dropped, and coarse groups are not over-treated. A fraction</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mtext mathvariant="normal">frac</mtext><mi>i</mi></msub><mo>=</mo><msub><mi>o</mi><mi>i</mi></msub><mo>×</mo><mtext mathvariant="normal">coverage</mtext><mo>×</mo><mtext mathvariant="normal">drug efficacy</mtext><mo>×</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mtext mathvariant="normal">ETF</mtext><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">
 \text{frac}_i = o_i \times \text{coverage} \times \text{drug efficacy} \times (1 - \text{ETF})
 </annotation></semantics></math></p>
-<p>of
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>,</mo><mi>U</mi><mo>,</mo><mi>A</mi><mo>,</mo><mi>D</mi><mo>,</mo><mi>T</mi></mrow><annotation encoding="application/x-tex">S, U, A, D, T</annotation></semantics></math>
-in each affected cell is cleared and moved to
+<p>of <strong>every</strong> state in each affected cell —
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>,</mo><mi>U</mi><mo>,</mo><mi>A</mi><mo>,</mo><mi>D</mi><mo>,</mo><mi>T</mi><mo>,</mo><msub><mi>T</mi><mi>s</mi></msub></mrow><annotation encoding="application/x-tex">S, U, A, D, T, T_s</annotation></semantics></math>
+and the existing
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mi>c</mi></msub><annotation encoding="application/x-tex">P_c</annotation></semantics></math>
+stages, because the IBM resets <code>drug_time</code> for everyone it
+successfully treats, renewing the protection of those already covered —
+is cleared and moved to the first stage of
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mi>c</mi></msub><annotation encoding="application/x-tex">P_c</annotation></semantics></math>,
-which then decays to
+which then runs down its chain to
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>
 at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><msub><mi>P</mi><mi>c</mi></msub></msub><msub><mi>r</mi><msub><mi>P</mi><mi>c</mi></msub></msub></mrow><annotation encoding="application/x-tex">k_{P_c} r_{P_c}</annotation></semantics></math>
+per stage:
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><msub><mi>P</mi><mi>c</mi></msub></msub><annotation encoding="application/x-tex">r_{P_c}</annotation></semantics></math>
-— the coverage-weighted Weibull mean of the chemoprevention drugs,
-distinct from the clinical
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mi>P</mi></msub><annotation encoding="application/x-tex">r_P</annotation></semantics></math>.
-Pulses take effect the day <strong>after</strong> their scheduled
-timestep. PMC, which the IBM delivers on an age trigger, is approximated
-as ~monthly pulses over each dose-age band.</p>
+is 1 / the coverage-weighted Weibull mean of the chemoprevention drugs
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>k</mi><msub><mi>P</mi><mi>c</mi></msub></msub><annotation encoding="application/x-tex">k_{P_c}</annotation></semantics></math>
+their coverage-weighted
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><msubsup><mtext mathvariant="normal">CV</mtext><mi>W</mi><mn>2</mn></msubsup></mrow><annotation encoding="application/x-tex">1/\text{CV}_W^2</annotation></semantics></math>,
+both distinct from the clinical chain. Pulses take effect the day
+<strong>after</strong> their scheduled timestep. PMC, which the IBM
+delivers on an age trigger, is approximated as ~monthly pulses over each
+dose-age band.</p>
 </div>
 <div class="section level3">
 <h3 id="f--initial-conditions">F. Initial conditions<a class="anchor" aria-label="anchor" href="#f--initial-conditions"></a>
@@ -3426,9 +3596,19 @@ term by
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>β</mi><mi>P</mi></msub><annotation encoding="application/x-tex">\beta_P</annotation></semantics></math>,
 leaving
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mi>T</mi></msub><msub><mi>b</mi><mi>T</mi></msub></mrow><annotation encoding="application/x-tex">r_T b_T</annotation></semantics></math>
-undivided. The re-solve makes the seed the fixed point of the
-prophylaxis ODE actually implemented here, so the model holds flat even
-under treatment.</li>
+undivided — and generalised to the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>k</mi><mi>P</mi></msub><annotation encoding="application/x-tex">k_P</annotation></semantics></math>-stage
+chain (stage 1 fed by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mi>T</mi></msub><mi>T</mi></mrow><annotation encoding="application/x-tex">r_T T</annotation></semantics></math>,
+stage
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>
+by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><mi>P</mi></msub><msub><mi>r</mi><mi>P</mi></msub><msub><mi>P</mi><mrow><mi>m</mi><mo>−</mo><mn>1</mn></mrow></msub></mrow><annotation encoding="application/x-tex">k_P r_P P_{m-1}</annotation></semantics></math>,
+every stage aging at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn></mrow></msub><annotation encoding="application/x-tex">r_{i-1}</annotation></semantics></math>).
+The re-solve makes the seed the fixed point of the prophylaxis ODE
+actually implemented here, so the model holds flat even under
+treatment.</li>
 <li>The equilibrium age structure is recomputed under
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mu_i(0)</annotation></semantics></math>
 — which may be the custom-demography baseline row — and the
@@ -3445,8 +3625,17 @@ slow-clearance fraction.</li>
 <li>Mosquito compartments are seeded from
 <code>initial_mosquito_counts()</code> at the FOIM implied by the seeded
 human infectivity, with <code>total_M</code> chosen so that
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>s</mi></msub><msub><mi>a</mi><mi>s</mi></msub><msub><mi>I</mi><mrow><mi>M</mi><mo>,</mo><mi>s</mi></mrow></msub><mo>=</mo><mtext mathvariant="normal">init_EIR</mtext><mi>/</mi><mn>365</mn></mrow><annotation encoding="application/x-tex">\sum_s a_s I_{M,s} = \text{init_EIR}/365</annotation></semantics></math>
-exactly. Lag chains are seeded at their equilibrium values, and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>s</mi></msub><msub><mi>a</mi><mi>s</mi></msub><msub><mi>I</mi><mrow><mi>M</mi><mo>,</mo><mi>s</mi></mrow></msub><mo>=</mo><msub><mtext mathvariant="normal">EIR</mtext><mtext mathvariant="normal">seed</mtext></msub><mi>/</mi><mn>365</mn></mrow><annotation encoding="application/x-tex">\sum_s a_s I_{M,s} = \text{EIR}_{\text{seed}}/365</annotation></semantics></math>
+exactly. Under the default demography
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mtext mathvariant="normal">EIR</mtext><mtext mathvariant="normal">seed</mtext></msub><mo>=</mo><mtext mathvariant="normal">init_EIR</mtext></mrow><annotation encoding="application/x-tex">\text{EIR}_{\text{seed}} = \text{init_EIR}</annotation></semantics></math>;
+under a custom demography <code>total_M</code> is fixed to the IBM’s
+(<code>ibm_total_M()</code>, §4.3) and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mtext mathvariant="normal">EIR</mtext><mtext mathvariant="normal">seed</mtext></msub><annotation encoding="application/x-tex">\text{EIR}_{\text{seed}}</annotation></semantics></math>
+is the root of <code>total_M(EIR) = total_M_IBM</code>, found by
+<code><a href="https://rdrr.io/r/stats/uniroot.html" class="external-link">uniroot()</a></code> on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mtext mathvariant="normal">EIR</mtext></mrow><annotation encoding="application/x-tex">\log \text{EIR}</annotation></semantics></math>
+(steps 2–4 are re-solved at each trial EIR). Lag chains are seeded at
+their equilibrium values, and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>K</mi><mi>s</mi></msub><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">K_s(0)</annotation></semantics></math>
 at the corresponding carrying capacity (floored at
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mrow><mi>−</mi><mn>9</mn></mrow></msup><annotation encoding="application/x-tex">10^{-9}</annotation></semantics></math>

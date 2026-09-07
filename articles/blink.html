@@ -246,12 +246,13 @@ rounds in under-5s:</p>
 <span><span class="va">smc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_simulation_ode.html">run_simulation_ode</a></span><span class="op">(</span><span class="fl">3</span> <span class="op">*</span> <span class="fl">365</span>, <span class="va">p_smc</span>, init_EIR <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
 <span><span class="va">band</span> <span class="op">&lt;-</span> <span class="st">"p_detect_lm_91_1825"</span>        <span class="co"># the 0.25-5y target band, tag in days</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>baseline <span class="op">=</span> <span class="va">smc</span><span class="op">[[</span><span class="va">band</span><span class="op">]</span><span class="op">]</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, trough <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">smc</span><span class="op">[[</span><span class="va">band</span><span class="op">]</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   baseline     trough </span></span>
-<span><span class="co">#&gt; 0.47057773 0.01776261</span></span></code></pre></div>
+<span><span class="co">#&gt;    baseline      trough </span></span>
+<span><span class="co">#&gt; 0.470577730 0.009556474</span></span></code></pre></div>
 <p>SMC/MDA/PMC are applied as pulsed mass drug administration between
 integration segments: a fraction (coverage x drug efficacy) of the
-target age band is cleared and moved to a chemoprevention prophylaxis
-compartment.</p>
+target age band is cleared and moved to the first stage of a
+chemoprevention prophylaxis chain matched to the drug’s Weibull
+protection curve.</p>
 </div>
 <div class="section level3">
 <h3 id="pev-vaccine-rtss-via-epi-with-a-booster">PEV vaccine (RTS,S via EPI, with a booster)<a class="anchor" aria-label="anchor" href="#pev-vaccine-rtss-via-epi-with-a-booster"></a>
@@ -369,9 +370,9 @@ does not apply).</li>
 <li>
 <strong>Mean-field caveats.</strong> Vector control is
 population-averaged (slightly under-suppresses at deep troughs vs the
-IBM); drug prophylaxis is a single mean-duration compartment
-(equilibrium-exact, transient-approximate). PCR prevalence follows the
-IBM convention (all D/Tr/A/U).</li>
+IBM); drug prophylaxis is an Erlang chain matched to the drug’s Weibull
+protection (its mean and variance, not the Weibull itself). PCR
+prevalence follows the IBM convention (all D/Tr/A/U).</li>
 <li>
 <strong>Full detail.</strong> <code><a href="../articles/model.html">vignette("model")</a></code> is the
 canonical specification: the ODE system, what each state dimension

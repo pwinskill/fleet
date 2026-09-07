@@ -2,8 +2,73 @@
 
 ## blink 0.0.0.9000
 
+### Behaviour changes
+
+- **Custom demography: mosquito sizing now replicates
+  `set_equilibrium()`.** malariasimulation sizes the adult-mosquito
+  population from the human equilibrium under its *default* exponential
+  age structure (`set_equilibrium()` → `equilibrium_total_M()`; custom
+  mortality never enters), so under `set_demography()` the IBM drifts to
+  whatever transmission that density supports. `blink` used to re-solve
+  the equilibrium under the custom age structure and hold `init_EIR`
+  exactly, so the same parameter list realised different transmission in
+  the two models (EIR 20 in blink against 13.8 in the IBM in the
+  comparison scenario, PfPR(2–10) 0.55 against 0.49). It now reproduces
+  the IBM’s `total_M` exactly (`ibm_total_M()`) and root-finds the EIR
+  at which its own equilibrium under the custom demography has that
+  density, seeding there — still a fixed point, so no burn-in (the
+  scenario now seeds at EIR 13.86, PfPR 0.489). Under the default
+  demography nothing changes: blink keeps its own sizing there, which is
+  the IBM’s formula at blink’s own equilibrium and lands ~1.5% above the
+  IBM’s `total_M` (so the same exponential mortality expressed through
+  `set_demography()` seeds at EIR 19.7 rather than 20 — within the IBM’s
+  replicate noise). `parameters$hold_init_EIR = TRUE` restores the
+  previous behaviour. Every malariaverse site file uses
+  `set_demography()`, so this affects all country work.
+
+- **Prophylaxis is an Erlang chain, not one exponential compartment.**
+  The IBM applies the Weibull survival `W(t - t_drug)` to each treated
+  person’s infection probability, so a treated cohort’s mean protection
+  at lag `t` is exactly `W(t)`. `blink` represented both prophylaxis
+  compartments (`Ph` post-treatment, `Ph_c` chemoprevention) as a single
+  exponential at the Weibull mean, which leaks protection early — for
+  SP-AQ (shape 4.3, scale 38.1) only 42% are still protected at day 30
+  against the Weibull’s 70% — and under-estimated seasonal SMC (under-5
+  clinical reduction 40% vs the IBM’s 52% in the comparison article; now
+  54% against 52%, within the IBM’s replicate range). Both are now
+  Erlang chains moment-matched to the Weibull. The chemoprevention chain
+  has `k = 1/CV²` stages (14 for SP-AQ, 15 for DHA-PQP; SP-AQ chain at
+  day 30: 0.67). The post-treatment chain follows the exponential
+  treated stage `Tr` while the IBM’s clock runs from the dose, so its
+  mean is the integrated protection left after `Tr`
+  (`mean_W - ∫exp(-r_T t) W(t) dt`) and its length matches the variance
+  of the whole `Tr + Ph` sojourn: 16 for SP-AQ, 20 for DHA-PQP, and 1
+  for AL, whose 10-day protection is already less variable than `Tr`
+  itself (measured output-identical to a 20-stage chain at half the run
+  time). Counts are capped at
+
+  20. `run_simulation_ode(n_ph =, n_phc =)` override them; 1 recovers
+      the old behaviour. The equilibrium seed distributes the
+      prophylaxis mass across the stages exactly
+      (`solve_disease_block()` generalised), so runs still hold flat.
+      Runs now record only the output variables rather than the full
+      state, which keeps memory flat despite the larger state.
+
 ### Bug fixes
 
+- **Chemoprevention pulses renew existing protection and clear
+  `Tr_slow`.** The IBM’s `update_mass_drug_admin()` resets `drug_time`
+  for everyone successfully treated whatever their state; `blink`’s
+  pulse left people already in `Ph`/`Ph_c` decaying from their earlier
+  dose and skipped the slow-clearance treated compartment. Both now move
+  to the first stage of `Ph_c` with the rest of the covered fraction —
+  material for monthly SMC rounds, where most of the previous round’s
+  recipients are still protected.
+- **`rT_slow` uses the whole-day exit probability.** The
+  slow-parasite-clearance rate under antimalarial resistance was
+  `1/dt_slow`; it is now `1 - exp(-1/dt_slow)`, the same conversion
+  `build_inputs()` applies to `rA`/`rD`/`rU`/`rT` (the IBM leaves states
+  with per-day probability `rate_to_prob(1/d)`).
 - **Custom demography: top age group’s death rate.** The open-ended
   oldest model age group is represented by its lower bound, which the
   right-closed `set_demography()` bins assigned to the band *below* it
@@ -30,14 +95,11 @@
   per-replicate summaries are committed so the figures can be redrawn
   without re-running the models. The pre-replication-pass figures
   (`A_`–`F_`, `inc_*`) and the scripts that made them are removed.
-- The comparison surfaced three blink-side items. One is fixed above
-  (the top age group’s death rate); two remain and are documented in the
-  article’s *Where the two models differ*: exponential (Weibull-mean)
-  chemoprevention prophylaxis under-estimates seasonal SMC impact
-  (under-5 clinical reduction 40% vs the IBM’s 52%), and
-  `set_equilibrium()` conventions differ under custom demography (the
-  IBM drifts to the transmission its mosquito sizing supports, blink
-  holds `init_EIR`).
+- The comparison surfaced three blink-side items, all addressed in this
+  release (see *Behaviour changes* and *Bug fixes* above): the top age
+  group’s death rate under `set_demography()`, exponential prophylaxis
+  under-estimating seasonal SMC, and the `set_equilibrium()` convention
+  under custom demography.
 
 ### Exact-replication pass (malariasimulation v3.0.0)
 

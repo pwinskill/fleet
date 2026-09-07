@@ -184,14 +184,15 @@ p_smc$prevalence_rendering_max_ages <- round(5 * 365)
 smc <- run_simulation_ode(3 * 365, p_smc, init_EIR = 20)
 band <- "p_detect_lm_91_1825"        # the 0.25-5y target band, tag in days
 c(baseline = smc[[band]][1], trough = min(smc[[band]]))
-#>   baseline     trough 
-#> 0.47057773 0.01776261
+#>    baseline      trough 
+#> 0.470577730 0.009556474
 ```
 
 SMC/MDA/PMC are applied as pulsed mass drug administration between
 integration segments: a fraction (coverage x drug efficacy) of the
-target age band is cleared and moved to a chemoprevention prophylaxis
-compartment.
+target age band is cleared and moved to the first stage of a
+chemoprevention prophylaxis chain matched to the drug’s Weibull
+protection curve.
 
 ### PEV vaccine (RTS,S via EPI, with a booster)
 
@@ -303,9 +304,9 @@ EIR); treat it as indicative.
   compartmental (the individual-mosquito code path does not apply).
 - **Mean-field caveats.** Vector control is population-averaged
   (slightly under-suppresses at deep troughs vs the IBM); drug
-  prophylaxis is a single mean-duration compartment (equilibrium-exact,
-  transient-approximate). PCR prevalence follows the IBM convention (all
-  D/Tr/A/U).
+  prophylaxis is an Erlang chain matched to the drug’s Weibull
+  protection (its mean and variance, not the Weibull itself). PCR
+  prevalence follows the IBM convention (all D/Tr/A/U).
 - **Full detail.**
   [`vignette("model")`](https://pwinskill.github.io/blink/articles/model.md)
   is the canonical specification: the ODE system, what each state
