@@ -61,8 +61,8 @@ seasonal realised EIR: IBM 18.7, blink 18.7 (target 20); annual PfPR IBM 0.492 (
 ## Country site files
 
 countries: 63; sub-sites: 1391; years 2000–2026
-clinical: n = 450,684, r = 0.980, slope = 1.023, relative bias = 10.1%
-severe:   n = 450,684, r = 0.954, slope = 0.967, relative bias = 9.4%
+clinical: n = 450,684, r = 0.982, slope = 0.997, relative bias = 8.7%
+severe:   n = 450,684, r = 0.958, slope = 0.946, relative bias = 8.8%
 
 ## Intervention impact: reduction over post-deployment years 0-3 vs pre-deployment years -3-0
 

@@ -20,7 +20,9 @@
   `set_demography()` seeds at EIR 19.7 rather than 20 — within the IBM's
   replicate noise). `parameters$hold_init_EIR = TRUE` restores the previous
   behaviour. Every malariaverse site file uses `set_demography()`, so this affects
-  all country work.
+  all country work: across the 63-country validation set this release moves
+  blink's mean clinical-incidence excess over the IBM from +10.1% to +8.7% and the
+  regression slope from 1.02 to 1.00 (r 0.980 → 0.982); severe from +9.4% to +8.8%.
 
 * **Prophylaxis is an Erlang chain, not one exponential compartment.** The IBM
   applies the Weibull survival `W(t - t_drug)` to each treated person's infection
