@@ -48,6 +48,7 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="articles/model.html">The blink model: formal specification</a></li>
+    <li><a class="dropdown-item" href="articles/comparison.html">Comparison with malariasimulation</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
@@ -284,91 +285,23 @@
 <div class="section level2">
 <h2 id="validation">Validation<a class="anchor" aria-label="anchor" href="#validation"></a>
 </h2>
-<p>The <code>comparison/</code> directory runs each scenario through <strong>both</strong> models on the same parameter list — the IBM burned in ~30 years to its stochastic steady state, the ODE seeded at the <code>malariaEquilibrium</code> fixed point — and renders IBM-vs-ODE figures. Reproduce with:</p>
+<p>Every panel in <code><a href="articles/comparison.html">vignette("comparison")</a></code> runs the <strong>same malariasimulation parameter list</strong> through both models: the IBM as the median of 10 stochastic replicates (10,000 people, 30-year burn-in) with a 10–90% band, <code>blink</code> as a single deterministic run. Colour, line type and point shape all encode the model, so the figures read in greyscale and under colour-vision deficiency.</p>
+<div class="float">
+<img src="reference/figures/cmp_core_eir.png" alt="Core transmission relationships: PfPR(2–10) and under-5 clinical incidence against EIR in both models"><div class="figcaption">Core transmission relationships: PfPR(2–10) and under-5 clinical incidence against EIR in both models</div>
+</div>
+<p><em>Equilibrium PfPR(2–10) and under-5 clinical incidence across EIR 1–120. blink lies inside the IBM’s 10–90% replicate band at every EIR for prevalence (largest gap 0.004) and runs 1–3% above the IBM median for under-5 clinical incidence.</em></p>
+<div class="float">
+<img src="reference/figures/cmp_int_impact.png" alt="Intervention impact: percentage reduction in PfPR(2–10) and under-5 clinical incidence over the first three years of five interventions"><div class="figcaption">Intervention impact: percentage reduction in PfPR(2–10) and under-5 clinical incidence over the first three years of five interventions</div>
+</div>
+<p><em>Five interventions deployed with the ordinary <code>set_*()</code> builders — treatment scale-up, RTS,S via EPI, seasonal SMC, IRS and bed nets. Four of the five agree to within two percentage points of reduction. Seasonal SMC is the exception: blink cuts under-5 clinical incidence by 40% against the IBM’s 52%, because it decays SP-AQ prophylaxis exponentially at the Weibull mean, which lets protection leak between monthly rounds (see the article).</em></p>
+<div class="float">
+<img src="reference/figures/cmp_core_sites.png" alt="Country site files: blink against the IBM for 450,684 sub-site-months across 63 countries"><div class="figcaption">Country site files: blink against the IBM for 450,684 sub-site-months across 63 countries</div>
+</div>
+<p><em>Every admin-1 × urban/rural sub-site in the malariaverse site files, monthly, 2000–2026, with its full intervention history: clinical incidence r = 0.98 (slope 1.02), severe r = 0.95 (slope 0.97). blink sits about 10% above the IBM on average, mostly in low-incidence sub-site-months.</em></p>
+<p>The full set — age profiles, the seasonal cycle, custom demography, intervention time series — with the numbers behind each figure, is in <code><a href="articles/comparison.html">vignette("comparison")</a></code>. Reproduce with:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"comparison/run_comparison.R"</span><span class="op">)</span>   <span class="co"># equilibrium + intervention scenarios (Figures A-F)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"comparison/run_incidence.R"</span><span class="op">)</span>    <span class="co"># clinical &amp; severe incidence time series (inc_* figures)</span></span></code></pre></div>
-<p>Across the equilibrium and intervention scenarios the ODE tracks the IBM closely — for example equilibrium PfPR(2–10) agrees to ≤ 0.012 across EIR 1–120, the age-prevalence profile at EIR 20 to <code>max |IBM − ODE| = 0.008</code>, and the custom-demography under-5 population fraction to within 0.002 (IBM 0.090 vs ODE 0.088). In the figures, <strong>colour, line type and point shape all encode the IBM/ODE distinction</strong>, so they stay legible in greyscale and under colour-vision deficiency.</p>
-<blockquote>
-<p><strong>Note.</strong> The figures below were generated <em>before</em> the exact-replication pass described in <code>NEWS.md</code>. The prevalence-based panels are unaffected (they plot per-band prevalence directly), but the incidence panels predate the output-band fix and the model changes, and should be regenerated with <code>source("comparison/run_comparison.R")</code> / <code>run_incidence.R</code>. For the current, broader picture see the validation table in <code>NEWS.md</code> (63 countries, monthly, clinical slope 1.02 / severe 0.967).</p>
-</blockquote>
-<p><strong>Equilibrium &amp; structure</strong></p>
-<table class="table">
-<colgroup>
-<col width="50%">
-<col width="50%">
-</colgroup>
-<tbody>
-<tr>
-<td><img src="reference/figures/A_pfpr_eir.png" alt="PfPR vs EIR"></td>
-<td>
-<strong>A.</strong> Equilibrium PfPR(2–10) across EIR 1–120 (log x).</td>
-</tr>
-<tr>
-<td><img src="reference/figures/B_age_profile.png" alt="Age profile"></td>
-<td>
-<strong>B.</strong> Age-prevalence profile at EIR 20.</td>
-</tr>
-<tr>
-<td><img src="reference/figures/F_demog_structure.png" alt="Demography structure"></td>
-<td>
-<strong>F1.</strong> Custom-demography equilibrium age structure (density per year of age) under high infant &amp; elderly mortality.</td>
-</tr>
-<tr>
-<td><img src="reference/figures/F_demog_prevalence.png" alt="Demography prevalence"></td>
-<td>
-<strong>F2.</strong> Age-prevalence under that custom demography.</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Interventions (prevalence)</strong></p>
-<table class="table">
-<colgroup>
-<col width="50%">
-<col width="50%">
-</colgroup>
-<tbody>
-<tr>
-<td><img src="reference/figures/C_bednets.png" alt="Bed nets"></td>
-<td>
-<strong>C.</strong> Bed-net campaign (80% coverage at year 30), monthly LM prevalence (2–10).</td>
-</tr>
-<tr>
-<td><img src="reference/figures/D_seasonal.png" alt="Seasonal"></td>
-<td>
-<strong>D.</strong> Seasonal transmission, settled annual cycle (EIR ≈ 20).</td>
-</tr>
-<tr>
-<td><img src="reference/figures/E_smc.png" alt="SMC"></td>
-<td>
-<strong>E.</strong> Seasonal SMC in under-5s (4 rounds/yr × 3 yr from year 30).</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Interventions (clinical &amp; severe incidence, under-5, monthly-annualised)</strong></p>
-<table class="table">
-<colgroup>
-<col width="50%">
-<col width="50%">
-</colgroup>
-<tbody>
-<tr>
-<td><img src="reference/figures/inc_nets.png" alt="Incidence — nets"></td>
-<td>
-<strong>inc_nets.</strong> Bed-net campaign: clinical drops to ~0.1/child/yr and recovers as nets decay.</td>
-</tr>
-<tr>
-<td><img src="reference/figures/inc_seasonal.png" alt="Incidence — seasonal"></td>
-<td>
-<strong>inc_seasonal.</strong> Seasonal transmission cycle in clinical &amp; severe incidence.</td>
-</tr>
-<tr>
-<td><img src="reference/figures/inc_smc.png" alt="Incidence — SMC"></td>
-<td>
-<strong>inc_smc.</strong> Seasonal SMC suppressing under-5 incidence.</td>
-</tr>
-</tbody>
-</table>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"comparison/run_replicates.R"</span><span class="op">)</span>   <span class="co"># both models, every scenario (~25 min on 10 cores)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"comparison/render_figures.R"</span><span class="op">)</span>   <span class="co"># figures from the saved CSVs (seconds)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="notes--conventions">Notes &amp; conventions<a class="anchor" aria-label="anchor" href="#notes--conventions"></a>
@@ -389,11 +322,13 @@
 <li>Getting started: <code><a href="articles/blink.html">vignette("blink")</a></code>.</li>
 <li>
 <strong>Formal model specification:</strong> <code><a href="articles/model.html">vignette("model")</a></code> — the full ODE system, what each state dimension captures (and what is captured <em>without</em> one), and an argument-by-argument table of every <code>malariasimulation</code> <code>set_*</code> function.</li>
+<li>
+<strong>Comparison with malariasimulation:</strong> <code><a href="articles/comparison.html">vignette("comparison")</a></code> — the full IBM-vs-blink figure set (core relationships, country site files, intervention impact) with the numbers behind each figure.</li>
 <li>Function reference: <code><a href="reference/run_simulation_ode.html">?run_simulation_ode</a></code>, <code><a href="reference/get_epi_outputs.html">?get_epi_outputs</a></code>, <code><a href="reference/default_age_lower.html">?default_age_lower</a></code>.</li>
 <li>Model source: <code>inst/odin/malaria_ode.R</code> (the odin2 model).</li>
 <li>Parameter translation &amp; equilibrium seeding: <code>R/build_inputs.R</code>, <code>R/translate_params.R</code>, <code>R/mosquito_equilibrium.R</code>.</li>
 <li>Intervention time-series builders: <code>R/interventions.R</code>; run loop &amp; rendering: <code>R/run.R</code>; post-processing: <code>R/postie.R</code>.</li>
-<li>Validation harness: <code>comparison/run_comparison.R</code>, <code>comparison/run_incidence.R</code>, <code>comparison/plot_helpers.R</code>.</li>
+<li>Comparison harness: <code>comparison/run_replicates.R</code>, <code>comparison/render_figures.R</code>, <code>comparison/theme.R</code> (see <code>comparison/README.md</code>).</li>
 </ul>
 </div>
 <div class="section level2">

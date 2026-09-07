@@ -237,7 +237,7 @@ p_dem$prevalence_rendering_max_ages <- c(5, 100) * 365
 dem <- run_simulation_ode(8 * 365, p_dem, init_EIR = 20)
 under5_fraction <- dem$n_age_0_1825[nrow(dem)] / dem$n_age_0_36500[nrow(dem)]
 under5_fraction     # ~0.09 here, vs ~0.21 under the default constant hazard
-#> [1] 0.08405595
+#> [1] 0.08787847
 ```
 
 Custom demography is **time-varying**: `mu_age(t)` is interpolated over
@@ -345,7 +345,7 @@ sessionInfo()
 #>  [7] tidyr_1.3.2              jquerylib_0.1.4          systemfonts_1.3.2       
 #> [10] textshaping_1.0.5        yaml_2.3.12              fastmap_1.2.0           
 #> [13] statmod_1.5.2            malariaEquilibrium_1.0.1 R6_2.6.1                
-#> [16] generics_0.1.4           postie_1.1.0             knitr_1.51              
+#> [16] generics_0.1.4           postie_1.1.0             knitr_1.52              
 #> [19] MASS_7.3-65              tibble_3.3.1             desc_1.4.3              
 #> [22] monty_0.4.14             bslib_0.12.0             pillar_1.11.1           
 #> [25] rlang_1.3.0              cachem_1.1.0             stringi_1.8.9           
@@ -354,6 +354,6 @@ sessionInfo()
 #> [34] cli_3.6.6                withr_3.0.3              pkgdown_2.2.1           
 #> [37] magrittr_2.0.5           digest_0.6.39            lifecycle_1.0.5         
 #> [40] vctrs_0.7.3              evaluate_1.0.5           glue_1.8.1              
-#> [43] ragg_1.5.2               purrr_1.2.2              rmarkdown_2.31          
+#> [43] ragg_1.5.2               purrr_1.2.2              rmarkdown_2.32          
 #> [46] tools_4.6.1              pkgconfig_2.0.3          htmltools_0.5.9
 ```
