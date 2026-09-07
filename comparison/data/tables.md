@@ -36,20 +36,20 @@ max |blink - IBM| prevalence across bands: 0.005; under-20 bands: clinical relat
 
 | age band (y) | IBM population share | blink population share | IBM prevalence | blink prevalence |
 | --- | --- | --- | --- | --- |
-| 0-1 | 1.8% | 1.8% | 0.229 | 0.288 |
-| 1-2 | 1.8% | 1.8% | 0.367 | 0.440 |
-| 2-3 | 1.7% | 1.8% | 0.421 | 0.492 |
-| 3-5 | 3.5% | 3.5% | 0.461 | 0.536 |
-| 5-7 | 3.4% | 3.4% | 0.506 | 0.565 |
-| 7-10 | 5.0% | 5.1% | 0.512 | 0.570 |
-| 10-15 | 8.3% | 8.4% | 0.457 | 0.502 |
-| 15-20 | 8.0% | 8.1% | 0.336 | 0.351 |
-| 20-30 | 15.7% | 15.4% | 0.230 | 0.244 |
-| 30-40 | 15.3% | 14.2% | 0.193 | 0.207 |
-| 40-60 | 23.2% | 22.1% | 0.185 | 0.198 |
-| 60-85 | 12.4% | 14.5% | 0.182 | 0.195 |
+| 0-1 | 1.8% | 1.8% | 0.229 | 0.232 |
+| 1-2 | 1.8% | 1.8% | 0.367 | 0.372 |
+| 2-3 | 1.7% | 1.8% | 0.421 | 0.424 |
+| 3-5 | 3.5% | 3.5% | 0.461 | 0.469 |
+| 5-7 | 3.4% | 3.4% | 0.506 | 0.502 |
+| 7-10 | 5.0% | 5.1% | 0.512 | 0.513 |
+| 10-15 | 8.3% | 8.4% | 0.457 | 0.462 |
+| 15-20 | 8.0% | 8.1% | 0.336 | 0.331 |
+| 20-30 | 15.7% | 15.4% | 0.230 | 0.231 |
+| 30-40 | 15.3% | 14.2% | 0.193 | 0.196 |
+| 40-60 | 23.2% | 22.1% | 0.185 | 0.187 |
+| 60-85 | 12.4% | 14.5% | 0.182 | 0.185 |
 
-under-5 share: IBM 8.8%, blink 8.8%; max |share diff| 2.05 pp; max |prevalence diff| 0.075
+under-5 share: IBM 8.8%, blink 8.8%; max |share diff| 2.05 pp; max |prevalence diff| 0.008
 
 ## Seasonal cycle (final year, weekly bins)
 
@@ -70,25 +70,25 @@ severe:   n = 450,684, r = 0.954, slope = 0.967, relative bias = 9.4%
 | --- | --- | --- | --- | --- |
 | Treatment scale-up | 19% (18%–20%) | 19% | 4% (1%–6%) | 5% |
 | RTS,S via EPI | 0% (-1%–2%) | 1% | 10% (9%–12%) | 10% |
-| Seasonal SMC | 23% (22%–26%) | 22% | 52% (51%–54%) | 40% |
+| Seasonal SMC | 23% (22%–26%) | 24% | 52% (51%–54%) | 54% |
 | Indoor residual spraying | 79% (78%–79%) | 80% | 97% (97%–98%) | 98% |
 | Bed-net campaign | 48% (47%–49%) | 47% | 66% (65%–67%) | 66% |
 
-largest |blink - IBM median| gap: prevalence 1.2 pp (smc), clinical 12.1 pp (smc); blink inside the IBM band: prevalence 2/5, clinical 3/5
+largest |blink - IBM median| gap: prevalence 1.0 pp (irs), clinical 1.8 pp (treatment); blink inside the IBM band: prevalence 3/5, clinical 4/5
 
 | scenario | mean prevalence gap (blink - IBM, pp) | mean clinical gap (% of IBM) |
 | --- | --- | --- |
 | irs | -0.4 | 0.1% |
 | nets | +0.6 | 2.8% |
 | pev | +0.1 | 2.0% |
-| smc | +0.3 | 30.6% |
-| treatment | -0.1 | 0.6% |
+| smc | -0.6 | 0.3% |
+| treatment | -0.2 | 0.3% |
 
 ## Run time
 
 | model | runs | s per simulated year | mean run (s) | mean horizon (y) |
 | --- | --- | --- | --- | --- |
-| IBM | 130 | 6.45 | 218.7 | 34 |
-| blink | 13 | 0.18 | 6.2 | 34 |
+| IBM | 130 | 5.92 | 200.7 | 34 |
+| blink | 13 | 0.14 | 4.6 | 34 |
 
-IBM total CPU: 7.9 h across 130 runs; blink total: 81 s across 13 runs (IBM/blink per-year ratio 35x)
+IBM total CPU: 7.2 h across 130 runs; blink total: 60 s across 13 runs (IBM/blink per-year ratio 43x)

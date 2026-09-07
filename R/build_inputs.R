@@ -40,46 +40,61 @@ get_ft <- function(p, t = 1) {
 }
 
 #' Re-solve the S/T/D/A/U/P equilibrium per age with the CORRECTED prophylaxis
-#' aging recursion.
+#' aging recursion, prophylaxis being an Erlang chain of `n_ph` stages.
 #'
 #' `malariaEquilibrium::human_equilibrium_no_het` computes the prophylaxis inflow
 #' as `bP <- rT*bT + r[i-1]*P[i-1]/betaP` — the `rT*bT` term is not divided by
 #' `betaP`. That makes its P/S columns not the fixed point of the clean-flux
 #' prophylaxis ODE this model implements, so seeding directly from it leaves a
 #' small (ft>0) transient. We reuse its FOI/phi/prop/r columns but re-solve the
-#' disease block with the corrected `bP = (rT*bT + r[i-1]*P[i-1]) / betaP`.
+#' disease block with the corrected `bP = (rT*bT + r[i-1]*P[i-1]) / betaP`,
+#' generalised to a chain: stage 1 is fed by `rT*T`, stage m by `n_ph*rP*P[m-1]`,
+#' and every stage ages at `r` and is left at `n_ph*rP` (chain mean `1/rP`).
 #' @param FOI per-age equilibrium force of infection (length n_age).
 #' @param phi per-age probability of clinical disease on infection.
 #' @param prop per-age equilibrium population fraction (reference age structure).
 #' @param r per-age aging rate (1/band width; 0 in the absorbing top group).
 #' @param eta birth/death rate (1/average_age).
 #' @param rA,rD,rU,rT recovery rates out of the A, D, U and Tr compartments.
-#' @param rP prophylaxis exit rate (drug-linked mean duration).
+#' @param rP prophylaxis exit rate: 1 / the chain's mean (drug-linked) duration.
 #' @param ft effective treated fraction (coverage x drug efficacy).
-#' @return list(S, T, D, A, U, P) of per-age equilibrium population fractions.
+#' @param n_ph number of prophylaxis chain stages.
+#' @return list(S, T, D, A, U, P) of per-age equilibrium population fractions; `P`
+#'   is an [n_age, n_ph] matrix of stage occupancies.
 #' @noRd
-solve_disease_block <- function(FOI, phi, prop, r, eta, rA, rD, rU, rT, rP, ft) {
-  n <- length(FOI)
-  S <- Tc <- D <- A <- U <- P <- numeric(n)
+solve_disease_block <- function(FOI, phi, prop, r, eta, rA, rD, rU, rT, rP, ft, n_ph = 1L) {
+  n <- length(FOI); k <- as.integer(n_ph); rPk <- rP * k
+  S <- Tc <- D <- A <- U <- numeric(n)
+  P <- matrix(0, n, k)
   for (i in seq_len(n)) {
     re <- r[i] + eta
     betaT <- rT + re; betaD <- rD + re
     betaA <- FOI[i] * phi[i] + rA + re
-    betaU <- FOI[i] + rU + re; betaP <- rP + re
+    betaU <- FOI[i] + rU + re; betaP <- rPk + re
     aT <- ft * phi[i] * FOI[i] / betaT
-    aP <- rT * aT / betaP
     aD <- (1 - ft) * phi[i] * FOI[i] / betaD
     if (i == 1) {
-      bT <- 0; bD <- 0; bP <- 0
+      bT <- 0; bD <- 0
     } else {
       bT <- r[i - 1] * Tc[i - 1] / betaT
       bD <- r[i - 1] * D[i - 1] / betaD
-      bP <- (rT * bT + r[i - 1] * P[i - 1]) / betaP   # corrected (see @description)
     }
-    Y <- (prop[i] - (bT + bD + bP)) / (1 + aT + aD + aP)
+    # prophylaxis chain: each stage's occupancy is its inflow / betaP, split into
+    # the part proportional to the at-risk pool Y (aP) and the rest (bP): stage 1
+    # is fed by rT*T (corrected form, see @description) plus aging-in, stage m by
+    # rPk*P[m-1] plus aging-in.
+    aP <- bP <- numeric(k)
+    aging_in <- function(m) if (i == 1) 0 else r[i - 1] * P[i - 1, m]
+    aP[1] <- rT * aT / betaP
+    bP[1] <- (rT * bT + aging_in(1)) / betaP
+    for (m in seq_len(k)[-1]) {
+      aP[m] <- rPk * aP[m - 1] / betaP
+      bP[m] <- (rPk * bP[m - 1] + aging_in(m)) / betaP
+    }
+    Y <- (prop[i] - (bT + bD + sum(bP))) / (1 + aT + aD + sum(aP))
     Tc[i] <- aT * Y + bT
     D[i]  <- aD * Y + bD
-    P[i]  <- aP * Y + bP
+    P[i, ] <- aP * Y + bP
     rA_in <- if (i == 1) 0 else r[i - 1] * A[i - 1]
     rU_in <- if (i == 1) 0 else r[i - 1] * U[i - 1]
     A[i] <- (rA_in + (1 - phi[i]) * Y * FOI[i] + rD * D[i]) /
@@ -88,6 +103,32 @@ solve_disease_block <- function(FOI, phi, prop, r, eta, rA, rD, rU, rT, rP, ft) 
     S[i] <- Y - A[i] - U[i]
   }
   list(S = S, T = Tc, D = D, A = A, U = U, P = P)
+}
+
+#' malariasimulation's mosquito sizing for a target EIR, replicated exactly.
+#'
+#' `set_equilibrium()` (compatibility.R) solves the human equilibrium under the
+#' DEFAULT exponential age structure on its own 0.1-year grid (`EQUILIBRIUM_AGES`),
+#' stores the resulting FOIM as `init_foim`, and `equilibrium_total_M()`
+#' (mosquito_biology.R) converts the requested EIR into an adult-mosquito density
+#' with a species-weighted `mum`. Custom demography enters nowhere. Reproduced here
+#' rather than read from `parameters$total_M` so it holds for any `init_EIR` passed
+#' at run time.
+#' @param eqp_ibm translated equilibrium parameters with the IBM's raw (unconverted)
+#'   sojourn rates.
+#' @param ft_raw total clinical-treatment coverage at t = 1 (the IBM passes raw
+#'   coverage here, not coverage x efficacy).
+#' @noRd
+ibm_total_M <- function(p, init_EIR, eqp_ibm, ft_raw) {
+  n_het <- if (is.null(p$n_heterogeneity_groups)) 5L else p$n_heterogeneity_groups
+  eq <- malariaEquilibrium::human_equilibrium(
+    EIR = init_EIR, ft = ft_raw, p = eqp_ibm, age = 0:999 / 10,
+    h = malariaEquilibrium::gq_normal(n_het)
+  )
+  mum <- stats::weighted.mean(p$mum, p$species_proportions)
+  lifetime <- eq$FOIM * exp(-mum * p$dem) / (eq$FOIM + mum)
+  (init_EIR * p$human_population / 365) /
+    sum(p$species_proportions * p$blood_meal_rates * p$Q0 * lifetime)
 }
 
 #' Guard for malariasimulation features not represented in the mean-field model.
@@ -118,6 +159,10 @@ check_unsupported <- function(p) {
 #' @param age_lower age-group lower edges in years.
 #' @param n_eir,n_foim,n_eip Erlang-chain stage counts for the EIR lag, FOIM lag
 #'   and mosquito EIP respectively.
+#' @param n_ph,n_phc Erlang-chain stage counts for the post-treatment and the
+#'   chemoprevention prophylaxis compartments; NULL picks the count that matches
+#'   the variance of the drug's Weibull protection (capped at 20; see
+#'   `erlang_stages()`), fixed at the seed's drug mix.
 #' @param timesteps simulation horizon in days. Used only to size the
 #'   intervention time-series grids (vector control, PEV, TBV, carrying capacity),
 #'   which are built to extend past `timesteps` so the ODE stepper never
@@ -125,7 +170,8 @@ check_unsupported <- function(p) {
 #' @return list with `pars` (odin parameter list) and `meta` (grid metadata).
 #' @noRd
 build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
-                         n_eir = 10L, n_foim = 10L, n_eip = 20L, timesteps = 3650) {
+                         n_eir = 10L, n_foim = 10L, n_eip = 20L, n_ph = NULL, n_phc = NULL,
+                         timesteps = 3650) {
   p <- parameters
   if (!is.null(p$parasite) && p$parasite == "vivax") {
     stop("blink supports P. falciparum only (parasite = 'vivax' not supported)")
@@ -139,6 +185,7 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
   # eq_params) explicitly, rather than relying on it round-tripping through the
   # IBM parameter names.
   if (!is.null(p$eq_params)) eqp <- utils::modifyList(eqp, as.list(p$eq_params))
+  eqp_ibm <- eqp                           # the IBM's own (unconverted) rates, for ibm_total_M()
   # Disease-progression rates: malariasimulation advances states once per whole day
   # with exit probability rate_to_prob(1/d) = 1 - exp(-1/d) (competing_hazards.R:78,
   # utils.R:118), so the REALISED mean dwell is 1/(1 - exp(-1/d)) -- e.g. 5.517 d for
@@ -155,7 +202,23 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
   dser <- drug_mix_series(p, eqp)          # time-varying drug_eff/cT/rP; seed = t=0 blend
   eqp[["cT"]] <- dser$seed$cT              # drug-linked treated infectivity for the seed
   rP <- dser$seed$rP                       # drug-linked prophylaxis rate for the seed
-  rP_c <- chemoprevention_prophylaxis_rate(p, eqp)  # chemoprevention prophylaxis rate
+  chp <- chemoprevention_prophylaxis(p, eqp)   # chemoprevention prophylaxis: chain rate + stages
+  rP_c <- chp$rate
+  # Erlang stage counts of the two prophylaxis chains: matched to the Weibull shape
+  # of the drug (mix) unless overridden. 1 = the old single exponential compartment.
+  chk_stages <- function(k, nm) {
+    if (length(k) != 1 || !is.numeric(k) || !is.finite(k) || k < 1 || k != round(k))
+      stop("`", nm, "` must be a single whole number >= 1", if (nm %in% c("n_ph", "n_phc"))
+        " (or NULL for the default)", ".", call. = FALSE)
+    as.integer(k)
+  }
+  n_eir <- chk_stages(n_eir, "n_eir"); n_foim <- chk_stages(n_foim, "n_foim")
+  n_eip <- chk_stages(n_eip, "n_eip")
+  n_ph  <- if (is.null(n_ph))  dser$seed$n_ph else chk_stages(n_ph, "n_ph")
+  n_phc <- if (is.null(n_phc)) chp$n_stages   else chk_stages(n_phc, "n_phc")
+  if (!is.null(p$hold_init_EIR) && !(is.logical(p$hold_init_EIR) &&
+                                     length(p$hold_init_EIR) == 1 && !is.na(p$hold_init_EIR)))
+    stop("parameters$hold_init_EIR must be TRUE or FALSE.", call. = FALSE)
   ft_seed <- ft * dser$seed$drug_eff       # effective treated fraction = coverage * efficacy
 
   ## heterogeneity nodes
@@ -251,46 +314,7 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
     ivm_factor[i] <- dvm / w * (exp(-age_days[i] / dvm) - exp(-age_days[i + 1] / dvm))
   }
 
-  ## human equilibrium seed (per het node), on the model age grid
-  S0 <- D0 <- A0 <- U0 <- Tr0 <- Ph0 <- Phc0 <- matrix(0, n_age, n_het)
-  IB_init <- ICA_init <- ID_init <- IVA_init <- matrix(0, n_age, n_het)
-  cA0 <- matrix(0, n_age, n_het)
-  for (j in seq_len(n_het)) {
-    eqn <- malariaEquilibrium::human_equilibrium_no_het(
-      EIR = init_EIR * zeta[j], ft = ft_seed, p = eqp, age = age_lower
-    )
-    w <- het_wt[j]
-    db <- solve_disease_block(
-      eqn[, "FOI"], eqn[, "phi"], eqn[, "prop"], eqn[, "r"],
-      eqp[["eta"]], eqp[["rA"]], eqp[["rD"]], eqp[["rU"]], eqp[["rT"]], rP, ft_seed
-    )
-    S0[, j]  <- w * resc * db$S
-    Tr0[, j] <- w * resc * db$T
-    D0[, j]  <- w * resc * db$D
-    A0[, j]  <- w * resc * db$A
-    U0[, j]  <- w * resc * db$U
-    Ph0[, j] <- w * resc * db$P
-    IB_init[, j]  <- eqn[, "IB"]
-    ICA_init[, j] <- eqn[, "ICA"]
-    ID_init[, j]  <- eqn[, "ID"]
-    IVA_init[, j] <- eqn[, "IVA"]
-    cA0[, j] <- eqn[, "cA"]
-  }
-  ## equilibrium infectivity sum (Xf0) matching the odin inf_sum formula
-  inf0 <- eqp[["cD"]] * D0 + cA0 * A0 + eqp[["cU"]] * U0 + eqp[["cT"]] * Tr0
-  Xf0 <- sum(outer(psi, zeta) * inf0) / mean_psi
-  Xe0 <- init_EIR / 365   # equilibrium adult EIR per day
-
-  ## equilibrium FOIM (het-integrated) for mosquito seeding
-  eq_full <- malariaEquilibrium::human_equilibrium(
-    EIR = init_EIR, ft = ft_seed, p = eqp, age = age_lower, h = gq
-  )
-  init_foim <- eq_full$FOIM
-
-  ## mosquito parameters + equilibrium seed (per-human densities)
-  ## EIP is an Erlang chain of n_eip stages; per-stage rate reip = n_eip/dem.
-  ## Chain survival g_s replaces exp(-mum*dem); total_M is matched to g so that
-  ## sum_s a_s*Im_s = init_EIR/365 exactly.
+  ## mosquito parameters (per species)
   species_prop <- p$species_proportions
   n_spp <- length(species_prop)
   hp <- p$human_population
@@ -307,10 +331,100 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
     # chain-survival compensation is needed and this stays correct as mum varies.
     g_s[s] <- exp(-mum_v[s] * dem)
   }
-  ## per-species FOIM consistent with THIS model's seeded human infectivity
-  foim0 <- a_spp * Xf0
-  denom <- sum(a_spp * species_prop * foim0 * g_s / (foim0 + mum_v))
-  total_M <- (init_EIR / 365) * hp / denom
+
+  ## human equilibrium seed (per het node) on the model age grid at adult EIR `EIR`,
+  ## plus the adult-mosquito density at which sum_s a_s*Im_s = EIR/365 exactly under
+  ## THIS age structure (the EIP chain is loss-free; survival g_s applies at exit).
+  seed_human <- function(EIR) {
+    S0 <- D0 <- A0 <- U0 <- Tr0 <- matrix(0, n_age, n_het)
+    Ph0 <- array(0, c(n_age, n_het, n_ph)); Phc0 <- array(0, c(n_age, n_het, n_phc))
+    IB_init <- ICA_init <- ID_init <- IVA_init <- matrix(0, n_age, n_het)
+    cA0 <- matrix(0, n_age, n_het)
+    for (j in seq_len(n_het)) {
+      eqn <- malariaEquilibrium::human_equilibrium_no_het(
+        EIR = EIR * zeta[j], ft = ft_seed, p = eqp, age = age_lower
+      )
+      w <- het_wt[j]
+      db <- solve_disease_block(
+        eqn[, "FOI"], eqn[, "phi"], eqn[, "prop"], eqn[, "r"],
+        eqp[["eta"]], eqp[["rA"]], eqp[["rD"]], eqp[["rU"]], eqp[["rT"]], rP, ft_seed, n_ph
+      )
+      S0[, j]  <- w * resc * db$S
+      Tr0[, j] <- w * resc * db$T
+      D0[, j]  <- w * resc * db$D
+      A0[, j]  <- w * resc * db$A
+      U0[, j]  <- w * resc * db$U
+      Ph0[, j, ] <- w * resc * db$P                 # [n_age, n_ph] stage occupancies
+      IB_init[, j]  <- eqn[, "IB"]
+      ICA_init[, j] <- eqn[, "ICA"]
+      ID_init[, j]  <- eqn[, "ID"]
+      IVA_init[, j] <- eqn[, "IVA"]
+      cA0[, j] <- eqn[, "cA"]
+    }
+    ## equilibrium infectivity sum (Xf0) matching the odin inf_sum formula
+    inf0 <- eqp[["cD"]] * D0 + cA0 * A0 + eqp[["cU"]] * U0 + eqp[["cT"]] * Tr0
+    Xf0 <- sum(outer(psi, zeta) * inf0) / mean_psi
+    ## per-species FOIM consistent with THIS model's seeded human infectivity
+    foim0 <- a_spp * Xf0
+    denom <- sum(a_spp * species_prop * foim0 * g_s / (foim0 + mum_v))
+    list(S0 = S0, D0 = D0, A0 = A0, U0 = U0, Tr0 = Tr0, Ph0 = Ph0, Phc0 = Phc0,
+         IB_init = IB_init, ICA_init = ICA_init, ID_init = ID_init, IVA_init = IVA_init,
+         Xf0 = Xf0, foim0 = foim0, total_M = (EIR / 365) * hp / denom)
+  }
+
+  ## Which EIR to seed at. Under the default demography blink's own sizing is
+  ## malariasimulation's formula evaluated at blink's own equilibrium (its age
+  ## grid, whole-day rates, drug-linked cT and ft*eff), which lands within ~1-2% of
+  ## the IBM's total_M, so the seed is at init_EIR. Under a custom demography the two conventions part
+  ## ways: set_equilibrium() sizes total_M from the equilibrium under the DEFAULT
+  ## exponential age structure (compatibility.R set_equilibrium ->
+  ## equilibrium_total_M; custom mortality never enters), and the IBM then drifts to
+  ## whatever transmission that mosquito density supports under the custom
+  ## mortality. Replicate that: take the IBM's total_M and find the EIR at which
+  ## blink's equilibrium under the custom age structure has exactly that density --
+  ## a fixed point, so no burn-in is needed and the same parameter list realises the
+  ## same transmission in both models. parameters$hold_init_EIR = TRUE keeps the
+  ## previous behaviour (init_EIR is the EIR blink realises).
+  eir_seed <- init_EIR
+  total_M_ibm <- NA_real_
+  sub_threshold <- FALSE
+  if (isTRUE(p$custom_demography) && !isTRUE(p$hold_init_EIR)) {
+    total_M_ibm <- ibm_total_M(p, init_EIR, eqp_ibm, ft)
+    # blink's total_M(EIR) is increasing in EIR and tends to the transmission
+    # threshold M_crit as EIR -> 0, so a root exists iff M_crit < total_M_ibm:
+    # test at a near-zero EIR rather than at an arbitrary fraction of init_EIR.
+    f <- function(lE) seed_human(exp(lE))$total_M - total_M_ibm
+    lo <- log(init_EIR * 1e-6); f_lo <- f(lo)
+    if (f_lo > 0) {
+      # The IBM's mosquito density is below blink's transmission threshold under
+      # this demography: transmission is not sustainable, and the IBM decays to
+      # elimination from its seed. Keep the IBM's density (so blink decays too) and
+      # start the humans at a near-zero EIR.
+      warning("Under this custom demography the mosquito population that ",
+              "set_equilibrium() implies is below blink's transmission threshold (",
+              signif(total_M_ibm, 4), " vs ", signif(f_lo + total_M_ibm, 4), " adults); ",
+              "seeding the mosquitoes at the IBM's density and the humans at a near-zero ",
+              "EIR, so transmission decays as it would in the IBM. Set ",
+              "parameters$hold_init_EIR = TRUE to seed at init_EIR instead.", call. = FALSE)
+      eir_seed <- exp(lo); sub_threshold <- TRUE
+    } else {
+      eir_seed <- exp(stats::uniroot(f, c(lo, log(init_EIR * 50)), f.lower = f_lo,
+                                     extendInt = "upX", tol = 1e-10)$root)
+    }
+  }
+  hs <- seed_human(eir_seed)
+  S0 <- hs$S0; D0 <- hs$D0; A0 <- hs$A0; U0 <- hs$U0; Tr0 <- hs$Tr0
+  Ph0 <- hs$Ph0; Phc0 <- hs$Phc0
+  IB_init <- hs$IB_init; ICA_init <- hs$ICA_init; ID_init <- hs$ID_init; IVA_init <- hs$IVA_init
+  Xf0 <- hs$Xf0; foim0 <- hs$foim0
+  total_M <- if (sub_threshold) total_M_ibm else hs$total_M
+  Xe0 <- eir_seed / 365   # equilibrium adult EIR per day
+
+  ## equilibrium FOIM (het-integrated) at the seed, for reference
+  eq_full <- malariaEquilibrium::human_equilibrium(
+    EIR = eir_seed, ft = ft_seed, p = eqp, age = age_lower, h = gq
+  )
+  init_foim <- eq_full$FOIM
 
   ME0 <- ML0 <- MP0 <- Sm0 <- Im0 <- Em_inc0 <- K0 <- numeric(n_spp)
   Xi0 <- matrix(0, n_spp, n_eip)
@@ -345,7 +459,7 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
 
   pars <- list(
     n_age = n_age, n_het = n_het, n_spp = n_spp,
-    n_eir = n_eir, n_foim = n_foim, n_eip = n_eip,
+    n_eir = n_eir, n_foim = n_foim, n_eip = n_eip, n_ph = n_ph, n_phc = n_phc,
     r_age = r_age, psi = psi,
     n_mut = ncol(mu_age_z), mu_age_t = mu_age_t, mu_age_z = mu_age_z,
     age_mid = age_mid, mask20 = mask20,
@@ -405,9 +519,10 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
     meta = list(
       n_age = n_age, n_het = n_het, n_spp = n_spp, age_lower = age_lower,
       age_mid = age_mid, age_lo = age_days, age_hi = age_days + width,
-      prop = prop, init_EIR = init_EIR, init_foim = init_foim,
-      total_M = total_M, ft = ft, eq_full = eq_full,
-      human_population = hp, parameters = p, eqp = eqp, n_eip = n_eip
+      prop = prop, init_EIR = init_EIR, eir_seed = eir_seed, init_foim = init_foim,
+      total_M = total_M, total_M_ibm = total_M_ibm, ft = ft, eq_full = eq_full,
+      human_population = hp, parameters = p, eqp = eqp, n_eip = n_eip,
+      n_ph = n_ph, n_phc = n_phc
     )
   )
 }

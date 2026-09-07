@@ -8,7 +8,10 @@
 # odin2's delay() warm-up seeding is unreliable with multiple delays, whereas
 # chains are pure ODE, seed exactly at equilibrium, and are robust. The two
 # human transmission lags are loss-free (exact at equilibrium); the mosquito
-# EIP chain has death, and total_M is matched to it so EIR stays exact.
+# EIP chain is a loss-free delay with the incubation survival applied at exit.
+# The two prophylaxis compartments (Ph post-treatment, Ph_c chemoprevention) are
+# Erlang chains too, so their exit-time distributions approximate the IBM's
+# Weibull protection rather than an exponential at its mean.
 # =============================================================================
 
 ## ---- dimensions -----------------------------------------------------------
@@ -18,6 +21,8 @@ n_spp <- parameter(constant = TRUE)
 n_eir <- parameter(constant = TRUE)   # EIR-lag chain stages
 n_foim <- parameter(constant = TRUE)  # FOIM-lag chain stages
 n_eip <- parameter(constant = TRUE)   # EIP chain stages
+n_ph <- parameter(constant = TRUE)    # post-treatment prophylaxis chain stages
+n_phc <- parameter(constant = TRUE)   # chemoprevention prophylaxis chain stages
 
 ## ---- grid / demography (data) ---------------------------------------------
 r_age <- parameter(); psi <- parameter()
@@ -76,6 +81,15 @@ dim(cT_vals, drug_eff_vals, rP_vals) <- n_dmix
 cT <- interpolate(dmix_times, cT_vals, "constant")
 drug_eff <- interpolate(dmix_times, drug_eff_vals, "constant")
 rP <- interpolate(dmix_times, rP_vals, "constant")
+# Prophylaxis is an Erlang chain of n_ph stages, each left at rate n_ph*rP, so the
+# chain's mean is 1/rP and its exit-time distribution approximates the IBM's
+# Weibull (build_inputs picks n_ph from the Weibull shape). The IBM applies the
+# Weibull survival W(t - t_drug) to each treated person's infection probability;
+# the cohort's mean protection at lag t is therefore exactly W(t), which a chain
+# whose survival matches W reproduces in the mean field. A single exponential
+# stage at the Weibull mean leaks protection early (SP-AQ: 42% still protected
+# at day 30 against the Weibull's 70%) and under-estimates SMC impact.
+rPk <- rP * n_ph
 
 ## ---- antimalarial resistance (time-varying, step) -------------------------
 # etf_t = fraction of would-be-treated that fail early (-> stay clinical D);
@@ -218,16 +232,19 @@ foim[] <- a_spp[i] * inf_lag
 dim(foim) <- n_spp
 
 ## ---- demography bookkeeping (constant population) -------------------------
-Npop[, ] <- S[i, j] + D[i, j] + A[i, j] + U[i, j] + Tr[i, j] + Tr_slow[i, j] + Ph[i, j] + Ph_c[i, j]
+Ph_tot[, ] <- sum(Ph[i, j, ])
+Phc_tot[, ] <- sum(Ph_c[i, j, ])
+dim(Ph_tot, Phc_tot) <- c(n_age, n_het)
+Npop[, ] <- S[i, j] + D[i, j] + A[i, j] + U[i, j] + Tr[i, j] + Tr_slow[i, j] + Ph_tot[i, j] + Phc_tot[i, j]
 deaths[, ] <- mu_age[i] * Npop[i, j]
 dim(Npop, deaths) <- c(n_age, n_het)
 births <- sum(deaths)
 
 ## ---- human ODEs -----------------------------------------------------------
-deriv(S[1, ]) <- births * het_wt[j] + rU * U[1, j] + rP * Ph[1, j] + rP_c * Ph_c[1, j] -
-  FOI[1, j] * S[1, j] - re[1] * S[1, j]
-deriv(S[2:n_age, ]) <- r_age[i - 1] * S[i - 1, j] + rU * U[i, j] + rP * Ph[i, j] +
-  rP_c * Ph_c[i, j] - FOI[i, j] * S[i, j] - re[i] * S[i, j]
+deriv(S[1, ]) <- births * het_wt[j] + rU * U[1, j] + rPk * Ph[1, j, n_ph] +
+  rPck * Ph_c[1, j, n_phc] - FOI[1, j] * S[1, j] - re[1] * S[1, j]
+deriv(S[2:n_age, ]) <- r_age[i - 1] * S[i - 1, j] + rU * U[i, j] + rPk * Ph[i, j, n_ph] +
+  rPck * Ph_c[i, j, n_phc] - FOI[i, j] * S[i, j] - re[i] * S[i, j]
 
 # Treated. malariasimulation assigns each successfully-treated individual to slow
 # parasite clearance by a Bernoulli draw with probability `spc` (= artemisinin
@@ -262,16 +279,27 @@ deriv(U[1, ]) <- rA * A[1, j] - FOI[1, j] * U[1, j] - rU * U[1, j] - re[1] * U[1
 deriv(U[2:n_age, ]) <- r_age[i - 1] * U[i - 1, j] + rA * A[i, j] -
   FOI[i, j] * U[i, j] - rU * U[i, j] - re[i] * U[i, j]
 
-deriv(Ph[1, ]) <- rT * Tr[1, j] + rT_slow * Tr_slow[1, j] - rP * Ph[1, j] - re[1] * Ph[1, j]
-deriv(Ph[2:n_age, ]) <- r_age[i - 1] * Ph[i - 1, j] + rT * Tr[i, j] + rT_slow * Tr_slow[i, j] -
-  rP * Ph[i, j] - re[i] * Ph[i, j]
+# Post-treatment prophylaxis chain: Tr/Tr_slow feed stage 1, each stage is left at
+# rPk = n_ph*rP, the last stage returns to S. Aging runs along every stage.
+deriv(Ph[1, , 1]) <- rT * Tr[1, j] + rT_slow * Tr_slow[1, j] - rPk * Ph[1, j, 1] -
+  re[1] * Ph[1, j, 1]
+deriv(Ph[2:n_age, , 1]) <- r_age[i - 1] * Ph[i - 1, j, 1] + rT * Tr[i, j] +
+  rT_slow * Tr_slow[i, j] - rPk * Ph[i, j, 1] - re[i] * Ph[i, j, 1]
+deriv(Ph[1, , 2:n_ph]) <- rPk * (Ph[1, j, k - 1] - Ph[1, j, k]) - re[1] * Ph[1, j, k]
+deriv(Ph[2:n_age, , 2:n_ph]) <- r_age[i - 1] * Ph[i - 1, j, k] +
+  rPk * (Ph[i, j, k - 1] - Ph[i, j, k]) - re[i] * Ph[i, j, k]
 
-# chemoprevention prophylaxis compartment (filled by MDA/SMC/PMC pulses; decays
-# to S at the chemoprevention drug's rate rP_c). No FOI, no infectivity.
+# Chemoprevention prophylaxis chain (filled at stage 1 by the MDA/SMC/PMC pulses;
+# each stage left at rPck = n_phc*rP_c, the chemoprevention drug's chain rate; the
+# last stage returns to S). No FOI, no infectivity.
 rP_c <- parameter()
-deriv(Ph_c[1, ]) <- -rP_c * Ph_c[1, j] - re[1] * Ph_c[1, j]
-deriv(Ph_c[2:n_age, ]) <- r_age[i - 1] * Ph_c[i - 1, j] - rP_c * Ph_c[i, j] -
-  re[i] * Ph_c[i, j]
+rPck <- rP_c * n_phc
+deriv(Ph_c[1, , 1]) <- -rPck * Ph_c[1, j, 1] - re[1] * Ph_c[1, j, 1]
+deriv(Ph_c[2:n_age, , 1]) <- r_age[i - 1] * Ph_c[i - 1, j, 1] - rPck * Ph_c[i, j, 1] -
+  re[i] * Ph_c[i, j, 1]
+deriv(Ph_c[1, , 2:n_phc]) <- rPck * (Ph_c[1, j, k - 1] - Ph_c[1, j, k]) - re[1] * Ph_c[1, j, k]
+deriv(Ph_c[2:n_age, , 2:n_phc]) <- r_age[i - 1] * Ph_c[i - 1, j, k] +
+  rPck * (Ph_c[i, j, k - 1] - Ph_c[i, j, k]) - re[i] * Ph_c[i, j, k]
 
 ## ---- immunity ODEs (aging uses re[i]; boundary I0 = 0) --------------------
 # Immunity boosting, matching the IBM's refractory renewal process exactly.
@@ -348,7 +376,9 @@ dim(Em_inc) <- n_spp
 S0 <- parameter(); D0 <- parameter(); A0 <- parameter()
 U0 <- parameter(); Tr0 <- parameter(); Ph0 <- parameter(); Phc0 <- parameter()
 IB_init <- parameter(); ICA_init <- parameter(); ID_init <- parameter(); IVA_init <- parameter()
-dim(S0, D0, A0, U0, Tr0, Ph0, Phc0, IB_init, ICA_init, ID_init, IVA_init) <- c(n_age, n_het)
+dim(S0, D0, A0, U0, Tr0, IB_init, ICA_init, ID_init, IVA_init) <- c(n_age, n_het)
+dim(Ph0) <- c(n_age, n_het, n_ph)
+dim(Phc0) <- c(n_age, n_het, n_phc)
 ME0 <- parameter(); ML0 <- parameter(); MP0 <- parameter(); Sm0 <- parameter(); Im0 <- parameter()
 dim(ME0, ML0, MP0, Sm0, Im0) <- n_spp
 Xi0 <- parameter(); dim(Xi0) <- c(n_spp, n_eip)
@@ -361,8 +391,8 @@ initial(A[, ]) <- A0[i, j]
 initial(U[, ]) <- U0[i, j]
 initial(Tr[, ]) <- (1 - spc0) * Tr0[i, j]
 initial(Tr_slow[, ]) <- spc0 * Tr0[i, j]
-initial(Ph[, ]) <- Ph0[i, j]
-initial(Ph_c[, ]) <- Phc0[i, j]
+initial(Ph[, , ]) <- Ph0[i, j, k]
+initial(Ph_c[, , ]) <- Phc0[i, j, k]
 initial(IB[, ]) <- IB_init[i, j]
 initial(ICA[, ]) <- ICA_init[i, j]
 initial(ID[, ]) <- ID_init[i, j]
@@ -377,7 +407,9 @@ initial(Im[]) <- Im0[i]
 initial(Xe[]) <- Xe0
 initial(Xf[]) <- Xf0
 
-dim(S, D, A, U, Tr, Tr_slow, Ph, Ph_c) <- c(n_age, n_het)
+dim(S, D, A, U, Tr, Tr_slow) <- c(n_age, n_het)
+dim(Ph) <- c(n_age, n_het, n_ph)
+dim(Ph_c) <- c(n_age, n_het, n_phc)
 dim(IB, ICA, ID, IVA) <- c(n_age, n_het)
 
 ## ---- outputs (per age group; aggregated to bands in R) --------------------
@@ -404,7 +436,7 @@ clin_g[] <- sum(clin_inc_a[i, ])
 sev_g[] <- sum(sev_inc_a[i, ])
 inc_g[] <- sum(inc_a[i, ])
 S_g[] <- sum(S[i, ]); D_g[] <- sum(D[i, ]); A_g[] <- sum(A[i, ])
-U_g[] <- sum(U[i, ]); Tr_g[] <- sum(Tr[i, ]) + sum(Tr_slow[i, ]); Ph_g[] <- sum(Ph[i, ]) + sum(Ph_c[i, ])
+U_g[] <- sum(U[i, ]); Tr_g[] <- sum(Tr[i, ]) + sum(Tr_slow[i, ]); Ph_g[] <- sum(Ph_tot[i, ]) + sum(Phc_tot[i, ])
 dim(n_g, det_lm_g, det_pcr_g, clin_g, sev_g, inc_g) <- n_age
 dim(S_g, D_g, A_g, U_g, Tr_g, Ph_g) <- n_age
 

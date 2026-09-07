@@ -53,6 +53,14 @@ get_generator <- function(odin_file = NULL) {
 #'       is a per-individual detail which does not carry over to a stratum mean; an
 #'       A/B against the IBM ensemble mean favours `0`. Set `0.5` to reproduce the
 #'       IBM's literal Hill calls.
+#'     \item `hold_init_EIR` (default `FALSE`) — only matters with `set_demography()`.
+#'       malariasimulation's `set_equilibrium()` sizes the mosquito population from
+#'       the equilibrium under its *default* exponential age structure, so under a
+#'       custom demography the IBM drifts to whatever transmission that density
+#'       supports. By default blink replicates that: it takes the IBM's mosquito
+#'       density and seeds at the EIR its own equilibrium under the custom age
+#'       structure then supports (a fixed point, so no burn-in), which is generally
+#'       *not* `init_EIR`. Set `TRUE` to seed at `init_EIR` exactly instead.
 #'   }
 #' @param correlations accepted so the first three arguments mirror
 #'   `malariasimulation::run_simulation(timesteps, parameters, correlations)`
@@ -64,16 +72,34 @@ get_generator <- function(odin_file = NULL) {
 #'   ~10 years are a transient onto the cycle and the seasonal annual-mean EIR
 #'   sits a few percent below the aseasonal `init_EIR` target (nonlinear
 #'   averaging). Use a burned-in cycle for calibration/comparison.
-#' @param init_EIR target adult EIR (bites/adult/year). If NULL, taken from
-#'   `parameters$init_EIR` (set by malariasimulation::set_equilibrium()).
+#' @param init_EIR target adult EIR (bites/adult/year), with the same meaning as in
+#'   `malariasimulation::set_equilibrium()`. If NULL, taken from
+#'   `parameters$init_EIR` (set by set_equilibrium()). Under the default demography
+#'   this is the EIR blink realises; under `set_demography()` see `hold_init_EIR`
+#'   above.
 #' @param age_lower age-group lower edges in **years** (default graded grid).
 #' @param n_eir,n_foim,n_eip Erlang-chain stage counts for the EIR lag, FOIM lag
 #'   and mosquito EIP. Larger values sharpen the (otherwise gamma-shaped) lags
 #'   toward the IBM's fixed delays; equilibrium is exact for any value.
+#' @param n_ph,n_phc Erlang-chain stage counts for the post-treatment (`Ph`) and
+#'   chemoprevention (`Ph_c`) prophylaxis compartments. `NULL` (default) matches the
+#'   chain's variance to the drug's Weibull protection curve, capped at 20. For
+#'   `Ph_c` that is `1/CV²` of the Weibull: 14 for SP-AQ, 15 for DHA-PQP. `Ph`
+#'   follows the exponential treated stage `Tr`, so its count matches the variance
+#'   of the whole `Tr + Ph` sojourn and its mean is the integrated protection left
+#'   after `Tr`: 16 stages for SP-AQ, 20 for DHA-PQP, and 1 for AL, whose 10-day
+#'   protection is already less variable than `Tr` itself. A drug mixture is
+#'   moment-matched as a mixture. `1` is a single exponential stage, which for
+#'   `Ph_c` leaks protection early between monthly SMC rounds. The count is fixed
+#'   at the seed's drug mix — a first-line switch moves the chain's mean, not its
+#'   shape.
 #' @param atol,rtol,step_size_max dust2 ODE-solver controls. The defaults
 #'   (`1e-8`, `1e-8`, `1`) preserve the flat equilibrium exactly; for long dynamic
-#'   projections a looser tolerance and larger step cap (e.g. `1e-6`, `1e-6`, `10`)
-#'   run several times faster with negligible effect on aggregate outputs.
+#'   projections a looser relative tolerance and larger step cap (`atol = 1e-8`,
+#'   `rtol = 1e-6`, `step_size_max = 10`) run several times faster with negligible
+#'   effect on aggregate outputs. Keep `atol` at `1e-8`: the individual prophylaxis
+#'   chain stages hold occupancies of order `1e-6`, which a looser absolute
+#'   tolerance lets dip below zero.
 #' @param odin_file optional path to the odin source (development use).
 #' @return a wide, malariasimulation-style daily count table, one row per output
 #'   day. Columns:
@@ -107,6 +133,7 @@ run_simulation_ode <- function(timesteps, parameters = NULL, correlations = NULL
                                init_EIR = NULL,
                                age_lower = default_age_lower(),
                                n_eir = 10L, n_foim = 10L, n_eip = 20L,
+                               n_ph = NULL, n_phc = NULL,
                                atol = 1e-8, rtol = 1e-8, step_size_max = 1,
                                odin_file = NULL) {
   if (is.null(parameters)) {
@@ -125,7 +152,7 @@ run_simulation_ode <- function(timesteps, parameters = NULL, correlations = NULL
     }
   }
   inp <- build_inputs(parameters, init_EIR, age_lower, n_eir, n_foim, n_eip,
-                      timesteps = timesteps)
+                      n_ph = n_ph, n_phc = n_phc, timesteps = timesteps)
   generator <- get_generator(odin_file)
   # Robustness: the interpolate grids (pev/tbv "linear") are built to extend past
   # `timesteps` so the stepper never extrapolates them. step_size_max caps the step;
@@ -139,19 +166,28 @@ run_simulation_ode <- function(timesteps, parameters = NULL, correlations = NULL
                                    ode_control = ctrl)
   dust2::dust_system_set_state_initial(sys)
   times <- seq(0, timesteps)
+  # Record only the per-age outputs and scalars render_output() reads, not the
+  # full state: with the prophylaxis chains the state can be several times the
+  # size of the outputs, and the full daily trajectory of a 30-year run would
+  # otherwise cost hundreds of MB.
+  uidx <- dust2::dust_unpack_index(sys)
+  out_idx <- unlist(uidx[OUTPUT_VARS], use.names = FALSE)
   events <- chemoprevention_events(inp$meta$parameters, timesteps)
   if (length(events) == 0) {
-    y <- dust2::dust_system_simulate(sys, times)
+    y <- dust2::dust_system_simulate(sys, times, index_state = out_idx)
   } else {
-    y <- simulate_with_pulses(sys, times, events, inp$meta)
+    y <- simulate_with_pulses(sys, times, events, inp$meta, uidx, out_idx)
   }
-  render_output(sys, y, times, inp)
+  render_output(y, times, inp, uidx, out_idx)
 }
+
+# odin output/aggregate variables recorded from each run (all of render_output's inputs)
+OUTPUT_VARS <- c("n_g", "det_lm_g", "det_pcr_g", "clin_g", "sev_g", "inc_g",
+                 "S_g", "D_g", "A_g", "U_g", "Tr_g", "Ph_g", "EIR_yr", "FOIM", "ft_out")
 
 #' Integrate with chemoprevention pulses applied between segments.
 #' @noRd
-simulate_with_pulses <- function(sys, times, events, meta) {
-  uidx <- dust2::dust_unpack_index(sys)
+simulate_with_pulses <- function(sys, times, events, meta, uidx, out_idx) {
   timesteps <- max(times)
   ev_days <- sort(unique(vapply(events, function(e) e$time, numeric(1))))
   ev_days <- ev_days[ev_days >= 1 & ev_days <= timesteps]
@@ -162,7 +198,7 @@ simulate_with_pulses <- function(sys, times, events, meta) {
     lo <- bnds[k]; hi <- bnds[k + 1]
     seg_days <- times[times > recorded_hi & times <= hi]
     if (length(seg_days)) {
-      cols[[k]] <- dust2::dust_system_simulate(sys, seg_days)
+      cols[[k]] <- dust2::dust_system_simulate(sys, seg_days, index_state = out_idx)
       recorded_hi <- max(seg_days)
     }
     if (hi %in% ev_days) {
@@ -220,16 +256,20 @@ output_bands <- function(p, family = c("all", "prevalence", "incidence",
 #' Render dust2 output into a wide malariasimulation-style count table that can
 #' be passed directly to postie::get_rates() / postie::get_prevalence().
 #' @noRd
-render_output <- function(sys, y, times, inp) {
-  st <- dust2::dust_unpack_state(sys, y)
+render_output <- function(y, times, inp, uidx, out_idx) {
+  # y holds only the rows out_idx (in that order); pull each variable's rows back
+  # out by position, as an [n, nt] matrix (per-age series) or a length-nt vector
+  get <- function(nm, as_matrix = TRUE) {
+    m <- y[match(uidx[[nm]], out_idx), , drop = FALSE]
+    if (as_matrix) m else as.numeric(m)
+  }
   meta <- inp$meta
   hp <- meta$human_population
   age_mid <- meta$age_mid
   nt <- length(times)
   # per-age-group time series are [n_age, nt] matrices
-  mat <- function(a) if (is.null(dim(a))) matrix(a, nrow = 1) else a
-  n_g <- mat(st$n_g); det_lm_g <- mat(st$det_lm_g); det_pcr_g <- mat(st$det_pcr_g)
-  clin_g <- mat(st$clin_g); sev_g <- mat(st$sev_g); inc_g <- mat(st$inc_g)
+  n_g <- get("n_g"); det_lm_g <- get("det_lm_g"); det_pcr_g <- get("det_pcr_g")
+  clin_g <- get("clin_g"); sev_g <- get("sev_g"); inc_g <- get("inc_g")
 
   band_sum <- function(m, lo, hi) {
     idx <- which(age_mid >= lo & age_mid < hi)
@@ -264,15 +304,15 @@ render_output <- function(sys, y, times, inp) {
   for (b in output_bands(p, "incidence")) {
     out[[paste0("n_inc_", tag_of(b))]] <- band_sum(inc_g, b[1], b[2]) * hp
   }
-  out$ft <- as.numeric(st$ft_out)
-  out$EIR <- as.numeric(st$EIR_yr)
-  out$FOIM <- as.numeric(st$FOIM)
+  out$ft <- get("ft_out", FALSE)
+  out$EIR <- get("EIR_yr", FALSE)
+  out$FOIM <- get("FOIM", FALSE)
   # population-total infection-state fractions (diagnostic)
-  out$S_count <- colSums(mat(st$S_g)) * hp
-  out$D_count <- colSums(mat(st$D_g)) * hp
-  out$A_count <- colSums(mat(st$A_g)) * hp
-  out$U_count <- colSums(mat(st$U_g)) * hp
-  out$Tr_count <- colSums(mat(st$Tr_g)) * hp
-  out$Ph_count <- colSums(mat(st$Ph_g)) * hp
+  out$S_count <- colSums(get("S_g")) * hp
+  out$D_count <- colSums(get("D_g")) * hp
+  out$A_count <- colSums(get("A_g")) * hp
+  out$U_count <- colSums(get("U_g")) * hp
+  out$Tr_count <- colSums(get("Tr_g")) * hp
+  out$Ph_count <- colSums(get("Ph_g")) * hp
   out
 }

@@ -163,7 +163,8 @@ c(baseline = smc[[band]][1], trough = min(smc[[band]]))
 
 SMC/MDA/PMC are applied as pulsed mass drug administration between integration
 segments: a fraction (coverage x drug efficacy) of the target age band is cleared
-and moved to a chemoprevention prophylaxis compartment.
+and moved to the first stage of a chemoprevention prophylaxis chain matched to the
+drug's Weibull protection curve.
 
 ### PEV vaccine (RTS,S via EPI, with a booster)
 
@@ -261,9 +262,9 @@ and can differ by ~5-20% (largest at low EIR); treat it as indicative.
 - **P. falciparum only.** *P. vivax* is rejected; the model is always
   compartmental (the individual-mosquito code path does not apply).
 - **Mean-field caveats.** Vector control is population-averaged (slightly
-  under-suppresses at deep troughs vs the IBM); drug prophylaxis is a single
-  mean-duration compartment (equilibrium-exact, transient-approximate). PCR
-  prevalence follows the IBM convention (all D/Tr/A/U).
+  under-suppresses at deep troughs vs the IBM); drug prophylaxis is an Erlang
+  chain matched to the drug's Weibull protection (its mean and variance, not the
+  Weibull itself). PCR prevalence follows the IBM convention (all D/Tr/A/U).
 - **Full detail.** `vignette("model")` is the canonical specification: the ODE
   system, what each state dimension carries (and what is captured *without* a
   dimension), and an argument-by-argument table of every `malariasimulation`

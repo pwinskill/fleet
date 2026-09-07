@@ -20,22 +20,22 @@
 "Treatment scale-up
 20% → 60% of clinical cases","clinical incidence, ages 0–5",0.0362895707449449,0.00540393244387108,0.0565545565525212,"IBM"
 "Indoor residual spraying
-80% coverage, annual","LM prevalence, ages 2–10",0.795848481383924,NA,NA,"blink"
+80% coverage, annual","LM prevalence, ages 2–10",0.79584848142447,NA,NA,"blink"
 "Indoor residual spraying
-80% coverage, annual","clinical incidence, ages 0–5",0.98218235479185,NA,NA,"blink"
+80% coverage, annual","clinical incidence, ages 0–5",0.982182354783761,NA,NA,"blink"
 "Bed-net campaign
-80% coverage, one round","LM prevalence, ages 2–10",0.469545241624311,NA,NA,"blink"
+80% coverage, one round","LM prevalence, ages 2–10",0.469545241626246,NA,NA,"blink"
 "Bed-net campaign
-80% coverage, one round","clinical incidence, ages 0–5",0.659388359973189,NA,NA,"blink"
+80% coverage, one round","clinical incidence, ages 0–5",0.659388359853103,NA,NA,"blink"
 "RTS,S via EPI
-90% at 5 months, booster","LM prevalence, ages 2–10",0.00818154614859579,NA,NA,"blink"
+90% at 5 months, booster","LM prevalence, ages 2–10",0.00818154614860789,NA,NA,"blink"
 "RTS,S via EPI
-90% at 5 months, booster","clinical incidence, ages 0–5",0.10167010590993,NA,NA,"blink"
+90% at 5 months, booster","clinical incidence, ages 0–5",0.101670105909906,NA,NA,"blink"
 "Seasonal SMC
-4 rounds/yr, ages 0.25–5","LM prevalence, ages 2–10",0.215497500036985,NA,NA,"blink"
+4 rounds/yr, ages 0.25–5","LM prevalence, ages 2–10",0.236322256716932,NA,NA,"blink"
 "Seasonal SMC
-4 rounds/yr, ages 0.25–5","clinical incidence, ages 0–5",0.401620197479724,NA,NA,"blink"
+4 rounds/yr, ages 0.25–5","clinical incidence, ages 0–5",0.535142875431373,NA,NA,"blink"
 "Treatment scale-up
-20% → 60% of clinical cases","LM prevalence, ages 2–10",0.192306768364133,NA,NA,"blink"
+20% → 60% of clinical cases","LM prevalence, ages 2–10",0.193598192298647,NA,NA,"blink"
 "Treatment scale-up
-20% → 60% of clinical cases","clinical incidence, ages 0–5",0.0520922109563174,NA,NA,"blink"
+20% → 60% of clinical cases","clinical incidence, ages 0–5",0.0541255449228115,NA,NA,"blink"

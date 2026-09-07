@@ -124,6 +124,9 @@ scenarios$demography <- local({
 ## CMP_ONLY=a,b -> run just those scenarios and merge their rows into the existing CSVs
 ONLY <- Filter(nzchar, strsplit(Sys.getenv("CMP_ONLY"), ",")[[1]])
 if (length(ONLY)) { stopifnot(all(ONLY %in% names(scenarios))); scenarios <- scenarios[ONLY] }
+## CMP_BLINK_ONLY=1 -> re-run only blink (the IBM rows are kept): for a blink-side
+## model change, when the IBM results are unaffected
+BLINK_ONLY <- nzchar(Sys.getenv("CMP_BLINK_ONLY"))
 
 if (SMOKE) scenarios <- lapply(scenarios, function(s) { s$years <- 4L; s })
 
@@ -185,7 +188,7 @@ ode <- lapply(names(scenarios), function(nm) {
   s <- scenarios[[nm]]
   el <- system.time(
     out <- run_simulation_ode(timesteps = s$years * 365, parameters = s$p, init_EIR = s$eir,
-                              atol = 1e-6, rtol = 1e-6, step_size_max = 10))[["elapsed"]]
+                              atol = 1e-8, rtol = 1e-6, step_size_max = 10))[["elapsed"]]
   r <- summarise_run(out[-1, ], s$years)          # drop the day-0 seed row
   r$timing <- data.frame(years = s$years, elapsed_s = el)
   tag_parts(r, nm, "blink", 0L)
@@ -194,6 +197,8 @@ names(ode) <- names(scenarios)
 log_msg("blink done: %.1f s total", sum(vapply(ode, function(o) o$timing$elapsed_s, numeric(1))))
 
 ## ---- run the IBM replicates in parallel --------------------------------------
+ibm <- list()
+if (!BLINK_ONLY) {
 jobs <- expand.grid(scenario = names(scenarios), rep = seq_len(N_REP),
                     stringsAsFactors = FALSE)
 ## rough cost in default-band sim-years, so the load balancer starts the longest jobs first
@@ -222,13 +227,16 @@ ibm <- parallel::parLapplyLB(cl, seq_len(nrow(jobs)), function(j) {
 }, chunk.size = 1L)
 parallel::stopCluster(cl)
 log_msg("IBM done in %.1f min", as.numeric(Sys.time() - t0, units = "mins"))
+}
 
 ## ---- combine and write -------------------------------------------------------
 bind <- function(part) do.call(rbind, c(lapply(ode, `[[`, part), lapply(ibm, `[[`, part)))
 for (part in c("eq", "age", "monthly", "doy", "timing")) {
   d <- bind(part); f <- file.path(DDIR, paste0("rep_", part, ".csv"))
-  if (length(ONLY) && file.exists(f)) {           # subset run: replace just those scenarios
-    old <- read.csv(f, stringsAsFactors = FALSE); old <- old[!old$scenario %in% ONLY, ]
+  if ((length(ONLY) || BLINK_ONLY) && file.exists(f)) {   # partial run: replace just those rows
+    old <- read.csv(f, stringsAsFactors = FALSE)
+    drop <- old$scenario %in% names(scenarios) & (if (BLINK_ONLY) old$model == "blink" else TRUE)
+    old <- old[!drop, ]
     for (nm in setdiff(names(d), names(old))) old[[nm]] <- NA
     for (nm in setdiff(names(old), names(d))) d[[nm]] <- NA
     d <- rbind(old[names(d)], d)

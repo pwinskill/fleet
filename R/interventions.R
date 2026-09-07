@@ -7,7 +7,59 @@
 # (which has no interventions) is preserved; interventions act from their
 # scheduled timesteps onward, exactly as malariasimulation applies them.
 
-.weibull_mean <- function(shape, scale) scale * gamma(1 + 1 / shape)
+# lgamma forms so absurd shapes (< 0.01) give Inf rather than NaN
+.weibull_mean <- function(shape, scale) scale * exp(lgamma(1 + 1 / shape))
+.weibull_var  <- function(shape, scale)
+  scale^2 * (exp(lgamma(1 + 2 / shape)) - exp(2 * lgamma(1 + 1 / shape)))
+
+# Erlang stage count for a prophylaxis chain, moment-matched to a (mixture of)
+# Weibull protection distribution(s) with mixture mean M and variance V. The IBM
+# applies the Weibull survival W(t - t_drug) to each treated person's infection
+# probability, so the cohort's mean protection at lag t is W(t); a chain with the
+# same mean and variance reproduces that curve far better than one exponential
+# stage (SP-AQ at day 30: Weibull 0.70, Erlang-14 0.67, exponential 0.42), and a
+# drug MIXTURE (bimodal survival) gets a far larger variance than the shape-average
+# would suggest.
+#   * chemoprevention chain (tr = 0): k = M^2 / V, i.e. 1/CV^2 for one drug --
+#     SP-AQ shape 4.3 -> 14, DHA-PQP 4.4 -> 15.
+#   * post-treatment chain (tr = mean Tr sojourn): the chain FOLLOWS an exponential
+#     Tr stage (variance tr^2) while the IBM's clock runs from the dose, so match
+#     the variance of the whole Tr + chain sojourn: k = m_chain^2 / (V - tr^2) with
+#     m_chain the integrated-protection mean of .chain_mean_after_tr(). When
+#     V <= tr^2 the treated stage alone is already more variable than the Weibull
+#     (AL: sd 1.1 d against Tr's 5.5 d) and no chain length can help, so k = 1 --
+#     measured output-identical to k = 20 at half the run time. SP-AQ as a
+#     treatment drug -> 16, DHA-PQP -> 20 (capped).
+# Capped at 20: each stage adds n_age*n_het states and beyond ~20 the run time
+# climbs steeply (40 stages: 4x) for a shoulder already sharper than any
+# intervention cadence resolves. The per-stage rate k / mean is also capped at
+# MAX_STAGE_RATE per day (AL's rate at 20 stages): dust2 has no implicit stepper,
+# so a stiff stage would stall the solver. 1 = one exponential stage.
+MAX_STAGE_RATE <- 4
+erlang_stages <- function(shape, scale = 1, w = 1, tr = 0, m_chain = NULL) {
+  w <- w / sum(w)
+  m <- .weibull_mean(shape, scale); v <- .weibull_var(shape, scale)
+  M <- sum(w * m); V <- sum(w * (v + m^2)) - M^2
+  Vc <- V - tr^2
+  mc <- if (is.null(m_chain)) M else m_chain
+  if (!is.finite(Vc) || Vc <= 0 || !is.finite(mc) || mc <= 0) return(1L)
+  k <- min(20, round(mc^2 / Vc), floor(MAX_STAGE_RATE * mc))
+  as.integer(max(1, k))
+}
+
+# Mean protection the post-treatment chain must carry. The IBM's Weibull clock
+# starts at treatment and runs IN PARALLEL with the Tr sojourn (exponential at rT),
+# so a treated person is unprotected at lag t with probability F_Tr(t)*(1 - W(t));
+# blink's chain starts when Tr ends. Matching the integrated protection,
+#   int (1 - F_Tr (1 - W)) dt = 1/rT + mean_W - int exp(-rT t) W(t) dt,
+# against blink's 1/rT + mean_chain gives mean_chain = mean_W - int exp(-rT t) W dt.
+# This reduces to mean_W - 1/rT only when W ~ 1 throughout the Tr sojourn (true for
+# SP-AQ, 29.2 vs 29.2 d; not for AL's ~10-day protection, 5.5 vs 4.6 d).
+.chain_mean_after_tr <- function(shape, scale, rT) {
+  overlap <- vapply(seq_along(shape), function(i) stats::integrate(
+    function(t) exp(-rT * t) * exp(-(t / scale[i])^shape[i]), 0, Inf)$value, numeric(1))
+  .weibull_mean(shape, scale) - overlap
+}
 
 # Coverage active at timestep t for one drug's (timesteps, coverages).
 .cov_at <- function(ts, cov, t) {
@@ -45,21 +97,27 @@ treatment_series <- function(p) {
 # first-line drug switch changes the mix over time.
 drug_mix <- function(p, eqp, t = NULL) {
   drugs <- p$clinical_treatment_drugs
-  if (is.null(drugs) || length(drugs) == 0)
-    return(list(drug_eff = 1, cT = eqp[["cT"]], rP = eqp[["rP"]]))
+  none <- list(drug_eff = 1, cT = eqp[["cT"]], rP = eqp[["rP"]], n_ph = 1L)
+  if (is.null(drugs) || length(drugs) == 0) return(none)
   di <- vapply(drugs, function(x) x[[1]], numeric(1))
   peak <- vapply(p$clinical_treatment_coverages, max, numeric(1))
   w <- if (is.null(t)) peak else vapply(seq_along(drugs), function(d)
     .cov_at(p$clinical_treatment_timesteps[[d]], p$clinical_treatment_coverages[[d]], t),
     numeric(1))
   if (sum(w) == 0) w <- peak                          # no drug active at t: hold the mix
-  if (sum(w) == 0) return(list(drug_eff = 1, cT = eqp[["cT"]], rP = eqp[["rP"]]))
+  if (sum(w) == 0) return(none)
   wn <- w / sum(w)
-  dt <- 1 / eqp[["rT"]]                                # mean days in Tr (refractory)
-  mean_dur <- sum(wn * .weibull_mean(p$drug_prophylaxis_shape[di], p$drug_prophylaxis_scale[di]))
+  shp <- p$drug_prophylaxis_shape[di]; scl <- p$drug_prophylaxis_scale[di]
+  # chain mean = Weibull mean less the protection already spent during the Tr
+  # sojourn (see .chain_mean_after_tr), coverage-weighted across the mix
+  # floored at one day: a shorter chain would need a per-day rate the explicit
+  # solver cannot take, and no antimalarial protects for less than a day
+  mean_chain <- max(1, sum(wn * .chain_mean_after_tr(shp, scl, eqp[["rT"]])))
   list(drug_eff = sum(wn * p$drug_efficacy[di]),
        cT = p$cd * sum(wn * p$drug_rel_c[di]),
-       rP = 1 / max(mean_dur - dt, 1e-6))
+       rP = 1 / mean_chain,
+       # chain length matched to the variance of the whole Tr + chain sojourn
+       n_ph = erlang_stages(shp, scl, wn, tr = 1 / eqp[["rT"]], m_chain = mean_chain))
 }
 
 # Time-varying drug_eff/cT/rP over the clinical-treatment change times, so a
@@ -121,7 +179,7 @@ resistance_series <- function(p, eqp) {
       e   <- a * step_at(ts, p$early_treatment_failure_probability[[k]], t)
       s   <- a * step_at(ts, p$slow_parasite_clearance_probability[[k]], t)
       dts <- p$dt_slow_parasite_clearance[[k]]
-      dts <- if (length(dts)) dts[length(dts)] else 1 / rT_base
+      dts <- if (length(dts)) dts[length(dts)] else p$dt      # raw duration, not 1/rT_base
       etf[i] <- etf[i] + wn[ci] * e
       # slow fraction of the (already ETF-net) Tr inflow -> exact for a single drug
       # (common case); small over-count only for multiple drugs at high resistance.
@@ -132,8 +190,12 @@ resistance_series <- function(p, eqp) {
   # blended slow-clearance duration at PEAK resistance (single scalar, as modelled).
   # Peak, not the last timestep: a rise-then-fall schedule can end at spc = 0.
   nPeak <- which.max(spc)
-  dt_slow_blend <- if (length(nPeak) && spc[nPeak] > 0) slow_num[nPeak] / spc[nPeak] else 1 / rT_base
-  list(times = all_ts, etf = etf, spc = spc, rT_slow = 1 / dt_slow_blend)
+  # whole-day exit probability 1 - exp(-1/d), as build_inputs applies to rA/rD/rU/rT:
+  # the IBM leaves Tr with per-day probability rate_to_prob(1/dt_slow), so the
+  # realised mean dwell is 1/(1 - exp(-1/dt_slow)), not dt_slow. With no slow
+  # clearance anywhere on the schedule, Tr_slow has no inflow and takes rT.
+  rT_slow <- if (length(nPeak) && spc[nPeak] > 0) 1 - exp(-spc[nPeak] / slow_num[nPeak]) else rT_base
+  list(times = all_ts, etf = etf, spc = spc, rT_slow = rT_slow)
 }
 
 # ---- mean-field vector control: per-species a(t), mu(t) ---------------------
@@ -306,32 +368,40 @@ chemoprevention_events <- function(p, timesteps) {
   ev
 }
 
-# Prophylaxis rate for the shared chemoprevention compartment Ph_c, from the
-# MDA/SMC/PMC drug(s)' Weibull mean. Distinct from the clinical-treatment rP. When
-# several chemoprevention types with different drugs are co-deployed, the single
-# Ph_c decay rate is the coverage-weighted mean of their protection durations
-# (better than an arbitrary priority ordering).
-chemoprevention_prophylaxis_rate <- function(p, eqp) {
+# Prophylaxis chain for the shared chemoprevention compartment Ph_c: its rate
+# (1 / the MDA/SMC/PMC drug(s)' Weibull mean) and stage count (from their Weibull
+# shape). Distinct from the clinical-treatment rP. When several chemoprevention
+# types with different drugs are co-deployed, the single chain uses the
+# coverage-weighted mean duration and shape (better than an arbitrary priority
+# ordering).
+chemoprevention_prophylaxis <- function(p, eqp) {
   tot_cov <- function(cov) if (is.null(cov)) 0 else sum(unlist(cov))
   active <- list()
   if (isTRUE(p$smc)) active[[length(active) + 1L]] <- c(p$smc_drug, tot_cov(p$smc_coverages))
   if (isTRUE(p$mda)) active[[length(active) + 1L]] <- c(p$mda_drug, tot_cov(p$mda_coverages))
   if (isTRUE(p$pmc)) active[[length(active) + 1L]] <- c(p$pmc_drug, tot_cov(p$pmc_coverages))
-  if (!length(active)) return(eqp[["rP"]])
+  if (!length(active)) return(list(rate = eqp[["rP"]], n_stages = 1L))
   w <- vapply(active, `[`, numeric(1), 2)
-  dur <- vapply(active, function(a) .weibull_mean(p$drug_prophylaxis_shape[a[1]],
-                                                  p$drug_prophylaxis_scale[a[1]]), numeric(1))
-  mean_dur <- if (sum(w) > 0) sum(w * dur) / sum(w) else mean(dur)
-  1 / mean_dur
+  wn <- if (sum(w) > 0) w / sum(w) else rep(1 / length(w), length(w))
+  di <- vapply(active, `[`, numeric(1), 1)
+  shp <- p$drug_prophylaxis_shape[di]; scl <- p$drug_prophylaxis_scale[di]
+  # no Tr sojourn precedes chemoprevention protection: the chain carries the full
+  # Weibull mean; stages moment-matched to the (mixture of) Weibull(s)
+  list(rate = 1 / max(1, sum(wn * .weibull_mean(shp, scl))), n_stages = erlang_stages(shp, scl, wn))
 }
 
 # Apply a single chemoprevention pulse to the packed dust2 state in place: a
-# fraction `frac` of the targeted age band is cleared of infection and moved to
-# the chemoprevention prophylaxis compartment Ph_c (protected). (The brief
-# treated-infectious phase of detectable cases is omitted; negligible for the
+# fraction `frac` (coverage x efficacy x (1 - ETF): the IBM's "successfully
+# treated") of the targeted age band is cleared of infection and starts a fresh
+# protection clock at stage 1 of the chemoprevention chain Ph_c. That applies to
+# EVERY state -- the IBM resets drug_time for all successfully treated people,
+# including those already under post-treatment or chemoprevention prophylaxis,
+# so Ph and Ph_c mass is renewed too, which matters for monthly SMC rounds. (The
+# brief treated-infectious phase the IBM gives detectable cases -- D and LM-
+# detectable A pass through Tr for ~dt days -- is omitted; negligible for the
 # fast-clearing MDA/SMC/PMC drugs.)
 apply_chemoprevention_pulse <- function(sys, uidx, meta, event) {
-  n_age <- meta$n_age; n_het <- meta$n_het
+  n_age <- meta$n_age; n_het <- meta$n_het; n_ph <- meta$n_ph; n_phc <- meta$n_phc
   # per-group fraction of the pulse: coverage x efficacy x (fraction of the group
   # that overlaps the target band). Weighting by overlap (not midpoint membership)
   # stops narrow bands from being silently dropped and coarse groups from being
@@ -348,19 +418,28 @@ apply_chemoprevention_pulse <- function(sys, uidx, meta, event) {
   fr <- event$frac * ov[arows]                       # length(arows) vector
   sv <- dust2::dust_system_state(sys)
   gv <- function(nm) matrix(sv[uidx[[nm]]], n_age, n_het)
-  S <- gv("S"); D <- gv("D"); A <- gv("A"); U <- gv("U"); Tr <- gv("Tr"); Phc <- gv("Ph_c")
-  keep <- 1 - fr
+  ga <- function(nm, k) array(sv[uidx[[nm]]], c(n_age, n_het, k))
+  S <- gv("S"); D <- gv("D"); A <- gv("A"); U <- gv("U")
+  Tr <- gv("Tr"); Trs <- gv("Tr_slow")
+  Ph <- ga("Ph", n_ph); Phc <- ga("Ph_c", n_phc)
+  keep <- 1 - fr                                     # recycles along the age (first) dim
+  tot3 <- function(x) apply(x[arows, , , drop = FALSE], c(1, 2), sum)
   cleared <- fr * (S[arows, , drop = FALSE] + U[arows, , drop = FALSE] +
                    A[arows, , drop = FALSE] + D[arows, , drop = FALSE] +
-                   Tr[arows, , drop = FALSE])
-  S[arows, ]  <- S[arows, , drop = FALSE]  * keep
-  U[arows, ]  <- U[arows, , drop = FALSE]  * keep
-  A[arows, ]  <- A[arows, , drop = FALSE]  * keep
-  D[arows, ]  <- D[arows, , drop = FALSE]  * keep
-  Tr[arows, ] <- Tr[arows, , drop = FALSE] * keep
-  Phc[arows, ] <- Phc[arows, , drop = FALSE] + cleared
+                   Tr[arows, , drop = FALSE] + Trs[arows, , drop = FALSE] +
+                   tot3(Ph) + tot3(Phc))
+  S[arows, ]   <- S[arows, , drop = FALSE]   * keep
+  U[arows, ]   <- U[arows, , drop = FALSE]   * keep
+  A[arows, ]   <- A[arows, , drop = FALSE]   * keep
+  D[arows, ]   <- D[arows, , drop = FALSE]   * keep
+  Tr[arows, ]  <- Tr[arows, , drop = FALSE]  * keep
+  Trs[arows, ] <- Trs[arows, , drop = FALSE] * keep
+  Ph[arows, , ]  <- Ph[arows, , , drop = FALSE]  * keep
+  Phc[arows, , ] <- Phc[arows, , , drop = FALSE] * keep
+  Phc[arows, , 1] <- Phc[arows, , 1, drop = FALSE] + array(cleared, c(length(arows), n_het, 1))
   sv[uidx[["S"]]] <- S; sv[uidx[["U"]]] <- U; sv[uidx[["A"]]] <- A
-  sv[uidx[["D"]]] <- D; sv[uidx[["Tr"]]] <- Tr; sv[uidx[["Ph_c"]]] <- Phc
+  sv[uidx[["D"]]] <- D; sv[uidx[["Tr"]]] <- Tr; sv[uidx[["Tr_slow"]]] <- Trs
+  sv[uidx[["Ph"]]] <- Ph; sv[uidx[["Ph_c"]]] <- Phc
   dust2::dust_system_set_state(sys, sv)
   invisible()
 }

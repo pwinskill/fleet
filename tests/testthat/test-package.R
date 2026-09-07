@@ -94,7 +94,8 @@ test_that("multi-drug resistance is coverage-weighted and drives dynamics", {
   # rT_slow = 1 / coverage*spc-weighted mean clearance time (the rate feeding the ODE)
   s1 <- 0.5 * 0.2; s2 <- 1.0 * 0.3
   num <- w1 * s1 * 10 + w2 * s2 * 20; den <- w1 * s1 + w2 * s2
-  expect_equal(r$rT_slow, 1 / (num / den), tolerance = 1e-9)
+  # whole-day exit probability of the blended slow-clearance duration (as rA/rD/rU/rT)
+  expect_equal(r$rT_slow, 1 - exp(-1 / (num / den)), tolerance = 1e-9)
   # end-to-end: resistance raises prevalence vs the SAME treatment without resistance
   base <- run_simulation_ode(1500, base_p, init_EIR = 30)
   o <- run_simulation_ode(1500, p, init_EIR = 30)
@@ -119,7 +120,7 @@ test_that("resistance rT_slow uses the PEAK timestep, not the last", {
     slow_parasite_clearance_time = 10)
   r <- resistance_series(p, translate_parameters(p))
   expect_equal(tail(r$spc, 1), 0)               # schedule ends at zero resistance
-  expect_equal(r$rT_slow, 1 / 10, tolerance = 1e-9)   # from the peak (dt=10), not 1/rT_base
+  expect_equal(r$rT_slow, 1 - exp(-1 / 10), tolerance = 1e-9)   # from the peak (dt=10), not rT_base
 })
 
 test_that("custom demography changes the equilibrium age structure", {
@@ -143,6 +144,33 @@ test_that("custom demography changes the equilibrium age structure", {
   pflat <- gp(); pflat$acquired_immunity_offset <- 0; pflat$bite_dedup <- 0
   o <- run_simulation_ode(400, pflat, init_EIR = 20)
   expect_lt(max(abs(o$EIR - o$EIR[1])) / o$EIR[1], 1e-2)
+})
+
+test_that("custom demography sizes mosquitoes as set_equilibrium() does", {
+  skip_if_not_installed("malariasimulation")
+  gp <- malariasimulation::get_parameters
+  dr <- c(0.048, 0.007, 0.003, 0.004, 0.008, 0.020, 0.050, 0.120) / 365
+  p <- malariasimulation::set_demography(gp(list(human_population = 10000)),
+    agegroups = round(c(1, 5, 10, 20, 40, 60, 80, 100) * 365),
+    timesteps = 0, deathrates = matrix(dr, nrow = 1))
+  p <- malariasimulation::set_equilibrium(p, init_EIR = 20)
+  inp <- build_inputs(p, 20)
+  # the IBM's own total_M is reproduced exactly, and blink seeds at the EIR its
+  # equilibrium under the custom age structure supports for that density -- an
+  # older population sustains less transmission (the IBM realises ~13.8 here)
+  expect_equal(inp$meta$total_M_ibm, p$total_M, tolerance = 1e-8)
+  expect_equal(inp$meta$total_M, p$total_M, tolerance = 1e-6)
+  expect_lt(inp$meta$eir_seed, 16)
+  expect_gt(inp$meta$eir_seed, 11)
+  # the seed is a fixed point of the dynamics (linear-FOI form)
+  pflat <- p; pflat$bite_dedup <- 0; pflat$acquired_immunity_offset <- 0
+  o <- run_simulation_ode(400, pflat, init_EIR = 20)
+  expect_equal(o$EIR[1], inp$meta$eir_seed, tolerance = 1e-6)
+  expect_lt(max(abs(o$EIR - o$EIR[1])) / o$EIR[1], 1e-2)
+  # opt-out keeps init_EIR as the realised EIR; the default demography is unaffected
+  p2 <- p; p2$hold_init_EIR <- TRUE
+  expect_equal(build_inputs(p2, 20)$meta$eir_seed, 20)
+  expect_equal(build_inputs(malariasimulation::set_equilibrium(gp(), 20), 20)$meta$eir_seed, 20)
 })
 
 test_that("invalid inputs error clearly", {
