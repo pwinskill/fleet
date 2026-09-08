@@ -59,6 +59,8 @@
 <span>  n_eir <span class="op">=</span> <span class="fl">10L</span>,</span>
 <span>  n_foim <span class="op">=</span> <span class="fl">10L</span>,</span>
 <span>  n_eip <span class="op">=</span> <span class="fl">20L</span>,</span>
+<span>  n_ph <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  n_phc <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  atol <span class="op">=</span> <span class="fl">1e-08</span>,</span>
 <span>  rtol <span class="op">=</span> <span class="fl">1e-08</span>,</span>
 <span>  step_size_max <span class="op">=</span> <span class="fl">1</span>,</span>
@@ -100,6 +102,14 @@ positive acquired immunity inside the <code>b</code>/<code>phi</code>/<code>thet
 is a per-individual detail which does not carry over to a stratum mean; an
 A/B against the IBM ensemble mean favours <code>0</code>. Set <code>0.5</code> to reproduce the
 IBM's literal Hill calls.</p></li>
+<li><p><code>hold_init_EIR</code> (default <code>FALSE</code>) — only matters with <code>set_demography()</code>.
+malariasimulation's <code>set_equilibrium()</code> sizes the mosquito population from
+the equilibrium under its <em>default</em> exponential age structure, so under a
+custom demography the IBM drifts to whatever transmission that density
+supports. By default blink replicates that: it takes the IBM's mosquito
+density and seeds at the EIR its own equilibrium under the custom age
+structure then supports (a fixed point, so no burn-in), which is generally
+<em>not</em> <code>init_EIR</code>. Set <code>TRUE</code> to seed at <code>init_EIR</code> exactly instead.</p></li>
 </ul></dd>
 
 
@@ -112,8 +122,11 @@ ignored with a warning (the ODE assumes independence between interventions).</p>
 
 
 <dt id="arg-init-eir">init_EIR<a class="anchor" aria-label="anchor" href="#arg-init-eir"></a></dt>
-<dd><p>target adult EIR (bites/adult/year). If NULL, taken from
-<code>parameters$init_EIR</code> (set by malariasimulation::set_equilibrium()).</p></dd>
+<dd><p>target adult EIR (bites/adult/year), with the same meaning as in
+<code><a href="https://rdrr.io/pkg/malariasimulation/man/set_equilibrium.html" class="external-link">malariasimulation::set_equilibrium()</a></code>. If NULL, taken from
+<code>parameters$init_EIR</code> (set by set_equilibrium()). Under the default demography
+this is the EIR blink realises; under <code>set_demography()</code> see <code>hold_init_EIR</code>
+above.</p></dd>
 
 
 <dt id="arg-age-lower">age_lower<a class="anchor" aria-label="anchor" href="#arg-age-lower"></a></dt>
@@ -126,11 +139,29 @@ and mosquito EIP. Larger values sharpen the (otherwise gamma-shaped) lags
 toward the IBM's fixed delays; equilibrium is exact for any value.</p></dd>
 
 
+<dt id="arg-n-ph-n-phc">n_ph, n_phc<a class="anchor" aria-label="anchor" href="#arg-n-ph-n-phc"></a></dt>
+<dd><p>Erlang-chain stage counts for the post-treatment (<code>Ph</code>) and
+chemoprevention (<code>Ph_c</code>) prophylaxis compartments. <code>NULL</code> (default) matches the
+chain's variance to the drug's Weibull protection curve, capped at 20. For
+<code>Ph_c</code> that is <code>1/CV²</code> of the Weibull: 14 for SP-AQ, 15 for DHA-PQP. <code>Ph</code>
+follows the exponential treated stage <code>Tr</code>, so its count matches the variance
+of the whole <code>Tr + Ph</code> sojourn and its mean is the integrated protection left
+after <code>Tr</code>: 16 stages for SP-AQ, 20 for DHA-PQP, and 1 for AL, whose 10-day
+protection is already less variable than <code>Tr</code> itself. A drug mixture is
+moment-matched as a mixture. <code>1</code> is a single exponential stage, which for
+<code>Ph_c</code> leaks protection early between monthly SMC rounds. The count is fixed
+at the seed's drug mix — a first-line switch moves the chain's mean, not its
+shape.</p></dd>
+
+
 <dt id="arg-atol-rtol-step-size-max">atol, rtol, step_size_max<a class="anchor" aria-label="anchor" href="#arg-atol-rtol-step-size-max"></a></dt>
 <dd><p>dust2 ODE-solver controls. The defaults
 (<code>1e-8</code>, <code>1e-8</code>, <code>1</code>) preserve the flat equilibrium exactly; for long dynamic
-projections a looser tolerance and larger step cap (e.g. <code>1e-6</code>, <code>1e-6</code>, <code>10</code>)
-run several times faster with negligible effect on aggregate outputs.</p></dd>
+projections a looser relative tolerance and larger step cap (<code>atol = 1e-8</code>,
+<code>rtol = 1e-6</code>, <code>step_size_max = 10</code>) run several times faster with negligible
+effect on aggregate outputs. Keep <code>atol</code> at <code>1e-8</code>: the individual prophylaxis
+chain stages hold occupancies of order <code>1e-6</code>, which a looser absolute
+tolerance lets dip below zero.</p></dd>
 
 
 <dt id="arg-odin-file">odin_file<a class="anchor" aria-label="anchor" href="#arg-odin-file"></a></dt>

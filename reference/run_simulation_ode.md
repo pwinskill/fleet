@@ -14,6 +14,8 @@ run_simulation_ode(
   n_eir = 10L,
   n_foim = 10L,
   n_eip = 20L,
+  n_ph = NULL,
+  n_phc = NULL,
   atol = 1e-08,
   rtol = 1e-08,
   step_size_max = 1,
@@ -61,6 +63,16 @@ run_simulation_ode(
     to a stratum mean; an A/B against the IBM ensemble mean favours `0`.
     Set `0.5` to reproduce the IBM's literal Hill calls.
 
+  - `hold_init_EIR` (default `FALSE`) — only matters with
+    `set_demography()`. malariasimulation's `set_equilibrium()` sizes
+    the mosquito population from the equilibrium under its *default*
+    exponential age structure, so under a custom demography the IBM
+    drifts to whatever transmission that density supports. By default
+    blink replicates that: it takes the IBM's mosquito density and seeds
+    at the EIR its own equilibrium under the custom age structure then
+    supports (a fixed point, so no burn-in), which is generally *not*
+    `init_EIR`. Set `TRUE` to seed at `init_EIR` exactly instead.
+
 - correlations:
 
   accepted so the first three arguments mirror
@@ -72,8 +84,11 @@ run_simulation_ode(
 
 - init_EIR:
 
-  target adult EIR (bites/adult/year). If NULL, taken from
-  `parameters$init_EIR` (set by malariasimulation::set_equilibrium()).
+  target adult EIR (bites/adult/year), with the same meaning as in
+  [`malariasimulation::set_equilibrium()`](https://rdrr.io/pkg/malariasimulation/man/set_equilibrium.html).
+  If NULL, taken from `parameters$init_EIR` (set by set_equilibrium()).
+  Under the default demography this is the EIR blink realises; under
+  `set_demography()` see `hold_init_EIR` above.
 
 - age_lower:
 
@@ -85,12 +100,31 @@ run_simulation_ode(
   Larger values sharpen the (otherwise gamma-shaped) lags toward the
   IBM's fixed delays; equilibrium is exact for any value.
 
+- n_ph, n_phc:
+
+  Erlang-chain stage counts for the post-treatment (`Ph`) and
+  chemoprevention (`Ph_c`) prophylaxis compartments. `NULL` (default)
+  matches the chain's variance to the drug's Weibull protection curve,
+  capped at 20. For `Ph_c` that is `1/CV²` of the Weibull: 14 for SP-AQ,
+  15 for DHA-PQP. `Ph` follows the exponential treated stage `Tr`, so
+  its count matches the variance of the whole `Tr + Ph` sojourn and its
+  mean is the integrated protection left after `Tr`: 16 stages for
+  SP-AQ, 20 for DHA-PQP, and 1 for AL, whose 10-day protection is
+  already less variable than `Tr` itself. A drug mixture is
+  moment-matched as a mixture. `1` is a single exponential stage, which
+  for `Ph_c` leaks protection early between monthly SMC rounds. The
+  count is fixed at the seed's drug mix — a first-line switch moves the
+  chain's mean, not its shape.
+
 - atol, rtol, step_size_max:
 
   dust2 ODE-solver controls. The defaults (`1e-8`, `1e-8`, `1`) preserve
   the flat equilibrium exactly; for long dynamic projections a looser
-  tolerance and larger step cap (e.g. `1e-6`, `1e-6`, `10`) run several
-  times faster with negligible effect on aggregate outputs.
+  relative tolerance and larger step cap (`atol = 1e-8`, `rtol = 1e-6`,
+  `step_size_max = 10`) run several times faster with negligible effect
+  on aggregate outputs. Keep `atol` at `1e-8`: the individual
+  prophylaxis chain stages hold occupancies of order `1e-6`, which a
+  looser absolute tolerance lets dip below zero.
 
 - odin_file:
 
