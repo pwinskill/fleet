@@ -4,13 +4,16 @@
 
 ![The blink model](man/figures/model_flow.png)
 
-*The model at a glance: human compartments above, mosquito below. Solid black =
-a flow of individuals, a rate in the ODE. Dashed purple = a scalar coupling, where
-nobody moves. Dashed red = a discrete state jump. Dotted grey = a grouping, not a
-compartment: the infectious pool above, the adult females below. Every human box is
-an array over age × biting heterogeneity. Not drawn: the immunity arrays, the
-Erlang lag chains, the stages of the two prophylaxis chains, human demography, the
-species dimension, and the resistance split of T — see `vignette("model")`.*
+*The model at a glance: humans above, mosquitoes below, the transmission cycle
+running counter-clockwise. Solid black = a flow of individuals, a rate in the ODE.
+Dashed indigo = a scalar coupling, where nobody moves. Dashed red = a discrete state
+jump. Dotted grey = a grouping or a set membership, never a compartment: the
+infectious pool, the adult females, and the ring marking the states the infection
+hazard acts on. A stacked outline = an array or an Erlang chain, with its count: the
+deck behind each panel is the age × biting-heterogeneity grid (humans) and the
+species dimension (mosquitoes), and the stacked boxes are the two prophylaxis chains
+and the EIP delay. Not drawn: the Erlang lag chains on the two couplings, and the
+split of T under antimalarial resistance — see `vignette("model")`.*
 
 ## What it is
 

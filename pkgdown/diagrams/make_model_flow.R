@@ -1,4 +1,4 @@
-# Generate the blink model flow diagram used at the top of vignette("model").
+# Generate the blink model flow diagram used by the README and vignette("model").
 #
 #   Rscript pkgdown/diagrams/make_model_flow.R
 #
@@ -7,6 +7,7 @@
 #
 # Outputs vignettes/model_flow.png and man/figures/model_flow.png, both
 # committed, so neither the vignette nor the README needs flodia at build time.
+# Set BLINK_DIAGRAM_OUT to write elsewhere, plus a 700-px proof (development).
 #
 # ---------------------------------------------------------------------------
 # INVARIANTS. Break one of these and the figure states something false.
@@ -16,68 +17,86 @@
 #        vignette appendix B.4 documents that and section 2 discloses it.
 #
 # FIDELITY
-#   A's only infection outflow is h_c (odin :255), so A's at-risk feeder joins
-#   the spine ABOVE the asymptomatic branch. U loses the full FOI (:261), so U's
-#   feeder joins below it. Getting this backwards draws a phantom A -> A flow.
-#   Chemoprevention clears S, U, A, D, T -- S is outside the infectious bracket,
-#   so the pulse must show an S source of its own.
-#   Larval death is affine, me*(1 + nL/K), not proportional; pupal death is
+#   The infection hazard acts on S + A + U. A's ONLY infection outflow is h_c
+#   (odin :255) -- there is no A -> A arrow -- and U loses the full FOI (:261).
+#   Membership of the at-risk pool is therefore drawn as a dotted OUTLINE on
+#   S, A and U, never as a flow: a line from A back to the spine would read as
+#   a phantom A -> A flow.
+#   Chemoprevention clears S, U, A, D, T, P and P_c -- S is outside the
+#   infectious pool, so the pulse must show an S source of its own.
+#   Larval death is affine, me*(1 + n_L/K), not proportional; pupal death is
 #   density-independent. E is EARLY LARVAL, not eggs. E_M is exposed, not
-#   infectious. Both couplings are lagged.
+#   infectious, and the EIP chain is loss-free with survival applied at exit.
+#   ALL adult females lay eggs, so oviposition leaves the adult grouping.
+#   Both couplings are lagged. P and P_c are Erlang CHAINS, not single
+#   compartments (NEWS 2026-09: k_P = 1 for AL, 16 SP-AQ; k_Pc = 14 SP-AQ).
 #
-# GRAMMAR is three-part, not two:
+# GRAMMAR is four-part, and the key states all of it:
 #   solid black + filled triangle = a rate in the ODE, people move
-#   dashed purple                 = a scalar coupling, nobody moves
+#   dashed indigo                 = a scalar coupling, nobody moves
 #   dashed red                    = people move, instantaneously (a state jump)
-#   dotted grey                   = a grouping, never a compartment; always labelled
+#   dotted grey                   = a grouping or a set membership, never a
+#                                   compartment; always labelled
+#   stacked outline               = an array or an Erlang chain (count shown)
 #   Set membership is never drawn in flow ink, and there is ONE arrowhead glyph
 #   for flows -- flodia's filled triangle, which hand-drawn paths must match.
 #
 # GEOMETRY  No line through a box. No two flows sharing a lane. Every arrowhead
-#   lands on something. All paths orthogonal. Brackets are DERIVED from the boxes
-#   they enclose and drawn BEFORE any node, so they never tint a fill.
+#   lands on something. All paths orthogonal. Flow labels sit BESIDE their line
+#   (LGAP clear of it), never on it. Panels, decks and regions are DERIVED from
+#   the boxes they enclose and drawn BEFORE any node, so they never tint a
+#   fill. The transmission cycle runs counter-clockwise -- humans left to
+#   right, mosquitoes right to left -- so the two couplings never cross each
+#   other. The only crossings in the figure are where the EIR coupling meets
+#   the two return lanes; both are drawn as hops (a gap in the EIR line).
+#   Flows to and from an at-risk box stop at its dotted ring, not its border.
 #
-# RENDERING  Authored at width 2400, res 250 (9.6 in). To check it at the size
-#   readers actually get, render at width 700, res 73 (9.59 in) -- NOT
+# DIMENSIONS  The three arrays are drawn, not just asserted: a deck of offset
+#   panels behind the human compartments (age i x heterogeneity j), a deck
+#   behind the mosquito compartments (species s), and a stacked outline behind
+#   each Erlang chain (P, P_c, EIP), each with its stage count beside it.
+#
+# RENDERING  Authored at width 2400, res 250 (9.6 in). Check it at the size
+#   readers actually get by rendering at width 700, res 73 (9.59 in) -- NOT
 #   flodia_png's default res, which gives 3.5 in and inflates every cex ~2.7x.
-#
-# KNOWN, DEFERRED  The fill palette does not survive greyscale (six of seven
-#   fills sit inside a 27-level luminance band) and S/P/P_c collapse under
-#   deuteranopia. Fixing that means abandoning flodia's light_palette() for a
-#   luminance ladder. Human ageing/death/births are disclosed in prose rather
-#   than drawn, to protect legibility at 520 px.
+#   The fills are a luminance ladder spanning 36 levels (flodia's light_palette
+#   packs seven fills into 27): every SPATIALLY ADJACENT pair differs by at least
+#   13 levels, so the figure survives greyscale, and every state is named too --
+#   colour never carries meaning alone.
 # ---------------------------------------------------------------------------
 
 library(flodia)
 
-## ---- palette ---------------------------------------------------------------
-col_sus   <- light_palette("bu")
-col_clin  <- light_palette("rd")
-col_asym  <- light_palette("oryl")
-col_treat <- light_palette("gn")
-col_proph <- light_palette("pu")
-col_aq    <- light_palette("gybr")
-col_mosq  <- light_palette("gnbu")
+## ---- palette: a luminance ladder -------------------------------------------
+SUS   <- "#EAF0F9"   # susceptible          luminance 94
+SUBP  <- "#F2DFAF"   # sub-patent                      88
+TREAT <- "#BCDCBC"   # treated                         83
+PROPH <- "#CBBCE2"   # prophylaxis                     76
+AQ    <- "#E0D9CB"   # aquatic mosquito                85
+ASYM  <- "#E3BC6A"   # asymptomatic                    75
+MOSQ  <- "#8FBAC5"   # adult mosquito                  70
+CLIN  <- "#CE8484"   # clinical disease                58
 
-COUPLE <- "#464273"   # scalar coupling      (9.2:1 on white)
+PANEL  <- "#FFFFFF"
+DECK1  <- "#F1F1EE"
+DECK2  <- "#E4E4E0"
+POOLT  <- "#F7F4EF"
+
+COUPLE <- "#463C8A"   # scalar coupling      (8.6:1 on white)
 PULSE  <- "#B03A22"   # discrete state jump  (6.0:1)
-GREY   <- "#666666"   # annotation text      (5.7:1)
-POOL   <- "#5F5563"   # groupings            (7.0:1, darker than before so the
-                      # label sitting in the tint clears AA comfortably)
+GREY   <- "#5B5B5B"   # annotation text      (7.0:1)
+POOL   <- "#6B6B6B"   # groupings            (5.6:1)
 INK    <- "grey15"
 
-RX <- 0.30; RY <- 0.20
-CEX_NODE <- 1.45; CEX_RATE <- 1.20; CEX_NOTE <- 1.10
+RX <- 0.34; RY <- 0.26; ARP <- 0.075          # box half-widths; at-risk ring pad
+CEX_NODE <- 1.5; CEX_RATE <- 1.15; CEX_NOTE <- 1.0; CEX_SMALL <- 0.85
+LGAP <- 0.19          # every flow label sits this far off its line
 
 ## ---- helpers ---------------------------------------------------------------
 nd <- function(x, y, label, col, heavy = FALSE) {
   node(x = x, y = y, rx = RX, ry = RY, label = label, node_col = col,
-       border_col = INK, label_cex = CEX_NODE, lwd = if (heavy) 2.6 else 1.0)
+       border_col = INK, label_cex = CEX_NODE, lwd = if (heavy) 2.4 else 1.0)
 }
-
-## a bare coordinate pair. NOT flodia::node(r = 0), which draws a degenerate
-## rect in flodia's default grey. flowx/flowy read only these six fields.
-pt <- function(x, y) list(x = x, y = y, x0 = x, x1 = x, y0 = y, y1 = y)
 
 ## the one arrowhead glyph, matching flodia's own flows
 head_at <- function(x0, y0, x1, y1, col) {
@@ -87,166 +106,289 @@ head_at <- function(x0, y0, x1, y1, col) {
 }
 
 ## orthogonal polyline; filled-triangle head on the last segment unless head = FALSE
-path <- function(xs, ys, col = INK, lty = 1, lwd = 1.2, head = TRUE) {
+path <- function(xs, ys, col = INK, lty = 1, lwd = 1.3, head = TRUE) {
   stopifnot(length(xs) == length(ys), length(xs) >= 2)
   n <- length(xs)
   segments(xs[-n], ys[-n], xs[-1], ys[-1], col = col, lty = lty, lwd = lwd)
   if (head) head_at(xs[n - 1], ys[n - 1], xs[n], ys[n], col)
 }
 
-## a bracket DERIVED from the boxes it encloses -- never eyeballed
-hull <- function(x, y, pad = 0.09) {
+## a vertical that HOPS over the lanes it must cross (circuit-diagram convention)
+vhop <- function(x, ya, yb, hops, col, lty = 1, lwd = 1.3, gap = 0.10) {
+  lo <- min(ya, yb); hi <- max(ya, yb)
+  cuts <- sort(unlist(lapply(hops, function(h) c(h - gap, h + gap))))
+  cuts <- cuts[cuts > lo & cuts < hi]
+  pts <- c(lo, cuts, hi)
+  for (k in seq(1, length(pts) - 1, by = 2))
+    segments(x, pts[k], x, pts[k + 1], col = col, lty = lty, lwd = lwd)
+}
+
+## a region DERIVED from the boxes it encloses -- never eyeballed
+hull <- function(x, y, pad = 0.12) {
   list(x0 = min(x) - RX - pad, x1 = max(x) + RX + pad,
        y0 = min(y) - RY - pad, y1 = max(y) + RY + pad)
 }
-bracket <- function(h) {
-  rect(h$x0, h$y0, h$x1, h$y1, border = POOL, lty = 3, lwd = 1.8, col = NA)
+region <- function(h, fill = POOLT) {
+  rect(h$x0, h$y0, h$x1, h$y1, border = POOL, lty = 3, lwd = 1.6, col = fill)
 }
 
-death <- function(x, y0, len = 0.34) path(c(x, x), c(y0, y0 - len))
+## the at-risk marker: a dotted ring OUTSIDE the box, so no flow ink is spent
+## on set membership (see FIDELITY)
+at_risk <- function(x, y) {
+  rect(x - RX - ARP, y - RY - ARP, x + RX + ARP, y + RY + ARP,
+       border = POOL, lty = 3, lwd = 1.5)
+}
+
+## a stacked outline behind a box: this compartment is an Erlang chain
+chain <- function(x, y, col, n = 2, d = 0.09) {
+  for (k in seq(n, 1))
+    rect(x - RX + k * d, y - RY + k * d, x + RX + k * d, y + RY + k * d,
+         col = col, border = INK, lwd = 0.9)
+}
+
+## a deck of offset panels behind a group of boxes: this is an array
+deck <- function(p, n = 2, dx = 0.20, dy = 0.20) {
+  cols <- c(DECK2, DECK1)
+  for (k in seq(n, 1))
+    rect(p$x0 + k * dx, p$y0 + k * dy, p$x1 + k * dx, p$y1 + k * dy,
+         col = cols[n - k + 1], border = POOL, lwd = 1.1)
+  rect(p$x0, p$y0, p$x1, p$y1, col = PANEL, border = POOL, lwd = 1.4)
+}
+
+death <- function(x, y0, len = 0.44) path(c(x, x), c(y0, y0 - len))
 
 lab <- function(x, y, txt, col = GREY, cex = CEX_NOTE, adj = c(0.5, 0.5),
                 font = 1) {
   text(x, y, txt, col = col, cex = cex, adj = adj, font = font)
 }
 
-## flow-label defaults. flodia otherwise uses pure-black italic, which reads as
-## a different class of symbol from every hand-drawn label.
-fl <- function(...) {
-  a <- list(...)
-  d <- list(label_col = INK, label_font = 1, label_cex = CEX_RATE,
-            arr_col = INK)
-  d[names(a)] <- a      # explicit args win, no duplicate-formal error
-  d
-}
-
 model_flow <- function() {
 
   ## ---- layout table: every position named exactly once --------------------
-  SPINE  <- 2.10
-  COL    <- 3.60                                # T / D / A column
-  UX     <- 5.25                                # U
-  LEFT   <- 0.80                                # P / S / P_c column
-  Y_T    <- 4.00; Y_D <- 3.15; Y_A <- 2.30      # right column rows
-  FOOT_U <- 1.86                                # U joins below the h_a branch
-  FOOT_A <- 2.72                                # A joins ABOVE it
-  LANE_U <- 1.30; LANE_CP <- 0.94; LANE_EIR <- 0.28
-  MY     <- -0.55
-  MX     <- c(E = 0.80, L = 2.15, Pl = 3.50, Sm = 4.85, Em = 6.20, Im = 7.90)
+  ## humans, left to right
+  LEFT  <- 1.25                                  # P / S / P_c column
+  SPINE <- 2.95                                  # the infection spine
+  MID   <- 4.85                                  # T / D / A column
+  UX    <- 6.75                                  # U
+  Y_T <- 4.70; Y_S <- 3.35; Y_A <- 2.00          # rows (P on Y_T, P_c on Y_A)
+  LANE_RT <- 5.36                                # T -> P, above the boxes
+  LANE_CP <- 1.28                                # chemoprevention pulse
+  LANE_U  <- 0.92                                # U -> S
+  RET_X   <- 0.42                                # the U -> S riser
+  CP_X    <- 5.20                                # the pulse drop off the pool
+  PULSE_S <- 1.45                                # the pulse's own S source
+  PC_X    <- 1.10                                # P_c -> S, clear of the pulse
+  HP <- list(x0 = 0.30, x1 = 7.42, y0 = 0.55, y1 = 5.90)
 
-  INFECT <- hull(c(COL, UX), c(Y_T, Y_A))
-  ADULT  <- hull(MX[c("Sm", "Im")], c(MY, MY))
+  ## mosquitoes, right to left, so the transmission cycle closes without the
+  ## two couplings crossing each other
+  MY <- -1.75
+  MX <- c(Im = 0.95, Em = 2.75, Sm = 4.35, Pl = 6.00, L = 7.30, E = 8.60)
+  LANE_OVI <- -3.05; OVI_X <- 9.15
+  MP <- list(x0 = 0.24, x1 = 9.32, y0 = -3.30, y1 = -0.98)
 
-  ## brackets first, so they never tint a node fill
-  bracket(INFECT)
-  bracket(ADULT)
+  ## couplings
+  LANE_EIR <- -0.90; LANE_FOIM <- -0.55; FOIM_X <- 7.85
 
-  ## ======================= HUMAN =========================================
-  Ph <- nd(LEFT, Y_T,  expression(bold(P)),    col_proph)
-  S  <- nd(LEFT, Y_D,  expression(bold(S)),    col_sus)
-  Pc <- nd(LEFT, Y_A,  expression(bold(P[c])), col_proph)
-  Tr <- nd(COL,  Y_T,  expression(bold(T)),    col_treat, heavy = TRUE)
-  D  <- nd(COL,  Y_D,  expression(bold(D)),    col_clin,  heavy = TRUE)
-  A  <- nd(COL,  Y_A,  expression(bold(A)),    col_asym,  heavy = TRUE)
-  U  <- nd(UX,   Y_A,  expression(bold(U)),    col_asym,  heavy = TRUE)
+  POOLH  <- hull(c(MID, UX), c(Y_A, Y_T))                  # infectious to mosquitoes
+  ADULTH <- hull(MX[c("Im", "Sm")], c(MY, MY), pad = 0.20) # adult females
 
-  lab(INFECT$x1 + 0.14, Y_D + 0.50, "infectious to\nmosquitoes", col = POOL,
-      cex = 1.0, font = 3, adj = c(0, 0.5))
+  ## ---- backdrop: decks first, so nothing tints a fill ---------------------
+  deck(HP)                                   # age i x heterogeneity j
+  deck(MP, dy = -0.20)                       # species s
+  region(POOLH)
+  region(ADULTH)
 
-  ## --- infection ----------------------------------------------------------
-  do.call(flowx, fl(from = S, to = pt(SPINE, Y_D), label = ""))
-  segments(SPINE, FOOT_U, SPINE, Y_T, col = INK, lwd = 1.2)      # the spine
-  lab(SPINE - 0.14, Y_T + 0.26, expression(Lambda), col = INK, cex = CEX_RATE,
-      adj = c(1, 0.5))
+  ## ======================= HUMANS ==========================================
+  for (xy in list(c(LEFT, Y_S), c(MID, Y_A), c(UX, Y_A))) at_risk(xy[1], xy[2])
+  chain(LEFT, Y_T, PROPH)                    # P is an Erlang chain
+  chain(LEFT, Y_A, PROPH)                    # so is P_c
 
-  ## at-risk membership, in POOL dotted so it is never read as a flow
-  path(c(A$x, A$x, SPINE), c(A$y1, FOOT_A, FOOT_A), col = POOL, lty = 3,
-       head = FALSE)
-  path(c(U$x, U$x, SPINE), c(U$y0, FOOT_U, FOOT_U), col = POOL, lty = 3,
-       head = FALSE)
-  lab(SPINE + 0.16, FOOT_U - 0.26, expression(paste("at risk: ", S + A + U)),
-      col = POOL, cex = 1.0, adj = c(0, 0.5))
+  Ph <- nd(LEFT, Y_T, expression(bold(P)),    PROPH)
+  S  <- nd(LEFT, Y_S, expression(bold(S)),    SUS)
+  Pc <- nd(LEFT, Y_A, expression(bold(P[c])), PROPH)
+  Tr <- nd(MID,  Y_T, expression(bold(T)),    TREAT, heavy = TRUE)
+  D  <- nd(MID,  Y_S, expression(bold(D)),    CLIN,  heavy = TRUE)
+  A  <- nd(MID,  Y_A, expression(bold(A)),    ASYM,  heavy = TRUE)
+  U  <- nd(UX,   Y_A, expression(bold(U)),    SUBP,  heavy = TRUE)
 
-  do.call(flowx, fl(from = pt(SPINE, Y_T), to = Tr, label = "treated"))
-  do.call(flowx, fl(from = pt(SPINE, Y_D), to = D,  label = "untreated"))
-  do.call(flowx, fl(from = pt(SPINE, Y_A), to = A,  label = "asymptomatic"))
+  lab(1.79, Y_T + 0.20, expression(paste(k[P], " stages")),
+      adj = c(0, 0.5), cex = CEX_SMALL)
+  lab(1.83, Y_A + 0.20, expression(paste(k[P[c]], " stages")),
+      adj = c(0, 0.5), cex = CEX_SMALL)
+  lab(5.10, POOLH$y1 + 0.24, "infectious to mosquitoes",
+      col = POOL, cex = CEX_NOTE, font = 3, adj = c(0, 0.5))
+
+  ## --- infection: one spine, three branches -------------------------------
+  segments(S$x1 + ARP, Y_S, SPINE, Y_S, col = INK, lwd = 1.3)  # the at-risk pool feeds it
+  segments(SPINE, Y_A, SPINE, Y_T, col = INK, lwd = 1.3)       # the spine
+  lab(SPINE - 0.14, 4.10, expression(Lambda[ij]), col = INK,
+      cex = CEX_RATE + 0.2, adj = c(1, 0.5))
+  lab(SPINE - 0.14, 3.84, "infection hazard", col = GREY,
+      cex = CEX_SMALL, adj = c(1, 0.5))
+
+  br <- function(y, txt, to_x) {
+    path(c(SPINE, to_x), c(y, y))
+    lab((SPINE + to_x) / 2, y + LGAP, txt, col = INK, cex = CEX_RATE)
+  }
+  br(Y_T, "treated",     MID - RX)
+  br(Y_S, "untreated",   MID - RX)
+  br(Y_A, "no symptoms", MID - RX - ARP)
+
+  ## --- immunity: four arrays, one coupling into the hazard ----------------
+  IMX <- 2.30; IMY <- 2.95; IMRX <- 0.46; IMRY <- 0.32
+  rect(IMX - IMRX, IMY - IMRY, IMX + IMRX, IMY + IMRY,
+       col = DECK1, border = POOL, lwd = 1.0)
+  lab(IMX, IMY + 0.10, expression(paste(I[B], "  ", I[CA], "  ", I[D], "  ", I[VA])),
+      col = INK, cex = CEX_SMALL)
+  lab(IMX, IMY - 0.14, "immunity (i, j)", col = GREY, cex = CEX_SMALL)
+  path(c(IMX + IMRX, SPINE), c(IMY, IMY), col = COUPLE, lty = 2, lwd = 1.6)
 
   ## --- recovery -----------------------------------------------------------
-  do.call(flowy, fl(from = D, to = A, label = expression(r[D])))
-  do.call(flowx, fl(from = A, to = U, label = expression(r[A])))
+  path(c(MID, MID), c(D$y0, A$y1 + ARP))
+  lab(MID + LGAP, (D$y0 + A$y1) / 2, expression(r[D]), col = INK,
+      cex = CEX_RATE, adj = c(0, 0.5))
+  path(c(A$x1 + ARP, U$x0 - ARP), c(Y_A, Y_A))
+  lab((A$x1 + U$x0) / 2, Y_A + LGAP, expression(r[A]), col = INK, cex = CEX_RATE)
 
   ## --- returns to S: four lanes, none shared ------------------------------
-  path(c(Tr$x, Tr$x, Ph$x, Ph$x), c(Tr$y1, Y_T + 0.66, Y_T + 0.66, Ph$y1))
-  lab(SPINE + 0.34, Y_T + 0.82, expression(r[T]), col = INK, cex = CEX_RATE)
-  do.call(flowy, fl(from = Ph, to = S, label = expression(r[P])))
-  do.call(flowy, fl(from = Pc, to = S, label = expression(r[P[c]])))
-  path(c(U$x1, 6.20, 6.20, 0.30, 0.30, S$x0),
-       c(U$y, U$y, LANE_U, LANE_U, S$y, S$y))
-  lab(7.05, LANE_U - 0.22, expression(r[U]), col = INK, cex = CEX_RATE)
+  path(c(MID, MID, LEFT, LEFT), c(Tr$y1, LANE_RT, LANE_RT, Ph$y1))
+  lab(3.05, LANE_RT + 0.16, expression(r[T]), col = INK, cex = CEX_RATE)
+  path(c(LEFT, LEFT), c(Ph$y0, S$y1 + ARP))
+  lab(LEFT + LGAP, (Ph$y0 + S$y1) / 2, expression(r[P]), col = INK,
+      cex = CEX_RATE, adj = c(0, 0.5))
+  path(c(PC_X, PC_X), c(Pc$y1, S$y0 - ARP))
+  lab(PC_X - LGAP, (Pc$y1 + S$y0) / 2, expression(r[P[c]]), col = INK,
+      cex = CEX_RATE, adj = c(1, 0.5))
+  path(c(UX, UX, RET_X, RET_X, S$x0 - ARP),
+       c(U$y0 - ARP, LANE_U, LANE_U, Y_S, Y_S))
+  lab(UX - 0.14, LANE_U + 0.16, expression(r[U]), col = INK, cex = CEX_RATE,
+      adj = c(1, 0.5))
 
   ## --- chemoprevention: a state jump, from S AND the infectious states -----
-  path(c(4.10, 4.10, Pc$x, Pc$x), c(INFECT$y0, LANE_CP, LANE_CP, Pc$y0),
+  path(c(CP_X, CP_X, LEFT, LEFT), c(POOLH$y0, LANE_CP, LANE_CP, Pc$y0),
        col = PULSE, lty = 4, lwd = 1.7)
-  path(c(1.45, 1.45), c(S$y0, LANE_CP), col = PULSE, lty = 4, lwd = 1.7,
-       head = FALSE)                                  # S is a source too
-  lab(3.00, LANE_CP - 0.32, expression(italic("MDA / SMC / PMC")),
+  path(c(PULSE_S, PULSE_S), c(S$y0 - ARP, Pc$y1), col = PULSE, lty = 4, lwd = 1.7)
+  lab(3.30, LANE_CP + 0.18, expression(italic("MDA / SMC / PMC")),
       col = PULSE, cex = CEX_NOTE)
 
-  ## ======================= MOSQUITO ======================================
-  E  <- nd(MX[["E"]],  MY, expression(bold(E)),    col_aq)
-  L  <- nd(MX[["L"]],  MY, expression(bold(L)),    col_aq)
-  Pl <- nd(MX[["Pl"]], MY, expression(bold(P[L])), col_aq)
-  Sm <- nd(MX[["Sm"]], MY, expression(bold(S[M])), col_mosq)
-  Em <- nd(MX[["Em"]], MY, expression(bold(E[M])), col_mosq)
-  Im <- nd(MX[["Im"]], MY, expression(bold(I[M])), col_mosq, heavy = TRUE)
+  ## --- what the layers mean, and what happens between them ----------------
+  lab(HP$x0 + 0.14, HP$y1 - 0.16, "HUMANS", col = INK, cex = 1.25, font = 2,
+      adj = c(0, 0.5))
+  lab(1.60, HP$y1 - 0.16, "each box is an array over age i and heterogeneity j",
+      col = GREY, cex = CEX_NOTE, font = 3, adj = c(0, 0.5))
+  lab(HP$x1 - 0.10, HP$y1 - 0.16, "i = 1", col = GREY, cex = CEX_SMALL, adj = c(1, 0.5))
+  lab(HP$x1 + 0.30, HP$y1 + 0.10, "i = 2", col = GREY, cex = CEX_SMALL, adj = c(1, 0.5))
+  lab(HP$x1 + 0.50, HP$y1 + 0.30, "i = 52 (80+ y)", col = GREY, cex = CEX_SMALL,
+      adj = c(1, 0.5))
+  lab(HP$x0 + 0.30, HP$y0 + 0.16,
+      expression(italic(paste("people age between layers (", r[i],
+                              "), die from every box (", mu[i](t),
+                              "), and are born into S"))),
+      col = GREY, cex = CEX_SMALL, adj = c(0, 0.5))
 
-  lab(mean(MX[c("Sm", "Im")]), ADULT$y1 + 0.20, "adult females: all lay eggs",
-      col = POOL, cex = 1.0, font = 3)
+  ## ======================= MOSQUITOES ======================================
+  chain(MX[["Em"]], MY, MOSQ)                # the EIP is an Erlang delay chain
 
-  do.call(flowx, fl(from = E,  to = L,  label = expression(1/d[E])))
-  do.call(flowx, fl(from = L,  to = Pl, label = expression(1/d[L])))
-  do.call(flowx, fl(from = Pl, to = Sm, label = expression(1/(2 * d[P])), label_cex = 1.0))
-  do.call(flowx, fl(from = Sm, to = Em, label = expression(Lambda[s]^M)))
-  do.call(flowx, fl(from = Em, to = Im, label = "survives EIP", label_cex = 1.0))
+  E  <- nd(MX[["E"]],  MY, expression(bold(E)),    AQ)
+  L  <- nd(MX[["L"]],  MY, expression(bold(L)),    AQ)
+  Pl <- nd(MX[["Pl"]], MY, expression(bold(P[L])), AQ)
+  Sm <- nd(MX[["Sm"]], MY, expression(bold(S[M])), MOSQ)
+  Em <- nd(MX[["Em"]], MY, expression(bold(E[M])), MOSQ)
+  Im <- nd(MX[["Im"]], MY, expression(bold(I[M])), MOSQ, heavy = TRUE)
+
+  fl <- function(from, to, txt, cex = CEX_RATE) {
+    path(c(from$x0, to$x1), c(MY, MY))
+    lab((from$x0 + to$x1) / 2, MY + LGAP, txt, col = INK, cex = cex)
+  }
+  fl(E,  L,  expression(1/d[E]))
+  fl(L,  Pl, expression(1/d[L]))
+  fl(Pl, Sm, expression(1/(2 * d[P])), cex = CEX_NOTE)
+  fl(Sm, Em, expression(Lambda[s]^M))
+  fl(Em, Im, "survives EIP", cex = 0.78)
 
   for (b in list(E, L, Pl, Sm, Em, Im)) death(b$x, b$y0)
-  lab(0.52, MY - 1.06,
-      expression(paste("death; larval death rises with ", n[L]/K[s](t),
-                       " -- seasonality")), adj = c(0, 0.5), cex = 1.0)
-  lab(MX[["Im"]] + 0.48, MY - 0.36, expression(mu[s](t)), adj = c(0, 0.5),
-      cex = CEX_RATE)
+  lab(3.20, -2.10, expression(paste("EIP: ", n[P], " stages")), adj = c(0, 0.5),
+      cex = CEX_SMALL)
 
-  ## oviposition: from ALL adults, entering E from the left
-  path(c(5.52, 5.52, 0.30, 0.30, E$x0),
-       c(ADULT$y0, MY - 1.50, MY - 1.50, MY, MY))
-  lab(3.00, MY - 1.34, expression(beta[s]), col = INK, cex = CEX_RATE)
+  lab(MP$x0 + 0.14, MP$y1 - 0.14, "MOSQUITOES", col = INK, cex = 1.25,
+      font = 2, adj = c(0, 0.5))
+  lab(ADULTH$x1 + 0.14, MP$y1 - 0.14, "adult females -- all lay eggs",
+      col = POOL, cex = CEX_NOTE, font = 3, adj = c(0, 0.5))
+  lab(MP$x0 + 0.30, MP$y0 + 0.16,
+      expression(italic(paste("death: adults ", mu[s](t), "; larvae rise with ",
+                              n[L]/K[s](t), " -- seasonality enters here"))),
+      col = GREY, cex = CEX_SMALL, adj = c(0, 0.5))
+  lab(MP$x1 + 0.46, MP$y0 - 0.30,
+      expression(paste("s = 1 ... ", n[v], " species")), col = GREY,
+      cex = CEX_SMALL, adj = c(1, 0.5))
 
-  ## ======================= COUPLING ======================================
-  path(c(Im$x, Im$x, SPINE, SPINE), c(Im$y1, LANE_EIR, LANE_EIR, FOOT_U),
-       col = COUPLE, lty = 2, lwd = 1.8)
-  lab(6.10, LANE_EIR + 0.26,
-      expression(paste("EIR = ", a[s](t), " ", I[M], ", lagged ", tau[E])),
+  ## oviposition: from ALL adult females, entering E from the right
+  path(c(3.50, 3.50, OVI_X, OVI_X, E$x1),
+       c(ADULTH$y0, LANE_OVI, LANE_OVI, MY, MY))
+  lab(7.70, LANE_OVI + 0.18, expression(beta[s]), col = INK, cex = CEX_RATE)
+
+  ## ======================= COUPLINGS =======================================
+  ## EIR: infectious mosquitoes -> the human hazard. Hops the two return lanes.
+  segments(Im$x, Im$y1, Im$x, LANE_EIR, col = COUPLE, lty = 2, lwd = 1.7)
+  segments(Im$x, LANE_EIR, SPINE, LANE_EIR, col = COUPLE, lty = 2, lwd = 1.7)
+  vhop(SPINE, LANE_EIR, Y_A, hops = c(LANE_U, LANE_CP), col = COUPLE,
+       lty = 2, lwd = 1.7)
+  head_at(SPINE, Y_A - 0.20, SPINE, Y_A, COUPLE)
+  lab(1.20, LANE_EIR + 0.20,
+      expression(paste("EIR = ", sum(a[s](t) * I[M], s), ",  lagged ", tau[E])),
+      col = COUPLE, cex = CEX_NOTE, adj = c(0, 0.5))
+
+  ## human infectivity -> the mosquito FOI
+  path(c(POOLH$x1, FOIM_X, FOIM_X, MX[["Sm"]], MX[["Sm"]]),
+       c(Y_S, Y_S, LANE_FOIM, LANE_FOIM, Sm$y1), col = COUPLE, lty = 2, lwd = 1.7)
+  lab(6.10, LANE_FOIM + 0.20,
+      expression(paste(Lambda[s]^M, " = ", a[s](t), " x infectivity,  lagged ", tau[l])),
       col = COUPLE, cex = CEX_NOTE)
 
-  path(c(Sm$x, Sm$x), c(INFECT$y0, Sm$y1), col = COUPLE, lty = 2, lwd = 1.8)
-  lab(Sm$x + 0.34, FOOT_U - 0.26,
-      expression(paste(Lambda[s]^M, " = ", a[s](t), " infectivity, lagged ",
-                       tau[l])), col = COUPLE, cex = CEX_NOTE, adj = c(0, 0.5))
+  ## ======================= KEY =============================================
+  KX <- 8.18; KT <- 8.80; ky <- 5.52
+  lab(KX, ky + 0.44, "Key", col = INK, cex = 1.15, font = 2, adj = c(0, 0.5))
+  krow <- function(y, txt, draw) {
+    draw(y); lab(KT, y, txt, col = GREY, cex = CEX_SMALL, adj = c(0, 0.5))
+  }
+  krow(ky, "flow: a rate in the ODE",
+       function(y) path(c(KX, KX + 0.48), c(y, y)))
+  krow(ky - 0.46, "coupling: nobody moves",
+       function(y) path(c(KX, KX + 0.48), c(y, y), col = COUPLE, lty = 2, lwd = 1.7))
+  krow(ky - 0.92, "pulse: a state jump",
+       function(y) path(c(KX, KX + 0.48), c(y, y), col = PULSE, lty = 4, lwd = 1.7))
+  krow(ky - 1.38, "grouping, not a state",
+       function(y) rect(KX, y - 0.13, KX + 0.48, y + 0.13, border = POOL,
+                        lty = 3, lwd = 1.6, col = POOLT))
+  krow(ky - 1.86, expression(paste(Lambda, " acts here: S, A, U")),
+       function(y) {
+         rect(KX + 0.07, y - 0.10, KX + 0.41, y + 0.10, col = SUS, border = INK)
+         rect(KX, y - 0.17, KX + 0.48, y + 0.17, border = POOL, lty = 3, lwd = 1.5)
+       })
+  krow(ky - 2.36, "array / Erlang chain",
+       function(y) {
+         rect(KX + 0.16, y - 0.05, KX + 0.50, y + 0.15, col = DECK1, border = POOL)
+         rect(KX + 0.08, y - 0.10, KX + 0.42, y + 0.10, col = DECK1, border = POOL)
+         rect(KX, y - 0.15, KX + 0.34, y + 0.05, col = PANEL, border = INK)
+       })
 
-  ## ======================= ANNOTATION ====================================
-  lab(0.28, Y_T + 0.98, "HUMAN", adj = c(0, 0.5), font = 2, cex = 1.3)
-  lab(0.28, MY + 0.88, "MOSQUITO", adj = c(0, 0.5), font = 2, cex = 1.3)
-  lab(0.30, MY - 1.92,
-      expression(italic("human boxes also age, die, and are replenished by births")),
-      adj = c(0, 0.5), cex = 0.98)
-
-  list(x0 = 0.20, x1 = 8.60, y0 = -2.42, y1 = 5.14)
+  list(x0 = 0.10, x1 = 10.85, y0 = -3.90, y1 = 6.45)
 }
 
 ## ---- write ------------------------------------------------------------------
-stopifnot(file.exists("DESCRIPTION"))
+out <- Sys.getenv("BLINK_DIAGRAM_OUT", "")
 tmp <- tempfile(fileext = ".png")
 flodia_png(model_flow, filepath = tmp, width = 2400, res = 250)
-stopifnot(file.copy(tmp, "vignettes/model_flow.png", overwrite = TRUE),
-          file.copy(tmp, "man/figures/model_flow.png", overwrite = TRUE))
-message("wrote vignettes/model_flow.png and man/figures/model_flow.png")
+if (nzchar(out)) {
+  dir.create(out, showWarnings = FALSE, recursive = TRUE)
+  stopifnot(file.copy(tmp, file.path(out, "model_flow.png"), overwrite = TRUE))
+  flodia_png(model_flow, filepath = file.path(out, "model_flow_700.png"),
+             width = 700, res = 73)
+  message("wrote ", out)
+} else {
+  stopifnot(file.exists("DESCRIPTION"))
+  stopifnot(file.copy(tmp, "vignettes/model_flow.png", overwrite = TRUE),
+            file.copy(tmp, "man/figures/model_flow.png", overwrite = TRUE))
+  message("wrote vignettes/model_flow.png and man/figures/model_flow.png")
+}

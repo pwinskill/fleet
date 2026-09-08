@@ -62,32 +62,52 @@ segments. §3.1–3.4 set out exactly which is which.
 
 ## 2. The model at a glance
 
-![Flow diagram of the blink model. The upper half shows the human compartments:
-susceptible; untreated clinical disease; treated; asymptomatic and sub-patent
-infection; and two prophylaxis compartments, one post-treatment and one for
-chemoprevention. A dotted region encloses the four states infectious to mosquitoes.
-The treated state is drawn once; the model splits it in two when antimalarial
-resistance is switched on. The infection hazard acts on the susceptible,
-asymptomatic and sub-patent states together and splits three ways; recovery returns
-everyone to susceptible. A dashed red path marks the chemoprevention pulse, a
-discrete jump rather than a rate, drawn leaving both the susceptible state and the
-infectious pool. The lower half shows the mosquito compartments: early and late
-larvae and pupae, then susceptible, exposed and infectious adults, with a death
-outflow from each and a return flow in which all adult females lay eggs back into
-the first larval stage. A second dotted region encloses the adult females. Two
-dashed purple paths couple the halves: the entomological inoculation rate driving
-human infection, and human infectivity driving the mosquito force of infection,
-both lagged.](model_flow.png)
+![Flow diagram of the blink model, in two panels, each sitting on a deck of offset
+copies that stands for the array the panel is replicated over. The upper panel
+holds the human compartments: susceptible; untreated clinical disease; treated;
+asymptomatic and sub-patent infection; and two prophylaxis compartments, one
+post-treatment and one for chemoprevention, each drawn as a stack of boxes to mark
+it as an Erlang chain with its stage count beside it. Its deck is labelled for the
+52 age groups, and a note records that every box is also an array over the five
+biting-heterogeneity nodes, that people age between layers, die from every box, and
+are born into susceptible. A dotted region encloses the four states infectious to
+mosquitoes; a dotted ring round the susceptible, asymptomatic and sub-patent boxes
+marks the states the infection hazard acts on. The treated state is drawn once; the
+model splits it in two when antimalarial resistance is switched on. The infection
+hazard leaves a vertical spine and splits three ways, into treated, untreated and
+asymptomatic; recovery returns everyone to susceptible. A small box holds the four
+immunity arrays, coupled into the hazard. A dashed red path marks the
+chemoprevention pulse, a discrete jump rather than a rate, drawn leaving both the
+susceptible state and the infectious pool. The lower panel holds the mosquito
+compartments, running right to left: early and late larvae and pupae, then
+susceptible, exposed and infectious adults, with a death outflow from each and a
+return flow in which all adult females lay eggs back into the first larval stage. A
+second dotted region encloses the adult females, and the panel's deck is labelled
+for the species dimension. Two dashed indigo paths couple the panels: the
+entomological inoculation rate driving human infection, and human infectivity
+driving the mosquito force of infection, both lagged. A key at the right names each
+line style.](model_flow.png)
 
-The figure uses three line grammars, not two:
+The figure uses four grammars, not two:
 
 - **Solid black** — a flow of individuals, i.e. a term in the ODE.
-- **Dashed purple** — a *scalar coupling*: it sets a rate in the other panel, and
+- **Dashed indigo** — a *scalar coupling*: it sets a rate in the other panel, and
   nobody moves along it.
 - **Dashed red** — people *do* move, but instantaneously, as a state jump between
   integration segments rather than at a rate.
-- **Dotted grey** — a grouping, never a compartment. There are two: the infectious
-  pool, and the adult mosquitoes.
+- **Dotted grey** — a grouping or a set membership, never a compartment, and always
+  labelled. There are three: the infectious pool, the adult mosquitoes, and the ring
+  round $S$, $A$ and $U$ marking the states $\Lambda$ acts on. Drawing that last one
+  as a *ring* rather than as lines back to the spine is deliberate: a line from $A$
+  would read as a flow $A \to A$, which the model does not have (§B.4).
+- **A stacked outline** — an array or an Erlang chain, with its count. The deck
+  behind each panel is the dimension that panel is replicated over (age $\times$
+  heterogeneity for humans, species for mosquitoes); the stacked boxes are the two
+  prophylaxis chains and the EIP delay.
+
+The transmission cycle runs counter-clockwise — humans left to right, mosquitoes
+right to left — so the two couplings never cross. Where the EIR coupling must cross
+a return lane it hops it, as in a circuit diagram.
 
 Reading it:
 
@@ -112,18 +132,18 @@ Reading it:
   Infectious mosquitoes drive the human hazard through the EIR; infectious humans
   drive the mosquito force of infection $\Lambda^M_s$. Both are lagged (§B.2, §C).
 
-**What the figure leaves out.** It is an overview. Not drawn: the four immunity
-arrays $I_B$, $I_{CA}$, $I_D$, $I_{VA}$ — $b$ and $\phi$ set arrows that *are*
-shown, while $q$ and $\theta$ act on the infectivity coupling and the
-severe-incidence output; the three Erlang lag chains behind the two couplings and
-the incubation period, and the stages of the two prophylaxis chains ($P$ and
-$P_c$ are each drawn as one box); the age × heterogeneity structure inside every human box,
-and the ageing flow between age groups; human death and the births that replenish
-$S$ (noted on the figure, not drawn, unlike the mosquito deaths — those are drawn
-because $\mu_s$ is where nets and IRS act); the species dimension, which replicates
-the whole mosquito panel; and the split of $T$ into fast and slow parasite
-clearance, which exists only once antimalarial resistance is switched on. Most are
-the subject of §3; the $T$ split is §B.4.
+**What the figure leaves out.** It is an overview. The four immunity arrays $I_B$,
+$I_{CA}$, $I_D$, $I_{VA}$ appear as one box coupled into the hazard, but which
+function each drives is not drawn — $b$ and $\phi$ set arrows that *are* shown,
+while $q$ and $\theta$ act on the infectivity coupling and the severe-incidence
+output. Not drawn at all: the two Erlang lag chains behind the couplings ($n_E$,
+$n_F$ stages — the couplings are marked "lagged", and the EIP chain *is* drawn);
+the individual layers of each deck, so ageing between age groups, human death and
+the births that replenish $S$ are noted on the panel rather than drawn as arrows
+(unlike the mosquito deaths, which are drawn because $\mu_s$ is where nets and IRS
+act); and the split of $T$ into fast and slow parasite clearance, which exists only
+once antimalarial resistance is switched on. Most are the subject of §3; the $T$
+split is §B.4.
 
 Nor does the figure mark where interventions act. With the single exception of
 chemoprevention — the one intervention that adds a compartment — they modify
