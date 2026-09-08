@@ -131,41 +131,76 @@ as a <strong>time-varying coefficient</strong> in the ODE, or as a
 <h2 id="the-model-at-a-glance">2. The model at a glance<a class="anchor" aria-label="anchor" href="#the-model-at-a-glance"></a>
 </h2>
 <div class="float">
-<img src="model_flow.png" alt="Flow diagram of the blink model. The upper half shows the human compartments: susceptible; untreated clinical disease; treated; asymptomatic and sub-patent infection; and two prophylaxis compartments, one post-treatment and one for chemoprevention. A dotted region encloses the four states infectious to mosquitoes. The treated state is drawn once; the model splits it in two when antimalarial resistance is switched on. The infection hazard acts on the susceptible, asymptomatic and sub-patent states together and splits three ways; recovery returns everyone to susceptible. A dashed red path marks the chemoprevention pulse, a discrete jump rather than a rate, drawn leaving both the susceptible state and the infectious pool. The lower half shows the mosquito compartments: early and late larvae and pupae, then susceptible, exposed and infectious adults, with a death outflow from each and a return flow in which all adult females lay eggs back into the first larval stage. A second dotted region encloses the adult females. Two dashed purple paths couple the halves: the entomological inoculation rate driving human infection, and human infectivity driving the mosquito force of infection, both lagged."><div class="figcaption">Flow diagram of the blink model. The upper half
-shows the human compartments: susceptible; untreated clinical disease;
-treated; asymptomatic and sub-patent infection; and two prophylaxis
-compartments, one post-treatment and one for chemoprevention. A dotted
-region encloses the four states infectious to mosquitoes. The treated
-state is drawn once; the model splits it in two when antimalarial
-resistance is switched on. The infection hazard acts on the susceptible,
-asymptomatic and sub-patent states together and splits three ways;
-recovery returns everyone to susceptible. A dashed red path marks the
-chemoprevention pulse, a discrete jump rather than a rate, drawn leaving
-both the susceptible state and the infectious pool. The lower half shows
-the mosquito compartments: early and late larvae and pupae, then
-susceptible, exposed and infectious adults, with a death outflow from
-each and a return flow in which all adult females lay eggs back into the
-first larval stage. A second dotted region encloses the adult females.
-Two dashed purple paths couple the halves: the entomological inoculation
-rate driving human infection, and human infectivity driving the mosquito
-force of infection, both lagged.</div>
+<img src="model_flow.png" alt="Flow diagram of the blink model, in two panels, each sitting on a deck of offset copies that stands for the array the panel is replicated over. The upper panel holds the human compartments: susceptible; untreated clinical disease; treated; asymptomatic and sub-patent infection; and two prophylaxis compartments, one post-treatment and one for chemoprevention, each drawn as a stack of boxes to mark it as an Erlang chain with its stage count beside it. Its deck is labelled for the 52 age groups, and a note records that every box is also an array over the five biting-heterogeneity nodes, that people age between layers, die from every box, and are born into susceptible. A dotted region encloses the four states infectious to mosquitoes; a dotted ring round the susceptible, asymptomatic and sub-patent boxes marks the states the infection hazard acts on. The treated state is drawn once; the model splits it in two when antimalarial resistance is switched on. The infection hazard leaves a vertical spine and splits three ways, into treated, untreated and asymptomatic; recovery returns everyone to susceptible. A small box holds the four immunity arrays, coupled into the hazard. A dashed red path marks the chemoprevention pulse, a discrete jump rather than a rate, drawn leaving both the susceptible state and the infectious pool. The lower panel holds the mosquito compartments, running right to left: early and late larvae and pupae, then susceptible, exposed and infectious adults, with a death outflow from each and a return flow in which all adult females lay eggs back into the first larval stage. A second dotted region encloses the adult females, and the panel’s deck is labelled for the species dimension. Two dashed indigo paths couple the panels: the entomological inoculation rate driving human infection, and human infectivity driving the mosquito force of infection, both lagged. A key at the right names each line style."><div class="figcaption">Flow diagram of the blink model, in two panels,
+each sitting on a deck of offset copies that stands for the array the
+panel is replicated over. The upper panel holds the human compartments:
+susceptible; untreated clinical disease; treated; asymptomatic and
+sub-patent infection; and two prophylaxis compartments, one
+post-treatment and one for chemoprevention, each drawn as a stack of
+boxes to mark it as an Erlang chain with its stage count beside it. Its
+deck is labelled for the 52 age groups, and a note records that every
+box is also an array over the five biting-heterogeneity nodes, that
+people age between layers, die from every box, and are born into
+susceptible. A dotted region encloses the four states infectious to
+mosquitoes; a dotted ring round the susceptible, asymptomatic and
+sub-patent boxes marks the states the infection hazard acts on. The
+treated state is drawn once; the model splits it in two when
+antimalarial resistance is switched on. The infection hazard leaves a
+vertical spine and splits three ways, into treated, untreated and
+asymptomatic; recovery returns everyone to susceptible. A small box
+holds the four immunity arrays, coupled into the hazard. A dashed red
+path marks the chemoprevention pulse, a discrete jump rather than a
+rate, drawn leaving both the susceptible state and the infectious pool.
+The lower panel holds the mosquito compartments, running right to left:
+early and late larvae and pupae, then susceptible, exposed and
+infectious adults, with a death outflow from each and a return flow in
+which all adult females lay eggs back into the first larval stage. A
+second dotted region encloses the adult females, and the panel’s deck is
+labelled for the species dimension. Two dashed indigo paths couple the
+panels: the entomological inoculation rate driving human infection, and
+human infectivity driving the mosquito force of infection, both lagged.
+A key at the right names each line style.</div>
 </div>
-<p>The figure uses three line grammars, not two:</p>
+<p>The figure uses four grammars, not two:</p>
 <ul>
 <li>
 <strong>Solid black</strong> — a flow of individuals, i.e. a term in
 the ODE.</li>
 <li>
-<strong>Dashed purple</strong> — a <em>scalar coupling</em>: it sets
+<strong>Dashed indigo</strong> — a <em>scalar coupling</em>: it sets
 a rate in the other panel, and nobody moves along it.</li>
 <li>
 <strong>Dashed red</strong> — people <em>do</em> move, but
 instantaneously, as a state jump between integration segments rather
 than at a rate.</li>
 <li>
-<strong>Dotted grey</strong> — a grouping, never a compartment.
-There are two: the infectious pool, and the adult mosquitoes.</li>
+<strong>Dotted grey</strong> — a grouping or a set membership, never
+a compartment, and always labelled. There are three: the infectious
+pool, the adult mosquitoes, and the ring round
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>
+marking the states
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Λ</mi><annotation encoding="application/x-tex">\Lambda</annotation></semantics></math>
+acts on. Drawing that last one as a <em>ring</em> rather than as lines
+back to the spine is deliberate: a line from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+would read as a flow
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>→</mo><mi>A</mi></mrow><annotation encoding="application/x-tex">A \to A</annotation></semantics></math>,
+which the model does not have (§B.4).</li>
+<li>
+<strong>A stacked outline</strong> — an array or an Erlang chain,
+with its count. The deck behind each panel is the dimension that panel
+is replicated over (age
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>×</mi><annotation encoding="application/x-tex">\times</annotation></semantics></math>
+heterogeneity for humans, species for mosquitoes); the stacked boxes are
+the two prophylaxis chains and the EIP delay.</li>
 </ul>
+<p>The transmission cycle runs counter-clockwise — humans left to right,
+mosquitoes right to left — so the two couplings never cross. Where the
+EIR coupling must cross a return lane it hops it, as in a circuit
+diagram.</p>
 <p>Reading it:</p>
 <ul>
 <li>
@@ -239,13 +274,14 @@ through the EIR; infectious humans drive the mosquito force of infection
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi mathvariant="normal">Λ</mi><mi>s</mi><mi>M</mi></msubsup><annotation encoding="application/x-tex">\Lambda^M_s</annotation></semantics></math>.
 Both are lagged (§B.2, §C).</li>
 </ul>
-<p><strong>What the figure leaves out.</strong> It is an overview. Not
-drawn: the four immunity arrays
+<p><strong>What the figure leaves out.</strong> It is an overview. The
+four immunity arrays
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mi>B</mi></msub><annotation encoding="application/x-tex">I_B</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>C</mi><mi>A</mi></mrow></msub><annotation encoding="application/x-tex">I_{CA}</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mi>D</mi></msub><annotation encoding="application/x-tex">I_D</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>V</mi><mi>A</mi></mrow></msub><annotation encoding="application/x-tex">I_{VA}</annotation></semantics></math>
-—
+appear as one box coupled into the hazard, but which function each
+drives is not drawn —
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>
 and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>
@@ -253,21 +289,18 @@ set arrows that <em>are</em> shown, while
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math>
 and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
-act on the infectivity coupling and the severe-incidence output; the
-three Erlang lag chains behind the two couplings and the incubation
-period, and the stages of the two prophylaxis chains
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mi>c</mi></msub><annotation encoding="application/x-tex">P_c</annotation></semantics></math>
-are each drawn as one box); the age × heterogeneity structure inside
-every human box, and the ageing flow between age groups; human death and
-the births that replenish
+act on the infectivity coupling and the severe-incidence output. Not
+drawn at all: the two Erlang lag chains behind the couplings
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mi>E</mi></msub><annotation encoding="application/x-tex">n_E</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mi>F</mi></msub><annotation encoding="application/x-tex">n_F</annotation></semantics></math>
+stages — the couplings are marked “lagged”, and the EIP chain
+<em>is</em> drawn); the individual layers of each deck, so ageing
+between age groups, human death and the births that replenish
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>
-(noted on the figure, not drawn, unlike the mosquito deaths — those are
-drawn because
+are noted on the panel rather than drawn as arrows (unlike the mosquito
+deaths, which are drawn because
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>s</mi></msub><annotation encoding="application/x-tex">\mu_s</annotation></semantics></math>
-is where nets and IRS act); the species dimension, which replicates the
-whole mosquito panel; and the split of
+is where nets and IRS act); and the split of
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
 into fast and slow parasite clearance, which exists only once
 antimalarial resistance is switched on. Most are the subject of §3; the
