@@ -13,6 +13,8 @@ run_simulation_ode(
   n_eir = 10L,
   n_foim = 10L,
   n_eip = 20L,
+  n_ph = NULL,
+  n_phc = NULL,
   atol = 1e-08,
   rtol = 1e-08,
   step_size_max = 1,
@@ -50,6 +52,14 @@ positive acquired immunity inside the \code{b}/\code{phi}/\code{theta} Hill func
 is a per-individual detail which does not carry over to a stratum mean; an
 A/B against the IBM ensemble mean favours \code{0}. Set \code{0.5} to reproduce the
 IBM's literal Hill calls.
+\item \code{hold_init_EIR} (default \code{FALSE}) — only matters with \code{set_demography()}.
+malariasimulation's \code{set_equilibrium()} sizes the mosquito population from
+the equilibrium under its \emph{default} exponential age structure, so under a
+custom demography the IBM drifts to whatever transmission that density
+supports. By default blink replicates that: it takes the IBM's mosquito
+density and seeds at the EIR its own equilibrium under the custom age
+structure then supports (a fixed point, so no burn-in), which is generally
+\emph{not} \code{init_EIR}. Set \code{TRUE} to seed at \code{init_EIR} exactly instead.
 }}
 
 \item{correlations}{accepted so the first three arguments mirror
@@ -58,8 +68,11 @@ exactly (drop-in call compatibility). Intervention correlation is an
 individual-level feature with no mean-field analogue, so a non-NULL value is
 ignored with a warning (the ODE assumes independence between interventions).}
 
-\item{init_EIR}{target adult EIR (bites/adult/year). If NULL, taken from
-\code{parameters$init_EIR} (set by malariasimulation::set_equilibrium()).}
+\item{init_EIR}{target adult EIR (bites/adult/year), with the same meaning as in
+\code{malariasimulation::set_equilibrium()}. If NULL, taken from
+\code{parameters$init_EIR} (set by set_equilibrium()). Under the default demography
+this is the EIR blink realises; under \code{set_demography()} see \code{hold_init_EIR}
+above.}
 
 \item{age_lower}{age-group lower edges in \strong{years} (default graded grid).}
 
@@ -67,10 +80,26 @@ ignored with a warning (the ODE assumes independence between interventions).}
 and mosquito EIP. Larger values sharpen the (otherwise gamma-shaped) lags
 toward the IBM's fixed delays; equilibrium is exact for any value.}
 
+\item{n_ph, n_phc}{Erlang-chain stage counts for the post-treatment (\code{Ph}) and
+chemoprevention (\code{Ph_c}) prophylaxis compartments. \code{NULL} (default) matches the
+chain's variance to the drug's Weibull protection curve, capped at 20. For
+\code{Ph_c} that is \verb{1/CV²} of the Weibull: 14 for SP-AQ, 15 for DHA-PQP. \code{Ph}
+follows the exponential treated stage \code{Tr}, so its count matches the variance
+of the whole \code{Tr + Ph} sojourn and its mean is the integrated protection left
+after \code{Tr}: 16 stages for SP-AQ, 20 for DHA-PQP, and 1 for AL, whose 10-day
+protection is already less variable than \code{Tr} itself. A drug mixture is
+moment-matched as a mixture. \code{1} is a single exponential stage, which for
+\code{Ph_c} leaks protection early between monthly SMC rounds. The count is fixed
+at the seed's drug mix — a first-line switch moves the chain's mean, not its
+shape.}
+
 \item{atol, rtol, step_size_max}{dust2 ODE-solver controls. The defaults
 (\code{1e-8}, \code{1e-8}, \code{1}) preserve the flat equilibrium exactly; for long dynamic
-projections a looser tolerance and larger step cap (e.g. \code{1e-6}, \code{1e-6}, \code{10})
-run several times faster with negligible effect on aggregate outputs.}
+projections a looser relative tolerance and larger step cap (\code{atol = 1e-8},
+\code{rtol = 1e-6}, \code{step_size_max = 10}) run several times faster with negligible
+effect on aggregate outputs. Keep \code{atol} at \code{1e-8}: the individual prophylaxis
+chain stages hold occupancies of order \code{1e-6}, which a looser absolute
+tolerance lets dip below zero.}
 
 \item{odin_file}{optional path to the odin source (development use).}
 }

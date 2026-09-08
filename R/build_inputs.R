@@ -60,7 +60,7 @@ get_ft <- function(p, t = 1) {
 #' @param ft effective treated fraction (coverage x drug efficacy).
 #' @param n_ph number of prophylaxis chain stages.
 #' @return list(S, T, D, A, U, P) of per-age equilibrium population fractions; `P`
-#'   is an [n_age, n_ph] matrix of stage occupancies.
+#'   is an n_age x n_ph matrix of stage occupancies.
 #' @noRd
 solve_disease_block <- function(FOI, phi, prop, r, eta, rA, rD, rU, rT, rP, ft, n_ph = 1L) {
   n <- length(FOI); k <- as.integer(n_ph); rPk <- rP * k

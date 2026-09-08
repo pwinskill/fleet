@@ -210,9 +210,6 @@ simulate_with_pulses <- function(sys, times, events, meta, uidx, out_idx) {
   do.call(cbind, cols[!vapply(cols, is.null, logical(1))])
 }
 
-#' Default output age bands (days), taken from the parameter list's rendering
-#' fields where present, always including 2-10y and all-ages.
-#' @noRd
 #' Age bands per output family, mirroring malariasimulation's rendering semantics.
 #'
 #' CRITICAL: each column family must be emitted ONLY over its own rendering list,
