@@ -13,14 +13,50 @@ set once on the shared parameter list so both models emit identical
 | File | What it does |
 | --- | --- |
 | `theme.R` | House style (palette, theme, series scales, envelope helper, `save_fig()`) **and** the scenario constants (`BURN_Y`, `POP`, `N_REP`, `EIR_GRID`, age bands, seasonality, intervention labels). Sourced by every other script so they cannot drift. |
-| `run_replicates.R` | Builds the scenarios (EIR grid, seasonal, custom demography, five interventions), runs blink and the IBM replicates on a PSOCK cluster, writes `data/rep_{eq,age,monthly,doy,timing}.csv`. `CMP_SMOKE=1` gives a 4-year, 1-replicate end-to-end check into `data/smoke/`; `CMP_ONLY=a,b` re-runs a subset and merges it into the existing CSVs. |
+| `scenarios.R` | The scenario definitions, the shared per-run summariser, and `run_blink()`. Sourced by both `run_replicates.R` and `check_drift.R`, so a drift check cannot silently test different scenarios from the ones the reference was built on. |
+| `check_drift.R` | **The one to run often.** Re-runs blink only (~2 min) against the committed IBM rows. Reports movement and agreement separately; exits non-zero on drift. |
+| `run_replicates.R` | Runs blink and the IBM replicates on a PSOCK cluster, writes `data/rep_{eq,age,monthly,doy,timing}.csv` and `data/ibm_reference.json`. `CMP_SMOKE=1` gives a 4-year, 1-replicate end-to-end check into `data/smoke/`; `CMP_ONLY=a,b` re-runs a subset and merges it into the existing CSVs. |
 | `render_figures.R` | Draws every `cmp_*.png` from the CSVs (no model runs) into `man/figures/` and `vignettes/`. The 63-country panel reads the `blink2_validate` results directly. |
 | `summary_tables.R` | The numbers quoted in the article, as markdown tables in `data/tables.md`. |
 
-## Reproduce
+## Checking a change: don't re-run the IBM
+
+The IBM does not depend on blink, so its committed rows stay valid for any
+blink-side change. Re-run blink alone and compare:
 
 ```bash
-Rscript comparison/run_replicates.R     # ~25 min on 10 workers
+Rscript comparison/check_drift.R          # ~2 min, exits 1 on drift
+CMP_ONLY=eir_20,smc Rscript comparison/check_drift.R   # a subset, ~20 s
+CMP_STRICT=1 Rscript comparison/check_drift.R          # also fail if ANY value moved
+```
+
+It answers two questions separately, because they mean different things.
+**Did anything move?** blink now against blink's committed rows: a moved number
+is not automatically wrong (a deliberate model fix moves numbers) but it must be
+seen, and silent movement is how a regression ships. **Is the match still good?**
+blink now against the committed IBM medians and 10–90% bands, at the thresholds
+the article's claims rest on. Only the second one fails the run by default.
+
+If the movement was intended, refresh the committed blink rows without touching
+the IBM:
+
+```bash
+CMP_BLINK_ONLY=1 Rscript comparison/run_replicates.R   # ~1 min
+```
+
+### When the IBM *does* need re-running
+
+Only when the reference itself goes stale, which `check_drift.R` tells you about
+rather than leaving you to remember. `data/ibm_reference.json` records the date,
+the malariasimulation version, `N_REP`/`POP`/burn-in, and a digest of the
+scenario definitions (every parameter that differs from a bare
+`get_parameters()`, plus each EIR and horizon). The check warns when the
+installed malariasimulation or the scenario digest no longer matches.
+
+## Full re-run
+
+```bash
+Rscript comparison/run_replicates.R     # ~25 min on 10 workers; re-stamps ibm_reference.json
 Rscript comparison/render_figures.R     # seconds
 Rscript comparison/summary_tables.R     # seconds
 ```

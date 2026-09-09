@@ -203,6 +203,41 @@
   IBM's 10–90% replicate range in 15 of the 20 scenario × outcome cells; the
   noisiest is treatment scale-up on severe incidence, where the IBM's own
   replicates span −12% to +6% and the two models differ in sign.
+* **New `comparison/check_drift.R`: check the match without re-running the IBM.**
+  The IBM does not depend on `blink`, so its committed rows stay valid for any
+  blink-side change, and there was never a reason to re-run a 25-minute IBM sweep
+  to find out whether the match still holds. The check re-runs blink alone
+  (~2 min for all 18 scenarios, ~20 s for a `CMP_ONLY` subset) and compares
+  against the frozen reference.
+
+  It answers two questions separately, because they mean different things. **Did
+  anything move?** blink now against blink's committed rows, to 1e-6. A moved
+  number is not automatically wrong — a deliberate model fix moves numbers — but
+  it must be seen; silent movement is how a regression ships. **Is the match
+  still good?** blink now against the committed IBM medians and 10–90% bands, at
+  per-outcome thresholds set from what the models achieve today with headroom
+  (max |blink − IBM| of 2% for PfPR, 5% for both clinical measures, 10% for
+  severe; and a tolerated count of grid points falling outside the replicate
+  band, expressed as failures allowed rather than successes required so a subset
+  run does not make the limit unreachable). Only the second fails the run;
+  `CMP_STRICT=1` fails on any movement too.
+
+  Supporting this, `comparison/data/ibm_reference.json` now records what the
+  committed IBM rows were actually made from: date, malariasimulation version,
+  `N_REP`/`POP`/burn-in, and a digest of the scenario definitions — every
+  parameter that differs from a bare `get_parameters()`, plus each EIR and
+  horizon, deliberately not the whole list, which carries defaults that shift
+  between malariasimulation versions for unrelated reasons. `run_replicates.R`
+  writes it whenever it actually runs the IBM. The check warns when the installed
+  malariasimulation or the scenario digest no longer matches, which is the only
+  time the expensive re-run is genuinely required — so the script says when,
+  rather than leaving it to memory.
+
+  The scenario definitions, the shared summariser and the blink-run loop moved
+  into `comparison/scenarios.R`, sourced by both scripts. Otherwise a drift check
+  could quietly test a different set of scenarios, or a different solver tuning,
+  from the one the reference was built on.
+
 * **The model flow diagram is simplified.** It had accumulated more visual
   grammar than it could carry, and the worst of it was that the *same* layered
   idiom meant two unrelated things: offset layers behind a panel meant "array

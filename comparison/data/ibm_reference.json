@@ -1,0 +1,11 @@
+{
+  "generated": "2026-09-09 (stamped retrospectively; see note)",
+  "malariasimulation": "3.0.0",
+  "R": "4.5.2",
+  "n_rep": 10,
+  "population": 10000,
+  "burn_in_years": 30,
+  "scenarios": ["demography", "eir_1", "eir_10", "eir_120", "eir_20", "eir_3", "eir_50", "irs", "nets", "pev", "seasonal", "smc", "treatment", "ts_all", "ts_nets", "ts_none", "ts_smc", "ts_treat"],
+  "scenario_digest": "6265d65d91ee53c8",
+  "note": "Stamped after the fact for IBM rows already committed. The scenario digest and malariasimulation version are computed from the current checkout; the date is when the stamp was made, not when every row was generated. run_replicates.R writes this file itself from now on."
+}
