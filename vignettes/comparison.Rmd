@@ -72,22 +72,22 @@ The seasonal setting uses a single-peaked Fourier rainfall profile
 
 ### Transmission intensity
 
-The first test is the backbone of any malaria model: how prevalence and
-clinical incidence scale with the entomological inoculation rate.
+The first test is the backbone of any malaria model: how prevalence, clinical
+incidence and severe disease scale with the entomological inoculation rate.
 
-```{r core-eir, eval = TRUE, echo = FALSE, fig.alt = "Two panels. Left: LM parasite prevalence in 2-10 year olds rising from about 10% at EIR 1 to about 80% at EIR 120, on a log EIR axis; IBM circles with replicate range bars and blink triangles lie on top of each other. Right: clinical episodes per child-year in under-5s rising and then flattening with EIR, again with the two models coincident."}
+```{r core-eir, eval = TRUE, echo = FALSE, fig.alt = "Four panels on a shared log EIR axis, IBM circles with replicate range bars against blink triangles. Top left: LM parasite prevalence in 2-10 year olds rising from about 11% at EIR 1 to about 79% at EIR 120, the two models coincident. Top right: clinical episodes per child-year in under-5s rising from 0.16 to 2.9 and flattening at the top of the range. Bottom left: clinical episodes per person-year across all ages rising from 0.21 to only 0.81 and flattening much earlier, with blink a shade below the IBM above EIR 10. Bottom right: severe episodes per 1,000 person-years, a hump that rises to about 9-9.6 around EIR 20-50 and falls back by EIR 120, with blink running just below the IBM over the plateau."}
 fig("core_eir")
 ```
 
-Across the 120-fold range the two curves lie on top of each other. The largest
-gap in PfPR~2–10~ between blink and the IBM median is 0.004 (0.237 against 0.240
-at EIR 3), and blink sits inside the IBM's 10–90% replicate band at every EIR.
-Under-5 clinical incidence runs 0.7–2.6% above the IBM median: inside the
-replicate band at five of the six EIRs, and 0.1% above its upper edge at EIR 120,
-where ten replicates pin the IBM to within about ±1%. Both models also realise
-the EIR they were asked for -- the IBM's rendered bites per person per year and
-blink's reported `EIR` are within about 1% of the target throughout -- so the
-x-axis is a fair one.
+Across the 120-fold range the prevalence and under-5 clinical curves lie on top
+of each other. The largest gap in PfPR~2–10~ between blink and the IBM median is
+0.004 (0.237 against 0.240 at EIR 3), and blink sits inside the IBM's 10–90%
+replicate band at every EIR. Under-5 clinical incidence runs 0.7–2.6% above the
+IBM median: inside the replicate band at five of the six EIRs, and 0.1% above
+its upper edge at EIR 120, where ten replicates pin the IBM to within about ±1%.
+Both models also realise the EIR they were asked for -- the IBM's rendered bites
+per person per year and blink's reported `EIR` are within about 1% of the target
+throughout -- so the x-axis is a fair one.
 
 | EIR | IBM PfPR~2–10~, median (10–90%) | blink PfPR~2–10~ | IBM clinical, ages 0–5, per child-year | blink clinical | realised EIR, IBM / blink |
 | --- | --- | --- | --- | --- | --- |
@@ -97,6 +97,38 @@ x-axis is a fair one.
 | 20 | 0.548 (0.544–0.552) | 0.548 | 1.52 (1.48–1.55) | 1.55 | 20.1 / 20.0 |
 | 50 | 0.684 (0.678–0.694) | 0.686 | 2.27 (2.23–2.33) | 2.31 | 50.0 / 50.1 |
 | 120 | 0.786 (0.781–0.791) | 0.786 | 2.84 (2.81–2.86) | 2.86 | 121.3 / 120.4 |
+
+Widening the window to all ages changes the *shape* of the relationship, not
+just its level, and both models change shape the same way. All-age clinical
+incidence spans 0.21 to 0.81 episodes per person-year over the grid -- a
+3.8-fold range against the 18-fold range in under-5s -- because most of the
+transmission added above EIR 20 lands on people who are already immune. At
+EIR 1 the all-age rate (0.21) is *higher* than the under-5 rate (0.16); by
+EIR 120 it is under a third of it. Severe incidence is not monotonic at all: in
+both models it climbs to a plateau of about 9–9.6 per 1,000 person-years around
+EIR 20–50 and falls back by EIR 120, as immunity outruns exposure.
+
+| EIR | IBM clinical, all ages, per person-year (10–90%) | blink clinical | IBM severe, all ages, per 1,000 person-years (10–90%) | blink severe |
+| --- | --- | --- | --- | --- |
+| 1 | 0.208 (0.198–0.218) | 0.213 | 4.73 (4.20–5.09) | 4.69 |
+| 3 | 0.388 (0.368–0.400) | 0.386 | 6.51 (5.83–6.97) | 6.52 |
+| 10 | 0.585 (0.577–0.595) | 0.585 | 8.39 (7.83–8.90) | 8.40 |
+| 20 | 0.692 (0.675–0.700) | 0.683 | 9.63 (9.05–9.99) | 9.06 |
+| 50 | 0.785 (0.774–0.789) | 0.772 | 9.53 (9.18–10.03) | 9.21 |
+| 120 | 0.822 (0.801–0.840) | 0.811 | 8.81 (8.23–9.64) | 8.54 |
+
+Agreement on the two all-age outcomes is a little looser than on the under-5
+metrics, and it leans the other way. blink's all-age clinical incidence runs
+−1.6% to +2.1% of the IBM median: inside the replicate band at five of the six
+EIRs, and 0.2% below its lower edge at EIR 50. So the small excess blink carries
+in under-5s is more than repaid at older ages. Decomposing the EIR 20 gap band
+by band, the 5–20 year olds account for more than the whole −1.3% deficit,
+partly offset by adults, where blink runs higher. All-age severe incidence is
+where blink sits furthest below the IBM -- −5.9% at EIR 20, −3.4% at EIR 50 and
+−3.1% at EIR 120 -- although it stays inside the 10–90% band at all six EIRs,
+and both curves flatten over EIR 20–50 and fall away by EIR 120. About half of
+that gap comes from the under-5 bands and the rest from 5–20 year olds, the same
+age pattern set out next.
 
 ### Age structure
 

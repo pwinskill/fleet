@@ -52,6 +52,31 @@ in_band <- e %>% filter(model == "IBM") %>% group_by(EIR) %>%
 say("blink inside the IBM 10-90%% band: PfPR at %d of %d EIRs; clinical at %d of %d\n",
     sum(in_band$in_p), nrow(in_band), sum(in_band$in_c), nrow(in_band))
 
+## the same grid over the all-ages outcomes. These carry the shape of the
+## relationship rather than its level: all-age clinical flattens far sooner than
+## the under-5 rate, and severe incidence turns over entirely.
+ai <- e %>% filter(model == "IBM") %>% group_by(EIR) %>%
+  summarise(`IBM clinical (all ages, per person-year)` = med_rng(clin_all, "%.3f"),
+            `IBM severe (all ages, per 1,000 person-years)` = med_rng(sev_all, "%.2f"),
+            lo_c = q(clin_all, .1), hi_c = q(clin_all, .9),
+            lo_s = q(sev_all, .1), hi_s = q(sev_all, .9),
+            cl_i = median(clin_all), sv_i = median(sev_all), .groups = "drop")
+ao <- e %>% filter(model == "blink") %>%
+  transmute(EIR, `blink clinical` = sprintf("%.3f", clin_all),
+            `blink severe` = sprintf("%.2f", sev_all), cl_o = clin_all, sv_o = sev_all)
+at <- left_join(ai, ao, by = "EIR") %>% arrange(EIR) %>%
+  mutate(in_c = cl_o >= lo_c & cl_o <= hi_c, in_s = sv_o >= lo_s & sv_o <= hi_s)
+md_table(at %>% transmute(`init EIR` = EIR, `IBM clinical (all ages, per person-year)`,
+                          `blink clinical`, `IBM severe (all ages, per 1,000 person-years)`,
+                          `blink severe`))
+say("all-ages relative difference: clinical %s to %s, severe %s to %s\n",
+    pct(min(at$cl_o / at$cl_i - 1), 1), pct(max(at$cl_o / at$cl_i - 1), 1),
+    pct(min(at$sv_o / at$sv_i - 1), 1), pct(max(at$sv_o / at$sv_i - 1), 1))
+say("blink inside the IBM 10-90%% band: all-age clinical at %d of %d EIRs; all-age severe at %d of %d\n",
+    sum(at$in_c), nrow(at), sum(at$in_s), nrow(at))
+say("fold change across the grid (blink): clinical 0-5 %.1fx, clinical all ages %.1fx; severe all ages peaks at EIR %s\n",
+    max(et$cl_o) / min(et$cl_o), max(at$cl_o) / min(at$cl_o), at$EIR[which.max(at$sv_o)])
+
 ## ---- 2. age profile -----------------------------------------------------------
 say("## Age profile at EIR %s\n", EIR_REF)
 a <- age %>% filter(scenario == paste0("eir_", EIR_REF))

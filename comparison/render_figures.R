@@ -5,7 +5,7 @@
 #
 # Writes cmp_*.png. All visual decisions live in theme.R; this file only shapes
 # data and composes panels. Figures:
-#   core_eir       PfPR(2-10) and under-5 clinical incidence vs EIR
+#   core_eir       four equilibrium relationships vs EIR (2x2)
 #   core_age       age profiles at EIR 20: prevalence, clinical, severe
 #   core_seasonal  the settled annual cycle: prevalence and clinical incidence
 #   core_sites     63-country monthly comparison (from blink2_validate results)
@@ -36,12 +36,23 @@ PREV_LAB <- "LM prevalence, ages 2\u201310"
 CLIN_LAB <- "clinical episodes per child-year, ages 0\u20135"
 
 ## ============================================================================
-## 1. core_eir -- equilibrium PfPR(2-10) and under-5 clinical incidence vs EIR
+## 1. core_eir -- four equilibrium relationships vs EIR
 ## ============================================================================
+EIR_MET <- list(
+  list(key = "pfpr_2_10", lab = PREV_LAB, pct = TRUE,
+       title = "Parasite prevalence rises with transmission"),
+  list(key = "clin_0_5", lab = CLIN_LAB,
+       title = "Clinical incidence saturates as immunity builds"),
+  ## the y labels here stay short: the panel title already says "all ages", and a
+  ## longer label runs up into the title in the bottom row
+  list(key = "clin_all", lab = "clinical episodes per person-year",
+       title = "Across all ages it flattens much sooner"),
+  list(key = "sev_all", lab = "severe episodes per 1,000 person-years",
+       title = "Severe disease peaks at moderate transmission"))
 e_long <- eq %>% filter(grepl("^eir_", scenario)) %>%
   mutate(init_EIR = as.numeric(sub("eir_", "", scenario))) %>%
-  select(init_EIR, model, rep, pfpr_2_10, clin_0_5) %>%
-  pivot_longer(c(pfpr_2_10, clin_0_5), names_to = "metric", values_to = "y")
+  select(init_EIR, model, rep, all_of(vapply(EIR_MET, `[[`, "", "key"))) %>%
+  pivot_longer(-c(init_EIR, model, rep), names_to = "metric", values_to = "y")
 ibm_e <- e_long %>% filter(model == "IBM") %>% group_by(metric) %>%
   group_modify(~ envelope(.x, by = "init_EIR")) %>% ungroup()
 ode_e <- e_long %>% filter(model == "blink") %>% rename(mid = y)
@@ -62,17 +73,21 @@ panel_eir <- function(metric_id, ylab, title) {
     labs(title = title, x = "EIR (infectious bites per adult per year)", y = ylab) +
     theme_cmp() + theme(legend.position = "none")
 }
-p1 <- panel_eir("pfpr_2_10", PREV_LAB, "Parasite prevalence rises with transmission") +
-  scale_y_continuous(limits = c(0, 1), labels = scales::percent) +
-  theme(legend.position = "top")
-p2 <- panel_eir("clin_0_5", CLIN_LAB, "Clinical incidence saturates as immunity builds") +
-  scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.06)))
-g <- (p1 | p2) + plot_annotation(
+ps <- lapply(seq_along(EIR_MET), function(i) {
+  m <- EIR_MET[[i]]
+  p <- panel_eir(m$key, m$lab, m$title) +
+    if (isTRUE(m$pct)) scale_y_continuous(limits = c(0, 1), labels = scales::percent)
+    else scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.06)))
+  ## the x axis is the same in all four; name it once, on the bottom row
+  if (i <= 2) p <- p + labs(x = NULL)
+  if (i == 1) p + theme(legend.position = "top") else p
+})
+g <- patchwork::wrap_plots(ps, ncol = 2) + plot_annotation(
   title = "Core transmission relationships at equilibrium",
   subtitle = "The same parameter list through both models, across a 120-fold range of transmission intensity",
   caption = cap("x = the EIR passed to set_equilibrium(); each model's realised EIR is reported in the article.", ibm_note),
   theme = theme_cmp())
-save_fig(g, "core_eir", width = 10, height = 5)
+save_fig(g, "core_eir", width = 10, height = 9)
 
 ## ============================================================================
 ## 2. core_age -- age profiles at the reference EIR

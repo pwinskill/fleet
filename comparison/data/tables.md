@@ -13,6 +13,21 @@ max |blink - IBM median| PfPR(2-10): 0.004 (at EIR 3); clinical incidence relati
 
 blink inside the IBM 10-90% band: PfPR at 6 of 6 EIRs; clinical at 5 of 6
 
+| init EIR | IBM clinical (all ages, per person-year) | blink clinical | IBM severe (all ages, per 1,000 person-years) | blink severe |
+| --- | --- | --- | --- | --- |
+| 1 | 0.208 (0.198–0.218) | 0.213 | 4.73 (4.20–5.08) | 4.69 |
+| 3 | 0.388 (0.368–0.400) | 0.386 | 6.51 (5.83–6.97) | 6.52 |
+| 10 | 0.585 (0.577–0.595) | 0.585 | 8.39 (7.83–8.90) | 8.40 |
+| 20 | 0.692 (0.675–0.699) | 0.683 | 9.63 (9.05–9.99) | 9.06 |
+| 50 | 0.785 (0.774–0.789) | 0.772 | 9.53 (9.18–10.03) | 9.21 |
+| 120 | 0.822 (0.801–0.840) | 0.811 | 8.81 (8.23–9.64) | 8.54 |
+
+all-ages relative difference: clinical -1.6% to 2.1%, severe -5.9% to 0.1%
+
+blink inside the IBM 10-90% band: all-age clinical at 5 of 6 EIRs; all-age severe at 6 of 6
+
+fold change across the grid (blink): clinical 0-5 18.0x, clinical all ages 3.8x; severe all ages peaks at EIR 50
+
 ## Age profile at EIR 20
 
 | age band (y) | IBM prevalence | blink prevalence | IBM clinical | blink clinical | IBM severe /1000 | blink severe /1000 |
@@ -103,7 +118,7 @@ largest |blink - IBM median| gap: 10.3 pp (treatment, severe, all ages); blink i
 
 | model | runs | s per simulated year | mean run (s) | mean horizon (y) |
 | --- | --- | --- | --- | --- |
-| IBM | 130 | 4.80 | 163.0 | 34 |
-| blink | 13 | 0.13 | 4.4 | 34 |
+| IBM | 130 | 5.49 | 186.1 | 34 |
+| blink | 13 | 0.13 | 4.3 | 34 |
 
-IBM total CPU: 5.9 h across 130 runs; blink total: 58 s across 13 runs (IBM/blink per-year ratio 37x)
+IBM total CPU: 6.7 h across 130 runs; blink total: 56 s across 13 runs (IBM/blink per-year ratio 43x)
