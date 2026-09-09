@@ -180,6 +180,44 @@ gap <- monthly %>% filter(scenario %in% INT, year >= BURN_Y, year < BURN_Y + 6) 
             `mean clinical gap (% of IBM)` = pct(mean(c_blink - c_IBM) / mean(c_IBM), 1), .groups = "drop")
 md_table(gap)
 
+## ---- 5b. long-horizon programmes ----------------------------------------------
+## Two robust statistics only. A relative per-month error is NOT reported here: in
+## a seasonal setting the dry-season trough goes to within rounding of zero, so
+## |blink - IBM| / IBM reaches billions of percent on months carrying no burden.
+## In-band fraction and the 15-year mean reduction both weight by magnitude and
+## survive the trough.
+if (all(names(TS_LABELS) %in% monthly$scenario)) {
+  say("## Long-horizon programmes (%d years past deployment)\n", TS_YEARS)
+  td <- monthly %>%
+    filter(scenario %in% names(TS_LABELS), year >= BURN_Y, year <= BURN_Y + TS_YEARS) %>%
+    select(scenario, model, rep, year, pfpr_2_10, clin_0_5, clin_all, sev_all) %>%
+    tidyr::pivot_longer(-c(scenario, model, rep, year), names_to = "metric", values_to = "y")
+  ti <- td %>% filter(model == "IBM") %>% group_by(scenario, metric, year) %>%
+    summarise(ibm = median(y), lo = q(y, .1), hi = q(y, .9), .groups = "drop")
+  tj <- inner_join(ti, td %>% filter(model == "blink") %>%
+                     select(scenario, metric, year, blink = y),
+                   by = c("scenario", "metric", "year"))
+  md_table(tj %>% group_by(metric) %>%
+    summarise(`scenario-months` = n(),
+              `blink inside IBM 10-90%` = pct(mean(blink >= lo & blink <= hi)),
+              .groups = "drop") %>% rename(outcome = metric))
+  ## say() is literal when given no args, so this string takes single % signs
+  say("(an 80% band contains a perfectly-tracking deterministic mean ~80% of the time, so ~80% is the target, not a ceiling)\n")
+
+  tot <- tj %>% group_by(scenario, metric) %>%
+    summarise(ibm = mean(ibm), blink = mean(blink), .groups = "drop")
+  bse <- tot %>% filter(scenario == "ts_none") %>% select(metric, ibm0 = ibm, blink0 = blink)
+  red <- tot %>% left_join(bse, by = "metric") %>% filter(scenario != "ts_none") %>%
+    mutate(i = 1 - ibm / ibm0, o = 1 - blink / blink0)
+  ## TS_LABELS carry a newline for the figure's row strips; a markdown cell cannot
+  md_table(red %>% transmute(scenario = gsub("\n", " ", unname(TS_LABELS[scenario])), outcome = metric,
+                             `IBM reduction` = pct(i), `blink reduction` = pct(o),
+                             `gap (pp)` = sprintf("%+.1f", 100 * (o - i))) %>%
+             arrange(scenario, outcome))
+  say("largest |blink - IBM| gap in %d-year mean reduction: %.1f pp\n",
+      TS_YEARS, max(abs(100 * (red$o - red$i))))
+}
+
 ## ---- 6. timing ----------------------------------------------------------------
 say("## Run time\n")
 tm <- timing %>% group_by(model) %>%

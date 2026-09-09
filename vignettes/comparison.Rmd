@@ -362,6 +362,55 @@ gap has closed: 54% against 52%, with the between-round incidence within a few
 percent of the IBM median throughout the SMC season (see *Where the two models
 differ* for the small residual that remains).
 
+## Programmes over fifteen years
+
+Everything above isolates one builder over six years, which is the right shape
+for attributing a difference but not for seeing what a programme does. The test
+that matters for planning work is longer and messier: several interventions
+running together, campaigns repeating, protection decaying and being renewed,
+over a horizon where immunity has time to respond to the transmission you have
+removed. Five scenarios do that here, all at EIR 20 in the seasonal setting and
+all carrying 20% baseline case management, so each is the one before it with one
+more thing added.
+
+```{r programme-ts, eval = TRUE, echo = FALSE, fig.alt = "A five-row by four-column grid of monthly time series over fifteen years, IBM dashed coral against blink solid indigo, the two almost indistinguishable in every panel. Rows: no interventions, bed nets only, seasonal SMC only, case management only, all three together. Columns: LM prevalence in 2-10 year olds, clinical incidence in under-5s, clinical incidence over all ages, severe incidence over all ages. The no-intervention row is a stable seasonal cycle. The bed-net row shows prevalence dropping at each of five campaigns and climbing back between them, a sawtooth. The SMC row suppresses under-5 clinical incidence sharply while all-age clinical incidence moves much less. The case-management row lowers prevalence but leaves clinical incidence nearly unchanged. The combined row is the deepest and most sustained suppression."}
+fig("programme_ts")
+```
+
+The two models stay together for the whole fifteen years, through five net
+distributions, sixty SMC rounds and a treatment scale-up. Across the 915
+scenario-months in each panel column, `blink` sits inside the IBM's 10–90%
+replicate band in **83%** of them for prevalence, 84% for both clinical measures
+and 78% for severe incidence -- and since an 80% band contains a
+perfectly-tracking deterministic mean about 80% of the time by construction,
+those are at the target rather than short of it. On the summary a programme
+would actually be judged by -- the mean burden over the fifteen years, against
+the no-intervention reference -- the largest disagreement anywhere in the
+sixteen scenario × outcome cells is **1.8 percentage points**.
+
+| scenario | PfPR~2–10~ | clinical, 0–5 | clinical, all ages | severe, all ages |
+| --- | --- | --- | --- | --- |
+| Bed nets, 5 campaigns | 48% / 46% | 62% / 62% | 51% / 51% | 33% / 33% |
+| Seasonal SMC | 28% / 29% | 50% / 51% | 17% / 19% | 22% / 23% |
+| Case management | 29% / 30% | 13% / 15% | 8% / 9% | 6% / 5% |
+| All three together | 76% / 76% | 87% / 87% | 68% / 69% | 56% / 57% |
+
+*15-year mean reduction against the no-intervention row, IBM / blink.*
+
+The rows also say different things about what each tool buys, and both models
+say them identically. Nets are the only intervention here that lowers
+transmission itself, and the sawtooth shows the cost of that: prevalence falls
+to about 9–11% within a year of each distribution and is back to 43% before the
+next one three years later, in both models. SMC and case management do not
+reduce transmission much at all -- SMC cuts under-5 clinical incidence in half
+but all-age clinical incidence by only about a fifth, because it protects a
+narrow age band, and case management barely moves clinical incidence in any age
+band (8–15%) while lowering prevalence by roughly 30%, since treating an episode
+shortens an infection without preventing the next one. Combining all three is
+worth more than any of them alone (76% on prevalence, 87% on under-5 clinical)
+but visibly less than their sum, and the two models agree on that interaction to
+within a percentage point.
+
 ## Where the two models differ, and why
 
 The agreement above is not an accident of tuning -- `blink` has no free

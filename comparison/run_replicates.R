@@ -123,6 +123,51 @@ scenarios$demography <- local({
   list(p = set_equilibrium(p, init_EIR = EIR_REF), eir = EIR_REF, years = BURN_Y + 3L)
 })
 
+## ---- ts_*: long-horizon programme scenarios ---------------------------------
+## The scenarios above each isolate ONE builder over 6 years, which is the right
+## shape for attributing a difference but not for showing what a programme looks
+## like. These five run 15 years past deployment in a seasonal setting so the
+## repeated-campaign dynamics are visible -- five net distributions decaying and
+## being replaced, SMC pulsing four times a year for fifteen years -- and they
+## share a common no-intervention reference so the three tiers (nothing, one
+## thing, everything) can be read against each other. All at EIR 20 seasonal, so
+## every row of the figure is the same setting with more added to it.
+TS_Y <- 15L
+ts_base <- function() set_bands(get_parameters(c(list(human_population = POP),
+                                                 list(model_seasonality = TRUE), SEASON)))
+## nets every 3 years: 5 campaigns over the 15-year window
+ts_net_rounds <- Y_INT + seq(0, by = 3 * 365, length.out = 5L)
+ts_nets_on <- function(p) {
+  n <- length(ts_net_rounds)
+  set_bednets(p, timesteps = ts_net_rounds, coverages = rep(0.8, n),
+              retention = 5 * 365, dn0 = matrix(rep(0.387, n)), rn = matrix(rep(0.563, n)),
+              rnm = matrix(rep(0.24, n)), gamman = rep(2.64 * 365, n))
+}
+## SMC: 4 monthly rounds a year, every year of the window, peak-season aligned
+ts_smc_rounds <- as.vector(sapply(seq_len(TS_Y) - 1L,
+                                  function(y) Y_INT + y * 365 + c(0, 30, 60, 90) + 200))
+ts_smc_on <- function(p) {
+  n <- length(ts_smc_rounds)
+  set_smc(p, drug = 1, timesteps = ts_smc_rounds, coverages = rep(0.9, n),
+          min_ages = rep(round(0.25 * 365), n), max_ages = rep(round(5 * 365), n))
+}
+## case management: SP-AQ throughout (SMC needs a drug), scaled up at deployment
+ts_treat_on <- function(p, hi = 0.6) set_clinical_treatment(
+  set_drugs(p, list(SP_AQ_params)), drug = 1, timesteps = c(1, Y_INT), coverages = c(0.2, hi))
+ts_drug_only <- function(p) set_clinical_treatment(
+  set_drugs(p, list(SP_AQ_params)), drug = 1, timesteps = 1, coverages = 0.2)
+
+ts_scen <- list(
+  ts_none  = function() ts_drug_only(ts_base()),
+  ts_nets  = function() ts_nets_on(ts_drug_only(ts_base())),
+  ts_smc   = function() ts_smc_on(ts_drug_only(ts_base())),
+  ts_treat = function() ts_treat_on(ts_base()),
+  ts_all   = function() ts_smc_on(ts_nets_on(ts_treat_on(ts_base()))))
+for (nm in names(ts_scen)) scenarios[[nm]] <- local({
+  f <- ts_scen[[nm]]
+  list(p = set_equilibrium(f(), init_EIR = EIR_REF), eir = EIR_REF, years = BURN_Y + TS_Y)
+})
+
 ## CMP_ONLY=a,b -> run just those scenarios and merge their rows into the existing CSVs
 ONLY <- Filter(nzchar, strsplit(Sys.getenv("CMP_ONLY"), ",")[[1]])
 if (length(ONLY)) { stopifnot(all(ONLY %in% names(scenarios))); scenarios <- scenarios[ONLY] }

@@ -158,6 +158,29 @@
   IBM's 10–90% replicate range in 15 of the 20 scenario × outcome cells; the
   noisiest is treatment scale-up on severe incidence, where the IBM's own
   replicates span −12% to +6% and the two models differ in sign.
+* New figure `cmp_programme_ts` and a *Programmes over fifteen years* section in
+  `vignette("comparison")`. Every other intervention figure isolates one builder
+  over six years, which is the shape for attributing a difference but not for
+  seeing what a programme does. Five new harness scenarios (`ts_*`) run 15 years
+  past deployment at EIR 20 in the seasonal setting, all carrying 20% baseline
+  case management so each is the one before it with one more thing added: no
+  interventions, bed nets alone (5 campaigns, 3-yearly), seasonal SMC alone
+  (4 rounds a year for 15 years), case management alone (20% → 60%), and all
+  three together. Four outcomes per scenario — PfPR(2–10), clinical incidence in
+  under-5s and over all ages, and all-age severe incidence.
+
+  Through five net distributions, sixty SMC rounds and a treatment scale-up the
+  two models stay together: blink sits inside the IBM's 10–90% replicate band in
+  78–84% of the 915 scenario-months per outcome — an 80% band contains a
+  perfectly-tracking deterministic mean about 80% of the time, so that is at the
+  target, not short of it — and the largest disagreement in 15-year mean burden
+  reduction across the 16 scenario × outcome cells is 1.8 percentage points. The
+  figure needs four separate faceted columns rather than one `facet_grid`,
+  because `facet_grid` frees the y scale by row and here the scales differ by
+  column. `summary_tables.R` reports both statistics; it deliberately does *not*
+  report a per-month relative error, because the seasonal dry-season trough goes
+  to within rounding of zero and |blink − IBM| / IBM then reaches billions of
+  percent on months carrying no burden.
 * The equilibrium-vs-EIR figure gains the same two panels, also laid out 2×2:
   all-age clinical incidence and all-age severe incidence against EIR, beside the
   existing PfPR(2–10) and under-5 clinical panels. The all-age views carry the

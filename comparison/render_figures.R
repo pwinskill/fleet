@@ -10,6 +10,7 @@
 #   core_seasonal  the settled annual cycle: prevalence and clinical incidence
 #   core_sites     63-country monthly comparison (from blink2_validate results)
 #   int_timeseries five interventions x {prevalence, clinical}, time series
+#   programme_ts   five long-horizon programmes x four outcomes, 15 years
 #   int_impact     % reduction per intervention, IBM (replicate range) vs blink
 
 .libPaths("C:/Users/pwinskil/Documents/r_packages_arm64")
@@ -277,6 +278,76 @@ g <- ggplot() +
   theme_cmp() + theme(strip.text.y.left = element_text(angle = 0, hjust = 1, vjust = 1),
                       strip.placement = "outside", panel.spacing.x = unit(2.2, "lines"))
 save_fig(g, "int_timeseries", width = 10, height = 12)
+
+## ============================================================================
+## 5b. programme_ts -- long-horizon programmes: nothing / one thing / everything
+## ============================================================================
+## Section 5 isolates one builder over 6 years, which is the shape for attributing
+## a difference. This is the shape for seeing what a programme does: 15 years past
+## deployment, seasonal, with the repeated-campaign dynamics visible. Four metrics
+## get four SEPARATE faceted columns rather than one facet_grid, because
+## facet_grid frees y by row and here the scales differ by COLUMN -- prevalence,
+## two incidence families and severe share no axis.
+TS <- names(TS_LABELS)
+if (all(TS %in% monthly$scenario)) {
+  TS_MET <- list(
+    list(key = "pfpr_2_10", title = "LM prevalence\nages 2–10", pct = TRUE),
+    list(key = "clin_0_5",  title = "Clinical incidence\nages 0–5, per child-year"),
+    list(key = "clin_all",  title = "Clinical incidence\nall ages, per person-year"),
+    list(key = "sev_all",   title = "Severe incidence\nall ages, per 1,000 py"))
+  ts_long <- monthly %>%
+    filter(scenario %in% TS, year >= BURN_Y - 2, year <= BURN_Y + TS_YEARS) %>%
+    select(scenario, model, rep, year, all_of(vapply(TS_MET, `[[`, "", "key"))) %>%
+    pivot_longer(-c(scenario, model, rep, year), names_to = "metric", values_to = "y") %>%
+    mutate(scenario = factor(scenario, levels = TS, labels = TS_LABELS))
+  ibm_t <- ts_long %>% filter(model == "IBM") %>% group_by(scenario, metric) %>%
+    group_modify(~ envelope(.x, by = "year")) %>% ungroup()
+  ode_t <- ts_long %>% filter(model == "blink") %>% rename(mid = y)
+  ## net distributions marked only in the two rows that have them -- the SMC
+  ## pulses are 4 a year for 15 years and would be a picket fence, so those are
+  ## left to show themselves in the clinical sawtooth
+  net_x <- data.frame(
+    scenario = factor(rep(TS_LABELS[c("ts_nets", "ts_all")], each = 5L),
+                      levels = TS_LABELS),
+    x = rep(BURN_Y + seq(0, by = TS_NET_EVERY, length.out = 5L), times = 2L))
+
+  ts_col <- function(m, first) {
+    gi <- filter(ibm_t, metric == m$key); go <- filter(ode_t, metric == m$key)
+    p <- ggplot() +
+      geom_vline(data = net_x, aes(xintercept = x), colour = AXIS, linewidth = 0.45) +
+      geom_vline(xintercept = BURN_Y, colour = INK2, linewidth = 0.45, linetype = "22") +
+      geom_ribbon(data = gi, aes(year, ymin = lo, ymax = hi, fill = model), alpha = ENV_ALPHA) +
+      geom_line(data = go, aes(year, mid, colour = model, linetype = model), linewidth = 0.7) +
+      geom_line(data = gi, aes(year, mid, colour = model, linetype = model), linewidth = 0.7) +
+      facet_grid(scenario ~ ., switch = "y") +
+      scale_models(shapes = FALSE) +
+      scale_x_continuous(breaks = BURN_Y + seq(0, TS_YEARS, 5),
+                         labels = function(b) paste0("+", as.integer(b - BURN_Y), " y")) +
+      labs(title = m$title, x = NULL, y = NULL) +
+      theme_cmp() + theme(legend.position = "none")
+    p <- p + if (isTRUE(m$pct))
+      scale_y_continuous(limits = c(0, NA), labels = scales::percent,
+                         expand = expansion(mult = c(0, 0.08)))
+      else scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.08)))
+    ## scenario strips on the leftmost column only; repeating them four times
+    ## would cost a third of the width and say nothing new
+    if (first) p + theme(strip.text.y.left = element_text(angle = 0, hjust = 0, vjust = 0.5),
+                         strip.placement = "outside")
+    else p + theme(strip.text.y = element_blank(), strip.background = element_blank())
+  }
+  ps <- lapply(seq_along(TS_MET), function(i) ts_col(TS_MET[[i]], i == 1L))
+  g <- patchwork::wrap_plots(ps, nrow = 1, widths = c(1.12, 1, 1, 1)) +
+    plot_layout(guides = "collect") +
+    plot_annotation(
+      title = "Programmes over fifteen years, through both models",
+      subtitle = cap(sprintf("Monthly series at EIR %s in a seasonal setting, from two years before deployment. Every row carries 20%% baseline case management; rows 2–4 add one intervention, row 5 adds all three. Grey rules mark the five net distributions.", EIR_REF), width = 128),
+      caption = cap("x = years relative to deployment; the dashed rule is deployment. Nets: 80% coverage every 3 years, 5-year mean retention. SMC: 4 monthly rounds a year, ages 3 months to 5 years, 90% coverage. Case management: SP-AQ, coverage of clinical cases raised from 20% to 60%.", ibm_note),
+      theme = theme_cmp()) &
+    theme(legend.position = "top", legend.justification = "left")
+  save_fig(g, "programme_ts", width = 13.5, height = 11)
+} else {
+  message("programme_ts skipped: ts_* scenarios not in rep_monthly.csv")
+}
 
 ## ============================================================================
 ## 6. int_impact -- % reduction over the first three years, IBM range vs blink

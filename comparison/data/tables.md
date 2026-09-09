@@ -114,11 +114,43 @@ largest |blink - IBM median| gap: 10.2 pp (treatment, severe, all ages); blink i
 | smc | -0.6 | 0.3% |
 | treatment | -0.2 | 0.3% |
 
+## Long-horizon programmes (15 years past deployment)
+
+| outcome | scenario-months | blink inside IBM 10-90% |
+| --- | --- | --- |
+| clin_0_5 | 915 | 84% |
+| clin_all | 915 | 84% |
+| pfpr_2_10 | 915 | 83% |
+| sev_all | 915 | 78% |
+
+(an 80% band contains a perfectly-tracking deterministic mean ~80% of the time, so ~80% is the target, not a ceiling)
+
+| scenario | outcome | IBM reduction | blink reduction | gap (pp) |
+| --- | --- | --- | --- | --- |
+| All three together | clin_0_5 | 87% | 87% | +0.3 |
+| All three together | clin_all | 68% | 69% | +0.5 |
+| All three together | pfpr_2_10 | 76% | 76% | -0.4 |
+| All three together | sev_all | 56% | 57% | +0.9 |
+| Bed nets 5 campaigns | clin_0_5 | 62% | 62% | -0.2 |
+| Bed nets 5 campaigns | clin_all | 51% | 51% | +0.1 |
+| Bed nets 5 campaigns | pfpr_2_10 | 48% | 46% | -1.5 |
+| Bed nets 5 campaigns | sev_all | 33% | 33% | -0.3 |
+| Case management | clin_0_5 | 13% | 15% | +1.5 |
+| Case management | clin_all | 8% | 9% | +1.0 |
+| Case management | pfpr_2_10 | 29% | 30% | +1.3 |
+| Case management | sev_all | 6% | 5% | -0.9 |
+| Seasonal SMC | clin_0_5 | 50% | 51% | +1.0 |
+| Seasonal SMC | clin_all | 17% | 19% | +1.8 |
+| Seasonal SMC | pfpr_2_10 | 28% | 29% | +1.3 |
+| Seasonal SMC | sev_all | 22% | 23% | +1.2 |
+
+largest |blink - IBM| gap in 15-year mean reduction: 1.8 pp
+
 ## Run time
 
 | model | runs | s per simulated year | mean run (s) | mean horizon (y) |
 | --- | --- | --- | --- | --- |
-| IBM | 130 | 5.49 | 186.1 | 34 |
-| blink | 13 | 0.13 | 4.3 | 34 |
+| IBM | 180 | 4.61 | 170.5 | 37 |
+| blink | 18 | 0.16 | 6.0 | 37 |
 
-IBM total CPU: 6.7 h across 130 runs; blink total: 56 s across 13 runs (IBM/blink per-year ratio 43x)
+IBM total CPU: 8.5 h across 180 runs; blink total: 107 s across 18 runs (IBM/blink per-year ratio 29x)

@@ -123,3 +123,17 @@ INT_LABELS <- c(
   smc       = "Seasonal SMC\n4 rounds/yr, ages 0.25\u20135",
   irs       = "Indoor residual spraying\n80% coverage, annual",
   nets      = "Bed-net campaign\n80% coverage, one round")
+
+## long-horizon programme scenarios (ts_*), in tier order: nothing, one thing,
+## everything. All EIR 20 seasonal with 20% baseline case management, so each row
+## is the row above it with one more thing added.
+## kept short on purpose: these are row strips down the left of a 4-column
+## figure, and every character of label is width taken from the panels
+TS_LABELS <- c(
+  ts_none  = "No\ninterventions",
+  ts_nets  = "Bed nets\n5 campaigns",
+  ts_smc   = "Seasonal\nSMC",
+  ts_treat = "Case\nmanagement",
+  ts_all   = "All three\ntogether")
+TS_YEARS <- 15L                 # years followed past deployment
+TS_NET_EVERY <- 3L              # years between net campaigns
