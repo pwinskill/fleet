@@ -66,15 +66,30 @@ severe:   n = 450,684, r = 0.958, slope = 0.946, relative bias = 8.8%
 
 ## Intervention impact: reduction over post-deployment years 0-3 vs pre-deployment years -3-0
 
-| Scenario | IBM prevalence reduction | blink prevalence reduction | IBM clinical reduction | blink clinical reduction |
-| --- | --- | --- | --- | --- |
-| Treatment scale-up | 19% (18%–20%) | 19% | 4% (1%–6%) | 5% |
-| RTS,S via EPI | 0% (-1%–2%) | 1% | 10% (9%–12%) | 10% |
-| Seasonal SMC | 23% (22%–26%) | 24% | 52% (51%–54%) | 54% |
-| Indoor residual spraying | 79% (78%–79%) | 80% | 97% (97%–98%) | 98% |
-| Bed-net campaign | 48% (47%–49%) | 47% | 66% (65%–67%) | 66% |
+| Scenario | Outcome | IBM reduction (10-90%) | blink reduction |
+| --- | --- | --- | --- |
+| Treatment scale-up | PfPR 2-10 | 19% (18%–20%) | 19% |
+| Treatment scale-up | clinical, 0-5 | 4% (1%–6%) | 5% |
+| Treatment scale-up | clinical, all ages | 4% (2%–6%) | 5% |
+| Treatment scale-up | severe, all ages | -7% (-12%–6%) | 3% |
+| RTS,S via EPI | PfPR 2-10 | 0% (-1%–2%) | 1% |
+| RTS,S via EPI | clinical, 0-5 | 10% (9%–12%) | 10% |
+| RTS,S via EPI | clinical, all ages | 5% (4%–7%) | 5% |
+| RTS,S via EPI | severe, all ages | 10% (7%–20%) | 10% |
+| Seasonal SMC | PfPR 2-10 | 23% (22%–26%) | 24% |
+| Seasonal SMC | clinical, 0-5 | 52% (51%–54%) | 54% |
+| Seasonal SMC | clinical, all ages | 25% (24%–26%) | 26% |
+| Seasonal SMC | severe, all ages | 33% (32%–42%) | 38% |
+| Indoor residual spraying | PfPR 2-10 | 79% (78%–79%) | 80% |
+| Indoor residual spraying | clinical, 0-5 | 97% (97%–98%) | 98% |
+| Indoor residual spraying | clinical, all ages | 97% (97%–98%) | 98% |
+| Indoor residual spraying | severe, all ages | 97% (97%–97%) | 98% |
+| Bed-net campaign | PfPR 2-10 | 48% (47%–49%) | 47% |
+| Bed-net campaign | clinical, 0-5 | 66% (65%–67%) | 66% |
+| Bed-net campaign | clinical, all ages | 67% (66%–67%) | 66% |
+| Bed-net campaign | severe, all ages | 50% (44%–53%) | 50% |
 
-largest |blink - IBM median| gap: prevalence 1.0 pp (irs), clinical 1.8 pp (treatment); blink inside the IBM band: prevalence 3/5, clinical 4/5
+largest |blink - IBM median| gap: 10.3 pp (treatment, severe, all ages); blink inside the IBM 10-90% band in 15 of 20 scenario x outcome cells
 
 | scenario | mean prevalence gap (blink - IBM, pp) | mean clinical gap (% of IBM) |
 | --- | --- | --- |
@@ -88,7 +103,7 @@ largest |blink - IBM median| gap: prevalence 1.0 pp (irs), clinical 1.8 pp (trea
 
 | model | runs | s per simulated year | mean run (s) | mean horizon (y) |
 | --- | --- | --- | --- | --- |
-| IBM | 130 | 5.92 | 200.7 | 34 |
-| blink | 13 | 0.14 | 4.6 | 34 |
+| IBM | 130 | 4.80 | 163.0 | 34 |
+| blink | 13 | 0.13 | 4.4 | 34 |
 
-IBM total CPU: 7.2 h across 130 runs; blink total: 60 s across 13 runs (IBM/blink per-year ratio 43x)
+IBM total CPU: 5.9 h across 130 runs; blink total: 58 s across 13 runs (IBM/blink per-year ratio 37x)

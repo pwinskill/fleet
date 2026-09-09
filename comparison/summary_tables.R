@@ -120,28 +120,33 @@ if (length(fs)) {
 ## ---- 5. intervention impact ---------------------------------------------------
 say("## Intervention impact: reduction over post-deployment years 0-3 vs pre-deployment years -3-0\n")
 INT <- names(INT_LABELS)
+MET <- c(pfpr_2_10 = "PfPR 2-10", clin_0_5 = "clinical, 0-5",
+         clin_all = "clinical, all ages", sev_all = "severe, all ages")
 red <- monthly %>% filter(scenario %in% INT) %>%
   mutate(phase = case_when(year >= BURN_Y - 3 & year < BURN_Y ~ "pre",
                            year >= BURN_Y & year < BURN_Y + 3 ~ "post", TRUE ~ NA_character_)) %>%
   filter(!is.na(phase)) %>% group_by(scenario, model, rep, phase) %>%
-  summarise(pfpr = mean(pfpr_2_10), clin = mean(clin_0_5), .groups = "drop") %>%
-  pivot_wider(names_from = phase, values_from = c(pfpr, clin)) %>%
-  mutate(r_pfpr = 1 - pfpr_post / pfpr_pre, r_clin = 1 - clin_post / clin_pre)
-ri <- red %>% filter(model == "IBM") %>% group_by(scenario) %>%
-  summarise(`IBM prevalence reduction` = sprintf("%s (%s\u2013%s)", pct(median(r_pfpr)), pct(q(r_pfpr, .1)), pct(q(r_pfpr, .9))),
-            `IBM clinical reduction` = sprintf("%s (%s\u2013%s)", pct(median(r_clin)), pct(q(r_clin, .1)), pct(q(r_clin, .9))),
-            mp = median(r_pfpr), mc = median(r_clin), lp = q(r_pfpr, .1), hp = q(r_pfpr, .9), lc = q(r_clin, .1), hc = q(r_clin, .9),
+  summarise(across(all_of(names(MET)), mean), .groups = "drop") %>%
+  pivot_longer(all_of(names(MET)), names_to = "metric", values_to = "v") %>%
+  pivot_wider(names_from = phase, values_from = v) %>%
+  mutate(reduction = 1 - post / pre)
+ri <- red %>% filter(model == "IBM") %>% group_by(scenario, metric) %>%
+  summarise(mid = median(reduction), lo = q(reduction, .1), hi = q(reduction, .9),
             .groups = "drop")
-ro <- red %>% filter(model == "blink") %>% transmute(scenario, `blink prevalence reduction` = pct(r_pfpr),
-                                                   `blink clinical reduction` = pct(r_clin), op = r_pfpr, oc = r_clin)
-rt <- left_join(ri, ro, by = "scenario") %>% mutate(scenario = factor(scenario, levels = INT)) %>% arrange(scenario)
+ro <- red %>% filter(model == "blink") %>% transmute(scenario, metric, blink = reduction)
+rt <- left_join(ri, ro, by = c("scenario", "metric")) %>%
+  mutate(scenario = factor(scenario, levels = INT),
+         metric = factor(metric, levels = names(MET), labels = MET)) %>%
+  arrange(scenario, metric)
 md_table(rt %>% transmute(Scenario = sub("\n.*", "", INT_LABELS[as.character(scenario)]),
-                          `IBM prevalence reduction`, `blink prevalence reduction`,
-                          `IBM clinical reduction`, `blink clinical reduction`))
-say("largest |blink - IBM median| gap: prevalence %.1f pp (%s), clinical %.1f pp (%s); blink inside the IBM band: prevalence %d/%d, clinical %d/%d\n",
-    100 * max(abs(rt$op - rt$mp)), rt$scenario[which.max(abs(rt$op - rt$mp))],
-    100 * max(abs(rt$oc - rt$mc)), rt$scenario[which.max(abs(rt$oc - rt$mc))],
-    sum(rt$op >= rt$lp & rt$op <= rt$hp), nrow(rt), sum(rt$oc >= rt$lc & rt$oc <= rt$hc), nrow(rt))
+                          Outcome = as.character(metric),
+                          `IBM reduction (10-90%)` =
+                            sprintf("%s (%s\u2013%s)", pct(mid), pct(lo), pct(hi)),
+                          `blink reduction` = pct(blink)))
+wi <- which.max(abs(rt$blink - rt$mid))
+say("largest |blink - IBM median| gap: %.1f pp (%s, %s); blink inside the IBM 10-90%% band in %d of %d scenario x outcome cells\n",
+    100 * abs(rt$blink - rt$mid)[wi], rt$scenario[wi], rt$metric[wi],
+    sum(rt$blink >= rt$lo & rt$blink <= rt$hi), nrow(rt))
 ## per-scenario post-deployment trajectory gap, years 0-6, as % of the IBM median (monthly, prevalence)
 gap <- monthly %>% filter(scenario %in% INT, year >= BURN_Y, year < BURN_Y + 6) %>%
   group_by(scenario, model, year) %>% summarise(p = median(pfpr_2_10), c = median(clin_0_5), .groups = "drop") %>%

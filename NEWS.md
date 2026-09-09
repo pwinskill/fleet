@@ -91,6 +91,16 @@
   the solver presets cost. Reproduced by `comparison/benchmark.R`, which reports
   the minimum of five repeats — contention can only add time, so the fastest
   repeat is the least contaminated estimate.
+* The intervention-impact figure gains two panels — clinical incidence at all
+  ages, and severe incidence at all ages — alongside the existing PfPR(2–10) and
+  under-5 clinical panels, now laid out 2×2. This needed all-age rendering bands
+  in `comparison/run_replicates.R` and a re-run of the five intervention
+  scenarios. Together the four panels show *who* each intervention protects: SMC
+  and RTS,S roughly halve their effect when measured over all ages rather than
+  under-5s, while nets and IRS read the same either way. blink lands inside the
+  IBM's 10–90% replicate range in 15 of the 20 scenario × outcome cells; the
+  noisiest is treatment scale-up on severe incidence, where the IBM's own
+  replicates span −12% to +6% and the two models differ in sign.
 * The country-site comparison figure reads its 1:1 correlation properly (#2). Two
   changes. The reference line is a plain orange dash — hue-opposed to the indigo
   ramp, and not a series colour, so it cannot be misread as a model. And the low

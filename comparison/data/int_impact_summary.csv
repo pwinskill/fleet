@@ -3,39 +3,79 @@
 80% coverage, annual","LM prevalence, ages 2–10",0.78567619053175,0.780614670504881,0.788741383908915,"IBM"
 "Indoor residual spraying
 80% coverage, annual","clinical incidence, ages 0–5",0.974120632686538,0.972598231713119,0.975328610694121,"IBM"
+"Indoor residual spraying
+80% coverage, annual","clinical incidence, all ages",0.974885381500884,0.972763969162104,0.975951242831619,"IBM"
+"Indoor residual spraying
+80% coverage, annual","severe incidence, all ages",0.969512986972025,0.9663039384875,0.974455711239478,"IBM"
 "Bed-net campaign
 80% coverage, one round","LM prevalence, ages 2–10",0.47855088344413,0.470757276152283,0.489355201760552,"IBM"
 "Bed-net campaign
 80% coverage, one round","clinical incidence, ages 0–5",0.662416125073211,0.651913463861541,0.672968308240221,"IBM"
+"Bed-net campaign
+80% coverage, one round","clinical incidence, all ages",0.668419149172771,0.659618731085847,0.674001259837058,"IBM"
+"Bed-net campaign
+80% coverage, one round","severe incidence, all ages",0.500712326437965,0.436496826830523,0.531704781837148,"IBM"
 "RTS,S via EPI
 90% at 5 months, booster","LM prevalence, ages 2–10",0.00323002572727182,-0.00681062244343678,0.0195517733535041,"IBM"
 "RTS,S via EPI
 90% at 5 months, booster","clinical incidence, ages 0–5",0.101541838962392,0.0905985256016601,0.122844693081459,"IBM"
+"RTS,S via EPI
+90% at 5 months, booster","clinical incidence, all ages",0.0529742324897115,0.0424240506796205,0.0685544585628573,"IBM"
+"RTS,S via EPI
+90% at 5 months, booster","severe incidence, all ages",0.102645081267128,0.0682385131139003,0.198511143636661,"IBM"
 "Seasonal SMC
 4 rounds/yr, ages 0.25–5","LM prevalence, ages 2–10",0.227988478982593,0.216294222413362,0.256293585925168,"IBM"
 "Seasonal SMC
 4 rounds/yr, ages 0.25–5","clinical incidence, ages 0–5",0.522585853642673,0.513068043783105,0.541999996765704,"IBM"
+"Seasonal SMC
+4 rounds/yr, ages 0.25–5","clinical incidence, all ages",0.253015370939795,0.239736035113274,0.264559176448646,"IBM"
+"Seasonal SMC
+4 rounds/yr, ages 0.25–5","severe incidence, all ages",0.334321768899351,0.324024697880217,0.421494769917657,"IBM"
 "Treatment scale-up
 20% → 60% of clinical cases","LM prevalence, ages 2–10",0.192360128386611,0.184426679549496,0.195077324358682,"IBM"
 "Treatment scale-up
 20% → 60% of clinical cases","clinical incidence, ages 0–5",0.0362895707449449,0.00540393244387108,0.0565545565525212,"IBM"
+"Treatment scale-up
+20% → 60% of clinical cases","clinical incidence, all ages",0.0443187940617903,0.020883396475533,0.0569948835657592,"IBM"
+"Treatment scale-up
+20% → 60% of clinical cases","severe incidence, all ages",-0.0680218455481564,-0.119499048924047,0.0627303460215678,"IBM"
 "Indoor residual spraying
 80% coverage, annual","LM prevalence, ages 2–10",0.79584848142447,NA,NA,"blink"
 "Indoor residual spraying
 80% coverage, annual","clinical incidence, ages 0–5",0.982182354783761,NA,NA,"blink"
+"Indoor residual spraying
+80% coverage, annual","clinical incidence, all ages",0.98269127377629,NA,NA,"blink"
+"Indoor residual spraying
+80% coverage, annual","severe incidence, all ages",0.976445703643426,NA,NA,"blink"
 "Bed-net campaign
 80% coverage, one round","LM prevalence, ages 2–10",0.469545241626246,NA,NA,"blink"
 "Bed-net campaign
 80% coverage, one round","clinical incidence, ages 0–5",0.659388359853103,NA,NA,"blink"
+"Bed-net campaign
+80% coverage, one round","clinical incidence, all ages",0.66477068815461,NA,NA,"blink"
+"Bed-net campaign
+80% coverage, one round","severe incidence, all ages",0.495915542944002,NA,NA,"blink"
 "RTS,S via EPI
 90% at 5 months, booster","LM prevalence, ages 2–10",0.00818154614860789,NA,NA,"blink"
 "RTS,S via EPI
 90% at 5 months, booster","clinical incidence, ages 0–5",0.101670105909906,NA,NA,"blink"
+"RTS,S via EPI
+90% at 5 months, booster","clinical incidence, all ages",0.050229289125544,NA,NA,"blink"
+"RTS,S via EPI
+90% at 5 months, booster","severe incidence, all ages",0.1024087735653,NA,NA,"blink"
 "Seasonal SMC
 4 rounds/yr, ages 0.25–5","LM prevalence, ages 2–10",0.236322256716932,NA,NA,"blink"
 "Seasonal SMC
 4 rounds/yr, ages 0.25–5","clinical incidence, ages 0–5",0.535142875431373,NA,NA,"blink"
+"Seasonal SMC
+4 rounds/yr, ages 0.25–5","clinical incidence, all ages",0.256265537520777,NA,NA,"blink"
+"Seasonal SMC
+4 rounds/yr, ages 0.25–5","severe incidence, all ages",0.38398088655831,NA,NA,"blink"
 "Treatment scale-up
 20% → 60% of clinical cases","LM prevalence, ages 2–10",0.193598192298647,NA,NA,"blink"
 "Treatment scale-up
 20% → 60% of clinical cases","clinical incidence, ages 0–5",0.0541255449228115,NA,NA,"blink"
+"Treatment scale-up
+20% → 60% of clinical cases","clinical incidence, all ages",0.0518797040494371,NA,NA,"blink"
+"Treatment scale-up
+20% → 60% of clinical cases","severe incidence, all ages",0.0346038249222655,NA,NA,"blink"

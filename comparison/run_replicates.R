@@ -45,7 +45,9 @@ set_bands <- function(p, age_profile = FALSE) {
   add <- function(lo, hi) if (age_profile) list(c(band_lo, lo), c(band_hi, hi)) else list(lo, hi)
   r <- add(730, 3650)
   p$prevalence_rendering_min_ages <- r[[1]]; p$prevalence_rendering_max_ages <- r[[2]]
-  r <- add(0, 1825)
+  ## both incidence families over under-5 AND all ages: the impact figure reports
+  ## the burden a programme actually carries as well as the young-child burden
+  r <- add(c(0, 0), c(1825, 36500))
   p$clinical_incidence_rendering_min_ages <- r[[1]]; p$clinical_incidence_rendering_max_ages <- r[[2]]
   p$severe_incidence_rendering_min_ages   <- r[[1]]; p$severe_incidence_rendering_max_ages   <- r[[2]]
   p
@@ -145,7 +147,9 @@ summarise_run <- function(df, years, tags = AGE_TAGS) {
   ## equilibrium quantities over the observation window
   eq <- data.frame(
     pfpr_2_10 = prev("730_3650", obs), clin_0_5 = rate("clinical", "0_1825", obs),
-    sev_0_5 = rate("severe", "0_1825", obs, 365 * 1000))
+    sev_0_5 = rate("severe", "0_1825", obs, 365 * 1000),
+    clin_all = rate("clinical", "0_36500", obs),
+    sev_all = rate("severe", "0_36500", obs, 365 * 1000))
   ## age profiles over the observation window (reference scenario only)
   age <- if (all(paste0("n_detect_lm_", tags) %in% names(df))) {
     n_band <- vapply(tags, function(tg) sum(df[[paste0("n_age_", tg)]][obs]), numeric(1))
@@ -163,7 +167,9 @@ summarise_run <- function(df, years, tags = AGE_TAGS) {
     year = as.numeric(names(tapply(day, mon, length))) * 30 / 365,
     pfpr_2_10 = mo(function(ix) prev("730_3650", ix)),
     clin_0_5  = mo(function(ix) rate("clinical", "0_1825", ix)),
-    sev_0_5   = mo(function(ix) rate("severe", "0_1825", ix, 365 * 1000)))
+    sev_0_5   = mo(function(ix) rate("severe", "0_1825", ix, 365 * 1000)),
+    clin_all  = mo(function(ix) rate("clinical", "0_36500", ix)),
+    sev_all   = mo(function(ix) rate("severe", "0_36500", ix, 365 * 1000)))
   ## final-year day-of-year series (for the seasonal cycle), 7-day pooled bins
   fy <- (n - 365 + 1):n; wk <- (seq_along(fy) - 1) %/% 7
   doy <- data.frame(

@@ -264,17 +264,26 @@ save_fig(g, "int_timeseries", width = 10, height = 12)
 ## ============================================================================
 ## 6. int_impact -- % reduction over the first three years, IBM range vs blink
 ## ============================================================================
-MET_R <- c("LM prevalence, ages 2\u201310", "clinical incidence, ages 0\u20135")
+## Four outcomes: the two young-child measures a trial would report, and the two
+## all-age measures a programme carries. Severe is the noisiest of them in the
+## IBM, which the replicate range shows honestly.
+MET_KEY <- c(pfpr = "LM prevalence, ages 2\u201310",
+             clin05 = "clinical incidence, ages 0\u20135",
+             clinall = "clinical incidence, all ages",
+             sevall = "severe incidence, all ages")
+MET_R <- unname(MET_KEY)
 red <- monthly %>% filter(scenario %in% INT) %>%
   mutate(phase = case_when(year >= BURN_Y - 3 & year < BURN_Y ~ "pre",
                            year >= BURN_Y & year < BURN_Y + 3 ~ "post", TRUE ~ NA_character_)) %>%
   filter(!is.na(phase)) %>%
   group_by(scenario, model, rep, phase) %>%
-  summarise(pfpr = mean(pfpr_2_10), clin = mean(clin_0_5), .groups = "drop") %>%
-  pivot_wider(names_from = phase, values_from = c(pfpr, clin)) %>%
-  transmute(scenario, model, rep,
-            !!MET_R[1] := 1 - pfpr_post / pfpr_pre, !!MET_R[2] := 1 - clin_post / clin_pre) %>%
-  pivot_longer(-c(scenario, model, rep), names_to = "metric", values_to = "reduction")
+  summarise(pfpr = mean(pfpr_2_10), clin05 = mean(clin_0_5),
+            clinall = mean(clin_all), sevall = mean(sev_all), .groups = "drop") %>%
+  pivot_longer(all_of(names(MET_KEY)), names_to = "metric", values_to = "v") %>%
+  pivot_wider(names_from = phase, values_from = v) %>%
+  mutate(reduction = 1 - post / pre,
+         metric = unname(MET_KEY[metric])) %>%
+  select(scenario, model, rep, metric, reduction)
 ibm_r <- red %>% filter(model == "IBM") %>% group_by(scenario, metric) %>%
   summarise(mid = median(reduction), lo = unname(quantile(reduction, .1)),
             hi = unname(quantile(reduction, .9)), .groups = "drop") %>% mutate(model = "IBM")
@@ -299,7 +308,7 @@ g <- ggplot(both, aes(y = scenario)) +
   geom_text(data = vals, aes(x = x, label = lab), hjust = 0, size = 3.3, colour = INK2, family = FONT) +
   geom_text(data = hdr, aes(x = x, y = Inf, label = lab), hjust = 0, vjust = 1.4, size = 3.3,
             fontface = "bold", colour = INK2, family = FONT) +
-  facet_wrap(~metric, nrow = 1) +
+  facet_wrap(~metric, nrow = 2) +
   scale_models(lines = FALSE) + guide_models() +
   scale_x_continuous(labels = scales::percent, breaks = seq(0, 1, 0.25), limits = c(xmin, 1.36),
                      expand = expansion(0)) +
@@ -310,8 +319,10 @@ g <- ggplot(both, aes(y = scenario)) +
        x = "reduction relative to baseline", y = NULL,
        caption = cap("Columns give the plotted medians.", ibm_note)) +
   theme_cmp() + theme(panel.grid.major.y = element_blank(), axis.line.x = element_blank(),
-                      axis.text.y = element_text(size = rel(0.9), lineheight = 0.95, hjust = 1))
-save_fig(g, "int_impact", width = 10, height = 5.4)
+                      axis.text.y = element_text(size = rel(0.9), lineheight = 0.95, hjust = 1),
+                      panel.spacing.x = unit(1.6, "lines"),
+                      panel.spacing.y = unit(2.0, "lines"))
+save_fig(g, "int_impact", width = 11, height = 8.6)
 
 ## ---- console summary ---------------------------------------------------------
 cat("figures written", if (SMOKE) "to comparison/plots/smoke" else "to man/figures and vignettes", "\n\n")
