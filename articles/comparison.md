@@ -266,27 +266,63 @@ incidence to 0.08 in both models, then recover along the same curve as
 the nets age; by year six blink is fractionally above the IBM
 (prevalence 0.538 against 0.529).
 
-![Dumbbell chart of the percentage reduction over the first three
-post-deployment years relative to the three pre-deployment years, for
-five interventions and two outcomes. IBM medians with 10-90% replicate
+![A two-by-two dumbbell chart of the percentage reduction over the first
+three post-deployment years relative to the three pre-deployment years,
+for five interventions. The four panels are LM prevalence in 2-10 year
+olds, clinical incidence in under-5s, clinical incidence at all ages,
+and severe incidence at all ages. IBM medians with 10-90% replicate
 ranges as circles and bars, blink as triangles, with the numeric values
-in two columns to the right.](cmp_int_impact.png)
+in two columns to the right of each panel.](cmp_int_impact.png)
 
-| Scenario | IBM PfPR_(2–10) reduction, median (10–90%) | blink | IBM under-5 clinical reduction, median (10–90%) | blink |
-|----|----|----|----|----|
-| Treatment scale-up | 19% (18–20%) | 19% | 4% (1–6%) | 5% |
-| RTS,S via EPI | 0% (−1–2%) | 1% | 10% (9–12%) | 10% |
-| Seasonal SMC | 23% (22–26%) | 24% | 52% (51–54%) | 54% |
-| Indoor residual spraying | 79% (78–79%) | 80% | 97% (97–98%) | 98% |
-| Bed-net campaign | 48% (47–49%) | 47% | 66% (65–67%) | 66% |
+| Scenario | Outcome | IBM reduction, median (10–90%) | blink |
+|----|----|----|----|
+| Treatment scale-up | PfPR_(2–10) | 19% (18–20%) | 19% |
+|  | clinical, 0–5 | 4% (1–6%) | 5% |
+|  | clinical, all ages | 4% (2–6%) | 5% |
+|  | severe, all ages | −7% (−12–6%) | 3% |
+| RTS,S via EPI | PfPR_(2–10) | 0% (−1–2%) | 1% |
+|  | clinical, 0–5 | 10% (9–12%) | 10% |
+|  | clinical, all ages | 5% (4–7%) | 5% |
+|  | severe, all ages | 10% (7–20%) | 10% |
+| Seasonal SMC | PfPR_(2–10) | 23% (22–26%) | 24% |
+|  | clinical, 0–5 | 52% (51–54%) | 54% |
+|  | clinical, all ages | 25% (24–26%) | 26% |
+|  | severe, all ages | 33% (32–42%) | 38% |
+| Indoor residual spraying | PfPR_(2–10) | 79% (78–79%) | 80% |
+|  | clinical, 0–5 | 97% (97–98%) | 98% |
+|  | clinical, all ages | 97% (97–98%) | 98% |
+|  | severe, all ages | 97% (97–97%) | 98% |
+| Bed-net campaign | PfPR_(2–10) | 48% (47–49%) | 47% |
+|  | clinical, 0–5 | 66% (65–67%) | 66% |
+|  | clinical, all ages | 67% (66–67%) | 66% |
+|  | severe, all ages | 50% (44–53%) | 50% |
 
 Summarised as the reduction over the first three post-deployment years
-relative to the three years before, all five interventions agree to
-within two percentage points, with blink inside or at the edge of the
-IBM’s replicate range on every outcome. The largest gaps are 1.0 point
-of prevalence reduction (IRS, 80% against 79%) and 1.8 points of
-clinical reduction (treatment scale-up, 5% against 4%, where the IBM’s
-own replicates span 1–6%).
+relative to the three years before, **blink lands inside the IBM’s
+10–90% replicate range in 15 of the 20 scenario × outcome cells**, and
+within about a point of the band in the other five. On the two clinical
+outcomes and prevalence the two models agree to within two percentage
+points everywhere.
+
+Reading across the four panels shows *who* each intervention protects,
+and the two models agree on that too. **SMC and RTS,S are targeted**, so
+their all-age clinical effect is roughly half their under-5 effect (SMC
+25% against 52%; RTS,S 5% against 10%) — they protect a slice of the
+population, and the rest of it carries on as before. **Nets and IRS are
+not**: they suppress transmission for everyone, so the all-age and
+under-5 reductions are the same (67% and 97%).
+
+The one genuine disagreement in sign is **treatment scale-up on severe
+incidence**: the IBM’s median says severe disease *rises* by 7%, blink’s
+single run says it falls by 3%. Both are within the IBM’s own replicate
+range, which spans −12% to +6% — this is the noisiest cell in the
+figure, and the honest reading is that neither model resolves the sign.
+The mechanism behind the ambiguity is real, though: treating more
+clinical cases removes infections, which lowers exposure, which erodes
+the acquired immunity that protects against severe disease. Severe
+incidence is the most immunity-sensitive output in either model (§
+*Where the two models differ*), so it is exactly where a small
+difference in the immunity treatment shows up first.
 
 Seasonal SMC deserves a note, because it was the one intervention this
 comparison caught blink getting wrong. The IBM applies a Weibull

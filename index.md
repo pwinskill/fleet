@@ -425,17 +425,22 @@ blink lies inside the IBM’s 10–90% replicate band at every EIR for
 prevalence (largest gap 0.004) and runs 1–3% above the IBM median for
 under-5 clinical incidence.*
 
-![Intervention impact: percentage reduction in PfPR(2–10) and under-5
-clinical incidence over the first three years of five
+![Intervention impact: percentage reduction in prevalence, under-5
+clinical incidence, all-age clinical incidence and all-age severe
+incidence over the first three years of five
 interventions](reference/figures/cmp_int_impact.png)
 
-Intervention impact: percentage reduction in PfPR(2–10) and under-5
-clinical incidence over the first three years of five interventions
+Intervention impact: percentage reduction in prevalence, under-5
+clinical incidence, all-age clinical incidence and all-age severe
+incidence over the first three years of five interventions
 
 *Five interventions deployed with the ordinary `set_*()` builders —
-treatment scale-up, RTS,S via EPI, seasonal SMC, IRS and bed nets. All
-five agree to within two percentage points of reduction (seasonal SMC:
-54% against the IBM’s 52% for under-5 clinical incidence).*
+treatment scale-up, RTS,S via EPI, seasonal SMC, IRS and bed nets —
+across four outcomes. blink lands inside the IBM’s 10–90% replicate
+range in 15 of the 20 scenario × outcome cells. The four panels also
+show who each intervention protects: SMC and RTS,S roughly halve their
+effect when measured over all ages rather than under-5s, while nets and
+IRS suppress transmission for everyone and so read the same either way.*
 
 ![Country site files: blink against the IBM for 450,684 sub-site-months
 across 63 countries](reference/figures/cmp_core_sites.png)
