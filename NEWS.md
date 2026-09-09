@@ -63,6 +63,31 @@
 
 ## Bug fixes
 
+* **`test-prophylaxis-chain.R`'s first test no longer errors when
+  `malariasimulation` is absent.** It read `AL_params`/`SP_AQ_params` without a
+  `skip_if_not_installed()` guard — the only one of the suite's 57 test blocks to
+  do so. `malariasimulation` is a GitHub Remote in Suggests, so on any check
+  machine that could not install it the other 56 blocks skipped and this one
+  errored, turning a missing optional dependency into an `R CMD check` failure.
+  The block is now split rather than simply guarded: its closed-form
+  `erlang_stages()` checks need no drug tables and keep running unguarded, so the
+  suite retains real assertions without the dependency, and only the Weibull
+  parameters read out of the IBM's tables sit behind the guard.
+
+* **`build_inputs()` no longer recomputes grid-invariant PEV protection.** Two
+  fixes in `pev_series()`, both verified bit-identical (`identical()` on the full
+  `[n_age, n_time]` multiplier matrix, across the EPI single-timestep path, the
+  EPI multi-timestep path and mass campaigns). `.pev_eff_fun()` built its
+  interpolator with `stats::approx()`, which re-runs `regularize.values()` — a
+  sortedness check and a copy of the whole daily grid — on *every* scalar call;
+  it now builds one `stats::approxfun()` closure. And the EPI loop called
+  `pev_protection()` once per grid point when `.booster_cov_vec()`'s admin-time
+  argument is ignored (which the single-row `booster_coverage` that
+  `set_pev_epi()` builds by default always is), so that call is now hoisted to
+  once per age band behind a guard mirroring `.booster_cov_vec()`'s own.
+  Together: `pev_series()` on a 20-year two-booster EPI schedule drops from
+  2.92 s to 1.09 s (2.7x).
+
 * **Chemoprevention pulses renew existing protection and clear `Tr_slow`.** The
   IBM's `update_mass_drug_admin()` resets `drug_time` for everyone successfully
   treated whatever their state; `blink`'s pulse left people already in `Ph`/`Ph_c`
@@ -113,6 +138,17 @@
   all-age severe (inside the band at all six), so the small excess blink carries
   in under-5s is more than repaid in the 5–20 year bands. `summary_tables.R`
   reports both new outcomes over the grid.
+* Three stale comment blocks are removed, each of which had been left sitting
+  *above* the corrected version that replaced it — so the wrong one is the one a
+  reader hits first. `R/interventions.R` documented `drug_mix()`'s weights as each
+  drug's peak coverage (now only the `t = NULL` fallback) and `rP` as
+  `mean_W - 1/rT` — the exact approximation the comment 33 lines above it exists
+  to say is wrong (19% error for AL). `inst/odin/malaria_ode.R` described
+  `beta_eff` as a per-species interpolated series that varies under nets/IRS; it
+  is a plain constant `parameter()`, as the comment 17 lines below it already
+  said. `tests/testthat/test-package.R` called `rT_slow` a reciprocal time three
+  lines above the comment (and the assertion) that correctly make it a whole-day
+  exit probability.
 * Every line figure now draws the IBM's dashed median *over* blink's solid line
   rather than under it. Where the models agree — which, on these figures, is
   nearly everywhere — the line drawn last is the only one visible, so the old

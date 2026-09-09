@@ -13,8 +13,14 @@ test_that("erlang_stages moment-matches the Weibull and is capped at 20", {
   expect_equal(erlang_stages(2.1, 30), as.integer(round(1 / cv2(2.1))))
   # a one-day protection cannot take 14 stages at 14/day: the rate cap binds
   expect_equal(erlang_stages(4.3, 1), 3L)
-  # post-treatment chain: matches the variance of the whole Tr + chain sojourn, so a
-  # protection less variable than Tr itself (AL: sd 1.1 d vs 5.5 d) gets ONE stage
+})
+
+## Split from the block above so the closed-form checks there keep running when
+## malariasimulation (a Suggests-only GitHub Remote) is absent: everything from here
+## down reads its Weibull parameters out of the IBM's own drug tables.
+test_that("the post-treatment chain matches the variance of the whole Tr + chain sojourn", {
+  skip_if_not_installed("malariasimulation")
+  # a protection less variable than Tr itself (AL: sd 1.1 d vs 5.5 d) gets ONE stage
   rT <- 1 - exp(-1 / 5); tr <- 1 / rT
   mc <- function(pr) .chain_mean_after_tr(pr[3], pr[4], rT)
   al <- malariasimulation::AL_params; sp <- malariasimulation::SP_AQ_params

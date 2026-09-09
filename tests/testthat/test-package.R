@@ -91,7 +91,7 @@ test_that("multi-drug resistance is coverage-weighted and drives dynamics", {
   r <- resistance_series(p, translate_parameters(p))
   expect_equal(tail(r$etf, 1), w1 * 0.5 * 0.4 + w2 * 1.0 * 0.1, tolerance = 1e-9)
   expect_equal(tail(r$spc, 1), w1 * 0.5 * 0.2 + w2 * 1.0 * 0.3, tolerance = 1e-9)
-  # rT_slow = 1 / coverage*spc-weighted mean clearance time (the rate feeding the ODE)
+  # num / den is the coverage*spc-weighted mean slow-clearance time across the two drugs
   s1 <- 0.5 * 0.2; s2 <- 1.0 * 0.3
   num <- w1 * s1 * 10 + w2 * s2 * 20; den <- w1 * s1 + w2 * s2
   # whole-day exit probability of the blended slow-clearance duration (as rA/rD/rU/rT)

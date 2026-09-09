@@ -86,15 +86,11 @@ treatment_series <- function(p) {
 }
 
 # ---- drug-linked treatment properties --------------------------------------
-# Coverage-weighted (over each drug's peak scheduled coverage, so the mix is
-# defined even for later-onset treatment): drug_eff (efficacy), cT (treated
-# infectivity = cd*drug_rel_c), and rP (prophylaxis rate). rP subtracts the
-# ~1/rT days already spent refractory in Tr from the Weibull mean protection.
-# Drug-linked efficacy, treated infectivity (cT) and prophylaxis rate (rP),
-# coverage-weighted across clinical-treatment drugs. With `t = NULL` the weights are
-# each drug's PEAK scheduled coverage (used only as a fallback when no drug is
-# active); otherwise they are the INSTANTANEOUS coverage shares at time `t`, so a
-# first-line drug switch changes the mix over time.
+# Drug-linked efficacy, treated infectivity (cT = cd * drug_rel_c) and prophylaxis
+# rate (rP), coverage-weighted across clinical-treatment drugs. With `t = NULL` the
+# weights are each drug's PEAK scheduled coverage (used only as a fallback when no
+# drug is active); otherwise they are the INSTANTANEOUS coverage shares at time `t`,
+# so a first-line drug switch changes the mix over time.
 drug_mix <- function(p, eqp, t = NULL) {
   drugs <- p$clinical_treatment_drugs
   none <- list(drug_eff = 1, cT = eqp[["cT"]], rP = eqp[["rP"]], n_ph = 1L)
@@ -491,10 +487,14 @@ pev_efficacy_curve <- function(profile, t, n_gq = getOption("blink.pev_gq", 7L))
 .pev_eff_fun <- function(profile, tmax) {
   grid <- seq(0, max(tmax, 1) + 365, by = 1)
   vals <- pev_efficacy_curve(profile, grid)
-  function(t) {
-    tt <- pmin(pmax(t, 0), max(grid))
-    stats::approx(grid, vals, xout = tt, rule = 2)$y
-  }
+  # approxfun(), not approx(): approx() re-runs regularize.values() -- a sortedness
+  # check plus a copy of the whole grid -- on EVERY scalar call, which is thousands
+  # of times per build. approxfun() does that once here and the returned closure
+  # drops into the same C kernel, so the values are identical (the grid is strictly
+  # increasing, so there is no ties handling to differ).
+  hi <- max(grid)
+  f <- stats::approxfun(grid, vals, rule = 2)
+  function(t) f(pmin(pmax(t, 0), hi))
 }
 
 .combine <- function(a, b) 1 - (1 - a) * (1 - b)
@@ -573,16 +573,30 @@ pev_series <- function(p, age_mid, timesteps) {
     bcovm <- p$pev_epi_booster_coverage
     vax_complete <- p$pev_epi_age + last_dose
     start <- p$pev_epi_timesteps[1]
+    # .booster_cov_vec ignores its admin-time argument entirely unless the coverage
+    # matrix has more than one row AND there is more than one EPI timestep -- which
+    # the single-row booster_coverage set_pev_epi() builds by default never satisfies.
+    # When it is ignored, bcov is a constant and pev_protection()'s other four
+    # arguments do not vary with g, so the ~ng calls it took per age band collapse to
+    # one. The guard mirrors .booster_cov_vec's own, and bcov0 passes a same-length
+    # admin-time vector whose value that branch provably never reads, so the numbers
+    # are unchanged.
+    const_bcov <- is.null(bcovm) ||
+      !(nrow(as.matrix(bcovm)) > 1L && length(p$pev_epi_timesteps) > 1L)
+    bcov0 <- if (const_bcov) .booster_cov_vec(bcovm, p$pev_epi_timesteps, bspace)
     for (i in seq_len(n_age)) {
       if (age_mid[i] < vax_complete) next
       tsince <- age_mid[i] - vax_complete
+      prot0 <- if (const_bcov) pev_protection(prof, bprofs, bspace, bcov0, tsince)
       # eligible once the FIRST dose (last_dose before efficacy onset) falls in-programme
       for (g in seq_len(ng)) if (grid[g] >= start + tsince + last_dose) {
         vd <- grid[g] - tsince                          # cohort's efficacy-onset (final-dose) date
         fdose <- vd - last_dose                          # cohort's FIRST-dose date (ms samples here)
         cov <- .cov_at(p$pev_epi_timesteps, p$pev_epi_coverages, fdose)
-        bcov <- .booster_cov_vec(bcovm, p$pev_epi_timesteps, vd + bspace)
-        red[i, g] <- .combine(red[i, g], cov * pev_protection(prof, bprofs, bspace, bcov, tsince))
+        prot <- if (const_bcov) prot0 else pev_protection(
+          prof, bprofs, bspace,
+          .booster_cov_vec(bcovm, p$pev_epi_timesteps, vd + bspace), tsince)
+        red[i, g] <- .combine(red[i, g], cov * prot)
       }
     }
   }

@@ -111,8 +111,6 @@ n_cct <- parameter(constant = TRUE)
 cc_times <- parameter(); dim(cc_times) <- n_cct
 K_vals <- parameter(); dim(K_vals) <- c(n_spp, n_cct)
 Kcap <- interpolate(cc_times, K_vals, "linear"); dim(Kcap) <- n_spp
-# a (human blood-meal rate), mu (adult death), beta_eff (oviposition) vary in
-# time under bed nets / IRS; supplied as per-species interpolated series.
 # a (human blood-meal rate) and mu (adult death) vary in time under nets/IRS;
 # supplied per-species. odin2 array interpolate() requires time as the LAST
 # dimension, so a_vals/mum_vals are [n_spp, n_time].
