@@ -430,6 +430,28 @@ than in under-5s (3.8-fold across the grid against 18-fold), and severe
 incidence turns over entirely, plateauing around EIR 20–50 in both
 models.*
 
+![Programmes over fifteen years: five scenarios from no interventions
+through single interventions to all three combined, each shown as
+prevalence, under-5 clinical, all-age clinical and all-age severe
+incidence in both models](reference/figures/cmp_programme_ts.png)
+
+Programmes over fifteen years: five scenarios from no interventions
+through single interventions to all three combined, each shown as
+prevalence, under-5 clinical, all-age clinical and all-age severe
+incidence in both models
+
+*Five programmes followed for 15 years past deployment at EIR 20 in a
+seasonal setting — nothing, one intervention, then all three together —
+across four outcomes. Through five net distributions, sixty SMC rounds
+and a treatment scale-up the two models stay together: blink sits inside
+the IBM’s 10–90% replicate band in 78–84% of the 915 scenario-months per
+outcome (an 80% band contains a perfectly-tracking deterministic mean
+~80% of the time), and the largest disagreement in 15-year mean burden
+reduction across the 16 scenario × outcome cells is 1.8 percentage
+points. The bed-net row shows the sawtooth a repeating campaign
+produces: prevalence down to ~10% within a year of each distribution,
+back to ~43% before the next.*
+
 ![Intervention impact: percentage reduction in prevalence, under-5
 clinical incidence, all-age clinical incidence and all-age severe
 incidence over the first three years of five

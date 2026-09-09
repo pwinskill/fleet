@@ -184,6 +184,7 @@
   `comparison/benchmark.R`, which reports the minimum of five repeats —
   contention can only add time, so the fastest repeat is the least
   contaminated estimate.
+
 - The intervention-impact figure gains two panels — clinical incidence
   at all ages, and severe incidence at all ages — alongside the existing
   PfPR(2–10) and under-5 clinical panels, now laid out 2×2. This needed
@@ -195,6 +196,35 @@
   replicate range in 15 of the 20 scenario × outcome cells; the noisiest
   is treatment scale-up on severe incidence, where the IBM’s own
   replicates span −12% to +6% and the two models differ in sign.
+
+- New figure `cmp_programme_ts` and a *Programmes over fifteen years*
+  section in
+  [`vignette("comparison")`](https://pwinskill.github.io/blink/articles/comparison.md).
+  Every other intervention figure isolates one builder over six years,
+  which is the shape for attributing a difference but not for seeing
+  what a programme does. Five new harness scenarios (`ts_*`) run 15
+  years past deployment at EIR 20 in the seasonal setting, all carrying
+  20% baseline case management so each is the one before it with one
+  more thing added: no interventions, bed nets alone (5 campaigns,
+  3-yearly), seasonal SMC alone (4 rounds a year for 15 years), case
+  management alone (20% → 60%), and all three together. Four outcomes
+  per scenario — PfPR(2–10), clinical incidence in under-5s and over all
+  ages, and all-age severe incidence.
+
+  Through five net distributions, sixty SMC rounds and a treatment
+  scale-up the two models stay together: blink sits inside the IBM’s
+  10–90% replicate band in 78–84% of the 915 scenario-months per outcome
+  — an 80% band contains a perfectly-tracking deterministic mean about
+  80% of the time, so that is at the target, not short of it — and the
+  largest disagreement in 15-year mean burden reduction across the 16
+  scenario × outcome cells is 1.8 percentage points. The figure needs
+  four separate faceted columns rather than one `facet_grid`, because
+  `facet_grid` frees the y scale by row and here the scales differ by
+  column. `summary_tables.R` reports both statistics; it deliberately
+  does *not* report a per-month relative error, because the seasonal
+  dry-season trough goes to within rounding of zero and \|blink − IBM\|
+  / IBM then reaches billions of percent on months carrying no burden.
+
 - The equilibrium-vs-EIR figure gains the same two panels, also laid out
   2×2: all-age clinical incidence and all-age severe incidence against
   EIR, beside the existing PfPR(2–10) and under-5 clinical panels. The
@@ -208,6 +238,7 @@
   +0.1% on all-age severe (inside the band at all six), so the small
   excess blink carries in under-5s is more than repaid in the 5–20 year
   bands. `summary_tables.R` reports both new outcomes over the grid.
+
 - Three stale comment blocks are removed, each of which had been left
   sitting *above* the corrected version that replaced it — so the wrong
   one is the one a reader hits first. `R/interventions.R` documented
@@ -220,6 +251,7 @@
   said. `tests/testthat/test-package.R` called `rT_slow` a reciprocal
   time three lines above the comment (and the assertion) that correctly
   make it a whole-day exit probability.
+
 - Every line figure now draws the IBM’s dashed median *over* blink’s
   solid line rather than under it. Where the models agree — which, on
   these figures, is nearly everywhere — the line drawn last is the only
@@ -233,6 +265,7 @@
   intervention panels, which previously looked like a single curve. An
   unused `geom_ibm_envelope()` helper that bundled the old order is
   removed.
+
 - The country-site comparison figure reads its 1:1 correlation properly
   ([\#2](https://github.com/pwinskill/blink/issues/2)). Two changes. The
   reference line is a plain orange dash — hue-opposed to the indigo
@@ -246,6 +279,7 @@
   seeing — they simply no longer out-shout the ridge. The legend gained
   intermediate breaks (1 / 10 / 100 / 1,000 / 10,000) so the ramp can be
   decoded.
+
 - New article
   [`vignette("comparison")`](https://pwinskill.github.io/blink/articles/comparison.md)
   — *Comparison with malariasimulation* — with a redesigned figure set:
@@ -260,6 +294,7 @@
   per-replicate summaries are committed so the figures can be redrawn
   without re-running the models. The pre-replication-pass figures
   (`A_`–`F_`, `inc_*`) and the scripts that made them are removed.
+
 - The comparison surfaced three blink-side items, all addressed in this
   release (see *Behaviour changes* and *Bug fixes* above): the top age
   group’s death rate under `set_demography()`, exponential prophylaxis
