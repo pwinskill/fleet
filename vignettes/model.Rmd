@@ -66,17 +66,15 @@ segments. §3.1–3.4 set out exactly which is which.
 copies that stands for the array the panel is replicated over. The upper panel
 holds the human compartments: susceptible; untreated clinical disease; treated;
 asymptomatic and sub-patent infection; and two prophylaxis compartments, one
-post-treatment and one for chemoprevention, each drawn as a stack of boxes to mark
-it as an Erlang chain with its stage count beside it. Its deck is labelled for the
-52 age groups, and a note records that every box is also an array over the five
-biting-heterogeneity nodes, that people age between layers, die from every box, and
-are born into susceptible. A dotted region encloses the four states infectious to
-mosquitoes; a dotted ring round the susceptible, asymptomatic and sub-patent boxes
-marks the states the infection hazard acts on. The treated state is drawn once; the
+post-treatment and one for chemoprevention. Its deck carries one array dimension on
+each visible edge, age one to fifty-two and biting heterogeneity one to five, and a
+note records that people age along the age dimension, die from every box, and are
+born into susceptible. A dotted region encloses the four states infectious to
+mosquitoes. The treated state is drawn once; the
 model splits it in two when antimalarial resistance is switched on. The infection
 hazard leaves a vertical spine and splits three ways, into treated, untreated and
-asymptomatic; recovery returns everyone to susceptible. A small box holds the four
-immunity arrays, coupled into the hazard. A dashed red path marks the
+asymptomatic, and is labelled as acting on the susceptible, asymptomatic and
+sub-patent states; recovery returns everyone to susceptible. A dashed red path marks the
 chemoprevention pulse, a discrete jump rather than a rate, drawn leaving both the
 susceptible state and the infectious pool. The lower panel holds the mosquito
 compartments, running right to left: early and late larvae and pupae, then
@@ -1251,11 +1249,26 @@ band population) and is not scaled:
 | `p_detect_lm_*` | `n_detect_lm_*` / `n_age_*` for the same band (LM prevalence) |
 | `n_detect_pcr_*` | $\sum_j \left(D + T + T_s + A + U\right)$: the IBM convention, **not** `malariaEquilibrium`'s sub-patent-weighted `pos_PCR` |
 | `n_inc_clinical_*` | $\sum_j h^c_{ij}\Sigma_{ij}$, counted with the *clinical* hazard, so a day's integral is exactly the IBM's $\phi p N$ |
-| `n_inc_severe_*` | $\sum_j \theta_{ij}\Lambda_{ij}\Sigma_{ij}$: severe is drawn from the same infected set as clinical in the IBM, so it keeps the total infection hazard |
-| `n_inc_*` | $\sum_j \Lambda_{ij}\Sigma_{ij}$ (all new infections) |
+| `n_inc_severe_*` | $\sum_j \theta_{ij}\left[\Lambda_{ij}\left(S_{ij}+U_{ij}\right) + p_{ij}A_{ij}\right]$: $\theta$ times the all-infection count below, because the IBM draws severe from the same *deduplicated* infected set as clinical |
+| `n_inc_*` | $\sum_j \left[\Lambda_{ij}\left(S_{ij}+U_{ij}\right) + p_{ij}A_{ij}\right]$ (all new infections) |
 | `EIR` | $365\,\bar\varepsilon$, per adult per year |
 | `FOIM`, `ft` | $\Lambda^M_1$ and $f_t(t)$ |
 | `S_count`, `D_count`, `A_count`, `U_count`, `Tr_count`, `Ph_count` | Population totals by infection state (diagnostic) |
+
+**Why the two infection counts split the pool.** These outputs are *rates*, which
+R integrates over a day, so the right rate depends on how fast each compartment
+drains. $S$ and $U$ drain at the full $\Lambda$, and
+$\int_0^1 \Lambda X e^{-\Lambda t}\,\mathrm{d}t = X\left(1 - e^{-\Lambda}\right) = Xp$
+— the IBM's deduplicated count, exactly. $A$ does not: a sub-clinical re-infection
+of an $A$ leaves them in $A$, so $A$ drains only at $h^c$ and stays roughly flat
+across the day, making $\int \Lambda A\,\mathrm{d}t \approx \Lambda A$ and
+over-counting by $\Lambda/p = -\log(1-p)/p$. $A$ therefore takes $p_{ij}$ directly.
+Before this correction all-age `n_inc_*` ran 2.6% (EIR 20) to 4.2% (EIR 50) above
+the IBM median, outside its replicate spread at both; after, 0.6% and 0.4%. The
+bias sat in adults, where $A$ is a large share of $\Sigma$ — which is what
+identified it as an $A$-only defect rather than a whole-pool one. Clinical
+incidence is unaffected: it is counted with $h^c$, and
+$\int h^c A\,\mathrm{d}t = A\left(1-e^{-h^c}\right) = A\phi p$ already.
 
 **Six state columns for eight compartments.** `Tr_count` sums $T + T_s$ and
 `Ph_count` sums $P + P_c$, so neither split is observable in the output. That
@@ -1279,8 +1292,11 @@ only near equilibrium: there the solution is nearly flat, so the adaptive
 stepper proposes a very long step and can jump clean over an interpolation knot
 (the day an intervention changes), missing it entirely. For long dynamic
 projections,
-`atol = rtol = 1e-6` with `step_size_max = 10` runs several times faster with
-negligible effect on aggregate outputs.
+`rtol = 1e-6` with `step_size_max = 10` runs about 1.4–1.7x faster on seasonal
+projections, and barely faster on aseasonal ones (there the daily output grid, not
+the tolerance, sets the step count), with negligible effect on aggregate outputs.
+Keep `atol` at `1e-8`: the individual prophylaxis chain stages hold occupancies of
+order `1e-6`, which a looser absolute tolerance lets dip below zero.
 
 The PEV, TBV, carrying-capacity and (constant-demography) mortality grids are
 built to extend a year past `timesteps` so the stepper never extrapolates them;
