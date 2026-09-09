@@ -17,8 +17,8 @@ set once on the shared parameter list so both models emit identical
 | `scenarios.R` | The scenario definitions, the shared per-run summariser, and `run_blink()`. Sourced by both `run_replicates.R` and `check_drift.R`, so a drift check cannot silently test different scenarios from the ones the reference was built on. |
 | `check_drift.R` | **The one to run often.** Re-runs blink only (~2 min) against the committed IBM rows. Reports movement and agreement separately; exits non-zero on drift. |
 | `run_replicates.R` | Runs blink and the IBM replicates on a PSOCK cluster, writes `data/rep_{eq,age,monthly,doy,timing}.csv` and `data/ibm_reference.json`. `CMP_SMOKE=1` gives a 4-year, 1-replicate end-to-end check into `data/smoke/`; `CMP_ONLY=a,b` re-runs a subset and merges it into the existing CSVs. |
-| `render_figures.R` | Draws every `cmp_*.png` from the CSVs (no model runs) into `man/figures/` and `vignettes/`. The 63-country panel reads the `blink2_validate` results directly. |
-| `summary_tables.R` | The numbers quoted in the article, as markdown tables in `data/tables.md`. |
+| `render_figures.R` | Draws every `cmp_*.png` from the CSVs (no model runs) into `man/figures/` and `vignettes/`. The 63-country hex panel is a **snapshot** and is not redrawn: it needs a ~7-hour validation run in a separate checkout. `CMP_REFRESH_SITES=1` re-takes it. |
+| `summary_tables.R` | The numbers quoted in the article, as markdown tables in `data/tables.md`. The site-file statistics come from the committed `data/site_snapshot.json`, not from a live run, so they survive on a machine without the validation checkout. |
 
 ## Checking a change: don't re-run the IBM
 

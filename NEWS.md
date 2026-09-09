@@ -203,6 +203,28 @@
   IBM's 10–90% replicate range in 15 of the 20 scenario × outcome cells; the
   noisiest is treatment scale-up on severe incidence, where the IBM's own
   replicates span −12% to +6% and the two models differ in sign.
+* **The 63-country site comparison is now an explicit snapshot.** It was the one
+  figure whose inputs live outside this repository: a roughly seven-hour run
+  against the malariaverse site files, in a separate, unversioned checkout. Both
+  the figure and its statistics are therefore frozen rather than kept in step,
+  and both now say so — in the README caption, in a callout above the figure in
+  `vignette("comparison")`, and in `comparison/data/site_snapshot.json`, which
+  records when the snapshot was taken and against which `blink` version.
+
+  This also closes a hole. `summary_tables.R` used to compute those statistics
+  live and silently omit the whole section when the validation checkout was
+  absent, which is the normal case for anyone else and for CI. That would have
+  dropped the article's site numbers out of the reproducible record, and failed
+  the new figures job for a reason unrelated to the model. It now reads the
+  committed snapshot. `render_figures.R` likewise leaves the committed PNG alone
+  and says which flag redraws it. `CMP_REFRESH_SITES=1` re-takes both, and is the
+  only thing that touches either.
+
+  The alternative — wiring the validation run into the harness — was considered
+  and rejected: it would put a seven-hour dependency in the path of a two-minute
+  check, for a comparison that is meant to be repeated at a release rather than
+  on every change.
+
 * **CI for the comparison, prepared but not switched on.** Two new workflows,
   `comparison.yaml` (the drift check) and `figures.yaml` (do the committed
   figures and tables still match the committed data), plus `dependabot.yml` for

@@ -137,19 +137,45 @@ say("seasonal realised EIR: IBM %.1f, blink %.1f (target %s); annual PfPR IBM %s
     median(sea$eir_realised[sea$model == "IBM"]), sea$eir_realised[sea$model == "blink"], EIR_REF,
     med_rng(sea$pfpr_2_10[sea$model == "IBM"]), sea$pfpr_2_10[sea$model == "blink"])
 
-## ---- 4. country site files ----------------------------------------------------
-vdir <- VDIR
-fs <- list.files(file.path(vdir, "results"), pattern = "_compare.rds$", full.names = TRUE)
-if (length(fs)) {
+## ---- 4. country site files (a SNAPSHOT) ---------------------------------------
+## Read from a committed snapshot, not recomputed. The 63-country comparison is a
+## ~7-hour run against the malariaverse site files, in a separate checkout that is
+## not part of this repo, so it cannot be a step in the harness or in CI. Without
+## the snapshot this section would simply vanish from tables.md on any machine
+## lacking that checkout -- taking the article's numbers with it, and failing the
+## figures CI job for a reason that has nothing to do with the model.
+##
+## CMP_REFRESH_SITES=1, with the validation results present, re-takes it.
+site_f <- file.path(DDIR, "site_snapshot.json")
+if (nzchar(Sys.getenv("CMP_REFRESH_SITES"))) {
+  fs <- list.files(file.path(VDIR, "results"), pattern = "_compare.rds$", full.names = TRUE)
+  if (!length(fs)) stop("CMP_REFRESH_SITES is set but there are no results in ", VDIR)
   v <- bind_rows(lapply(fs, readRDS))
-  ag <- function(x, y) { ok <- is.finite(x) & is.finite(y); x <- x[ok]; y <- y[ok]
-    sprintf("n = %s, r = %.3f, slope = %.3f, relative bias = %s", format(length(x), big.mark = ","),
-            cor(x, y), unname(coef(lm(y ~ x))[2]), pct(mean(y - x) / mean(x), 1)) }
-  say("## Country site files\n")
-  say("countries: %d; sub-sites: %d; years %d\u2013%d", length(unique(v$iso3c)),
-      nrow(distinct(v, iso3c, name_1, urban_rural)), min(v$year), max(v$year))
-  say("clinical: %s", ag(v$ms_clinical, v$mo_clinical))
-  say("severe:   %s\n", ag(v$ms_severe, v$mo_severe))
+  ag2 <- function(x, y) { ok <- is.finite(x) & is.finite(y); x <- x[ok]; y <- y[ok]
+    list(n = length(x), r = cor(x, y), slope = unname(coef(lm(y ~ x))[2]),
+         rel_bias = mean(y - x) / mean(x)) }
+  prev <- if (file.exists(site_f)) jsonlite::read_json(site_f, simplifyVector = TRUE) else list()
+  snap <- list(taken = format(Sys.Date()),
+               blink = as.character(utils::packageVersion("blink")),
+               note = prev$note,
+               countries = length(unique(v$iso3c)),
+               sub_sites = nrow(distinct(v, iso3c, name_1, urban_rural)),
+               year_from = min(v$year), year_to = max(v$year),
+               clinical = ag2(v$ms_clinical, v$mo_clinical),
+               severe = ag2(v$ms_severe, v$mo_severe))
+  jsonlite::write_json(snap, site_f, auto_unbox = TRUE, pretty = TRUE, digits = 6)
+  message("re-took the site snapshot (", snap$countries, " countries)")
+}
+if (file.exists(site_f)) {
+  sn <- jsonlite::read_json(site_f, simplifyVector = TRUE)
+  agz <- function(z) sprintf("n = %s, r = %.3f, slope = %.3f, relative bias = %s",
+                             format(z$n, big.mark = ","), z$r, z$slope, pct(z$rel_bias, 1))
+  say("## Country site files (snapshot: %s, blink %s)\n", sn$taken, sn$blink)
+  say("countries: %d; sub-sites: %d; years %d\u2013%d", sn$countries, sn$sub_sites,
+      sn$year_from, sn$year_to)
+  say("clinical: %s", agz(sn$clinical))
+  say("severe:   %s", agz(sn$severe))
+  say("NOT refreshed by this harness or by CI: re-take with CMP_REFRESH_SITES=1 when the validation run is repeated\n")
 }
 
 ## ---- 5. intervention impact ---------------------------------------------------

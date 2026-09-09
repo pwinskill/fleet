@@ -205,9 +205,24 @@ g <- (panel_doy("pfpr_2_10", PREV_LAB, "Prevalence lags the season", TRUE) |
 save_fig(g, "core_seasonal", width = 10, height = 5)
 
 ## ============================================================================
-## 4. core_sites -- 63-country monthly comparison (site::site_parameters lists)
+## 4. core_sites -- 63-country monthly comparison (a SNAPSHOT)
 ## ============================================================================
+## The committed cmp_core_sites.png is a snapshot and is deliberately NOT redrawn
+## on an ordinary render. Its inputs are a ~7-hour validation run against the
+## malariaverse site files, living in a separate checkout that is not part of this
+## repo, so on any machine without that checkout this block would otherwise be
+## skipped silently -- which is fine for the figure (the committed PNG survives)
+## but leaves no record of the fact. Re-draw it deliberately, alongside re-taking
+## the statistics in summary_tables.R:
+##
+##   CMP_REFRESH_SITES=1 Rscript comparison/render_figures.R
+##   CMP_REFRESH_SITES=1 Rscript comparison/summary_tables.R
 vdir <- VDIR
+if (!nzchar(Sys.getenv("CMP_REFRESH_SITES"))) {
+  message("core_sites: keeping the committed snapshot ",
+          "(CMP_REFRESH_SITES=1 to re-draw it from ", vdir, ")")
+  vdir <- ""                                   # skips the block below
+}
 fs <- list.files(file.path(vdir, "results"), pattern = "_compare.rds$", full.names = TRUE)
 if (length(fs)) {
   v <- bind_rows(lapply(fs, readRDS))

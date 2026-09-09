@@ -1,5 +1,33 @@
 # blink
 
+[![Status: work in progress](https://img.shields.io/badge/status-work%20in%20progress-orange?style=for-the-badge)](#-not-ready-for-real-use)
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange?style=for-the-badge)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![Not for production use](https://img.shields.io/badge/not%20for-production%20use-red?style=for-the-badge)](#-not-ready-for-real-use)
+
+> ## ⚠️ Not ready for real use
+>
+> **`blink` is a work in progress and is not validated for research, policy or
+> operational use.** It is published early so the approach and the comparison
+> against `malariasimulation` can be looked at and argued with, not so that
+> anyone can rely on its numbers.
+>
+> Concretely, and honestly:
+>
+> - **The API is unstable.** `run_simulation_ode()`'s signature has already
+>   changed once and may change again without deprecation.
+> - **Known discrepancies against the IBM are open, not resolved.** All-age
+>   severe incidence runs about 4–6% below `malariasimulation` and sits outside
+>   its replicate band at two of six transmission levels; across the 63-country
+>   site-file comparison `blink` runs roughly 9% above the IBM on clinical and
+>   severe incidence, and that excess is **not** explained. See
+>   *[Where the two models differ](https://pwinskill.github.io/blink/articles/comparison.html)*.
+> - **Severe incidence and anything derived from it (including DALYs) should be
+>   treated as indicative only.**
+> - Nothing here has been peer reviewed, and there is no versioned release.
+>
+> If you need results you can defend today, use
+> [malariasimulation](https://github.com/mrc-ide/malariasimulation).
+
 > A fast, deterministic **mean-field (ODE) twin** of the [malariasimulation](https://github.com/mrc-ide/malariasimulation) individual-based model of *Plasmodium falciparum* malaria: same inputs, seconds per run, population-independent.
 
 ![The blink model](man/figures/model_flow.png)
@@ -187,7 +215,7 @@ Every panel in `vignette("comparison")` runs the **same malariasimulation parame
 
 ![Country site files: blink against the IBM for 450,684 sub-site-months across 63 countries](man/figures/cmp_core_sites.png)
 
-*Every admin-1 × urban/rural sub-site in the malariaverse site files, monthly, 2000–2026, with its full intervention history: clinical incidence r = 0.98 (slope 1.00), severe r = 0.96 (slope 0.95). blink sits about 9% above the IBM on average, mostly in low-incidence sub-site-months.*
+*Every admin-1 × urban/rural sub-site in the malariaverse site files, monthly, 2000–2026, with its full intervention history: clinical incidence r = 0.98 (slope 1.00), severe r = 0.96 (slope 0.95). blink sits about 9% above the IBM on average, mostly in low-incidence sub-site-months, and that excess is not explained. **A snapshot.** This one takes ~7 hours against the malariaverse site files, so unlike every other figure here it is not refreshed by the comparison harness or by CI: it is re-taken deliberately. It describes the blink version recorded in `comparison/data/site_snapshot.json`, which may be behind the current code.*
 
 The full set (age profiles, the seasonal cycle, custom demography, intervention time series), with the numbers behind each figure, is in `vignette("comparison")`. Reproduce with:
 

@@ -73,11 +73,12 @@ clinical peak (per child-year): IBM 4.53 (day 305), blink 4.50 (day 298); annual
 
 seasonal realised EIR: IBM 18.7, blink 18.7 (target 20); annual PfPR IBM 0.492 (0.484–0.499), blink 0.490
 
-## Country site files
+## Country site files (snapshot: 2026-09-09, blink 0.0.0.9000)
 
 countries: 63; sub-sites: 1391; years 2000–2026
 clinical: n = 450,684, r = 0.982, slope = 0.997, relative bias = 8.7%
 severe:   n = 450,684, r = 0.958, slope = 0.946, relative bias = 8.8%
+NOT refreshed by this harness or by CI: re-take with CMP_REFRESH_SITES=1 when the validation run is repeated
 
 ## Intervention impact: reduction over post-deployment years 0-3 vs pre-deployment years -3-0
 

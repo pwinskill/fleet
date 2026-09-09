@@ -246,6 +246,17 @@ seasonal cycle, which is where a mean-field model is most likely to slip).
 fig("core_sites")
 ```
 
+> **This one is a snapshot.** Every other figure on this page is redrawn from
+> committed per-replicate summaries whenever the harness runs, and a drift check
+> re-runs `blink` against them on demand. This comparison cannot work that way:
+> it is a roughly seven-hour run against the malariaverse site files, held in a
+> separate checkout that is not part of the package repository. So it is re-taken
+> deliberately rather than kept in step, and both the figure and the statistics
+> below describe the `blink` version recorded in
+> `comparison/data/site_snapshot.json` — which may be behind the code you are
+> reading about. Treat it as evidence that the approach holds up across real
+> settings, not as a live check on the current model.
+
 Across 450,684 sub-site-months in 1,391 sub-sites of 63 countries, monthly
 clinical incidence correlates at r = 0.98 with a regression slope of 1.00, and
 monthly severe incidence at r = 0.96 with a slope of 0.95: the two models agree
