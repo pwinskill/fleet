@@ -201,6 +201,30 @@
   IBM's 10–90% replicate range in 15 of the 20 scenario × outcome cells; the
   noisiest is treatment scale-up on severe incidence, where the IBM's own
   replicates span −12% to +6% and the two models differ in sign.
+* **The model flow diagram is simplified.** It had accumulated more visual
+  grammar than it could carry, and the worst of it was that the *same* layered
+  idiom meant two unrelated things: offset layers behind a panel meant "array
+  dimension", while a stacked outline behind a box meant "Erlang chain". The
+  layering now means one thing. The deck behind the human panel carries one
+  dimension on each visible edge — age *i* = 1 … 52 and biting heterogeneity
+  *j* = 1 … 5 — so the layers illustrate the grid and nothing else.
+
+  Three elements are gone. The stacked outlines on `P`, `P_c` and the EIP,
+  with their three stage-count labels: the chains are disclosed in the caption
+  and `vignette("model")` instead, where the counts belong anyway since they
+  vary by drug. The dotted at-risk rings on `S`, `A` and `U`, and the key row
+  explaining them: a whole grammar element, plus a padding offset on every
+  flow that touched those boxes, for one fact now stated in words beside the
+  hazard. And the immunity box with its coupling arrow, which sat in the
+  busiest part of the panel to represent something algebraic rather than a
+  state. The key is down from six rows to five, and the captions in the README
+  and `vignette("model")` are rewritten to match — they described idioms the
+  figure no longer uses.
+
+  Also fixed while in there: the FIDELITY invariant cited two odin line numbers
+  that had rotted by ~18 lines, so it now cites the equations (`deriv(A)`,
+  `deriv(U)`) instead. Bare line numbers into an actively edited file rot, and
+  these already had.
 * New figure `cmp_programme_ts` and a *Programmes over fifteen years* section in
   `vignette("comparison")`. Every other intervention figure isolates one builder
   over six years, which is the shape for attributing a difference but not for

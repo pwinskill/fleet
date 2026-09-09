@@ -17,11 +17,13 @@
 #        vignette appendix B.4 documents that and section 2 discloses it.
 #
 # FIDELITY
-#   The infection hazard acts on S + A + U. A's ONLY infection outflow is h_c
-#   (odin :255) -- there is no A -> A arrow -- and U loses the full FOI (:261).
-#   Membership of the at-risk pool is therefore drawn as a dotted OUTLINE on
-#   S, A and U, never as a flow: a line from A back to the spine would read as
-#   a phantom A -> A flow.
+#   The infection hazard acts on S + A + U. A's ONLY infection outflow is the
+#   -h_c[i,j]*A[i,j] term in deriv(A) -- there is no A -> A arrow -- and U loses
+#   the full FOI in deriv(U). (Cite the equation, not a line number: bare line
+#   numbers into a file that is actively edited rot, and these already had.)
+#   That membership is stated in WORDS beside the hazard, never in ink: a line
+#   from A back to the spine would read as a phantom A -> A flow, and the dotted
+#   rings this used to carry cost a whole grammar element for one fact.
 #   Chemoprevention clears S, U, A, D, T, P and P_c -- S is outside the
 #   infectious pool, so the pulse must show an S source of its own.
 #   Larval death is affine, me*(1 + n_L/K), not proportional; pupal death is
@@ -35,9 +37,9 @@
 #   solid black + filled triangle = a rate in the ODE, people move
 #   dashed indigo                 = a scalar coupling, nobody moves
 #   dashed red                    = people move, instantaneously (a state jump)
-#   dotted grey                   = a grouping or a set membership, never a
-#                                   compartment; always labelled
-#   stacked outline               = an array or an Erlang chain (count shown)
+#   dotted grey                   = a grouping, never a compartment; always
+#                                   labelled
+#   offset layers                 = the array dimensions, and ONLY those
 #   Set membership is never drawn in flow ink, and there is ONE arrowhead glyph
 #   for flows -- flodia's filled triangle, which hand-drawn paths must match.
 #
@@ -49,12 +51,17 @@
 #   right, mosquitoes right to left -- so the two couplings never cross each
 #   other. The only crossings in the figure are where the EIR coupling meets
 #   the two return lanes; both are drawn as hops (a gap in the EIR line).
-#   Flows to and from an at-risk box stop at its dotted ring, not its border.
 #
-# DIMENSIONS  The three arrays are drawn, not just asserted: a deck of offset
-#   panels behind the human compartments (age i x heterogeneity j), a deck
-#   behind the mosquito compartments (species s), and a stacked outline behind
-#   each Erlang chain (P, P_c, EIP), each with its stage count beside it.
+# DIMENSIONS  The layered idiom appears TWICE and means one thing both times:
+#   the array dimensions. A deck behind the human panel, its two visible edges
+#   labelled one dimension each (age i, biting heterogeneity j), and a deck
+#   behind the mosquito panel (species s). It used to also sit behind P, P_c and
+#   the EIP to mean "Erlang chain" -- one idiom carrying two unrelated meanings,
+#   which is what made the figure hard to read. The chains are now disclosed in
+#   the caption and vignette("model") instead, where the stage counts belong
+#   anyway (they vary by drug). Immunity likewise: it is algebraic, not a state,
+#   so it is named on the hazard rather than boxed in the busiest part of the
+#   panel.
 #
 # RENDERING  Authored at width 2400, res 250 (9.6 in). Check it at the size
 #   readers actually get by rendering at width 700, res 73 (9.59 in) -- NOT
@@ -88,7 +95,7 @@ GREY   <- "#5B5B5B"   # annotation text      (7.0:1)
 POOL   <- "#6B6B6B"   # groupings            (5.6:1)
 INK    <- "grey15"
 
-RX <- 0.34; RY <- 0.26; ARP <- 0.075          # box half-widths; at-risk ring pad
+RX <- 0.34; RY <- 0.26                        # box half-widths
 CEX_NODE <- 1.5; CEX_RATE <- 1.15; CEX_NOTE <- 1.0; CEX_SMALL <- 0.85
 LGAP <- 0.19          # every flow label sits this far off its line
 
@@ -132,21 +139,8 @@ region <- function(h, fill = POOLT) {
   rect(h$x0, h$y0, h$x1, h$y1, border = POOL, lty = 3, lwd = 1.6, col = fill)
 }
 
-## the at-risk marker: a dotted ring OUTSIDE the box, so no flow ink is spent
-## on set membership (see FIDELITY)
-at_risk <- function(x, y) {
-  rect(x - RX - ARP, y - RY - ARP, x + RX + ARP, y + RY + ARP,
-       border = POOL, lty = 3, lwd = 1.5)
-}
-
-## a stacked outline behind a box: this compartment is an Erlang chain
-chain <- function(x, y, col, n = 2, d = 0.09) {
-  for (k in seq(n, 1))
-    rect(x - RX + k * d, y - RY + k * d, x + RX + k * d, y + RY + k * d,
-         col = col, border = INK, lwd = 0.9)
-}
-
-## a deck of offset panels behind a group of boxes: this is an array
+## a deck of offset panels behind a panel: the ONLY layered idiom in the figure,
+## and it means one thing -- these boxes are arrays over the grid named on it
 deck <- function(p, n = 2, dx = 0.20, dy = 0.20) {
   cols <- c(DECK2, DECK1)
   for (k in seq(n, 1))
@@ -200,10 +194,6 @@ model_flow <- function() {
   region(ADULTH)
 
   ## ======================= HUMANS ==========================================
-  for (xy in list(c(LEFT, Y_S), c(MID, Y_A), c(UX, Y_A))) at_risk(xy[1], xy[2])
-  chain(LEFT, Y_T, PROPH)                    # P is an Erlang chain
-  chain(LEFT, Y_A, PROPH)                    # so is P_c
-
   Ph <- nd(LEFT, Y_T, expression(bold(P)),    PROPH)
   S  <- nd(LEFT, Y_S, expression(bold(S)),    SUS)
   Pc <- nd(LEFT, Y_A, expression(bold(P[c])), PROPH)
@@ -212,20 +202,18 @@ model_flow <- function() {
   A  <- nd(MID,  Y_A, expression(bold(A)),    ASYM,  heavy = TRUE)
   U  <- nd(UX,   Y_A, expression(bold(U)),    SUBP,  heavy = TRUE)
 
-  lab(1.79, Y_T + 0.20, expression(paste(k[P], " stages")),
-      adj = c(0, 0.5), cex = CEX_SMALL)
-  lab(1.83, Y_A + 0.20, expression(paste(k[P[c]], " stages")),
-      adj = c(0, 0.5), cex = CEX_SMALL)
   lab(5.10, POOLH$y1 + 0.24, "infectious to mosquitoes",
       col = POOL, cex = CEX_NOTE, font = 3, adj = c(0, 0.5))
 
   ## --- infection: one spine, three branches -------------------------------
-  segments(S$x1 + ARP, Y_S, SPINE, Y_S, col = INK, lwd = 1.3)  # the at-risk pool feeds it
+  segments(S$x1, Y_S, SPINE, Y_S, col = INK, lwd = 1.3)  # the at-risk pool feeds it
   segments(SPINE, Y_A, SPINE, Y_T, col = INK, lwd = 1.3)       # the spine
-  lab(SPINE - 0.14, 4.10, expression(Lambda[ij]), col = INK,
-      cex = CEX_RATE + 0.2, adj = c(1, 0.5))
-  lab(SPINE - 0.14, 3.84, "infection hazard", col = GREY,
-      cex = CEX_SMALL, adj = c(1, 0.5))
+  lab(SPINE + 0.16, 4.28, expression(Lambda[ij]), col = INK,
+      cex = CEX_RATE + 0.2, adj = c(0, 0.5))
+  lab(SPINE + 0.16, 4.02, "infection hazard", col = GREY,
+      cex = CEX_SMALL, adj = c(0, 0.5))
+  lab(SPINE + 0.16, 3.80, "on S, A, U", col = GREY,
+      cex = CEX_SMALL, adj = c(0, 0.5))
 
   br <- function(y, txt, to_x) {
     path(c(SPINE, to_x), c(y, y))
@@ -233,63 +221,55 @@ model_flow <- function() {
   }
   br(Y_T, "treated",     MID - RX)
   br(Y_S, "untreated",   MID - RX)
-  br(Y_A, "no symptoms", MID - RX - ARP)
-
-  ## --- immunity: four arrays, one coupling into the hazard ----------------
-  IMX <- 2.30; IMY <- 2.95; IMRX <- 0.46; IMRY <- 0.32
-  rect(IMX - IMRX, IMY - IMRY, IMX + IMRX, IMY + IMRY,
-       col = DECK1, border = POOL, lwd = 1.0)
-  lab(IMX, IMY + 0.10, expression(paste(I[B], "  ", I[CA], "  ", I[D], "  ", I[VA])),
-      col = INK, cex = CEX_SMALL)
-  lab(IMX, IMY - 0.14, "immunity (i, j)", col = GREY, cex = CEX_SMALL)
-  path(c(IMX + IMRX, SPINE), c(IMY, IMY), col = COUPLE, lty = 2, lwd = 1.6)
+  br(Y_A, "no symptoms", MID - RX)
 
   ## --- recovery -----------------------------------------------------------
-  path(c(MID, MID), c(D$y0, A$y1 + ARP))
+  path(c(MID, MID), c(D$y0, A$y1))
   lab(MID + LGAP, (D$y0 + A$y1) / 2, expression(r[D]), col = INK,
       cex = CEX_RATE, adj = c(0, 0.5))
-  path(c(A$x1 + ARP, U$x0 - ARP), c(Y_A, Y_A))
+  path(c(A$x1, U$x0), c(Y_A, Y_A))
   lab((A$x1 + U$x0) / 2, Y_A + LGAP, expression(r[A]), col = INK, cex = CEX_RATE)
 
   ## --- returns to S: four lanes, none shared ------------------------------
   path(c(MID, MID, LEFT, LEFT), c(Tr$y1, LANE_RT, LANE_RT, Ph$y1))
   lab(3.05, LANE_RT + 0.16, expression(r[T]), col = INK, cex = CEX_RATE)
-  path(c(LEFT, LEFT), c(Ph$y0, S$y1 + ARP))
+  path(c(LEFT, LEFT), c(Ph$y0, S$y1))
   lab(LEFT + LGAP, (Ph$y0 + S$y1) / 2, expression(r[P]), col = INK,
       cex = CEX_RATE, adj = c(0, 0.5))
-  path(c(PC_X, PC_X), c(Pc$y1, S$y0 - ARP))
+  path(c(PC_X, PC_X), c(Pc$y1, S$y0))
   lab(PC_X - LGAP, (Pc$y1 + S$y0) / 2, expression(r[P[c]]), col = INK,
       cex = CEX_RATE, adj = c(1, 0.5))
-  path(c(UX, UX, RET_X, RET_X, S$x0 - ARP),
-       c(U$y0 - ARP, LANE_U, LANE_U, Y_S, Y_S))
+  path(c(UX, UX, RET_X, RET_X, S$x0),
+       c(U$y0, LANE_U, LANE_U, Y_S, Y_S))
   lab(UX - 0.14, LANE_U + 0.16, expression(r[U]), col = INK, cex = CEX_RATE,
       adj = c(1, 0.5))
 
   ## --- chemoprevention: a state jump, from S AND the infectious states -----
   path(c(CP_X, CP_X, LEFT, LEFT), c(POOLH$y0, LANE_CP, LANE_CP, Pc$y0),
        col = PULSE, lty = 4, lwd = 1.7)
-  path(c(PULSE_S, PULSE_S), c(S$y0 - ARP, Pc$y1), col = PULSE, lty = 4, lwd = 1.7)
+  path(c(PULSE_S, PULSE_S), c(S$y0, Pc$y1), col = PULSE, lty = 4, lwd = 1.7)
   lab(3.30, LANE_CP + 0.18, expression(italic("MDA / SMC / PMC")),
       col = PULSE, cex = CEX_NOTE)
 
   ## --- what the layers mean, and what happens between them ----------------
   lab(HP$x0 + 0.14, HP$y1 - 0.16, "HUMANS", col = INK, cex = 1.25, font = 2,
       adj = c(0, 0.5))
-  lab(1.60, HP$y1 - 0.16, "each box is an array over age i and heterogeneity j",
+  lab(1.60, HP$y1 - 0.16, "every box is an array over the layers behind it",
       col = GREY, cex = CEX_NOTE, font = 3, adj = c(0, 0.5))
-  lab(HP$x1 - 0.10, HP$y1 - 0.16, "i = 1", col = GREY, cex = CEX_SMALL, adj = c(1, 0.5))
-  lab(HP$x1 + 0.30, HP$y1 + 0.10, "i = 2", col = GREY, cex = CEX_SMALL, adj = c(1, 0.5))
-  lab(HP$x1 + 0.50, HP$y1 + 0.30, "i = 52 (80+ y)", col = GREY, cex = CEX_SMALL,
-      adj = c(1, 0.5))
+  ## the deck is labelled on its own two edges, one dimension each, so the
+  ## layering reads as the [age x heterogeneity] grid and nothing else
+  lab(HP$x1 + 0.32, HP$y1 + 0.30, expression(paste("age  ", italic(i), " = 1 ... 52")),
+      col = GREY, cex = CEX_SMALL, adj = c(1, 0.5))
+  lab(HP$x1 + 0.12, HP$y1 + 0.10,
+      expression(paste("biting heterogeneity  ", italic(j), " = 1 ... 5")),
+      col = GREY, cex = CEX_SMALL, adj = c(1, 0.5))
   lab(HP$x0 + 0.30, HP$y0 + 0.16,
-      expression(italic(paste("people age between layers (", r[i],
+      expression(italic(paste("people age along ", italic(i), " (", r[i],
                               "), die from every box (", mu[i](t),
                               "), and are born into S"))),
       col = GREY, cex = CEX_SMALL, adj = c(0, 0.5))
 
   ## ======================= MOSQUITOES ======================================
-  chain(MX[["Em"]], MY, MOSQ)                # the EIP is an Erlang delay chain
-
   E  <- nd(MX[["E"]],  MY, expression(bold(E)),    AQ)
   L  <- nd(MX[["L"]],  MY, expression(bold(L)),    AQ)
   Pl <- nd(MX[["Pl"]], MY, expression(bold(P[L])), AQ)
@@ -308,8 +288,6 @@ model_flow <- function() {
   fl(Em, Im, "survives EIP", cex = 0.78)
 
   for (b in list(E, L, Pl, Sm, Em, Im)) death(b$x, b$y0)
-  lab(3.20, -2.10, expression(paste("EIP: ", n[P], " stages")), adj = c(0, 0.5),
-      cex = CEX_SMALL)
 
   lab(MP$x0 + 0.14, MP$y1 - 0.14, "MOSQUITOES", col = INK, cex = 1.25,
       font = 2, adj = c(0, 0.5))
@@ -361,14 +339,10 @@ model_flow <- function() {
   krow(ky - 1.38, "grouping, not a state",
        function(y) rect(KX, y - 0.13, KX + 0.48, y + 0.13, border = POOL,
                         lty = 3, lwd = 1.6, col = POOLT))
-  krow(ky - 1.86, expression(paste(Lambda, " acts here: S, A, U")),
+  ## the layered idiom appears once in the figure and means one thing
+  krow(ky - 1.90, "layers: the array dimensions",
        function(y) {
-         rect(KX + 0.07, y - 0.10, KX + 0.41, y + 0.10, col = SUS, border = INK)
-         rect(KX, y - 0.17, KX + 0.48, y + 0.17, border = POOL, lty = 3, lwd = 1.5)
-       })
-  krow(ky - 2.36, "array / Erlang chain",
-       function(y) {
-         rect(KX + 0.16, y - 0.05, KX + 0.50, y + 0.15, col = DECK1, border = POOL)
+         rect(KX + 0.16, y - 0.05, KX + 0.50, y + 0.15, col = DECK2, border = POOL)
          rect(KX + 0.08, y - 0.10, KX + 0.42, y + 0.10, col = DECK1, border = POOL)
          rect(KX, y - 0.15, KX + 0.34, y + 0.05, col = PANEL, border = INK)
        })

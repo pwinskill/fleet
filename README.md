@@ -7,13 +7,13 @@
 *The model at a glance: humans above, mosquitoes below, the transmission cycle
 running counter-clockwise. Solid black = a flow of individuals, a rate in the ODE.
 Dashed indigo = a scalar coupling, where nobody moves. Dashed red = a discrete state
-jump. Dotted grey = a grouping or a set membership, never a compartment: the
-infectious pool, the adult females, and the ring marking the states the infection
-hazard acts on. A stacked outline = an array or an Erlang chain, with its count: the
-deck behind each panel is the age × biting-heterogeneity grid (humans) and the
-species dimension (mosquitoes), and the stacked boxes are the two prophylaxis chains
-and the EIP delay. Not drawn: the Erlang lag chains on the two couplings, and the
-split of T under antimalarial resistance — see `vignette("model")`.*
+jump. Dotted grey = a grouping, never a compartment: the infectious pool and the
+adult females. Offset layers = the array dimensions, and only those: the deck behind
+the human panel is the age × biting-heterogeneity grid, the deck behind the mosquito
+panel is species. Not drawn, to keep the figure readable: P, P~c~ and the EIP are
+Erlang chains rather than single compartments (stage counts vary by drug); immunity
+is algebraic rather than a state, so it is named on the hazard instead of boxed; and
+T splits under antimalarial resistance — all three in `vignette("model")`.*
 
 ## What it is
 

@@ -95,15 +95,21 @@ The figure uses four grammars, not two:
   nobody moves along it.
 - **Dashed red** — people *do* move, but instantaneously, as a state jump between
   integration segments rather than at a rate.
-- **Dotted grey** — a grouping or a set membership, never a compartment, and always
-  labelled. There are three: the infectious pool, the adult mosquitoes, and the ring
-  round $S$, $A$ and $U$ marking the states $\Lambda$ acts on. Drawing that last one
-  as a *ring* rather than as lines back to the spine is deliberate: a line from $A$
-  would read as a flow $A \to A$, which the model does not have (§B.4).
-- **A stacked outline** — an array or an Erlang chain, with its count. The deck
-  behind each panel is the dimension that panel is replicated over (age $\times$
-  heterogeneity for humans, species for mosquitoes); the stacked boxes are the two
-  prophylaxis chains and the EIP delay.
+- **Dotted grey** — a grouping, never a compartment, and always labelled. There are
+  two: the infectious pool and the adult mosquitoes. That $\Lambda$ acts on $S$, $A$
+  and $U$ is stated in words beside the hazard rather than drawn, because a line from
+  $A$ back to the spine would read as a flow $A \to A$, which the model does not have
+  (§B.4) — and a whole grammar element for one fact was not paying for itself.
+- **Offset layers** — the array dimensions, and only those. The deck behind the human
+  panel carries one dimension on each visible edge (age $i = 1 \dots 52$, biting
+  heterogeneity $j = 1 \dots 5$); the deck behind the mosquito panel is species.
+
+Three things the figure deliberately does not draw, because showing them cost more
+legibility than they bought. $P$, $P_c$ and the EIP are **Erlang chains**, not single
+compartments — they were once drawn with a stacked outline of their own, which made
+the same layered idiom mean two unrelated things (§B.4 gives the stage counts, which
+vary by drug). **Immunity** is algebraic rather than a state, so it is named on the
+hazard rather than boxed. And $T$ splits under antimalarial resistance (§B.4).
 
 The transmission cycle runs counter-clockwise — humans left to right, mosquitoes
 right to left — so the two couplings never cross. Where the EIR coupling must cross
