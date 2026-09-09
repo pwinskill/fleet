@@ -51,7 +51,7 @@ library(blink)
 p <- malariasimulation::get_parameters()
 
 # 10-year daily wide count table (malariasimulation-style columns)
-out <- run_simulation_ode(timesteps = 3650, parameters = p, init_EIR = 20)
+out <- run_simulation_ode(timesteps = 3650, parameters = malariasimulation::set_equilibrium(p, init_EIR = 20))
 
 # postie-format rates (long) and prevalence (wide), exactly as for an IBM run
 prevalence <- postie::get_prevalence(out, diagnostic = "lm")
@@ -73,23 +73,24 @@ p <- malariasimulation::set_bednets(
   dn0 = matrix(0.387, 1, 1), rn = matrix(0.563, 1, 1),
   rnm = matrix(0.24, 1, 1), gamman = 2.64 * 365)
 
-out <- run_simulation_ode(timesteps = 3650, parameters = p, init_EIR = 20)
+out <- run_simulation_ode(timesteps = 3650, parameters = malariasimulation::set_equilibrium(p, init_EIR = 20))
 ```
 
-If you have already called `malariasimulation::set_equilibrium()`, `init_EIR` is read from the parameter list and can be omitted. For a step-by-step tour see `vignette("blink")`.
+`run_simulation_ode(timesteps, parameters, correlations)` takes the same three arguments as `malariasimulation::run_simulation()`, and the target EIR reaches it the same way: on the parameter list, via `set_equilibrium()`. Solver and discretisation settings live in a fourth argument, `tuning` — see `ode_tuning()`. For a step-by-step tour see `vignette("blink")`.
 
 ### Exported functions
 
 | Function | Purpose |
 | --- | --- |
 | `run_simulation_ode()` | Run the model; returns a wide, malariasimulation-style daily count table. |
+| `ode_tuning()` | Solver and discretisation settings for the run (`tuning =`). Every default is the validated choice. |
 | `default_age_lower()` | The default graded age grid (fine in infancy, coarse in adulthood). |
 
 Post-processing is `postie`'s job, not blink's: pass the returned table to `postie::get_rates()` / `postie::get_prevalence()` the same way you would an IBM run.
 
 ## Run times
 
-Seconds for one complete `run_simulation_ode()` call — building the inputs, seeding the equilibrium, integrating and rendering the outputs, which is what you actually pay. Single core, at the `atol = 1e-8, rtol = 1e-6, step_size_max = 10` preset.
+Seconds for one complete `run_simulation_ode()` call — building the inputs, seeding the equilibrium, integrating and rendering the outputs, which is what you actually pay. Single core, at the `tuning = list(rtol = 1e-6, step_size_max = 10)` preset.
 
 | Scenario | 5 years | 10 years | 30 years |
 | --- | --- | --- | --- |
@@ -108,7 +109,7 @@ Population size is irrelevant, as it should be — the compartments are per-capi
 | --- | --- | --- | --- | --- | --- |
 | 30-year seasonal run | 5.6 s | 5.8 s | 5.6 s | 5.6 s | 5.6 s |
 
-The solver settings are worth knowing about for long projections: the same 30-year seasonal run takes **7.9 s** at the defaults (`atol = rtol = 1e-8`, step ≤ 1 day, which hold the flat equilibrium exactly), **5.5 s** at the preset above, and **5.4 s** with `atol` loosened to `1e-6` — which is not worth it, because the prophylaxis chain stages hold occupancies of order `1e-6` and a looser absolute tolerance lets them go slightly negative.
+The solver settings are worth knowing about for long projections: the same 30-year seasonal run takes **7.9 s** at the `ode_tuning()` defaults (`atol = rtol = 1e-8`, step ≤ 1 day, which hold the flat equilibrium exactly), **5.5 s** at the preset above, and **5.4 s** with `atol` loosened to `1e-6` — which is not worth it, because the prophylaxis chain stages hold occupancies of order `1e-6` and a looser absolute tolerance lets them go slightly negative.
 
 Measured with `comparison/benchmark.R` (minimum of five repeats, since contention can only add time) on R 4.5.2, `aarch64-w64-mingw32`. Treat them as indicative: they are one machine, one core, and a laptop under load will be slower.
 

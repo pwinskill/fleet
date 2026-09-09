@@ -36,9 +36,17 @@ get_generator <- function(odin_file = NULL) {
 #'   the model is always compartmental (the individual-mosquito path does not
 #'   apply). See the README for the mean-field approximations used by each module.
 #'
-#'   Two optional fields on the list tune how faithfully the mean field mirrors the
-#'   IBM's per-individual arithmetic. Both default to the validated choice, so you
-#'   normally leave them alone:
+#'   **The target EIR is read from this list**, as `parameters$init_EIR`, which is
+#'   where `malariasimulation` puts it and reads it from too. Seed it the same way
+#'   you would for the IBM, before calling this function:
+#'   `parameters <- malariasimulation::set_equilibrium(parameters, init_EIR = 20)`.
+#'   That call also stores `eq_params`, which `blink` honours if present. Setting
+#'   `parameters$init_EIR` by hand works but skips that.
+#'
+#'   Three further optional fields tune how faithfully the mean field mirrors the
+#'   IBM. The first two are per-individual arithmetic, the third is a seeding
+#'   convention; all three default to the validated choice, so you normally leave
+#'   them alone:
 #'   \itemize{
 #'     \item `bite_dedup` (default `1`) — reproduce the IBM's per-timestep bite
 #'       deduplication. malariasimulation collects the day's bitten individuals in a
@@ -72,35 +80,13 @@ get_generator <- function(odin_file = NULL) {
 #'   ~10 years are a transient onto the cycle and the seasonal annual-mean EIR
 #'   sits a few percent below the aseasonal `init_EIR` target (nonlinear
 #'   averaging). Use a burned-in cycle for calibration/comparison.
-#' @param init_EIR target adult EIR (bites/adult/year), with the same meaning as in
-#'   `malariasimulation::set_equilibrium()`. If NULL, taken from
-#'   `parameters$init_EIR` (set by set_equilibrium()). Under the default demography
-#'   this is the EIR blink realises; under `set_demography()` see `hold_init_EIR`
-#'   above.
-#' @param age_lower age-group lower edges in **years** (default graded grid).
-#' @param n_eir,n_foim,n_eip Erlang-chain stage counts for the EIR lag, FOIM lag
-#'   and mosquito EIP. Larger values sharpen the (otherwise gamma-shaped) lags
-#'   toward the IBM's fixed delays; equilibrium is exact for any value.
-#' @param n_ph,n_phc Erlang-chain stage counts for the post-treatment (`Ph`) and
-#'   chemoprevention (`Ph_c`) prophylaxis compartments. `NULL` (default) matches the
-#'   chain's variance to the drug's Weibull protection curve, capped at 20. For
-#'   `Ph_c` that is `1/CV²` of the Weibull: 14 for SP-AQ, 15 for DHA-PQP. `Ph`
-#'   follows the exponential treated stage `Tr`, so its count matches the variance
-#'   of the whole `Tr + Ph` sojourn and its mean is the integrated protection left
-#'   after `Tr`: 16 stages for SP-AQ, 20 for DHA-PQP, and 1 for AL, whose 10-day
-#'   protection is already less variable than `Tr` itself. A drug mixture is
-#'   moment-matched as a mixture. `1` is a single exponential stage, which for
-#'   `Ph_c` leaks protection early between monthly SMC rounds. The count is fixed
-#'   at the seed's drug mix — a first-line switch moves the chain's mean, not its
-#'   shape.
-#' @param atol,rtol,step_size_max dust2 ODE-solver controls. The defaults
-#'   (`1e-8`, `1e-8`, `1`) preserve the flat equilibrium exactly; for long dynamic
-#'   projections a looser relative tolerance and larger step cap (`atol = 1e-8`,
-#'   `rtol = 1e-6`, `step_size_max = 10`) run several times faster with negligible
-#'   effect on aggregate outputs. Keep `atol` at `1e-8`: the individual prophylaxis
-#'   chain stages hold occupancies of order `1e-6`, which a looser absolute
-#'   tolerance lets dip below zero.
-#' @param odin_file optional path to the odin source (development use).
+#' @param tuning ODE solver and discretisation settings, from [ode_tuning()].
+#'   A plain named list of the fields you want to change is also accepted; every
+#'   field left out keeps its default. These are numerical-approximation knobs,
+#'   not model parameters -- nothing epidemiological lives here.
+#' @param ... not used. Named arguments that were top-level before the signature
+#'   was cut back to `malariasimulation::run_simulation()`'s are caught here and
+#'   reported with the call that replaces them.
 #' @return a wide, malariasimulation-style daily count table, one row per output
 #'   day. Columns:
 #'   \itemize{
@@ -115,27 +101,22 @@ get_generator <- function(odin_file = NULL) {
 #'   }
 #'   Incidence columns are per-day counts; do not thin rows before postie. Can be
 #'   passed directly to postie::get_rates() / postie::get_prevalence().
+#' @seealso [ode_tuning()] for the solver and discretisation settings.
 #' @examples
 #' \dontrun{
-#' p <- malariasimulation::get_parameters()
-#'
-#' # daily wide count table, init_EIR supplied directly
-#' out <- run_simulation_ode(timesteps = 3650, parameters = p, init_EIR = 20)
+#' # exactly the call you would make to malariasimulation::run_simulation()
+#' p <- malariasimulation::set_equilibrium(
+#'   malariasimulation::get_parameters(), init_EIR = 20)
+#' out <- run_simulation_ode(timesteps = 3650, parameters = p)
 #' head(out[, c("timestep", "n_age_730_3650", "n_detect_lm_730_3650", "EIR")])
 #'
-#' # or let set_equilibrium() seed init_EIR into the parameter list
-#' p2 <- malariasimulation::set_equilibrium(
-#'   malariasimulation::get_parameters(), init_EIR = 5)
-#' out2 <- run_simulation_ode(timesteps = 3650, parameters = p2)
+#' # a long projection, trading a little accuracy for speed
+#' fast <- run_simulation_ode(3650, p, tuning = list(rtol = 1e-6, step_size_max = 10))
 #' }
 #' @export
 run_simulation_ode <- function(timesteps, parameters = NULL, correlations = NULL,
-                               init_EIR = NULL,
-                               age_lower = default_age_lower(),
-                               n_eir = 10L, n_foim = 10L, n_eip = 20L,
-                               n_ph = NULL, n_phc = NULL,
-                               atol = 1e-8, rtol = 1e-8, step_size_max = 1,
-                               odin_file = NULL) {
+                               tuning = ode_tuning(), ...) {
+  .reject_moved_args(...)
   if (is.null(parameters)) {
     stop("`parameters` is required (a malariasimulation::get_parameters() list).")
   }
@@ -145,15 +126,18 @@ run_simulation_ode <- function(timesteps, parameters = NULL, correlations = NULL
             "individual-level feature with no mean-field analogue (the ODE ",
             "assumes independence). Ignoring it.", call. = FALSE)
   }
+  tn <- as_ode_tuning(tuning)
+  init_EIR <- parameters$init_EIR
   if (is.null(init_EIR)) {
-    init_EIR <- parameters$init_EIR
-    if (is.null(init_EIR)) {
-      stop("Provide `init_EIR` or run malariasimulation::set_equilibrium() first.")
-    }
+    stop("`parameters$init_EIR` is not set, so there is no target transmission ",
+         "to seed at. Seed the list the way you would for the IBM:\n",
+         "  parameters <- malariasimulation::set_equilibrium(parameters, init_EIR = 20)\n",
+         "  run_simulation_ode(timesteps, parameters)", call. = FALSE)
   }
-  inp <- build_inputs(parameters, init_EIR, age_lower, n_eir, n_foim, n_eip,
-                      n_ph = n_ph, n_phc = n_phc, timesteps = timesteps)
-  generator <- get_generator(odin_file)
+  inp <- build_inputs(parameters, init_EIR, tn$age_lower, tn$n_eir, tn$n_foim,
+                      tn$n_eip, n_ph = tn$n_ph, n_phc = tn$n_phc,
+                      timesteps = timesteps)
+  generator <- get_generator(tn$odin_file)
   # Robustness: the interpolate grids (pev/tbv "linear") are built to extend past
   # `timesteps` so the stepper never extrapolates them. step_size_max caps the step;
   # at the default 1 it binds only in the near-equilibrium regime (derivatives ~ 0,
@@ -161,7 +145,8 @@ run_simulation_ode <- function(timesteps, parameters = NULL, correlations = NULL
   # knot). For long dynamic projections a larger cap + looser atol/rtol trade a little
   # accuracy for speed; the equilibrium-preserving defaults (1, 1e-8) are unchanged.
   ctrl <- dust2::dust_ode_control(max_steps = max(1e5, 100 * timesteps),
-                                  atol = atol, rtol = rtol, step_size_max = step_size_max)
+                                  atol = tn$atol, rtol = tn$rtol,
+                                  step_size_max = tn$step_size_max)
   sys <- dust2::dust_system_create(generator, pars = inp$pars, n_particles = 1,
                                    ode_control = ctrl)
   dust2::dust_system_set_state_initial(sys)

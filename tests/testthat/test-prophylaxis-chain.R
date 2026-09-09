@@ -75,8 +75,8 @@ test_that("the Ph_c chain follows the Weibull protection curve; n_phc = 1 is the
   E <- function(s) exp(-s / m) * exp(-eta * s)               # old single compartment
   surv <- function(o, s) o$Ph_count[match(10 + s, o$timestep)] / (0.9 * hp)
   s <- 1:90
-  o14 <- run_simulation_ode(100, p, init_EIR = 20)           # n_phc auto = 14
-  o1  <- run_simulation_ode(100, p, init_EIR = 20, n_phc = 1)
+  o14 <- run_simulation_ode(100, eqm(p, 20))           # n_phc auto = 14
+  o1  <- run_simulation_ode(100, eqm(p, 20), tuning = list(n_phc = 1))
   expect_equal(o14$Ph_count[o14$timestep == 10], 0)          # row 10 is pre-pulse
   expect_equal(surv(o14, 1), 1 - pgamma(1, 14, rate = 14 / m), tolerance = 1e-3)
   # the chain tracks the Weibull to within a few points everywhere; the exponential
@@ -188,8 +188,8 @@ test_that("the chain seed adds no drift under treatment (Ph_count and EIR)", {
   p <- malariasimulation::set_drugs(gp(), list(malariasimulation::SP_AQ_params))
   p <- malariasimulation::set_clinical_treatment(p, drug = 1, timesteps = 1, coverages = 0.5)
   p$bite_dedup <- 0; p$acquired_immunity_offset <- 0
-  o16 <- run_simulation_ode(730, p, init_EIR = 20)          # n_ph auto = 16
-  o1  <- run_simulation_ode(730, p, init_EIR = 20, n_ph = 1)
+  o16 <- run_simulation_ode(730, eqm(p, 20))          # n_ph auto = 16
+  o1  <- run_simulation_ode(730, eqm(p, 20), tuning = list(n_ph = 1))
   drift <- function(o, col) max(abs(o[[col]] - o[[col]][1])) / o[[col]][1]
   # the seed under treatment relaxes by a few percent in Ph_count and ~0.5% in EIR
   # (pre-existing: the immunity-boost seed, identical at n_ph = 1); the chain must
@@ -211,7 +211,7 @@ test_that("hold_init_EIR = TRUE realises init_EIR under custom demography", {
   p$hold_init_EIR <- TRUE; p$bite_dedup <- 0; p$acquired_immunity_offset <- 0
   inp <- build_inputs(p, 20)
   expect_equal(inp$meta$eir_seed, 20); expect_true(is.na(inp$meta$total_M_ibm))
-  o <- run_simulation_ode(400, p, init_EIR = 20)
+  o <- run_simulation_ode(400, eqm(p, 20))
   expect_equal(o$EIR[1], 20, tolerance = 1e-6)
   expect_lt(max(abs(o$EIR - 20)) / 20, 1e-2)
   p0 <- p; p0$hold_init_EIR <- NULL                       # default: the IBM's (smaller) density
@@ -223,9 +223,9 @@ test_that("hold_init_EIR = TRUE realises init_EIR under custom demography", {
 test_that("chain stage arguments are validated", {
   skip_if_not_installed("malariasimulation")
   p <- malariasimulation::get_parameters()
-  expect_error(run_simulation_ode(10, p, init_EIR = 20, n_ph = 0), "n_ph")
-  expect_error(run_simulation_ode(10, p, init_EIR = 20, n_ph = 2.5), "n_ph")
-  expect_error(run_simulation_ode(10, p, init_EIR = 20, n_ph = "a"), "n_ph")
-  expect_error(run_simulation_ode(10, p, init_EIR = 20, n_phc = c(1, 2)), "n_phc")
-  expect_error(run_simulation_ode(10, p, init_EIR = 20, n_eip = 0), "n_eip")
+  expect_error(run_simulation_ode(10, eqm(p, 20), tuning = list(n_ph = 0)), "n_ph")
+  expect_error(run_simulation_ode(10, eqm(p, 20), tuning = list(n_ph = 2.5)), "n_ph")
+  expect_error(run_simulation_ode(10, eqm(p, 20), tuning = list(n_ph = "a")), "n_ph")
+  expect_error(run_simulation_ode(10, eqm(p, 20), tuning = list(n_phc = c(1, 2))), "n_phc")
+  expect_error(run_simulation_ode(10, eqm(p, 20), tuning = list(n_eip = 0)), "n_eip")
 })

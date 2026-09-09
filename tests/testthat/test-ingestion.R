@@ -65,7 +65,7 @@ test_that("IRS accumulates over rounds (closely-spaced rounds add protection)", 
 
 test_that("all-infection incidence is output and exceeds clinical incidence", {
   skip_if_not_installed("malariasimulation")
-  o <- run_simulation_ode(400, malariasimulation::get_parameters(), init_EIR = 30)
+  o <- run_simulation_ode(400, eqm(malariasimulation::get_parameters(), 30))
   expect_true("n_inc_730_3650" %in% names(o))
   expect_true(all(o$n_inc_730_3650 >= o$n_inc_clinical_730_3650 - 1e-9))   # all >= clinical
   expect_true(all(is.finite(o$n_inc_0_36500)))

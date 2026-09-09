@@ -7,7 +7,7 @@ test_that("model stays near the malariaEquilibrium seed (ft = 0)", {
   # the exact fixed point; this verifies the numerical machinery (equilibrium seeding,
   # immunity flux-aging, Erlang-lag seeding) holds flat. Set explicitly for clarity.
   p$acquired_immunity_offset <- 0; p$bite_dedup <- 0
-  out <- run_simulation_ode(3650, p, init_EIR = 20)
+  out <- run_simulation_ode(3650, eqm(p, 20))
 
   # adult EIR is reproduced and held flat
   expect_equal(out$EIR[1], 20, tolerance = 1e-3)
@@ -29,7 +29,7 @@ test_that("model stays near the malariaEquilibrium seed with treatment (ft > 0)"
   p <- malariasimulation::set_drugs(p, list(malariasimulation::AL_params))
   p <- malariasimulation::set_clinical_treatment(p, drug = 1, timesteps = 1,
                                                  coverages = 0.4)
-  out <- run_simulation_ode(3650, p, init_EIR = 20)
+  out <- run_simulation_ode(3650, eqm(p, 20))
   expect_lt(max(abs(out$EIR - out$EIR[1])) / out$EIR[1], 1e-2)
   prev <- out$p_detect_lm_730_3650
   expect_lt(max(abs(prev - prev[1])) / prev[1], 1e-2)
@@ -40,9 +40,9 @@ test_that("acquired-immunity offset toggle: default 0 holds flat, 0.5 shifts lik
   skip_if_not_installed("malariasimulation")
   p <- malariasimulation::get_parameters()
   p$bite_dedup <- 0                          # isolate the offset: linear FOI => exact seed
-  off <- run_simulation_ode(3650, p, init_EIR = 20)             # default offset 0 -> flat seed
+  off <- run_simulation_ode(3650, eqm(p, 20))             # default offset 0 -> flat seed
   p_on <- p; p_on$acquired_immunity_offset <- 0.5
-  on  <- run_simulation_ode(3650, p_on, init_EIR = 20)          # +0.5 -> literal IBM Hill calls
+  on  <- run_simulation_ode(3650, eqm(p_on, 20))          # +0.5 -> literal IBM Hill calls
   # default (0) holds flat at the malariaEquilibrium seed
   prev_off <- off$p_detect_lm_730_3650
   expect_lt(max(abs(prev_off - prev_off[1])) / prev_off[1], 1e-2)
@@ -63,14 +63,14 @@ test_that("bite deduplication saturates the infection hazard at high exposure", 
   # clinical incidence) than the unbounded linear form.
   p_sat <- gp(); p_sat$bite_dedup <- 1
   p_lin <- gp(); p_lin$bite_dedup <- 0
-  sat <- run_simulation_ode(1825, p_sat, init_EIR = 200)
-  lin <- run_simulation_ode(1825, p_lin, init_EIR = 200)
+  sat <- run_simulation_ode(1825, eqm(p_sat, 200))
+  lin <- run_simulation_ode(1825, eqm(p_lin, 200))
   cc <- grep("^n_inc_clinical_", names(sat))[1]
   rows <- 1000:1826                                  # settled window
   expect_lt(sum(sat[[cc]][rows]), sum(lin[[cc]][rows]))
   # ... and negligibly different at low exposure, where 1 - exp(-EPS) ~ EPS
-  sat_lo <- run_simulation_ode(1095, p_sat, init_EIR = 0.5)
-  lin_lo <- run_simulation_ode(1095, p_lin, init_EIR = 0.5)
+  sat_lo <- run_simulation_ode(1095, eqm(p_sat, 0.5))
+  lin_lo <- run_simulation_ode(1095, eqm(p_lin, 0.5))
   r <- sum(sat_lo[[cc]]) / sum(lin_lo[[cc]])
   expect_gt(r, 0.98); expect_lte(r, 1.001)
 })
@@ -79,7 +79,7 @@ test_that("PfPR increases monotonically with EIR (simulated, not seed)", {
   skip_if_not_installed("malariasimulation")
   p <- malariasimulation::get_parameters()
   prev <- vapply(c(1, 10, 50, 200), function(e) {
-    o <- run_simulation_ode(365, p, init_EIR = e)
+    o <- run_simulation_ode(365, eqm(p, e))
     o$p_detect_lm_730_3650[nrow(o)]   # final (simulated) timestep
   }, numeric(1))
   expect_true(all(diff(prev) > 0))
@@ -89,7 +89,7 @@ test_that("output feeds postie without error", {
   skip_if_not_installed("malariasimulation")
   skip_if_not_installed("postie")
   p <- malariasimulation::get_parameters()
-  out <- run_simulation_ode(730, p, init_EIR = 20)
+  out <- run_simulation_ode(730, eqm(p, 20))
   # the count table is malariasimulation-shaped, so postie consumes it directly,
   # exactly as it consumes an IBM run
   prevalence <- postie::get_prevalence(out, diagnostic = "lm")

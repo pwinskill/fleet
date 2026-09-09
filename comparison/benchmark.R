@@ -25,8 +25,8 @@ DDIR <- file.path(ROOT, "comparison", "data")
 N_REP <- 5L
 POP   <- 1e5                       # output scaling only; see the population table
 SEASON <- list(g0 = 0.285, g = c(-0.33, -0.13, 0.052), h = c(-0.35, 0.020, 0.10))
-## the fast preset documented in ?run_simulation_ode
-FAST <- list(atol = 1e-8, rtol = 1e-6, step_size_max = 10)
+## the fast preset documented in ?ode_tuning (atol stays at its default)
+FAST <- list(rtol = 1e-6, step_size_max = 10)
 
 log_msg <- function(...) cat(sprintf("[%s] %s\n", format(Sys.time(), "%H:%M:%S"),
                                      sprintf(...)))
@@ -84,11 +84,13 @@ YEARS <- c(5L, 10L, 30L)
 
 ## ---- timing helper -----------------------------------------------------------
 ## the whole user-visible call: build inputs, seed, integrate, render outputs
-time_run <- function(p, eir, years, ctrl = FAST, reps = N_REP) {
+## p already carries init_EIR (every caller builds it through set_equilibrium),
+## which is where run_simulation_ode reads the target EIR from.
+time_run <- function(p, years, ctrl = FAST, reps = N_REP) {
   el <- numeric(reps); gc(verbose = FALSE)
   for (k in seq_len(reps)) {
-    el[k] <- system.time(invisible(do.call(run_simulation_ode, c(
-      list(timesteps = years * 365, parameters = p, init_EIR = eir), ctrl))))[["elapsed"]]
+    el[k] <- system.time(invisible(run_simulation_ode(
+      timesteps = years * 365, parameters = p, tuning = ctrl)))[["elapsed"]]
   }
   min(el)
 }
@@ -102,7 +104,7 @@ log_msg("scenario x horizon: %d scenarios x %d horizons x %d reps",
 for (nm in names(SCEN)) {
   for (y in YEARS) {
     s <- SCEN[[nm]](y)
-    sec <- time_run(set_equilibrium(s$p, init_EIR = s$eir), s$eir, y)
+    sec <- time_run(set_equilibrium(s$p, init_EIR = s$eir), y)
     add_row(table = "scenario", scenario = nm, years = y, pop = POP,
             settings = "fast", seconds = sec)
     log_msg("  %-30s %2d y : %6.2f s", nm, y, sec)
@@ -113,7 +115,7 @@ for (nm in names(SCEN)) {
 log_msg("population independence, 30-year seasonal run")
 for (pop in c(1e3, 1e4, 1e5, 1e6, 1e7)) {
   p <- set_equilibrium(base_p(TRUE, pop = pop), init_EIR = 20)
-  sec <- time_run(p, 20, 30L)
+  sec <- time_run(p, 30L)
   add_row(table = "population", scenario = "Seasonal", years = 30L, pop = pop,
           settings = "fast", seconds = sec)
   log_msg("  pop %-9s : %6.2f s", format(pop, scientific = TRUE), sec)
@@ -128,7 +130,7 @@ PRESETS <- list(
 )
 for (nm in names(PRESETS)) {
   p <- set_equilibrium(base_p(TRUE), init_EIR = 20)
-  sec <- time_run(p, 20, 30L, ctrl = PRESETS[[nm]])
+  sec <- time_run(p, 30L, ctrl = PRESETS[[nm]])
   add_row(table = "settings", scenario = nm, years = 30L, pop = POP,
           settings = nm, seconds = sec)
   log_msg("  %-46s : %6.2f s", nm, sec)

@@ -25,7 +25,7 @@ test_that("logistic-retention bed nets build and run (no exponential-only error)
   p$bednet_logistic_half_life <- 3 * 365
   p$bednet_logistic_k <- 20
   expect_silent(vc <- vector_control_series(p, 2000))
-  o <- run_simulation_ode(1200, p, init_EIR = 20)
+  o <- run_simulation_ode(1200, eqm(p, 20))
   expect_true(all(is.finite(o$p_detect_lm_730_3650)))
   expect_lt(min(o$p_detect_lm_730_3650), o$p_detect_lm_730_3650[1])   # nets reduce prevalence
 })
@@ -57,6 +57,6 @@ test_that("time-varying demography: mu_age series varies over time and runs", {
   expect_equal(inp$pars$n_mut, 2)                                   # two demography knots
   expect_true(any(inp$pars$mu_age_z[, 1] != inp$pars$mu_age_z[, 2]))# genuinely time-varying
   expect_equal(inp$pars$mu_age_t, c(0, 10 * 365))
-  o <- run_simulation_ode(15 * 365, p, init_EIR = 20)
+  o <- run_simulation_ode(15 * 365, eqm(p, 20))
   expect_true(all(is.finite(o$p_detect_lm_730_3650)))
 })

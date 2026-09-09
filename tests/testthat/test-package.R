@@ -97,8 +97,8 @@ test_that("multi-drug resistance is coverage-weighted and drives dynamics", {
   # whole-day exit probability of the blended slow-clearance duration (as rA/rD/rU/rT)
   expect_equal(r$rT_slow, 1 - exp(-1 / (num / den)), tolerance = 1e-9)
   # end-to-end: resistance raises prevalence vs the SAME treatment without resistance
-  base <- run_simulation_ode(1500, base_p, init_EIR = 30)
-  o <- run_simulation_ode(1500, p, init_EIR = 30)
+  base <- run_simulation_ode(1500, eqm(base_p, 30))
+  o <- run_simulation_ode(1500, eqm(p, 30))
   expect_true(all(is.finite(o$p_detect_lm_730_3650)))
   expect_gt(o$p_detect_lm_730_3650[1500], base$p_detect_lm_730_3650[1500])
 })
@@ -142,7 +142,7 @@ test_that("custom demography changes the equilibrium age structure", {
   expect_equal(prop[n] / prop[n - 1], (1 / 5) / 0.12, tolerance = 1e-6)
   # default (constant hazard) still holds flat at equilibrium (offset 0 = exact seed)
   pflat <- gp(); pflat$acquired_immunity_offset <- 0; pflat$bite_dedup <- 0
-  o <- run_simulation_ode(400, pflat, init_EIR = 20)
+  o <- run_simulation_ode(400, eqm(pflat, 20))
   expect_lt(max(abs(o$EIR - o$EIR[1])) / o$EIR[1], 1e-2)
 })
 
@@ -164,7 +164,7 @@ test_that("custom demography sizes mosquitoes as set_equilibrium() does", {
   expect_gt(inp$meta$eir_seed, 11)
   # the seed is a fixed point of the dynamics (linear-FOI form)
   pflat <- p; pflat$bite_dedup <- 0; pflat$acquired_immunity_offset <- 0
-  o <- run_simulation_ode(400, pflat, init_EIR = 20)
+  o <- run_simulation_ode(400, eqm(pflat, 20))
   expect_equal(o$EIR[1], inp$meta$eir_seed, tolerance = 1e-6)
   expect_lt(max(abs(o$EIR - o$EIR[1])) / o$EIR[1], 1e-2)
   # opt-out keeps init_EIR as the realised EIR; the default demography is unaffected
@@ -175,23 +175,59 @@ test_that("custom demography sizes mosquitoes as set_equilibrium() does", {
 
 test_that("invalid inputs error clearly", {
   skip_if_not_installed("malariasimulation")
-  expect_error(run_simulation_ode(10, malariasimulation::get_parameters(), init_EIR = 0),
-               "positive")
-  expect_error(run_simulation_ode(10, malariasimulation::get_parameters(parasite = "vivax"),
-                                  init_EIR = 10), "falciparum")
+  # a non-positive EIR reaching blink directly on the list -- set_equilibrium()
+  # rejects one of its own before blink sees it, so this is the path blink owns
+  p0 <- malariasimulation::get_parameters(); p0$init_EIR <- 0
+  expect_error(run_simulation_ode(10, p0), "positive")
+  expect_error(run_simulation_ode(10, eqm(malariasimulation::get_parameters(parasite = "vivax"), 10)), "falciparum")
+})
+
+test_that("the run signature mirrors run_simulation() and points at the replacement call", {
+  skip_if_not_installed("malariasimulation")
+  # first three arguments identical to malariasimulation::run_simulation()
+  expect_equal(head(names(formals(run_simulation_ode)), 3),
+               c("timesteps", "parameters", "correlations"))
+  p <- eqm(malariasimulation::get_parameters(), 20)
+  # a parameter list with no init_EIR has no target transmission to seed at
+  expect_error(run_simulation_ode(10, malariasimulation::get_parameters()),
+               "set_equilibrium")
+  # every argument that moved names where it went, rather than R's bare
+  # "unused argument": a silent signature change is the expensive kind
+  expect_error(run_simulation_ode(10, p, init_EIR = 20), "no longer an argument")
+  expect_error(run_simulation_ode(10, p, atol = 1e-6), "field of `tuning`")
+  expect_error(run_simulation_ode(10, p, n_ph = 2, rtol = 1e-6), "fields of `tuning`")
+  expect_error(run_simulation_ode(10, p, bogus = 1), "unused argument")
+})
+
+test_that("ode_tuning validates its fields and accepts a partial list", {
+  expect_s3_class(ode_tuning(), "blink_ode_tuning")
+  expect_equal(ode_tuning()$atol, 1e-8)
+  # a partial list fills the rest from the defaults
+  tn <- as_ode_tuning(list(rtol = 1e-6))
+  expect_equal(tn$rtol, 1e-6)
+  expect_equal(tn$atol, ode_tuning()$atol)
+  # a mistyped field is an error, not a silently ignored one: a typo'd rtol that
+  # quietly did nothing would read as the tolerance simply not mattering
+  expect_error(as_ode_tuning(list(rtoll = 1e-6)), "unknown `tuning` field")
+  expect_error(as_ode_tuning(list(1e-6)), "must be named")
+  expect_error(ode_tuning(n_eir = 0), "n_eir")
+  expect_error(ode_tuning(n_eip = 2.5), "n_eip")
+  expect_error(ode_tuning(atol = -1), "atol")
+  expect_error(ode_tuning(age_lower = c(1, 2, 3)), "starting at 0")
+  expect_error(ode_tuning(age_lower = c(0, 2, 1)), "increasing")
 })
 
 test_that("IRS reduces prevalence; zero-coverage IRS == baseline", {
   skip_if_not_installed("malariasimulation")
-  base <- run_simulation_ode(1200, malariasimulation::get_parameters(), init_EIR = 20)
+  base <- run_simulation_ode(1200, eqm(malariasimulation::get_parameters(), 20))
   irs <- function(cov) malariasimulation::set_spraying(
     malariasimulation::get_parameters(), timesteps = 365, coverages = cov,
     ls_theta = matrix(2.025, 1, 1), ls_gamma = matrix(-0.009, 1, 1),
     ks_theta = matrix(-2.222, 1, 1), ks_gamma = matrix(0.008, 1, 1),
     ms_theta = matrix(-1.232, 1, 1), ms_gamma = matrix(-0.009, 1, 1))
-  z <- run_simulation_ode(1200, irs(0), init_EIR = 20)
+  z <- run_simulation_ode(1200, eqm(irs(0), 20))
   expect_lt(max(abs(z$p_detect_lm_730_3650 - base$p_detect_lm_730_3650)), 1e-9)
-  o <- run_simulation_ode(1200, irs(0.8), init_EIR = 20)
+  o <- run_simulation_ode(1200, eqm(irs(0.8), 20))
   expect_lt(min(o$p_detect_lm_730_3650), base$p_detect_lm_730_3650[1])
 })
 
@@ -201,7 +237,7 @@ test_that("carrying-capacity scaler = 1 is a no-op (flat)", {
     malariasimulation::get_parameters(), timesteps = 365,
     carrying_capacity_scalers = matrix(1, 1, 1))
   p$acquired_immunity_offset <- 0; p$bite_dedup <- 0                        # flat-machinery check
-  o <- run_simulation_ode(800, p, init_EIR = 20)
+  o <- run_simulation_ode(800, eqm(p, 20))
   expect_lt(max(abs(o$EIR - o$EIR[1])) / o$EIR[1], 1e-2)
 })
 
@@ -209,7 +245,7 @@ test_that("seasonal cycle is annually periodic (settled)", {
   skip_if_not_installed("malariasimulation")
   p <- malariasimulation::get_parameters(overrides = list(
     model_seasonality = TRUE, g0 = 2, g = c(0.3, 0.6, 0.9), h = c(0.1, 0.4, 0.7)))
-  o <- run_simulation_ode(3650, p, init_EIR = 20)
+  o <- run_simulation_ode(3650, eqm(p, 20))
   y3 <- mean(o$EIR[1096:1460]); y4 <- mean(o$EIR[1461:1825])
   expect_lt(abs(y3 - y4), 0.5)   # year-on-year mean stable (settled cycle)
 })
@@ -232,8 +268,8 @@ test_that("kitchen-sink run is finite, conserved, and postie-consumable", {
     timesteps = 1, coverages = 0.8, min_wait = 0, age = 180, booster_spacing = 360,
     booster_coverage = matrix(0.8, 1, 1),
     booster_profile = list(malariasimulation::rtss_booster_profile))
-  base <- run_simulation_ode(730, gp(), init_EIR = 20)
-  o <- run_simulation_ode(730, p, init_EIR = 20)
+  base <- run_simulation_ode(730, eqm(gp(), 20))
+  o <- run_simulation_ode(730, eqm(p, 20))
   expect_true(all(is.finite(as.matrix(o[sapply(o, is.numeric)]))))
   expect_identical(names(o), names(base))               # column stability
   pop <- with(o, S_count + D_count + A_count + U_count + Tr_count + Ph_count)
@@ -249,6 +285,6 @@ test_that("kitchen-sink run is finite, conserved, and postie-consumable", {
 
 test_that("timesteps = 1 returns two rows", {
   skip_if_not_installed("malariasimulation")
-  o <- run_simulation_ode(1, malariasimulation::get_parameters(), init_EIR = 20)
+  o <- run_simulation_ode(1, eqm(malariasimulation::get_parameters(), 20))
   expect_equal(nrow(o), 2)
 })

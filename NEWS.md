@@ -2,6 +2,49 @@
 
 ## API changes
 
+* **`run_simulation_ode()`'s signature now matches
+  `malariasimulation::run_simulation()`.** It was
+  `(timesteps, parameters, correlations, init_EIR, age_lower, n_eir, n_foim,
+  n_eip, n_ph, n_phc, atol, rtol, step_size_max, odin_file)` — fourteen
+  arguments, eleven of which the IBM does not have. It is now
+  `(timesteps, parameters, correlations, tuning)`.
+
+  Two changes, both breaking.
+
+  **`init_EIR` is gone as an argument.** The target EIR is a model input, so it
+  belongs on the parameter list, and `malariasimulation::set_equilibrium()`
+  already puts it there as `parameters$init_EIR` — which is where the IBM reads
+  it from too. Seed the list the way you would for a matched IBM run:
+
+  ```r
+  p <- malariasimulation::set_equilibrium(p, init_EIR = 20)
+  out <- run_simulation_ode(3650, p)
+  ```
+
+  Setting `parameters$init_EIR` by hand still works, but skips the `eq_params`
+  that `set_equilibrium()` stores and `blink` honours. This is numerically inert
+  for anyone already calling `set_equilibrium()`: the whole comparison harness
+  reproduces bit-identically through the new API.
+
+  **Everything numerical moved into `tuning`**, a new `ode_tuning()` object (also
+  accepted as a plain named list of just the fields you want to change). That is
+  `age_lower`, the five Erlang stage counts `n_eir`/`n_foim`/`n_eip`/`n_ph`/`n_phc`,
+  the solver controls `atol`/`rtol`/`step_size_max`, and `odin_file`:
+
+  ```r
+  run_simulation_ode(3650, p, tuning = list(rtol = 1e-6, step_size_max = 10))
+  ```
+
+  The dividing line is that nothing epidemiological sits outside the parameter
+  list any more — every field of `tuning` is a numerical-approximation knob, and
+  changing one should move the answer only by its own error term.
+
+  `ode_tuning()` validates its fields, and an unrecognised name in a `tuning`
+  list is an error rather than a silently ignored field — a mistyped `rtol` that
+  quietly did nothing would read as the tolerance simply not mattering. Passing
+  any of the removed arguments to `run_simulation_ode()` gives a targeted error
+  naming the call that replaces it, rather than R's bare "unused argument".
+
 * **`get_epi_outputs()` is removed** (#3). It was a thin wrapper that called
   `postie::get_rates()` and `postie::get_prevalence()` and returned them in a
   list, plus argument-splitting machinery (`rates_args`, `prevalence_args`,

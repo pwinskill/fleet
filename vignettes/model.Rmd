@@ -164,9 +164,9 @@ human population), which is why run time is independent of `human_population`.
 | Age group | $i = 1,\dots,n_a$ | 52 | `age_lower =` / `default_age_lower()` | Graded age grid: monthly to 1 y, quarterly to 5 y, yearly to 15 y, 5-yearly to 80 y, plus an absorbing top group. Individuals age by a linear-chain (McKendrick) flow $r_i$ between adjacent groups. |
 | Biting heterogeneity | $j = 1,\dots,n_z$ | 5 | `parameters$n_heterogeneity_groups`, `enable_heterogeneity` | Gauss–Hermite nodes $\zeta_j$ and weights $w_j$ of the log-normal relative-biting-rate distribution with variance $\sigma^2$ (`sigma_squared`); $\zeta_j = \exp(z_j\sigma - \sigma^2/2)$. Fixed at birth, never mixed — a person stays in their stratum for life, as in the IBM. |
 | Vector species | $s = 1,\dots,n_v$ | 1 | `set_species()` | Independent aquatic + adult mosquito populations, each with its own biting rate, mortality, carrying capacity and vector-control response, coupled only through the shared human population. |
-| EIR lag stage | $1,\dots,n_E$ | 10 (`n_eir`) | `run_simulation_ode(n_eir =)` | Erlang chain approximating the sporozoite-to-infection delay $\tau_E$ (`de`). |
-| FOIM lag stage | $1,\dots,n_F$ | 10 (`n_foim`) | `run_simulation_ode(n_foim =)` | Erlang chain approximating the gametocyte delay $\tau_l$ (`delay_gam`). |
-| EIP stage | $1,\dots,n_P$ | 20 (`n_eip`) | `run_simulation_ode(n_eip =)` | Loss-free Erlang chain approximating the fixed extrinsic incubation period $\tau_M$ (`dem`). |
+| EIR lag stage | $1,\dots,n_E$ | 10 (`n_eir`) | `ode_tuning(n_eir =)` | Erlang chain approximating the sporozoite-to-infection delay $\tau_E$ (`de`). |
+| FOIM lag stage | $1,\dots,n_F$ | 10 (`n_foim`) | `ode_tuning(n_foim =)` | Erlang chain approximating the gametocyte delay $\tau_l$ (`delay_gam`). |
+| EIP stage | $1,\dots,n_P$ | 20 (`n_eip`) | `ode_tuning(n_eip =)` | Loss-free Erlang chain approximating the fixed extrinsic incubation period $\tau_M$ (`dem`). |
 
 Human compartments, all $[n_a \times n_z]$. The last column gives the column
 name in the output table, which is where you will meet these in practice — note
@@ -336,7 +336,7 @@ Where a row carries two marks, the second is a caveat on the first.
 | Output bands | `age_group_rendering_*`, `incidence_rendering_*`, `clinical_incidence_rendering_*`, `severe_incidence_rendering_*`, `prevalence_rendering_*` | ✅ Each drives its own output family, exactly as in `malariasimulation` (§G) |
 | | `ib_`/`id_`/`ica_`/`iva_`/`idm_`/`icm_`/`ivm_rendering_*` | ⛔ `blink` does not render mean immunity by band |
 | Metapopulation test-and-treat | `rdt_intercept`, `rdt_coeff` | ⛔ Ignored — they parameterise the PCR→RDT conversion used by `run_metapop_simulation()`'s mixing, which `blink` does not support (§4.19) |
-| Engine / solver | `mosquito_limit`, `individual_mosquitoes`, `r_tol`, `a_tol`, `ode_max_steps`, `progress_bar` | ⛔ Ignored — `blink` is always compartmental and exposes its own `atol`/`rtol`/`step_size_max` on `run_simulation_ode()` |
+| Engine / solver | `mosquito_limit`, `individual_mosquitoes`, `r_tol`, `a_tol`, `ode_max_steps`, `progress_bar` | ⛔ Ignored — `blink` is always compartmental and exposes its own `atol`/`rtol`/`step_size_max` through `ode_tuning()` |
 | Vivax-only | All hypnozoite parameters, `drug_hypnozoite_*`, `n_with_hypnozoites_rendering_*` | ⛔ Not applicable |
 
 #### `blink`-only extension fields
@@ -360,7 +360,7 @@ both default to the validated choice.
 
 | Argument | malariasimulation meaning | `blink` |
 | --- | --- | --- |
-| `init_EIR` | Target EIR to seed from | ✅ Stored as `parameters$init_EIR` and read by `run_simulation_ode()` when its own `init_EIR` argument is `NULL`. It means the same thing in both models: under the default demography it is the EIR `blink` realises; under `set_demography()` it sizes the mosquito population exactly as the IBM's does and `blink` seeds at the EIR that density supports (§4.4) |
+| `init_EIR` | Target EIR to seed from | ✅ Stored as `parameters$init_EIR`, which is where `run_simulation_ode()` reads it from -- it has no `init_EIR` argument of its own. It means the same thing in both models: under the default demography it is the EIR `blink` realises; under `set_demography()` it sizes the mosquito population exactly as the IBM's does and `blink` seeds at the EIR that density supports (§4.4) |
 | `eq_params` | Custom `malariaEquilibrium` parameter set | ✅ Merged over `blink`'s own back-translation and takes precedence. Note `set_equilibrium()` writes this field **even when passed `NULL`** — storing its own back-translation — so after any call to it, that stored set, not `R/translate_params.R`, supplies every shared constant (§F) |
 | `EIR_population_input` | `"adult"` (default) or `"total"` | ✅ Handled upstream — `malariasimulation` converts a total-population EIR to adult EIR before storing it, and `blink` always interprets `init_EIR` as adult EIR (bites per adult per year) |
 
@@ -411,7 +411,7 @@ EIR instead.
 | `drugs` | List of 4-element vectors `c(efficacy, rel_c, prophylaxis_shape, prophylaxis_scale)` (e.g. `AL_params`, `DHA_PQP_params`, `SP_AQ_params`) | 🟡 Each element is handled as below |
 | &nbsp;&nbsp;`drug_efficacy` | Probability treatment clears the infection | ✅ Multiplies coverage into $f_t^{\text{eff}}$; also multiplies chemoprevention pulse fractions |
 | &nbsp;&nbsp;`drug_rel_c` | Infectivity of a treated case relative to `cd` | ✅ $c_T = c_d \times \text{rel_c}$, coverage-share-weighted across active drugs and time-varying |
-| &nbsp;&nbsp;`drug_prophylaxis_shape`, `drug_prophylaxis_scale` | Weibull prophylaxis survival | ✅ Both moments used. The chain mean is $\bar{d}_W - \int e^{-r_T t}W\,dt$, the protection left after the $T$ sojourn (§B.4), and its length $k_P$ matches the variance of the whole $T + P$ sojourn: 16 stages for SP-AQ, 20 for DHA-PQP, 1 for AL (the chemoprevention chain, with no $T$ stage in front, uses $1/\text{CV}_W^2$: 14 / 15). Capped at 20. 🟡 An Erlang chain is not a Weibull, and the exponential $T$ stage adds variability the IBM's parallel clock does not have — for AL the protection curve is reproduced in its integral, not its shape. `run_simulation_ode(n_ph =)` overrides the count |
+| &nbsp;&nbsp;`drug_prophylaxis_shape`, `drug_prophylaxis_scale` | Weibull prophylaxis survival | ✅ Both moments used. The chain mean is $\bar{d}_W - \int e^{-r_T t}W\,dt$, the protection left after the $T$ sojourn (§B.4), and its length $k_P$ matches the variance of the whole $T + P$ sojourn: 16 stages for SP-AQ, 20 for DHA-PQP, 1 for AL (the chemoprevention chain, with no $T$ stage in front, uses $1/\text{CV}_W^2$: 14 / 15). Capped at 20. 🟡 An Erlang chain is not a Weibull, and the exponential $T$ stage adds variability the IBM's parallel clock does not have — for AL the protection curve is reproduced in its integral, not its shape. `ode_tuning(n_ph =)` overrides the count |
 | &nbsp;&nbsp;`drug_hypnozoite_*` | *P. vivax* only | ⛔ Not applicable |
 
 ### 4.6 `set_clinical_treatment(drug, timesteps, coverages)`
@@ -628,7 +628,7 @@ of the five families empty; it defaults the **prevalence** bands to 2–10 y.
 | --- | --- | --- |
 | `peak_season_offset(parameters)` | Day of peak seasonal transmission | ✅ Pure helper on `g0`/`g`/`h`, which `blink` reads; useful for timing SMC/booster schedules |
 | `get_correlation_parameters(parameters)` | Correlation between intervention recipients | ⛔ Individual-level; no mean-field analogue |
-| `run_simulation(timesteps, parameters, correlations)` | Run the IBM | ✅ `run_simulation_ode(timesteps, parameters, correlations, ...)` mirrors the first three arguments exactly. A non-`NULL` `correlations` is **warned and ignored** — the ODE assumes independence between interventions |
+| `run_simulation(timesteps, parameters, correlations)` | Run the IBM | ✅ `run_simulation_ode(timesteps, parameters, correlations, tuning)` mirrors the first three arguments exactly; `tuning` carries the ODE-only settings, so nothing epidemiological sits outside the parameter list. A non-`NULL` `correlations` is **warned and ignored** — the ODE assumes independence between interventions |
 | `run_simulation_with_repetitions(...)` | Repeat stochastic runs | ⛔ Not applicable — `blink` is deterministic, so one run is the ensemble mean |
 | `run_metapop_simulation(timesteps, parameters, ..., export_mixing, import_mixing)` | Coupled patches | ⛔ Not supported. `blink` is a single patch; there is no guard, so do not pass a metapopulation setup expecting it to be honoured |
 | `run_resumable_simulation(...)` | Resume from saved state | ⛔ Not implemented. `blink` runs are cheap enough to re-run from the seed |
@@ -648,8 +648,7 @@ ages while the IBM removes them. Fix it either way round — widen the grid, or
 extend the death rates:
 
 ```r
-run_simulation_ode(t, p, init_EIR = 20,
-                   age_lower = default_age_lower(max_age = 100))
+run_simulation_ode(t, p, tuning = list(age_lower = default_age_lower(max_age = 100)))
 ```
 
 A warning fires when they diverge; don't ignore it, because it changes the
@@ -668,8 +667,7 @@ p$prevalence_rendering_max_ages <- c(2, 10, 100) * 365
 are slow and only needed near equilibrium:
 
 ```r
-run_simulation_ode(t, p, init_EIR = 20,
-                   atol = 1e-6, rtol = 1e-6, step_size_max = 10)
+run_simulation_ode(t, p, tuning = list(rtol = 1e-6, step_size_max = 10))
 ```
 
 **Sanity-check conservation.** `S_count + D_count + A_count + U_count +

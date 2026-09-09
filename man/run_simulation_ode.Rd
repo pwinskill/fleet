@@ -8,17 +8,8 @@ run_simulation_ode(
   timesteps,
   parameters = NULL,
   correlations = NULL,
-  init_EIR = NULL,
-  age_lower = default_age_lower(),
-  n_eir = 10L,
-  n_foim = 10L,
-  n_eip = 20L,
-  n_ph = NULL,
-  n_phc = NULL,
-  atol = 1e-08,
-  rtol = 1e-08,
-  step_size_max = 1,
-  odin_file = NULL
+  tuning = ode_tuning(),
+  ...
 )
 }
 \arguments{
@@ -35,9 +26,17 @@ mortality and the resulting equilibrium age structure). P. vivax is rejected;
 the model is always compartmental (the individual-mosquito path does not
 apply). See the README for the mean-field approximations used by each module.
 
-Two optional fields on the list tune how faithfully the mean field mirrors the
-IBM's per-individual arithmetic. Both default to the validated choice, so you
-normally leave them alone:
+\strong{The target EIR is read from this list}, as \code{parameters$init_EIR}, which is
+where \code{malariasimulation} puts it and reads it from too. Seed it the same way
+you would for the IBM, before calling this function:
+\code{parameters <- malariasimulation::set_equilibrium(parameters, init_EIR = 20)}.
+That call also stores \code{eq_params}, which \code{blink} honours if present. Setting
+\code{parameters$init_EIR} by hand works but skips that.
+
+Three further optional fields tune how faithfully the mean field mirrors the
+IBM. The first two are per-individual arithmetic, the third is a seeding
+convention; all three default to the validated choice, so you normally leave
+them alone:
 \itemize{
 \item \code{bite_dedup} (default \code{1}) — reproduce the IBM's per-timestep bite
 deduplication. malariasimulation collects the day's bitten individuals in a
@@ -68,40 +67,14 @@ exactly (drop-in call compatibility). Intervention correlation is an
 individual-level feature with no mean-field analogue, so a non-NULL value is
 ignored with a warning (the ODE assumes independence between interventions).}
 
-\item{init_EIR}{target adult EIR (bites/adult/year), with the same meaning as in
-\code{malariasimulation::set_equilibrium()}. If NULL, taken from
-\code{parameters$init_EIR} (set by set_equilibrium()). Under the default demography
-this is the EIR blink realises; under \code{set_demography()} see \code{hold_init_EIR}
-above.}
+\item{tuning}{ODE solver and discretisation settings, from \code{\link[=ode_tuning]{ode_tuning()}}.
+A plain named list of the fields you want to change is also accepted; every
+field left out keeps its default. These are numerical-approximation knobs,
+not model parameters -- nothing epidemiological lives here.}
 
-\item{age_lower}{age-group lower edges in \strong{years} (default graded grid).}
-
-\item{n_eir, n_foim, n_eip}{Erlang-chain stage counts for the EIR lag, FOIM lag
-and mosquito EIP. Larger values sharpen the (otherwise gamma-shaped) lags
-toward the IBM's fixed delays; equilibrium is exact for any value.}
-
-\item{n_ph, n_phc}{Erlang-chain stage counts for the post-treatment (\code{Ph}) and
-chemoprevention (\code{Ph_c}) prophylaxis compartments. \code{NULL} (default) matches the
-chain's variance to the drug's Weibull protection curve, capped at 20. For
-\code{Ph_c} that is \verb{1/CV²} of the Weibull: 14 for SP-AQ, 15 for DHA-PQP. \code{Ph}
-follows the exponential treated stage \code{Tr}, so its count matches the variance
-of the whole \code{Tr + Ph} sojourn and its mean is the integrated protection left
-after \code{Tr}: 16 stages for SP-AQ, 20 for DHA-PQP, and 1 for AL, whose 10-day
-protection is already less variable than \code{Tr} itself. A drug mixture is
-moment-matched as a mixture. \code{1} is a single exponential stage, which for
-\code{Ph_c} leaks protection early between monthly SMC rounds. The count is fixed
-at the seed's drug mix — a first-line switch moves the chain's mean, not its
-shape.}
-
-\item{atol, rtol, step_size_max}{dust2 ODE-solver controls. The defaults
-(\code{1e-8}, \code{1e-8}, \code{1}) preserve the flat equilibrium exactly; for long dynamic
-projections a looser relative tolerance and larger step cap (\code{atol = 1e-8},
-\code{rtol = 1e-6}, \code{step_size_max = 10}) run several times faster with negligible
-effect on aggregate outputs. Keep \code{atol} at \code{1e-8}: the individual prophylaxis
-chain stages hold occupancies of order \code{1e-6}, which a looser absolute
-tolerance lets dip below zero.}
-
-\item{odin_file}{optional path to the odin source (development use).}
+\item{...}{not used. Named arguments that were top-level before the signature
+was cut back to \code{malariasimulation::run_simulation()}'s are caught here and
+reported with the call that replaces them.}
 }
 \value{
 a wide, malariasimulation-style daily count table, one row per output
@@ -131,15 +104,16 @@ averaging). Use a burned-in cycle for calibration/comparison.
 }
 \examples{
 \dontrun{
-p <- malariasimulation::get_parameters()
-
-# daily wide count table, init_EIR supplied directly
-out <- run_simulation_ode(timesteps = 3650, parameters = p, init_EIR = 20)
+# exactly the call you would make to malariasimulation::run_simulation()
+p <- malariasimulation::set_equilibrium(
+  malariasimulation::get_parameters(), init_EIR = 20)
+out <- run_simulation_ode(timesteps = 3650, parameters = p)
 head(out[, c("timestep", "n_age_730_3650", "n_detect_lm_730_3650", "EIR")])
 
-# or let set_equilibrium() seed init_EIR into the parameter list
-p2 <- malariasimulation::set_equilibrium(
-  malariasimulation::get_parameters(), init_EIR = 5)
-out2 <- run_simulation_ode(timesteps = 3650, parameters = p2)
+# a long projection, trading a little accuracy for speed
+fast <- run_simulation_ode(3650, p, tuning = list(rtol = 1e-6, step_size_max = 10))
 }
+}
+\seealso{
+\code{\link[=ode_tuning]{ode_tuning()}} for the solver and discretisation settings.
 }

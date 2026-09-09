@@ -238,8 +238,10 @@ log_msg("blink: %d scenarios", length(scenarios))
 ode <- lapply(names(scenarios), function(nm) {
   s <- scenarios[[nm]]
   el <- system.time(
-    out <- run_simulation_ode(timesteps = s$years * 365, parameters = s$p, init_EIR = s$eir,
-                              atol = 1e-8, rtol = 1e-6, step_size_max = 10))[["elapsed"]]
+    ## s$p already carries init_EIR: every scenario is built through
+    ## set_equilibrium(), which is where blink reads the target EIR from now.
+    out <- run_simulation_ode(timesteps = s$years * 365, parameters = s$p,
+                              tuning = list(rtol = 1e-6, step_size_max = 10)))[["elapsed"]]
   r <- summarise_run(out[-1, ], s$years)          # drop the day-0 seed row
   r$timing <- data.frame(years = s$years, elapsed_s = el)
   tag_parts(r, nm, "blink", 0L)
