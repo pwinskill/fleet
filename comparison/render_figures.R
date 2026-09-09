@@ -191,12 +191,18 @@ if (length(fs)) {
     top <- unname(quantile(c(d$x, d$y), 0.999))
     ggplot(d, aes(x, y)) +
       geom_hex(bins = 60) +
-      ## 1:1 line, over a white halo: a plain dark dash vanished into the dark
-      ## end of the hex ramp, which is exactly where the mass of the data is
-      geom_abline(slope = 1, intercept = 0, colour = "white", linewidth = 1.7, alpha = 0.85) +
-      geom_abline(slope = 1, intercept = 0, colour = REF, linewidth = 0.75, linetype = "22") +
-      scale_fill_gradient(low = "#DDE1F7", high = "#1E1B5E", transform = "log10",
-                          name = "sub-site\nmonths", breaks = c(1, 100, 10000),
+      geom_abline(slope = 1, intercept = 0, colour = REF, linewidth = 0.8,
+                  linetype = "22") +
+      ## The low end of the ramp is near-white on purpose. The counts are wildly
+      ## skewed -- 52% of the hex cells carry 0.2% of the sub-site-months, while
+      ## the top 5% of cells carry 90% of them -- so a saturated low end spends
+      ## most of the plot's ink on almost none of the data and buries the 1:1
+      ## ridge it is meant to show. Keeping log10 keeps the sparse cells visible
+      ## (they are real, and the scatter is the point); making them faint stops
+      ## them out-shouting the ridge.
+      scale_fill_gradient(low = "#F4F6FE", high = "#171449", transform = "log10",
+                          name = "sub-site\nmonths",
+                          breaks = c(1, 10, 100, 1000, 10000),
                           labels = scales::label_comma()) +
       coord_equal(xlim = c(0, top), ylim = c(0, top), expand = FALSE) +
       labs(title = title,

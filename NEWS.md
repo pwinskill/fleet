@@ -91,11 +91,16 @@
   the solver presets cost. Reproduced by `comparison/benchmark.R`, which reports
   the minimum of five repeats — contention can only add time, so the fastest
   repeat is the least contaminated estimate.
-* The 1:1 line on the country-site comparison figure is now an amber dash over a
-  white halo (#2). A plain dark dash vanished into the dark end of the hex ramp —
-  which is exactly where the mass of the data sits, so the reference line was
-  invisible where it mattered most. Amber is the complement of the indigo ramp and
-  is not a series colour, so it can never be misread as a model.
+* The country-site comparison figure reads its 1:1 correlation properly (#2). Two
+  changes. The reference line is a plain orange dash — hue-opposed to the indigo
+  ramp, and not a series colour, so it cannot be misread as a model. And the low
+  end of the hex fill ramp is now near-white: the counts are wildly skewed, with
+  52% of the cells carrying 0.2% of the sub-site-months while the top 5% of cells
+  carry 90% of them, so the old saturated low end spent most of the plot's ink on
+  almost none of the data and buried the ridge it was meant to show. The scale is
+  still log10, so sparse cells stay visible — the scatter is real and worth
+  seeing — they simply no longer out-shout the ridge. The legend gained
+  intermediate breaks (1 / 10 / 100 / 1,000 / 10,000) so the ramp can be decoded.
 * New article `vignette("comparison")` — *Comparison with malariasimulation* — with
   a redesigned figure set: equilibrium PfPR and clinical incidence across EIR
   1–120, age profiles of prevalence / clinical / severe incidence, the settled

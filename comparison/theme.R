@@ -23,11 +23,11 @@ COL <- c(IBM = "#E5533F", blink = "#4338CA")
 LTY <- c(IBM = "22",      blink = "solid")        # dashed / solid
 SHP <- c(IBM = 21,        blink = 24)             # filled circle / triangle
 INK   <- "#111827"; INK2 <- "#52514E"; MUTED <- "#898781"
-## reference lines (1:1 agreement). Amber, because it is the complement of the
+## reference lines (1:1 agreement). Orange, because it is hue-opposed to the
 ## indigo hex ramp and is NOT a series colour, so it can never be read as a
-## model; drawn over a white halo so it stays visible on both the white surface
-## and the darkest hex fill (5.4:1 on white).
-REF   <- "#B45309"
+## model. Hue contrast is what carries it: at 4.2:1 on white it reads on the
+## pale fills, and against the deep indigo core the opposed hue does the work.
+REF   <- "#D94801"
 GRID  <- "#E5E7EB"; AXIS <- "#C9CCD1"; SURFACE <- "#FFFFFF"
 ENV_ALPHA <- 0.16                                 # IBM envelope wash
 
