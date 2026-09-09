@@ -11,6 +11,12 @@
 #     normal-vision dE 38; both >= 3:1 on white.
 #   * The IBM is stochastic. It is drawn as the median of N replicates with a
 #     10-90% envelope at ~15% opacity, never as one noisy realisation.
+#   * LAYER ORDER: where the two series overlap -- which, when the models agree,
+#     is everywhere -- the mark that hides less goes on top. So the IBM's dashed
+#     median draws OVER blink's solid line (the solid shows through the gaps, so
+#     both read), while blink's hollow point draws OVER the IBM's filled one.
+#     The envelope always sits at the bottom. Get this backwards and agreement
+#     looks like a single series.
 #   * Thin marks, hairline SOLID gridlines one step off the surface, no panel
 #     border, legend at the top, titles left-aligned. Text never wears a series
 #     colour.
@@ -89,13 +95,6 @@ envelope <- function(d, by, value = "y") {
   out$model <- "IBM"
   out
 }
-
-## the two marks every time-series panel draws: IBM envelope + median, blink line
-geom_ibm_envelope <- function(mapping_x, lwd = 0.8) list(
-  geom_ribbon(aes(x = {{ mapping_x }}, ymin = lo, ymax = hi, fill = model),
-              alpha = ENV_ALPHA, colour = NA),
-  geom_line(aes(x = {{ mapping_x }}, y = mid, colour = model, linetype = model),
-            linewidth = lwd, lineend = "round"))
 
 ## save to BOTH homes: man/figures (README, GitHub) and vignettes (pkgdown article)
 save_fig <- function(g, name, width, height, dpi = 200) {

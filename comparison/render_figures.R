@@ -38,15 +38,17 @@ CLIN_LAB <- "clinical episodes per child-year, ages 0\u20135"
 ## ============================================================================
 ## 1. core_eir -- four equilibrium relationships vs EIR
 ## ============================================================================
+## titles follow the same pattern as core_age below: one short declarative
+## clause per panel, each naming its own subject so it reads standing alone
 EIR_MET <- list(
   list(key = "pfpr_2_10", lab = PREV_LAB, pct = TRUE,
-       title = "Parasite prevalence rises with transmission"),
+       title = "Prevalence rises steadily with transmission"),
   list(key = "clin_0_5", lab = CLIN_LAB,
-       title = "Clinical incidence saturates as immunity builds"),
-  ## the y labels here stay short: the panel title already says "all ages", and a
+       title = "Clinical disease saturates in young children"),
+  ## the y labels here stay short: the panel title already says "all-age", and a
   ## longer label runs up into the title in the bottom row
   list(key = "clin_all", lab = "clinical episodes per person-year",
-       title = "Across all ages it flattens much sooner"),
+       title = "All-age clinical disease flattens much sooner"),
   list(key = "sev_all", lab = "severe episodes per 1,000 person-years",
        title = "Severe disease peaks at moderate transmission"))
 e_long <- eq %>% filter(grepl("^eir_", scenario)) %>%
@@ -62,8 +64,9 @@ panel_eir <- function(metric_id, ylab, title) {
   ggplot() +
     geom_linerange(data = gi, aes(init_EIR, ymin = lo, ymax = hi, colour = model),
                    linewidth = 0.7, alpha = 0.55, show.legend = FALSE) +
-    geom_line(data = gi, aes(init_EIR, mid, colour = model, linetype = model), linewidth = 0.8) +
+    ## dashed over solid, hollow over filled -- see the layer-order rule in theme.R
     geom_line(data = go, aes(init_EIR, mid, colour = model, linetype = model), linewidth = 0.8) +
+    geom_line(data = gi, aes(init_EIR, mid, colour = model, linetype = model), linewidth = 0.8) +
     geom_point(data = gi, aes(init_EIR, mid, colour = model, shape = model, fill = model),
                size = 2.6, stroke = 0.5) +
     geom_point(data = go, aes(init_EIR, mid, colour = model, shape = model, fill = model),
@@ -106,8 +109,8 @@ panel_age <- function(m) {
   gi <- filter(ibm_a, metric == m); go <- filter(ode_a, metric == m)
   ggplot() +
     geom_ribbon(data = gi, aes(age_mid, ymin = lo, ymax = hi, fill = model), alpha = ENV_ALPHA) +
-    geom_line(data = gi, aes(age_mid, mid, colour = model, linetype = model), linewidth = 0.8) +
     geom_line(data = go, aes(age_mid, mid, colour = model, linetype = model), linewidth = 0.8) +
+    geom_line(data = gi, aes(age_mid, mid, colour = model, linetype = model), linewidth = 0.8) +
     geom_point(data = gi, aes(age_mid, mid, colour = model, shape = model, fill = model), size = 2, stroke = 0.4) +
     geom_point(data = go, aes(age_mid, mid, colour = model, shape = model, fill = model), size = 2, stroke = 0.4) +
     scale_models() + guide_models() +
@@ -138,8 +141,8 @@ if ("demography" %in% age$scenario) {
     gi <- filter(ibm_d, metric == m); go <- filter(ode_d, metric == m)
     ggplot() +
       geom_ribbon(data = gi, aes(age_mid, ymin = lo, ymax = hi, fill = model), alpha = ENV_ALPHA) +
-      geom_line(data = gi, aes(age_mid, mid, colour = model, linetype = model), linewidth = 0.8) +
       geom_line(data = go, aes(age_mid, mid, colour = model, linetype = model), linewidth = 0.8) +
+      geom_line(data = gi, aes(age_mid, mid, colour = model, linetype = model), linewidth = 0.8) +
       geom_point(data = gi, aes(age_mid, mid, colour = model, shape = model, fill = model), size = 2, stroke = 0.4) +
       geom_point(data = go, aes(age_mid, mid, colour = model, shape = model, fill = model), size = 2, stroke = 0.4) +
       scale_models() + guide_models() +
@@ -173,8 +176,8 @@ panel_doy <- function(m, ylab, title, pct = FALSE) {
   gi <- filter(ibm_s, metric == m); go <- filter(ode_s, metric == m)
   ggplot() +
     geom_ribbon(data = gi, aes(doy, ymin = lo, ymax = hi, fill = model), alpha = ENV_ALPHA) +
-    geom_line(data = gi, aes(doy, mid, colour = model, linetype = model), linewidth = 0.8) +
     geom_line(data = go, aes(doy, mid, colour = model, linetype = model), linewidth = 0.8) +
+    geom_line(data = gi, aes(doy, mid, colour = model, linetype = model), linewidth = 0.8) +
     scale_models(shapes = FALSE) +
     scale_x_continuous(breaks = mon_brk, labels = c("Jan", "Apr", "Jul", "Oct")) +
     scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.06)),
@@ -261,8 +264,8 @@ g <- ggplot() +
   geom_text(data = onset_lab, aes(x = BURN_Y, y = Inf, label = "deployment"),
             hjust = -0.08, vjust = 1.6, size = 3.1, colour = INK2, family = FONT) +
   geom_ribbon(data = ibm_m, aes(year, ymin = lo, ymax = hi, fill = model), alpha = ENV_ALPHA) +
-  geom_line(data = ibm_m, aes(year, mid, colour = model, linetype = model), linewidth = 0.75) +
   geom_line(data = ode_m, aes(year, mid, colour = model, linetype = model), linewidth = 0.75) +
+  geom_line(data = ibm_m, aes(year, mid, colour = model, linetype = model), linewidth = 0.75) +
   facet_grid(scenario ~ metric, scales = "free_y", switch = "y") +
   scale_models(shapes = FALSE) +
   scale_x_continuous(breaks = seq(BURN_Y - 3, BURN_Y + 6, 3),
