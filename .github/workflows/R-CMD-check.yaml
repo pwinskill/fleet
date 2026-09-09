@@ -3,7 +3,7 @@
 on:
   push:
     branches: [main, master]
-    # TO ENABLE (see .github/README.md): uncomment to stop a docs-only or
+    # TO ENABLE (see .github/CI.md): uncomment to stop a docs-only or
     # figures-only commit spending a full five-runner matrix. paths-ignore, not
     # paths: a deny-list of what provably cannot break the build stays correct
     # when the package grows a new source directory.

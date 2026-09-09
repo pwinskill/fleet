@@ -1,3 +1,8 @@
+<!-- NOT named README.md on purpose. GitHub resolves a repository's front page
+     in the order .github/README.md, README.md, docs/README.md -- so a file at
+     .github/README.md silently REPLACES the package README on the repo home
+     page. It did, briefly. Keep this as CI.md. -->
+
 # CI: what runs, what does not yet, and how to turn it on
 
 Two of the four workflows are **prepared but inert**. They carry only a

@@ -8,7 +8,7 @@
 # ---------------------------------------------------------------------------
 # NOT YET ENABLED. Only workflow_dispatch is live, so this never runs on its
 # own. To turn it on, uncomment the `push`, `pull_request` and `schedule` keys
-# below. See .github/README.md for the whole go-live checklist.
+# below. See .github/CI.md for the whole go-live checklist.
 # ---------------------------------------------------------------------------
 
 name: comparison

@@ -9,7 +9,7 @@
 #
 # ---------------------------------------------------------------------------
 # NOT YET ENABLED. Only workflow_dispatch is live. To turn it on, uncomment the
-# `push` and `pull_request` keys. See .github/README.md.
+# `push` and `pull_request` keys. See .github/CI.md.
 # ---------------------------------------------------------------------------
 
 name: figures

@@ -230,7 +230,7 @@
   figures and tables still match the committed data), plus `dependabot.yml` for
   the Actions themselves. Both workflows carry only a `workflow_dispatch`
   trigger, so nothing fires automatically yet; their real triggers sit directly
-  above, commented and marked `TO ENABLE`. `.github/README.md` is the go-live
+  above, commented and marked `TO ENABLE`. `.github/CI.md` is the go-live
   checklist: three uncomments, and it explains why each piece is shaped the way
   it is.
 
