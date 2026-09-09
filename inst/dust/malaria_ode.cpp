@@ -1525,12 +1525,12 @@ public:
     }
     for (size_t i = 1; i <= shared.dim.clin_inc_a.dim[0]; ++i) {
       for (size_t j = 1; j <= shared.dim.clin_inc_a.dim[1]; ++j) {
-        internal.sev_inc_a[i - 1 + (j - 1) * shared.dim.clin_inc_a.mult[1]] = internal.theta[i - 1 + (j - 1) * shared.dim.b.mult[1]] * internal.FOI[i - 1 + (j - 1) * shared.dim.EPS.mult[1]] * (S[i - 1 + (j - 1) * shared.dim.S.mult[1]] + A[i - 1 + (j - 1) * shared.dim.S.mult[1]] + U[i - 1 + (j - 1) * shared.dim.S.mult[1]]);
+        internal.sev_inc_a[i - 1 + (j - 1) * shared.dim.clin_inc_a.mult[1]] = internal.theta[i - 1 + (j - 1) * shared.dim.b.mult[1]] * (internal.FOI[i - 1 + (j - 1) * shared.dim.EPS.mult[1]] * (S[i - 1 + (j - 1) * shared.dim.S.mult[1]] + U[i - 1 + (j - 1) * shared.dim.S.mult[1]]) + internal.p_inf[i - 1 + (j - 1) * shared.dim.EPS.mult[1]] * A[i - 1 + (j - 1) * shared.dim.S.mult[1]]);
       }
     }
     for (size_t i = 1; i <= shared.dim.clin_inc_a.dim[0]; ++i) {
       for (size_t j = 1; j <= shared.dim.clin_inc_a.dim[1]; ++j) {
-        internal.inc_a[i - 1 + (j - 1) * shared.dim.clin_inc_a.mult[1]] = internal.FOI[i - 1 + (j - 1) * shared.dim.EPS.mult[1]] * (S[i - 1 + (j - 1) * shared.dim.S.mult[1]] + A[i - 1 + (j - 1) * shared.dim.S.mult[1]] + U[i - 1 + (j - 1) * shared.dim.S.mult[1]]);
+        internal.inc_a[i - 1 + (j - 1) * shared.dim.clin_inc_a.mult[1]] = internal.FOI[i - 1 + (j - 1) * shared.dim.EPS.mult[1]] * (S[i - 1 + (j - 1) * shared.dim.S.mult[1]] + U[i - 1 + (j - 1) * shared.dim.S.mult[1]]) + internal.p_inf[i - 1 + (j - 1) * shared.dim.EPS.mult[1]] * A[i - 1 + (j - 1) * shared.dim.S.mult[1]];
       }
     }
     const real_type EIR_yr = eir_now * 365;

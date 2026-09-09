@@ -46,7 +46,7 @@
 "Indoor residual spraying
 80% coverage, annual","clinical incidence, all ages",0.98269127377629,NA,NA,"blink"
 "Indoor residual spraying
-80% coverage, annual","severe incidence, all ages",0.976445703643426,NA,NA,"blink"
+80% coverage, annual","severe incidence, all ages",0.976390368795485,NA,NA,"blink"
 "Bed-net campaign
 80% coverage, one round","LM prevalence, ages 2–10",0.469545241626246,NA,NA,"blink"
 "Bed-net campaign
@@ -54,7 +54,7 @@
 "Bed-net campaign
 80% coverage, one round","clinical incidence, all ages",0.66477068815461,NA,NA,"blink"
 "Bed-net campaign
-80% coverage, one round","severe incidence, all ages",0.495915542944002,NA,NA,"blink"
+80% coverage, one round","severe incidence, all ages",0.495157645401514,NA,NA,"blink"
 "RTS,S via EPI
 90% at 5 months, booster","LM prevalence, ages 2–10",0.00818154614860789,NA,NA,"blink"
 "RTS,S via EPI
@@ -62,7 +62,7 @@
 "RTS,S via EPI
 90% at 5 months, booster","clinical incidence, all ages",0.050229289125544,NA,NA,"blink"
 "RTS,S via EPI
-90% at 5 months, booster","severe incidence, all ages",0.1024087735653,NA,NA,"blink"
+90% at 5 months, booster","severe incidence, all ages",0.10201229093129,NA,NA,"blink"
 "Seasonal SMC
 4 rounds/yr, ages 0.25–5","LM prevalence, ages 2–10",0.236322256716932,NA,NA,"blink"
 "Seasonal SMC
@@ -70,7 +70,7 @@
 "Seasonal SMC
 4 rounds/yr, ages 0.25–5","clinical incidence, all ages",0.256265537520777,NA,NA,"blink"
 "Seasonal SMC
-4 rounds/yr, ages 0.25–5","severe incidence, all ages",0.38398088655831,NA,NA,"blink"
+4 rounds/yr, ages 0.25–5","severe incidence, all ages",0.382871931006553,NA,NA,"blink"
 "Treatment scale-up
 20% → 60% of clinical cases","LM prevalence, ages 2–10",0.193598192298647,NA,NA,"blink"
 "Treatment scale-up
@@ -78,4 +78,4 @@
 "Treatment scale-up
 20% → 60% of clinical cases","clinical incidence, all ages",0.0518797040494371,NA,NA,"blink"
 "Treatment scale-up
-20% → 60% of clinical cases","severe incidence, all ages",0.0346038249222655,NA,NA,"blink"
+20% → 60% of clinical cases","severe incidence, all ages",0.0339629890170265,NA,NA,"blink"

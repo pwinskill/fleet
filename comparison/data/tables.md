@@ -17,14 +17,14 @@ blink inside the IBM 10-90% band: PfPR at 6 of 6 EIRs; clinical at 5 of 6
 | --- | --- | --- | --- | --- |
 | 1 | 0.208 (0.198–0.218) | 0.213 | 4.73 (4.20–5.08) | 4.69 |
 | 3 | 0.388 (0.368–0.400) | 0.386 | 6.51 (5.83–6.97) | 6.52 |
-| 10 | 0.585 (0.577–0.595) | 0.585 | 8.39 (7.83–8.90) | 8.40 |
-| 20 | 0.692 (0.675–0.699) | 0.683 | 9.63 (9.05–9.99) | 9.06 |
-| 50 | 0.785 (0.774–0.789) | 0.772 | 9.53 (9.18–10.03) | 9.21 |
-| 120 | 0.822 (0.801–0.840) | 0.811 | 8.81 (8.23–9.64) | 8.54 |
+| 10 | 0.585 (0.577–0.595) | 0.585 | 8.39 (7.83–8.90) | 8.38 |
+| 20 | 0.692 (0.675–0.699) | 0.683 | 9.63 (9.05–9.99) | 9.03 |
+| 50 | 0.785 (0.774–0.789) | 0.772 | 9.53 (9.18–10.03) | 9.15 |
+| 120 | 0.822 (0.801–0.840) | 0.811 | 8.81 (8.23–9.64) | 8.40 |
 
-all-ages relative difference: clinical -1.6% to 2.1%, severe -5.9% to 0.1%
+all-ages relative difference: clinical -1.6% to 2.1%, severe -6.2% to 0.1%
 
-blink inside the IBM 10-90% band: all-age clinical at 5 of 6 EIRs; all-age severe at 6 of 6
+blink inside the IBM 10-90% band: all-age clinical at 5 of 6 EIRs; all-age severe at 4 of 6
 
 fold change across the grid (blink): clinical 0-5 18.0x, clinical all ages 3.8x; severe all ages peaks at EIR 50
 
@@ -32,12 +32,12 @@ fold change across the grid (blink): clinical 0-5 18.0x, clinical all ages 3.8x;
 
 | age band (y) | IBM prevalence | blink prevalence | IBM clinical | blink clinical | IBM severe /1000 | blink severe /1000 |
 | --- | --- | --- | --- | --- | --- | --- |
-| 0–1 | 0.283 | 0.288 | 1.09 | 1.09 | 53.9 | 52.7 |
-| 1–2 | 0.441 | 0.441 | 1.85 | 1.85 | 57.2 | 61.0 |
-| 2–3 | 0.492 | 0.493 | 1.75 | 1.79 | 39.9 | 38.7 |
+| 0–1 | 0.283 | 0.288 | 1.09 | 1.09 | 53.9 | 52.5 |
+| 1–2 | 0.441 | 0.441 | 1.85 | 1.85 | 57.2 | 60.8 |
+| 2–3 | 0.492 | 0.493 | 1.75 | 1.79 | 39.9 | 38.6 |
 | 3–5 | 0.535 | 0.536 | 1.49 | 1.52 | 19.6 | 17.4 |
 | 5–7 | 0.562 | 0.566 | 1.21 | 1.19 | 7.2 | 5.9 |
-| 7–10 | 0.566 | 0.571 | 0.94 | 0.93 | 3.2 | 2.6 |
+| 7–10 | 0.566 | 0.571 | 0.94 | 0.93 | 3.2 | 2.5 |
 | 10–15 | 0.506 | 0.506 | 0.60 | 0.60 | 1.3 | 1.1 |
 | 15–20 | 0.359 | 0.354 | 0.37 | 0.35 | 0.6 | 0.5 |
 | 20–30 | 0.247 | 0.247 | 0.24 | 0.26 | 0.3 | 0.3 |
@@ -45,7 +45,7 @@ fold change across the grid (blink): clinical 0-5 18.0x, clinical all ages 3.8x;
 | 40–60 | 0.197 | 0.199 | 0.12 | 0.15 | 0.2 | 0.2 |
 | 60–85 | 0.194 | 0.195 | 0.09 | 0.11 | 0.0 | 0.1 |
 
-max |blink - IBM| prevalence across bands: 0.005; under-20 bands: clinical relative diff range -4.9% to 2.6%, severe relative diff range -25% to 7%; blink severe inside IBM band in 11 of 12 bands
+max |blink - IBM| prevalence across bands: 0.005; under-20 bands: clinical relative diff range -4.9% to 2.6%, severe relative diff range -25% to 6%; blink severe inside IBM band in 11 of 12 bands
 
 ## Custom demography at EIR 20
 
@@ -104,7 +104,7 @@ severe:   n = 450,684, r = 0.958, slope = 0.946, relative bias = 8.8%
 | Bed-net campaign | clinical, all ages | 67% (66%–67%) | 66% |
 | Bed-net campaign | severe, all ages | 50% (44%–53%) | 50% |
 
-largest |blink - IBM median| gap: 10.3 pp (treatment, severe, all ages); blink inside the IBM 10-90% band in 15 of 20 scenario x outcome cells
+largest |blink - IBM median| gap: 10.2 pp (treatment, severe, all ages); blink inside the IBM 10-90% band in 15 of 20 scenario x outcome cells
 
 | scenario | mean prevalence gap (blink - IBM, pp) | mean clinical gap (% of IBM) |
 | --- | --- | --- |

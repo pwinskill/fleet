@@ -412,14 +412,29 @@ dim(IB, ICA, ID, IVA) <- c(n_age, n_het)
 
 ## ---- outputs (per age group; aggregated to bands in R) --------------------
 # All as fractions of the total human population (x human_population -> counts).
-# Counted with the clinical hazard h_c (not phi*FOI): the pool depletes only via
-# the clinical route, so integrating h_c*(S+A+U) over a day gives exactly the IBM's
-# phi*p*N clinical episodes. Severe is drawn from the SAME infected set as clinical
-# in the IBM (update_severe_disease takes infected_humans), so it keeps the total
-# infection hazard; theta is the severe fraction of all infections.
+#
+# These are RATES that R integrates over a day, so the rate to use for a
+# compartment depends on how fast that compartment drains. The IBM counts events
+# per person per day, i.e. the DEDUPLICATED probability p_inf (or phi*p_inf), not
+# the hazard.
+#   S and U drain at the full FOI, so int_0^1 FOI*X exp(-FOI t) dt = X*(1-exp(-FOI))
+#     = X*p_inf exactly. The hazard form is already the IBM's count for them.
+#   A does NOT: a sub-clinical re-infection of an A leaves them in A, so A drains
+#     only at h_c and stays ~flat over the day. int FOI*A dt is then ~ FOI*A, which
+#     over-counts by FOI/p_inf = -log(1-p_inf)/p_inf. So A takes p_inf directly.
+# Clinical is unaffected: it is counted with h_c = -log(1 - phi*p_inf), and
+# int h_c*A dt = A*(1-exp(-h_c)) = A*phi*p_inf, the IBM's clinical count.
+# Severe is drawn from the SAME infected set as clinical in the IBM
+# (update_severe_disease takes infected_humans), so it is theta x the all-infection
+# count, not theta x the clinical one.
+# Measured against 3 IBM replicates of 10,000 people: before this correction
+# all-age n_inc_* ran +2.6% (EIR 20) and +4.2% (EIR 50) above the IBM median, both
+# outside its replicate spread; after, +0.6% and +0.4%. The bias was concentrated
+# in adults, where A is a large share of the at-risk pool (under-5 n_inc_* was only
+# +0.3% / +1.7%), which is the signature of an A-only defect.
 clin_inc_a[, ] <- h_c[i, j] * (S[i, j] + A[i, j] + U[i, j])
-sev_inc_a[, ] <- theta[i, j] * FOI[i, j] * (S[i, j] + A[i, j] + U[i, j])
-inc_a[, ] <- FOI[i, j] * (S[i, j] + A[i, j] + U[i, j])   # all new infections
+sev_inc_a[, ] <- theta[i, j] * (FOI[i, j] * (S[i, j] + U[i, j]) + p_inf[i, j] * A[i, j])
+inc_a[, ] <- FOI[i, j] * (S[i, j] + U[i, j]) + p_inf[i, j] * A[i, j]   # all new infections
 detlm[, ] <- D[i, j] + Tr[i, j] + Tr_slow[i, j] + q[i, j] * A[i, j]
 # PCR follows the malariasimulation IBM convention (all D/Tr/A/U count as
 # PCR-positive), NOT malariaEquilibrium's sub-patent-weighted pos_PCR
