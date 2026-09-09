@@ -79,6 +79,44 @@
 
 ### Bug fixes
 
+- **Severe and all-infection incidence are counted with the deduplicated
+  probability, not the raw hazard** — the one change in this release
+  that moves numbers. `clin_inc_a` was already counted with `h_c`;
+  `sev_inc_a` and `inc_a` used `FOI`. These outputs are rates that R
+  integrates over a day, and the right rate depends on how fast the
+  compartment drains. `S` and `U` drain at the full `FOI`, so
+  `int FOI*X exp(-FOI t) dt = X*(1 - exp(-FOI)) = X*p_inf` — the IBM’s
+  count, exactly. `A` does not: a sub-clinical re-infection of an `A`
+  leaves them in `A`, so `A` drains only at `h_c` and stays roughly flat
+  over the day, making `int FOI*A dt ~ FOI*A` and over-counting by
+  `FOI/p_inf = -log(1-p_inf)/p_inf`. `A` now takes `p_inf` directly. The
+  IBM draws severe from the *deduplicated* `infections` bitset
+  (`update_severe_disease`), so this is a replication defect, not a
+  modelling choice.
+
+  Measured against 3 IBM replicates of 10,000 people on the same
+  parameter list: all-age `n_inc_*` ran **+2.6% (EIR 20) and +4.2% (EIR
+  50)** above the IBM median, both outside its replicate spread; after
+  the fix, **+0.6% and +0.4%**. The bias was concentrated in adults,
+  where `A` is a large share of the at-risk pool (under-5 `n_inc_*` was
+  only +0.3% / +1.7%) — the signature of an `A`-only defect. Clinical
+  incidence and prevalence are unchanged.
+
+  It also makes one comparison worse, and that is worth stating plainly.
+  The same correction lowers severe incidence slightly, and blink
+  already ran below the IBM there: all-age severe goes from −5.9% to
+  −6.2% at EIR 20 and from −3.4% to −4.0% at EIR 50, dropping just
+  outside the IBM’s 10–90% band at those two EIRs (by 0.2% and 0.3% of
+  the lower edge) where it had been marginally inside. The upward bias
+  had been masking part of a larger, separate severe deficit. That
+  compensation was accidental, so the corrected numbers are the honest
+  ones and the severe gap is now the largest open discrepancy between
+  the two models.
+  [`vignette("comparison")`](https://pwinskill.github.io/blink/articles/comparison.md)
+  and its tables are re-rendered accordingly; the comparison harness
+  does not render all-infection incidence, so those figures show this
+  change’s cost without showing its benefit.
+
 - **`test-prophylaxis-chain.R`’s first test no longer errors when
   `malariasimulation` is absent.** It read `AL_params`/`SP_AQ_params`
   without a `skip_if_not_installed()` guard — the only one of the

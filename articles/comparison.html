@@ -358,28 +358,28 @@ climbs to a plateau of about 9–9.6 per 1,000 person-years around EIR
 <td>0.585 (0.577–0.595)</td>
 <td>0.585</td>
 <td>8.39 (7.83–8.90)</td>
-<td>8.40</td>
+<td>8.38</td>
 </tr>
 <tr class="even">
 <td>20</td>
 <td>0.692 (0.675–0.700)</td>
 <td>0.683</td>
 <td>9.63 (9.05–9.99)</td>
-<td>9.06</td>
+<td>9.03</td>
 </tr>
 <tr class="odd">
 <td>50</td>
 <td>0.785 (0.774–0.789)</td>
 <td>0.772</td>
 <td>9.53 (9.18–10.03)</td>
-<td>9.21</td>
+<td>9.15</td>
 </tr>
 <tr class="even">
 <td>120</td>
 <td>0.822 (0.801–0.840)</td>
 <td>0.811</td>
 <td>8.81 (8.23–9.64)</td>
-<td>8.54</td>
+<td>8.40</td>
 </tr>
 </tbody>
 </table>
@@ -391,11 +391,25 @@ So the small excess blink carries in under-5s is more than repaid at
 older ages. Decomposing the EIR 20 gap band by band, the 5–20 year olds
 account for more than the whole −1.3% deficit, partly offset by adults,
 where blink runs higher. All-age severe incidence is where blink sits
-furthest below the IBM – −5.9% at EIR 20, −3.4% at EIR 50 and −3.1% at
-EIR 120 – although it stays inside the 10–90% band at all six EIRs, and
-both curves flatten over EIR 20–50 and fall away by EIR 120. About half
+furthest below the IBM – −6.2% at EIR 20, −4.0% at EIR 50 and −4.7% at
+EIR 120 – and it falls just outside the 10–90% band at EIR 20 and EIR 50
+(by 0.2% and 0.3% of the lower edge), inside it at the other four. Both
+curves still flatten over EIR 20–50 and fall away by EIR 120. About half
 of that gap comes from the under-5 bands and the rest from 5–20 year
 olds, the same age pattern set out next.</p>
+<p>That severe deficit is <em>larger</em> than it was before the
+incidence-hazard correction described in <code>NEWS.md</code>, and
+deliberately so. blink used to count severe and all-infection episodes
+with the raw force of infection rather than the deduplicated per-day
+probability, which inflated both; correcting it removed a genuine +2.6%
+to +4.2% excess on all-infection incidence, and in doing so also removed
+a small upward bias that had been masking part of this severe deficit.
+The compensation was accidental, so the corrected numbers are the honest
+ones: the severe gap is real, it is not explained by the hazard
+convention, and it is the largest open discrepancy between the two
+models. Note that all-infection incidence – the outcome the correction
+actually fixed – is not rendered by this harness, so the figures above
+show the cost of that change without showing its benefit.</p>
 </div>
 <div class="section level3">
 <h3 id="age-structure">Age structure<a class="anchor" aria-label="anchor" href="#age-structure"></a>
@@ -412,8 +426,8 @@ absolute gap is at most 0.02 episodes per person-year (0.145 against
 0.125 in 40–60 year olds), the tail of the same slight excess seen
 against EIR. Severe incidence is where the two models are least alike.
 In the under-5 bands, which carry most severe episodes, blink is within
-−11% to +7% of the IBM (52.7 against 53.9 per 1,000 person-years in
-infants; 61.0 against 57.2 at 1–2 years). Between 5 and 20 years blink’s
+−12% to +6% of the IBM (52.5 against 53.9 per 1,000 person-years in
+infants; 60.8 against 57.2 at 1–2 years). Between 5 and 20 years blink’s
 severe incidence falls off faster with age than the IBM’s – 15–25% lower
 in relative terms, though these are bands with a handful of events per
 replicate (5.9 against 7.2 per 1,000 at 5–7 years; 0.48 against 0.64 at
