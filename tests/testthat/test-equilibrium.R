@@ -90,8 +90,10 @@ test_that("output feeds postie without error", {
   skip_if_not_installed("postie")
   p <- malariasimulation::get_parameters()
   out <- run_simulation_ode(730, p, init_EIR = 20)
-  epi <- get_epi_outputs(out)
-  expect_true(all(c("rates", "prevalence") %in% names(epi)))
-  expect_true("lm_prevalence_2_10" %in% names(epi$prevalence))
-  expect_true(all(c("clinical", "severe", "dalys") %in% names(epi$rates)))
+  # the count table is malariasimulation-shaped, so postie consumes it directly,
+  # exactly as it consumes an IBM run
+  prevalence <- postie::get_prevalence(out, diagnostic = "lm")
+  rates <- postie::get_rates(out)
+  expect_true("lm_prevalence_2_10" %in% names(prevalence))
+  expect_true(all(c("clinical", "severe", "dalys") %in% names(rates)))
 })

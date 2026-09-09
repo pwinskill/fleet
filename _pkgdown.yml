@@ -67,12 +67,6 @@ reference:
     ODE model.
   contents:
   - run_simulation_ode
-- title: Post-process outputs
-  desc: >
-    Turn a raw run into tidy, postie-style epidemiological outputs
-    (prevalence, incidence, and rates).
-  contents:
-  - get_epi_outputs
 - title: Age grid
   desc: >
     The default graded age discretisation used throughout the model.

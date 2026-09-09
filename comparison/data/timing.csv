@@ -1,0 +1,27 @@
+"table","scenario","years","pop","settings","seconds","s_per_year"
+"scenario","No interventions",5,1e+05,"fast",0.5,0.1
+"scenario","No interventions",10,1e+05,"fast",1.02,0.102
+"scenario","No interventions",30,1e+05,"fast",3.06,0.102
+"scenario","Seasonal",5,1e+05,"fast",0.89,0.178
+"scenario","Seasonal",10,1e+05,"fast",1.71,0.171
+"scenario","Seasonal",30,1e+05,"fast",5.5,0.183
+"scenario","Seasonal + treatment (AL)",5,1e+05,"fast",1,0.2
+"scenario","Seasonal + treatment (AL)",10,1e+05,"fast",1.93,0.193
+"scenario","Seasonal + treatment (AL)",30,1e+05,"fast",5.78,0.193
+"scenario","Seasonal + nets + IRS",5,1e+05,"fast",1.62,0.324
+"scenario","Seasonal + nets + IRS",10,1e+05,"fast",1.83,0.183
+"scenario","Seasonal + nets + IRS",30,1e+05,"fast",4.75,0.158
+"scenario","Seasonal + SMC (4 rounds/yr)",5,1e+05,"fast",1.36,0.272
+"scenario","Seasonal + SMC (4 rounds/yr)",10,1e+05,"fast",2.53,0.253
+"scenario","Seasonal + SMC (4 rounds/yr)",30,1e+05,"fast",7.75,0.258
+"scenario","All of the above + RTS,S",5,1e+05,"fast",1.5,0.3
+"scenario","All of the above + RTS,S",10,1e+05,"fast",3.03,0.303
+"scenario","All of the above + RTS,S",30,1e+05,"fast",11.23,0.374
+"population","Seasonal",30,1000,"fast",5.59,0.186
+"population","Seasonal",30,10000,"fast",5.81,0.194
+"population","Seasonal",30,1e+05,"fast",5.58,0.186
+"population","Seasonal",30,1e+06,"fast",5.55,0.185
+"population","Seasonal",30,1e+07,"fast",5.59,0.186
+"settings","default (atol = rtol = 1e-8, step <= 1 d)",30,1e+05,"default (atol = rtol = 1e-8, step <= 1 d)",7.92,0.264
+"settings","fast (atol = 1e-8, rtol = 1e-6, step <= 10 d)",30,1e+05,"fast (atol = 1e-8, rtol = 1e-6, step <= 10 d)",5.53,0.184
+"settings","loose (atol = rtol = 1e-6, step <= 10 d)",30,1e+05,"loose (atol = rtol = 1e-6, step <= 10 d)",5.39,0.18

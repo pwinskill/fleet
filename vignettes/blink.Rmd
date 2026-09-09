@@ -42,7 +42,7 @@ library(blink)
 ```
 
 `malariasimulation` (for parameter lists and the `set_*` builders) and `postie`
-(for `get_epi_outputs()`) are used throughout; both are listed under Suggests.
+(for post-processing) are used throughout; both are listed under Suggests.
 
 ## A basic run
 
@@ -78,24 +78,25 @@ range(out$p_detect_lm_730_3650)   # constant to machine precision
 
 ## Reading outputs with postie
 
-`get_epi_outputs()` post-processes the count table into
-[postie](https://github.com/mrc-ide/postie) format: a long `rates` table (one row
-per timestep x age band) and a wide `prevalence` table.
+Because the count table is `malariasimulation`-shaped, it goes straight into
+[postie](https://github.com/mrc-ide/postie) — the same two calls you would make
+on an IBM run, with no blink-specific wrapper in between.
 
 ```{r epi}
-epi <- get_epi_outputs(out)
-
 # prevalence: one <diagnostic>_prevalence_<lo>_<hi> column per age band (years)
-utils::tail(epi$prevalence["lm_prevalence_2_10"], 3)
+prevalence <- postie::get_prevalence(out, diagnostic = "lm")
+utils::tail(prevalence["lm_prevalence_2_10"], 3)
 
 # rates: clinical / severe incidence, mortality and DALYs by age band
-utils::head(epi$rates[, c("time", "age_lower", "age_upper",
-                          "clinical", "severe", "dalys")])
+rates <- postie::get_rates(out)
+utils::head(rates[, c("time", "age_lower", "age_upper",
+                      "clinical", "severe", "dalys")])
 ```
 
-Use `diagnostic = "pcr"` for PCR prevalence, and pass through extra postie
-arguments via `rates_args` / `prevalence_args` (e.g. `scaler`, `treatment_scaler`,
-`life_expectancy`).
+Use `diagnostic = "pcr"` for PCR prevalence, and postie's own arguments
+(`scaler`, `treatment_scaler`, `life_expectancy`, …) as you normally would. This
+means a post-processing pipeline written for the IBM works on a `blink` run
+unchanged.
 
 ### Getting finer age resolution
 

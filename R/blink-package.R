@@ -15,10 +15,11 @@
 #' \itemize{
 #'   \item [run_simulation_ode()] — run the model; returns a wide, daily count
 #'     table (P. falciparum only).
-#'   \item [get_epi_outputs()] — post-process a run into postie `rates` (long)
-#'     and `prevalence` (wide).
 #'   \item [default_age_lower()] — the default graded age grid.
 #' }
+#' The count table is malariasimulation-shaped, so post-process it with
+#' \pkg{postie} exactly as you would an IBM run: `postie::get_rates(out)` and
+#' `postie::get_prevalence(out, diagnostic = "lm")`.
 #' See `vignette("blink")` for a worked tour, and the README's *Mean-field
 #' approximations* section for where and how much the ODE departs from the IBM.
 #'

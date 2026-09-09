@@ -239,11 +239,12 @@ test_that("kitchen-sink run is finite, conserved, and postie-consumable", {
   pop <- with(o, S_count + D_count + A_count + U_count + Tr_count + Ph_count)
   expect_equal(max(pop), min(pop), tolerance = 1e-5)
   expect_true(all(o$p_detect_lm_730_3650 >= 0 & o$p_detect_lm_730_3650 <= 1))
-  epi <- get_epi_outputs(o)
-  expect_true(all(epi$prevalence$lm_prevalence_2_10 >= 0 &
-                  epi$prevalence$lm_prevalence_2_10 <= 1))
-  expect_true(all(is.finite(epi$rates$clinical) & epi$rates$clinical >= 0))
-  expect_true(all(is.finite(epi$rates$dalys)))
+  prevalence <- postie::get_prevalence(o, diagnostic = "lm")
+  rates <- postie::get_rates(o)
+  expect_true(all(prevalence$lm_prevalence_2_10 >= 0 &
+                  prevalence$lm_prevalence_2_10 <= 1))
+  expect_true(all(is.finite(rates$clinical) & rates$clinical >= 0))
+  expect_true(all(is.finite(rates$dalys)))
 })
 
 test_that("timesteps = 1 returns two rows", {

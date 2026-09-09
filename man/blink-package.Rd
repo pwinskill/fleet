@@ -22,10 +22,11 @@ multi-decade run completes in seconds, independent of population size.
 \itemize{
 \item \code{\link[=run_simulation_ode]{run_simulation_ode()}} — run the model; returns a wide, daily count
 table (P. falciparum only).
-\item \code{\link[=get_epi_outputs]{get_epi_outputs()}} — post-process a run into postie \code{rates} (long)
-and \code{prevalence} (wide).
 \item \code{\link[=default_age_lower]{default_age_lower()}} — the default graded age grid.
 }
+The count table is malariasimulation-shaped, so post-process it with
+\pkg{postie} exactly as you would an IBM run: \code{postie::get_rates(out)} and
+\code{postie::get_prevalence(out, diagnostic = "lm")}.
 See \code{vignette("blink")} for a worked tour, and the README's \emph{Mean-field
 approximations} section for where and how much the ODE departs from the IBM.
 }

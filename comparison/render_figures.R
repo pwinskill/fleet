@@ -191,7 +191,10 @@ if (length(fs)) {
     top <- unname(quantile(c(d$x, d$y), 0.999))
     ggplot(d, aes(x, y)) +
       geom_hex(bins = 60) +
-      geom_abline(slope = 1, intercept = 0, colour = INK2, linewidth = 0.5, linetype = "22") +
+      ## 1:1 line, over a white halo: a plain dark dash vanished into the dark
+      ## end of the hex ramp, which is exactly where the mass of the data is
+      geom_abline(slope = 1, intercept = 0, colour = "white", linewidth = 1.7, alpha = 0.85) +
+      geom_abline(slope = 1, intercept = 0, colour = REF, linewidth = 0.75, linetype = "22") +
       scale_fill_gradient(low = "#DDE1F7", high = "#1E1B5E", transform = "log10",
                           name = "sub-site\nmonths", breaks = c(1, 100, 10000),
                           labels = scales::label_comma()) +

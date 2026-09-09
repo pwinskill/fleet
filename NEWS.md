@@ -1,5 +1,19 @@
 # blink 0.0.0.9000
 
+## API changes
+
+* **`get_epi_outputs()` is removed** (#3). It was a thin wrapper that called
+  `postie::get_rates()` and `postie::get_prevalence()` and returned them in a
+  list, plus argument-splitting machinery (`rates_args`, `prevalence_args`,
+  `...`) that was more to learn than the two calls it replaced. malariasimulation
+  has no such wrapper — IBM post-processing pipelines call postie directly — and
+  `blink`'s output table is malariasimulation-shaped, so those pipelines already
+  work on a `blink` run unchanged. Replace
+  `epi <- get_epi_outputs(out)` with
+  `postie::get_prevalence(out, diagnostic = "lm")` and `postie::get_rates(out)`;
+  every postie argument is now passed to postie directly. `postie` remains in
+  Suggests for the vignette and tests, but nothing `blink` exports depends on it.
+
 ## Behaviour changes
 
 * **Custom demography: mosquito sizing now replicates `set_equilibrium()`.**
@@ -71,6 +85,17 @@
 
 ## Documentation
 
+* README gains a **Run times** section (#1): seconds per complete
+  `run_simulation_ode()` call across six scenarios and three horizons, plus the
+  population-independence check (flat from 1,000 to 10,000,000 people) and what
+  the solver presets cost. Reproduced by `comparison/benchmark.R`, which reports
+  the minimum of five repeats — contention can only add time, so the fastest
+  repeat is the least contaminated estimate.
+* The 1:1 line on the country-site comparison figure is now an amber dash over a
+  white halo (#2). A plain dark dash vanished into the dark end of the hex ramp —
+  which is exactly where the mass of the data sits, so the reference line was
+  invisible where it mattered most. Amber is the complement of the indigo ramp and
+  is not a series colour, so it can never be misread as a model.
 * New article `vignette("comparison")` — *Comparison with malariasimulation* — with
   a redesigned figure set: equilibrium PfPR and clinical incidence across EIR
   1–120, age profiles of prevalence / clinical / severe incidence, the settled
