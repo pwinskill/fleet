@@ -248,6 +248,18 @@
   report a per-month relative error, because the seasonal dry-season trough goes
   to within rounding of zero and |blink − IBM| / IBM then reaches billions of
   percent on months carrying no burden.
+
+  The IBM envelope on this figure is drawn heavier than on the rest of the set
+  (0.40 against `ENV_ALPHA`'s 0.16, and the lines are thinned to match), because
+  fifteen years of monthly points is about three pixels per month and at 0.16 the
+  band was invisible even where it is wide. It has real width to disclose: over
+  the months carrying the top quartile of burden the 10–90% replicate range is
+  26% of the panel peak for all-age severe incidence, against 3–6% for prevalence
+  and the two clinical measures — severe being the rarest outcome, a 30-day bin
+  holds only ~20 severe episodes at the seasonal peak in a population of 10,000.
+  The caption and the article now give those widths, since the figure can only
+  hint at them. Raised locally rather than in `theme.R`, so the four
+  already-reviewed figures are not changed unseen.
 * The equilibrium-vs-EIR figure gains the same two panels, also laid out 2×2:
   all-age clinical incidence and all-age severe incidence against EIR, beside the
   existing PfPR(2–10) and under-5 clinical panels. The all-age views carry the

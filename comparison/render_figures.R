@@ -310,15 +310,25 @@ if (all(TS %in% monthly$scenario)) {
     scenario = factor(rep(TS_LABELS[c("ts_nets", "ts_all")], each = 5L),
                       levels = TS_LABELS),
     x = rep(BURN_Y + seq(0, by = TS_NET_EVERY, length.out = 5L), times = 2L))
+  ## a heavier envelope than the rest of the figure set (ENV_ALPHA = 0.16). This
+  ## figure is 183 monthly points in a ~495 px panel -- 2.7 px per month, 32 px
+  ## per seasonal cycle -- so the band only opens at the spike tips, and at 0.16
+  ## it is invisible there. It has real width to show: over the months carrying
+  ## the top quartile of burden the IBM's 10-90 range is 26% of the panel peak
+  ## for all-age severe, against 3-6% for prevalence and the two clinical
+  ## measures. Kept local to this figure rather than raised in theme.R, so the
+  ## four already-reviewed figures are not changed unseen.
+  TS_ENV_ALPHA <- 0.40
 
   ts_col <- function(m, first) {
     gi <- filter(ibm_t, metric == m$key); go <- filter(ode_t, metric == m$key)
     p <- ggplot() +
       geom_vline(data = net_x, aes(xintercept = x), colour = AXIS, linewidth = 0.45) +
       geom_vline(xintercept = BURN_Y, colour = INK2, linewidth = 0.45, linetype = "22") +
-      geom_ribbon(data = gi, aes(year, ymin = lo, ymax = hi, fill = model), alpha = ENV_ALPHA) +
-      geom_line(data = go, aes(year, mid, colour = model, linetype = model), linewidth = 0.7) +
-      geom_line(data = gi, aes(year, mid, colour = model, linetype = model), linewidth = 0.7) +
+      geom_ribbon(data = gi, aes(year, ymin = lo, ymax = hi, fill = model),
+                  alpha = TS_ENV_ALPHA) +
+      geom_line(data = go, aes(year, mid, colour = model, linetype = model), linewidth = 0.6) +
+      geom_line(data = gi, aes(year, mid, colour = model, linetype = model), linewidth = 0.6) +
       facet_grid(scenario ~ ., switch = "y") +
       scale_models(shapes = FALSE) +
       scale_x_continuous(breaks = BURN_Y + seq(0, TS_YEARS, 5),
@@ -341,7 +351,9 @@ if (all(TS %in% monthly$scenario)) {
     plot_annotation(
       title = "Programmes over fifteen years, through both models",
       subtitle = cap(sprintf("Monthly series at EIR %s in a seasonal setting, from two years before deployment. Every row carries 20%% baseline case management; rows 2–4 add one intervention, row 5 adds all three. Grey rules mark the five net distributions.", EIR_REF), width = 128),
-      caption = cap("x = years relative to deployment; the dashed rule is deployment. Nets: 80% coverage every 3 years, 5-year mean retention. SMC: 4 monthly rounds a year, ages 3 months to 5 years, 90% coverage. Case management: SP-AQ, coverage of clinical cases raised from 20% to 60%.", ibm_note),
+      caption = cap("x = years relative to deployment; the dashed rule is deployment. Nets: 80% coverage every 3 years, 5-year mean retention. SMC: 4 monthly rounds a year, ages 3 months to 5 years, 90% coverage. Case management: SP-AQ, coverage of clinical cases raised from 20% to 60%.",
+                    "The IBM band is hard to resolve here -- 15 years of monthly points is ~3 px per month -- so its width is given instead: over the months carrying the top quartile of burden the 10-90% replicate range is 26% of the panel peak for severe incidence, and 3-6% for the other three. Severe is the noisiest because a 30-day bin holds only ~20 severe episodes at the seasonal peak in a population of 10,000.",
+                    ibm_note),
       theme = theme_cmp()) &
     theme(legend.position = "top", legend.justification = "left")
   save_fig(g, "programme_ts", width = 13.5, height = 11)
