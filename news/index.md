@@ -138,6 +138,19 @@
   +0.1% on all-age severe (inside the band at all six), so the small
   excess blink carries in under-5s is more than repaid in the 5–20 year
   bands. `summary_tables.R` reports both new outcomes over the grid.
+- Every line figure now draws the IBM’s dashed median *over* blink’s
+  solid line rather than under it. Where the models agree — which, on
+  these figures, is nearly everywhere — the line drawn last is the only
+  one visible, so the old order quietly hid the IBM and made a
+  two-series panel read as one. Dashes let the solid line show through
+  the gaps, so both read. Points keep the opposite order for the same
+  reason: blink’s hollow marker hides less than the IBM’s filled one, so
+  it goes on top. The rule is written down in `comparison/theme.R` and
+  applies to `core_eir`, `core_age`, `core_demography`, `core_seasonal`
+  and `int_timeseries`; the effect is largest on the low-noise
+  intervention panels, which previously looked like a single curve. An
+  unused `geom_ibm_envelope()` helper that bundled the old order is
+  removed.
 - The country-site comparison figure reads its 1:1 correlation properly
   ([\#2](https://github.com/pwinskill/blink/issues/2)). Two changes. The
   reference line is a plain orange dash — hue-opposed to the indigo
