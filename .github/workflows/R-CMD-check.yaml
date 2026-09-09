@@ -3,11 +3,34 @@
 on:
   push:
     branches: [main, master]
+    # TO ENABLE (see .github/README.md): uncomment to stop a docs-only or
+    # figures-only commit spending a full five-runner matrix. paths-ignore, not
+    # paths: a deny-list of what provably cannot break the build stays correct
+    # when the package grows a new source directory.
+    # paths-ignore:
+    #   - '**.md'
+    #   - 'man/figures/**'
+    #   - 'vignettes/**.png'
+    #   - 'pkgdown/**'
+    #   - 'docs/**'
   pull_request:
+    # paths-ignore:
+    #   - '**.md'
+    #   - 'man/figures/**'
+    #   - 'vignettes/**.png'
+    #   - 'pkgdown/**'
+    #   - 'docs/**'
 
 name: R-CMD-check.yaml
 
 permissions: read-all
+
+# TO ENABLE: uncomment. Supersedes an in-flight matrix when the same branch is
+# pushed again, which on a private repo is the single biggest saving available:
+# three pushes ten minutes apart currently run three full matrices to completion.
+# concurrency:
+#   group: R-CMD-check-${{ github.ref }}
+#   cancel-in-progress: true
 
 jobs:
   R-CMD-check:

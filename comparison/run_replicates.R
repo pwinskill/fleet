@@ -31,7 +31,7 @@ while (!file.exists(file.path(ROOT, "DESCRIPTION")) && dirname(ROOT) != ROOT)
 if (!file.exists(file.path(ROOT, "DESCRIPTION")))
   stop("run this from inside the blink checkout (no DESCRIPTION found above ", getwd(), ")")
 suppressMessages(library(malariasimulation))
-source(file.path(ROOT, "comparison", "theme.R"))     # scenario constants
+source(file.path(ROOT, "comparison", "constants.R"))
 DDIR <- file.path(ROOT, "comparison", "data"); dir.create(DDIR, showWarnings = FALSE)
 N_WORKERS <- 10L
 ## CMP_SMOKE=1 -> a few-minute end-to-end check: 4-year horizon, one replicate,

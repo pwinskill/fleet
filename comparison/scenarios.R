@@ -8,7 +8,7 @@
 #
 # Expects ROOT and theme.R's constants to be in scope already.
 
-if (!exists("AGE_EDGES")) stop("source comparison/theme.R before this file.")
+if (!exists("AGE_EDGES")) stop("source comparison/constants.R before this file.")
 if (!exists("SMOKE")) SMOKE <- nzchar(Sys.getenv("CMP_SMOKE"))
 
 ## ---- shared parameter scaffolding -------------------------------------------

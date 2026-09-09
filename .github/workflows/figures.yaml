@@ -1,0 +1,105 @@
+# Do the committed figures and tables still match the committed data?
+#
+# comparison/data/rep_*.csv and the figures drawn from it are both committed, so
+# they can fall out of step: re-run the models, forget to re-render, and the
+# article quotes numbers its own figures do not show. Nothing else notices.
+#
+# This re-renders from the committed CSVs and fails if the working tree comes out
+# dirty. It runs no model, so it is seconds plus the cost of installing ggplot2.
+#
+# ---------------------------------------------------------------------------
+# NOT YET ENABLED. Only workflow_dispatch is live. To turn it on, uncomment the
+# `push` and `pull_request` keys. See .github/README.md.
+# ---------------------------------------------------------------------------
+
+name: figures
+
+on:
+  workflow_dispatch:
+  # TO ENABLE: uncomment. Scoped to the things that can change what is drawn --
+  # the data, the renderers, the style, or the constants they share.
+  # push:
+  #   branches: [main, master]
+  #   paths:
+  #     - 'comparison/data/rep_*.csv'
+  #     - 'comparison/render_figures.R'
+  #     - 'comparison/summary_tables.R'
+  #     - 'comparison/theme.R'
+  #     - 'comparison/constants.R'
+  # pull_request:
+  #   paths:
+  #     - 'comparison/data/rep_*.csv'
+  #     - 'comparison/render_figures.R'
+  #     - 'comparison/summary_tables.R'
+  #     - 'comparison/theme.R'
+  #     - 'comparison/constants.R'
+
+permissions: read-all
+
+concurrency:
+  group: figures-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  figures:
+    runs-on: ubuntu-latest
+    name: figures match data
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            any::dplyr
+            any::tidyr
+            any::ggplot2
+            any::patchwork
+            any::scales
+            any::hexbin
+            any::ragg
+            any::systemfonts
+            any::digest
+            any::jsonlite
+          needs: check
+
+      - name: Re-render the figures and tables from the committed data
+        run: |
+          Rscript comparison/render_figures.R
+          Rscript comparison/summary_tables.R
+        shell: bash
+
+      # A PNG can differ byte-for-byte between machines from font hinting alone,
+      # so compare the TABLES strictly (they are plain text produced from the same
+      # CSVs) and report figure changes without failing on them. A figure that
+      # genuinely went stale will almost always show up as a changed table too,
+      # because both are computed from the same rows.
+      - name: Tables must match the data
+        run: |
+          if ! git diff --quiet -- comparison/data/tables.md; then
+            echo "::error::comparison/data/tables.md is stale: re-run comparison/summary_tables.R and commit."
+            git diff -- comparison/data/tables.md
+            exit 1
+          fi
+          echo "tables.md is up to date with the committed data"
+        shell: bash
+
+      - name: Report any figure that re-rendered differently
+        if: always()
+        run: |
+          if git diff --quiet -- 'man/figures/cmp_*.png' 'vignettes/cmp_*.png'; then
+            echo "figures are byte-identical to the committed ones"
+          else
+            echo "::warning::these figures re-rendered differently. Often just font"
+            echo "::warning::rendering on another machine; if the data changed, re-run"
+            echo "::warning::comparison/render_figures.R locally and commit."
+            git diff --stat -- 'man/figures/cmp_*.png' 'vignettes/cmp_*.png'
+          fi
+        shell: bash

@@ -35,7 +35,7 @@ if (!file.exists(file.path(ROOT, "DESCRIPTION")))
   stop("run this from inside the blink checkout (no DESCRIPTION found above ", getwd(), ")")
 suppressMessages(library(malariasimulation))
 log_msg <- function(...) cat(sprintf("[%s] %s\n", format(Sys.time(), "%H:%M:%S"), sprintf(...)))
-source(file.path(ROOT, "comparison", "theme.R"))
+source(file.path(ROOT, "comparison", "constants.R"))
 source(file.path(ROOT, "comparison", "scenarios.R"))
 DDIR <- file.path(ROOT, "comparison", "data")
 STRICT <- nzchar(Sys.getenv("CMP_STRICT"))
@@ -86,7 +86,10 @@ if (!file.exists(ref_f)) {
                             ref$malariasimulation, utils::packageVersion("malariasimulation")))
   now <- scenario_digest()
   if (!identical(ref$scenario_digest, now)) {
-    warn <- c(warn, sprintf("the scenario definitions have changed since the IBM rows were made (digest %s -> %s). The IBM must be re-run: comparison/run_replicates.R.",
+    ## a FAIL, not a warning: with the scenarios changed, section 2 below is
+    ## comparing blink-on-new-scenarios against IBM-on-old-scenarios, which is
+    ## not a valid answer to "is the match still good" no matter what it prints
+    fail <- c(fail, sprintf("the scenario definitions have changed since the IBM rows were made (digest %s -> %s), so the agreement below compares blink on the new scenarios against the IBM on the old ones. Re-run comparison/run_replicates.R.",
                             ref$scenario_digest, now))
     cat("  scenario digest    CHANGED\n")
   } else {

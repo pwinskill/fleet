@@ -1,0 +1,90 @@
+# Does blink still match malariasimulation?
+#
+# The IBM does not depend on blink, so its committed rows in comparison/data/
+# stay valid for any blink-side change. This re-runs blink alone (~2 min) and
+# checks it against that frozen reference, which is why this can run on every
+# push while the full IBM sweep cannot.
+#
+# ---------------------------------------------------------------------------
+# NOT YET ENABLED. Only workflow_dispatch is live, so this never runs on its
+# own. To turn it on, uncomment the `push`, `pull_request` and `schedule` keys
+# below. See .github/README.md for the whole go-live checklist.
+# ---------------------------------------------------------------------------
+
+name: comparison
+
+on:
+  workflow_dispatch:
+  # TO ENABLE: uncomment from here to the end of this block.
+  #
+  # paths-ignore, not paths. A deny-list of things that provably cannot move the
+  # model is robust to this repo growing: add a new source directory and it is
+  # covered by default. An allow-list would silently stop checking it.
+  # push:
+  #   branches: [main, master]
+  #   paths-ignore:
+  #     - '**.md'
+  #     - 'man/figures/**'
+  #     - 'vignettes/**.png'
+  #     - 'pkgdown/**'
+  #     - 'docs/**'
+  #     - '.github/**'
+  # pull_request:
+  #   paths-ignore:
+  #     - '**.md'
+  #     - 'man/figures/**'
+  #     - 'vignettes/**.png'
+  #     - 'pkgdown/**'
+  #     - 'docs/**'
+  #     - '.github/**'
+  #
+  # The weekly run is the only thing that catches malariasimulation changing
+  # underneath us, which is the one staleness cause that never shows up in our
+  # own commits. GitHub emails the repo owner when a scheduled run fails.
+  # schedule:
+  #   - cron: '0 6 * * 1'   # Mondays, 06:00 UTC
+
+permissions: read-all
+
+# supersede an in-flight run when the same ref is pushed again
+concurrency:
+  group: comparison-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    name: drift check
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      # `needs: check` installs Suggests, which is where malariasimulation lives,
+      # and DESCRIPTION's Remotes says where to get it -- so that stays a single
+      # source of truth and is not repeated here. These two are the only packages
+      # the harness needs that DESCRIPTION has no reason to know about.
+      #
+      # The list is short because check_drift.R sources constants.R rather than
+      # theme.R and so needs no plotting stack. Every package here is one more
+      # thing that can break the check for a reason unrelated to the model.
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            any::digest
+            any::jsonlite
+          needs: check
+
+      - name: Install blink
+        run: R CMD INSTALL --no-multiarch .
+        shell: bash
+
+      - name: Check for drift against the committed IBM reference
+        run: Rscript comparison/check_drift.R
+        shell: bash

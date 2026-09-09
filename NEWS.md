@@ -203,6 +203,29 @@
   IBM's 10–90% replicate range in 15 of the 20 scenario × outcome cells; the
   noisiest is treatment scale-up on severe incidence, where the IBM's own
   replicates span −12% to +6% and the two models differ in sign.
+* **CI for the comparison, prepared but not switched on.** Two new workflows,
+  `comparison.yaml` (the drift check) and `figures.yaml` (do the committed
+  figures and tables still match the committed data), plus `dependabot.yml` for
+  the Actions themselves. Both workflows carry only a `workflow_dispatch`
+  trigger, so nothing fires automatically yet; their real triggers sit directly
+  above, commented and marked `TO ENABLE`. `.github/README.md` is the go-live
+  checklist: three uncomments, and it explains why each piece is shaped the way
+  it is.
+
+  The design choices that matter for keeping it low-maintenance. `paths-ignore`
+  rather than `paths` wherever the question is "could this break the model", so
+  a new source directory is covered by default instead of being silently
+  dropped from an allow-list. `concurrency: cancel-in-progress`, so pushing
+  again supersedes an in-flight run. Dependabot monthly and grouped into one
+  PR, because runner images and actions are deprecated on GitHub's schedule and
+  the failure mode otherwise is a red build one morning for a reason unrelated
+  to the package. And `figures.yaml` fails on `tables.md` but only warns on the
+  PNGs, since a PNG can differ byte-for-byte from font hinting alone and a check
+  that cries wolf is one you learn to ignore.
+
+  `R-CMD-check.yaml` gains its `paths-ignore` and `concurrency` blocks in the
+  same staged, commented form; its behaviour today is unchanged.
+
 * **New `comparison/check_drift.R`: check the match without re-running the IBM.**
   The IBM does not depend on `blink`, so its committed rows stay valid for any
   blink-side change, and there was never a reason to re-run a 25-minute IBM sweep

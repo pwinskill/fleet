@@ -1,0 +1,25 @@
+# Keep the GitHub Actions used by the workflows current, without anyone having to
+# watch for deprecations.
+#
+# This is the low-maintenance half of "robust to Actions changing": runner images
+# and actions get deprecated on GitHub's schedule, not ours, and the failure mode
+# without this is a red build one morning for a reason that has nothing to do with
+# the package. Dependabot turns that into a pull request instead.
+#
+# Monthly rather than weekly on purpose: actions move slowly, and a PR you ignore
+# is worse than one you read.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "ci"
+    labels:
+      - dependencies
+    groups:
+      # one PR for all of them, not five
+      actions:
+        patterns:
+          - "*"

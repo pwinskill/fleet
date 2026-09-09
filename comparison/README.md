@@ -12,7 +12,8 @@ set once on the shared parameter list so both models emit identical
 
 | File | What it does |
 | --- | --- |
-| `theme.R` | House style (palette, theme, series scales, envelope helper, `save_fig()`) **and** the scenario constants (`BURN_Y`, `POP`, `N_REP`, `EIR_GRID`, age bands, seasonality, intervention labels). Sourced by every other script so they cannot drift. |
+| `constants.R` | Paths (`ROOT`, `VDIR`) and the scenario constants (`BURN_Y`, `POP`, `N_REP`, `EIR_GRID`, age bands, seasonality, intervention labels). Sourced by every other script, so they cannot drift. Split out of `theme.R` so the two scripts that draw nothing — the IBM run and the drift check — need no plotting stack. |
+| `theme.R` | House style: palette, theme, series scales, envelope helper, `save_fig()`. Sources `constants.R`. |
 | `scenarios.R` | The scenario definitions, the shared per-run summariser, and `run_blink()`. Sourced by both `run_replicates.R` and `check_drift.R`, so a drift check cannot silently test different scenarios from the ones the reference was built on. |
 | `check_drift.R` | **The one to run often.** Re-runs blink only (~2 min) against the committed IBM rows. Reports movement and agreement separately; exits non-zero on drift. |
 | `run_replicates.R` | Runs blink and the IBM replicates on a PSOCK cluster, writes `data/rep_{eq,age,monthly,doy,timing}.csv` and `data/ibm_reference.json`. `CMP_SMOKE=1` gives a 4-year, 1-replicate end-to-end check into `data/smoke/`; `CMP_ONLY=a,b` re-runs a subset and merges it into the existing CSVs. |
