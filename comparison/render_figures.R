@@ -38,19 +38,14 @@ CLIN_LAB <- "clinical episodes per child-year, ages 0\u20135"
 ## ============================================================================
 ## 1. core_eir -- four equilibrium relationships vs EIR
 ## ============================================================================
-## titles follow the same pattern as core_age below: one short declarative
-## clause per panel, each naming its own subject so it reads standing alone
+## no panel titles here: the y axis already names the outcome and its age band,
+## so a title on top of it can only restate it or editorialise. The shape of each
+## curve is what the panel is for, and the article says what to make of it.
 EIR_MET <- list(
-  list(key = "pfpr_2_10", lab = PREV_LAB, pct = TRUE,
-       title = "Prevalence rises steadily with transmission"),
-  list(key = "clin_0_5", lab = CLIN_LAB,
-       title = "Clinical disease saturates in young children"),
-  ## the y labels here stay short: the panel title already says "all-age", and a
-  ## longer label runs up into the title in the bottom row
-  list(key = "clin_all", lab = "clinical episodes per person-year",
-       title = "All-age clinical disease flattens much sooner"),
-  list(key = "sev_all", lab = "severe episodes per 1,000 person-years",
-       title = "Severe disease peaks at moderate transmission"))
+  list(key = "pfpr_2_10", lab = PREV_LAB, pct = TRUE),
+  list(key = "clin_0_5", lab = CLIN_LAB),
+  list(key = "clin_all", lab = "clinical episodes per person-year, all ages"),
+  list(key = "sev_all", lab = "severe episodes per 1,000 person-years, all ages"))
 e_long <- eq %>% filter(grepl("^eir_", scenario)) %>%
   mutate(init_EIR = as.numeric(sub("eir_", "", scenario))) %>%
   select(init_EIR, model, rep, all_of(vapply(EIR_MET, `[[`, "", "key"))) %>%
@@ -59,7 +54,7 @@ ibm_e <- e_long %>% filter(model == "IBM") %>% group_by(metric) %>%
   group_modify(~ envelope(.x, by = "init_EIR")) %>% ungroup()
 ode_e <- e_long %>% filter(model == "blink") %>% rename(mid = y)
 
-panel_eir <- function(metric_id, ylab, title) {
+panel_eir <- function(metric_id, ylab) {
   gi <- filter(ibm_e, metric == metric_id); go <- filter(ode_e, metric == metric_id)
   ggplot() +
     geom_linerange(data = gi, aes(init_EIR, ymin = lo, ymax = hi, colour = model),
@@ -73,23 +68,27 @@ panel_eir <- function(metric_id, ylab, title) {
                size = 2.6, stroke = 0.5) +
     scale_x_log10(breaks = EIR_GRID, minor_breaks = NULL) +
     scale_models() + guide_models() +
-    labs(title = title, x = "EIR (infectious bites per adult per year)", y = ylab) +
-    theme_cmp() + theme(legend.position = "none")
+    labs(x = "EIR (infectious bites per adult per year)", y = ylab) +
+    theme_cmp()
 }
 ps <- lapply(seq_along(EIR_MET), function(i) {
   m <- EIR_MET[[i]]
-  p <- panel_eir(m$key, m$lab, m$title) +
+  p <- panel_eir(m$key, m$lab) +
     if (isTRUE(m$pct)) scale_y_continuous(limits = c(0, 1), labels = scales::percent)
     else scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.06)))
   ## the x axis is the same in all four; name it once, on the bottom row
-  if (i <= 2) p <- p + labs(x = NULL)
-  if (i == 1) p + theme(legend.position = "top") else p
+  if (i <= 2) p + labs(x = NULL) else p
 })
-g <- patchwork::wrap_plots(ps, ncol = 2) + plot_annotation(
-  title = "Core transmission relationships at equilibrium",
-  subtitle = "The same parameter list through both models, across a 120-fold range of transmission intensity",
-  caption = cap("x = the EIR passed to set_equilibrium(); each model's realised EIR is reported in the article.", ibm_note),
-  theme = theme_cmp())
+## one collected legend for the whole figure, not a legend sitting inside panel 1:
+## with no panel titles left to anchor the eye, a legend in one panel pushes that
+## panel's plot area down and the top row stops lining up
+g <- patchwork::wrap_plots(ps, ncol = 2) + plot_layout(guides = "collect") +
+  plot_annotation(
+    title = "Core transmission relationships at equilibrium",
+    subtitle = "The same parameter list through both models, across a 120-fold range of transmission intensity",
+    caption = cap("x = the EIR passed to set_equilibrium(); each model's realised EIR is reported in the article.", ibm_note),
+    theme = theme_cmp()) &
+  theme(legend.position = "top", legend.justification = "left")
 save_fig(g, "core_eir", width = 10, height = 9)
 
 ## ============================================================================
