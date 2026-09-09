@@ -1,4 +1,4 @@
-# Comparison harness — blink vs malariasimulation
+# Comparison harness: blink vs malariasimulation
 
 Scripts that run every comparison scenario through **both** models on the *same*
 parameter list and render the figures used in `vignette("comparison")` and the

@@ -12,7 +12,7 @@
 #' Numerical settings for [run_simulation_ode()]. Every default is the validated
 #' choice; a run with `ode_tuning()` untouched is the reference configuration.
 #' Pass either this object or a plain named list of the fields you want to
-#' change — anything left out keeps its default.
+#' change; anything left out keeps its default.
 #'
 #' @param age_lower age-group lower edges in **years** (default graded grid:
 #'   monthly to 1 year, quarterly to 5, yearly to 15, then 5-yearly to an
@@ -30,7 +30,7 @@
 #'   protection is already less variable than `Tr` itself. A drug mixture is
 #'   moment-matched as a mixture. `1` is a single exponential stage, which for
 #'   `Ph_c` leaks protection early between monthly SMC rounds. The count is fixed
-#'   at the seed's drug mix — a first-line switch moves the chain's mean, not its
+#'   at the seed's drug mix: a first-line switch moves the chain's mean, not its
 #'   shape.
 #' @param atol,rtol,step_size_max dust2 ODE-solver controls. The defaults
 #'   (`1e-8`, `1e-8`, `1`) preserve the flat equilibrium exactly; for long dynamic
@@ -89,7 +89,7 @@ ode_tuning <- function(age_lower = default_age_lower(),
 #' Coerce a partial named list to a full tuning object.
 #'
 #' Anything the caller left out keeps its default, and an unrecognised name is an
-#' error rather than a silently ignored field -- a mistyped `rtol` that quietly
+#' error rather than a silently ignored field, because a mistyped `rtol` that quietly
 #' did nothing would look like the tolerance simply not mattering.
 #' @noRd
 as_ode_tuning <- function(x) {

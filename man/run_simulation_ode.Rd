@@ -38,20 +38,20 @@ IBM. The first two are per-individual arithmetic, the third is a seeding
 convention; all three default to the validated choice, so you normally leave
 them alone:
 \itemize{
-\item \code{bite_dedup} (default \code{1}) — reproduce the IBM's per-timestep bite
+\item \code{bite_dedup} (default \code{1}): reproduce the IBM's per-timestep bite
 deduplication. malariasimulation collects the day's bitten individuals in a
 bitset, so a person bitten repeatedly in one timestep is infected at most
 once: the daily infection probability is \code{(1 - exp(-EPS)) * b}, which
 saturates. Setting \code{0} uses the unbounded \code{b * EPS} instead, which
 over-predicts infection where exposure approaches one bite/person/day
 (seasonal peaks, high-\code{zeta} strata) but makes the \code{malariaEquilibrium}
-seed an exact fixed point — useful for equilibrium tests.
-\item \code{acquired_immunity_offset} (default \code{0}) — the IBM adds \code{+0.5} to
+seed an exact fixed point, which is useful for equilibrium tests.
+\item \code{acquired_immunity_offset} (default \code{0}): the IBM adds \code{+0.5} to
 positive acquired immunity inside the \code{b}/\code{phi}/\code{theta} Hill functions. That
 is a per-individual detail which does not carry over to a stratum mean; an
 A/B against the IBM ensemble mean favours \code{0}. Set \code{0.5} to reproduce the
 IBM's literal Hill calls.
-\item \code{hold_init_EIR} (default \code{FALSE}) — only matters with \code{set_demography()}.
+\item \code{hold_init_EIR} (default \code{FALSE}): only matters with \code{set_demography()}.
 malariasimulation's \code{set_equilibrium()} sizes the mosquito population from
 the equilibrium under its \emph{default} exponential age structure, so under a
 custom demography the IBM drifts to whatever transmission that density
@@ -70,7 +70,7 @@ ignored with a warning (the ODE assumes independence between interventions).}
 \item{tuning}{ODE solver and discretisation settings, from \code{\link[=ode_tuning]{ode_tuning()}}.
 A plain named list of the fields you want to change is also accepted; every
 field left out keeps its default. These are numerical-approximation knobs,
-not model parameters -- nothing epidemiological lives here.}
+not model parameters: nothing epidemiological lives here.}
 
 \item{...}{not used. Named arguments that were top-level before the signature
 was cut back to \code{malariasimulation::run_simulation()}'s are caught here and
@@ -80,11 +80,11 @@ reported with the call that replaces them.}
 a wide, malariasimulation-style daily count table, one row per output
 day. Columns:
 \itemize{
-\item \code{timestep} — output day (0..timesteps), the row key.
+\item \code{timestep}: output day (0..timesteps), the row key.
 \item per age band (tags in \strong{days}, \verb{<lo>_<hi>}): \verb{n_age_*} (population),
 \verb{n_detect_lm_*} and \verb{p_detect_lm_*} (LM-positive count and PfPR
 proportion), \verb{n_detect_pcr_*}, \verb{n_inc_clinical_*}, \verb{n_inc_severe_*} and
-\verb{n_inc_*} (all-infection incidence) — all per-day counts.
+\verb{n_inc_*} (all-infection incidence), all per-day counts.
 \item \code{ft} (treated fraction), \code{EIR} (per adult per year), \code{FOIM}.
 \item population-total infection-state counts \code{S_count}, \code{D_count},
 \code{A_count}, \code{U_count}, \code{Tr_count}, \code{Ph_count} (diagnostic).

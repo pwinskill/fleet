@@ -36,7 +36,7 @@ after \code{Tr}: 16 stages for SP-AQ, 20 for DHA-PQP, and 1 for AL, whose 10-day
 protection is already less variable than \code{Tr} itself. A drug mixture is
 moment-matched as a mixture. \code{1} is a single exponential stage, which for
 \code{Ph_c} leaks protection early between monthly SMC rounds. The count is fixed
-at the seed's drug mix — a first-line switch moves the chain's mean, not its
+at the seed's drug mix: a first-line switch moves the chain's mean, not its
 shape.}
 
 \item{atol, rtol, step_size_max}{dust2 ODE-solver controls. The defaults
@@ -59,7 +59,7 @@ a \code{blink_ode_tuning} list.
 Numerical settings for \code{\link[=run_simulation_ode]{run_simulation_ode()}}. Every default is the validated
 choice; a run with \code{ode_tuning()} untouched is the reference configuration.
 Pass either this object or a plain named list of the fields you want to
-change — anything left out keeps its default.
+change; anything left out keeps its default.
 }
 \examples{
 ode_tuning()$atol

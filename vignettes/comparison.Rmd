@@ -25,17 +25,17 @@ fig <- function(name) knitr::include_graphics(paste0("cmp_", name, ".png"))  # a
 model (IBM): hand both models the same parameter list and they should tell the
 same epidemiological story, with `blink` finishing in seconds and without
 Monte-Carlo noise. This article puts that claim to the test. Every panel below
-runs the **identical `malariasimulation` parameter list** through both models --
-first the core equilibrium relationships, then a battery of interventions -- and
-draws them side by side.
+runs the **identical `malariasimulation` parameter list** through both models
+and draws them side by side: first the core equilibrium relationships, then a
+battery of interventions.
 
 **How to read the figures.** The IBM is stochastic, so it is never shown as a
 single run: each IBM curve is the **median of ten replicates**, with a shaded
 band (or a bar) spanning the 10th to 90th percentile across those replicates.
 `blink` is deterministic and is drawn as one line. Throughout, the two models
-are distinguished three ways at once -- colour (coral IBM, indigo blink), line
-type (dashed IBM, solid blink) and point shape (circle IBM, triangle blink) --
-so every panel still reads in greyscale and under colour-vision deficiency.
+are distinguished three ways at once: colour (coral IBM, indigo blink), line
+type (dashed IBM, solid blink) and point shape (circle IBM, triangle blink).
+So every panel still reads in greyscale and under colour-vision deficiency.
 
 ## Set-up
 
@@ -100,13 +100,13 @@ throughout -- so the x-axis is a fair one.
 
 Widening the window to all ages changes the *shape* of the relationship, not
 just its level, and both models change shape the same way. All-age clinical
-incidence spans 0.21 to 0.81 episodes per person-year over the grid -- a
-3.8-fold range against the 18-fold range in under-5s -- because most of the
-transmission added above EIR 20 lands on people who are already immune. At
-EIR 1 the all-age rate (0.21) is *higher* than the under-5 rate (0.16); by
-EIR 120 it is under a third of it. Severe incidence is not monotonic at all: in
-both models it climbs to a plateau of about 9–9.6 per 1,000 person-years around
-EIR 20–50 and falls back by EIR 120, as immunity outruns exposure.
+incidence spans 0.21 to 0.81 episodes per person-year over the grid (a 3.8-fold
+range against the 18-fold range in under-5s), because most of the transmission
+added above EIR 20 lands on people who are already immune. At EIR 1 the all-age
+rate (0.21) is *higher* than the under-5 rate (0.16); by EIR 120 it is under a
+third of it. Severe incidence is not monotonic at all: in both models it climbs
+to a plateau of about 9–9.6 per 1,000 person-years around EIR 20–50 and falls
+back by EIR 120, as immunity outruns exposure.
 
 | EIR | IBM clinical, all ages, per person-year (10–90%) | blink clinical | IBM severe, all ages, per 1,000 person-years (10–90%) | blink severe |
 | --- | --- | --- | --- | --- |
@@ -140,7 +140,7 @@ removed a small upward bias that had been masking part of this severe deficit.
 The compensation was accidental, so the corrected numbers are the honest ones:
 the severe gap is real, it is not explained by the hazard convention, and it is
 the largest open discrepancy between the two models. Note that all-infection
-incidence -- the outcome the correction actually fixed -- is not rendered by this
+incidence, the outcome the correction actually fixed, is not rendered by this
 harness, so the figures above show the cost of that change without showing its
 benefit.
 
@@ -154,8 +154,8 @@ fig("core_age")
 ```
 
 Prevalence by age agrees to within 0.005 in every band. Clinical incidence in
-the bands under 20 years -- where the rates are large enough for a relative
-comparison to mean anything -- is within −4.9% (15–20 years) to +2.6% (2–3
+the bands under 20 years, where the rates are large enough for a relative
+comparison to mean anything, is within −4.9% (15–20 years) to +2.6% (2–3
 years) of the IBM median; above 20, blink runs 7–16% higher in relative terms,
 but the rates there are small and the absolute gap is at most 0.02 episodes per
 person-year (0.145 against 0.125 in 40–60 year olds), the tail of the same
@@ -163,7 +163,7 @@ slight excess seen against EIR. Severe incidence is where the two models are
 least alike. In the under-5 bands, which carry most severe episodes, blink is
 within −12% to +6% of the IBM (52.5 against 53.9 per 1,000 person-years in
 infants; 60.8 against 57.2 at 1–2 years). Between 5 and 20 years blink's severe
-incidence falls off faster with age than the IBM's -- 15–25% lower in relative
+incidence falls off faster with age than the IBM's: 15–25% lower in relative
 terms, though these are bands with a handful of events per replicate (5.9
 against 7.2 per 1,000 at 5–7 years; 0.48 against 0.64 at 15–20). blink lies
 inside the IBM's 10–90% band in 11 of the 12 bands, the exception being 5–7
@@ -174,9 +174,9 @@ years.
 The default runs use malariasimulation's constant-hazard demography. With
 `set_demography()` the IBM instead kills people by age-specific death rates and
 its age pyramid emerges from that schedule; `blink` derives the equilibrium age
-structure analytically from the same rates. The scenario below uses a deliberately
-harsh schedule -- 4.8% per year in infancy, under 1% through the working ages, and
-12% per year over 80 -- at EIR 20.
+structure analytically from the same rates. The scenario below uses a
+deliberately harsh schedule (4.8% per year in infancy, under 1% through the
+working ages, and 12% per year over 80) at EIR 20.
 
 ```{r core-demography, eval = TRUE, echo = FALSE, fig.alt = "Two panels at EIR 20 under a custom mortality schedule. Left: share of the population per year of age, high in infancy and falling steeply through adulthood, IBM band and blink line coincident. Right: LM prevalence by age under that demography, again coincident."}
 fig("core_demography")
@@ -184,7 +184,7 @@ fig("core_demography")
 
 The two panels tell different stories, and each needs a caveat.
 
-**Left -- the age pyramid.** The IBM's structure is not yet stationary: it
+**Left: the age pyramid.** The IBM's structure is not yet stationary: it
 starts from the default exponential age distribution and, after 30 years, only
 people under 30 have lived their whole lives under the custom schedule. Even so
 it sits close to the analytic stable structure the death rates imply (13.1% of
@@ -196,7 +196,7 @@ exponential dwell times within a group let some people linger past the age at
 which the schedule would have removed them, and the whole open-ended 80+ group
 is counted in the 60–85 band.
 
-**Right -- age-prevalence.** The two curves agree to within 0.008 at every age.
+**Right: age-prevalence.** The two curves agree to within 0.008 at every age.
 That agreement hides a convention worth knowing about. malariasimulation's
 `set_equilibrium()` sizes the mosquito population from the equilibrium under its
 *default* exponential age structure, and run under the custom mortality -- with
@@ -211,8 +211,8 @@ above the IBM through childhood here; that behaviour is still available via
 
 ### Seasonality
 
-Seasonal forcing enters both models the same way -- rainfall scales the larval
-carrying capacity -- but the two then propagate it through very different
+Seasonal forcing enters both models the same way (rainfall scales the larval
+carrying capacity), but the two then propagate it through very different
 machinery: individual mosquitoes and people with sampled delays in the IBM,
 Erlang lag chains and a fixed-delay extrinsic incubation period in `blink`.
 
@@ -225,9 +225,9 @@ blink, in the same week of the year; the trough is 0.315 in both, one weekly bin
 apart. Under-5 clinical incidence peaks at 4.53 (IBM) against 4.50 (blink)
 episodes per child-year, again one bin apart, and the annual mean is 1.50
 against 1.54 (+2.7%). Both models realise an annual-mean EIR of 18.7 against the
-aseasonal target of 20 -- the same nonlinear-averaging shortfall in each -- and
-an annual-mean PfPR~2–10~ of 0.492 (IBM; 10–90% range 0.484–0.499) against
-0.490. The transient onto the cycle is shared too: seeded at the aseasonal
+aseasonal target of 20, the same nonlinear-averaging shortfall in each. The
+annual-mean PfPR~2–10~ is 0.492 (IBM; 10–90% range 0.484–0.499) against 0.490.
+The transient onto the cycle is shared too: seeded at the aseasonal
 equilibrium, both models' annual-mean prevalence drops from 0.50 to 0.48 in the
 first year and settles within a few years.
 
@@ -282,18 +282,18 @@ to 0.39 in both models while leaving under-5 clinical incidence almost untouched
 (a 4–5% reduction in both): more infections are cleared, but the lower exposure
 erodes clinical immunity, and the two effects nearly cancel. **RTS,S via EPI**
 acts on one birth cohort at a time, so under-5 incidence drifts down gradually as
-vaccinated children accumulate -- from 1.55 to about 1.2 episodes per child-year
-by year six -- and 2–10 prevalence barely moves; blink tracks the IBM median
+vaccinated children accumulate (from 1.55 to about 1.2 episodes per child-year
+by year six) and 2–10 prevalence barely moves; blink tracks the IBM median
 through the ramp and ends marginally higher (1.27 against 1.20). **Seasonal
 SMC**: at each round both models drop sharply and climb back together between
-the monthly rounds -- blink's post-deployment under-5 incidence sits within 1% of
+the monthly rounds; blink's post-deployment under-5 incidence sits within 1% of
 the IBM median on average, with a slightly sharper rebound after the season's
 last round. **IRS** with three annual rounds drives prevalence to ~0.01 by year
 three in both models; when the third round's protection wanes both rebound
 together and overshoot the pre-intervention incidence (2.39 episodes per
 child-year at +4.5 years in both, against a baseline of 1.55) because clinical
-immunity has drained during the suppression. **Bed nets** -- one round, five-year
-mean retention -- take prevalence to 0.17–0.18 by year one and under-5 incidence
+immunity has drained during the suppression. **Bed nets** (one round, five-year
+mean retention) take prevalence to 0.17–0.18 by year one and under-5 incidence
 to 0.08 in both models, then recover along the same curve as the nets age; by
 year six blink is fractionally above the IBM (prevalence 0.538 against 0.529).
 
@@ -333,14 +333,14 @@ agree to within two percentage points everywhere.
 Reading across the four panels shows *who* each intervention protects, and the
 two models agree on that too. **SMC and RTS,S are targeted**, so their all-age
 clinical effect is roughly half their under-5 effect (SMC 25% against 52%; RTS,S
-5% against 10%) — they protect a slice of the population, and the rest of it
+5% against 10%). They protect a slice of the population, and the rest of it
 carries on as before. **Nets and IRS are not**: they suppress transmission for
 everyone, so the all-age and under-5 reductions are the same (67% and 97%).
 
 The one genuine disagreement in sign is **treatment scale-up on severe
 incidence**: the IBM's median says severe disease *rises* by 7%, blink's single
 run says it falls by 3%. Both are within the IBM's own replicate range, which
-spans −12% to +6% — this is the noisiest cell in the figure, and the honest
+spans −12% to +6%; this is the noisiest cell in the figure, and the honest
 reading is that neither model resolves the sign. The mechanism behind the
 ambiguity is real, though: treating more clinical cases removes infections, which
 lowers exposure, which erodes the acquired immunity that protects against severe
@@ -350,7 +350,7 @@ the immunity treatment shows up first.
 
 Seasonal SMC deserves a note, because it was the one intervention this
 comparison caught blink getting wrong. The IBM applies a Weibull protection curve
-to each treated child -- for SP-AQ, shape 4.3 and scale 38.1 days, under which 70%
+to each treated child: for SP-AQ, shape 4.3 and scale 38.1 days, under which 70%
 are still protected 30 days after a round. An earlier version of blink decayed
 its chemoprevention-prophylaxis compartment exponentially at the Weibull mean,
 which protects only 42% at 30 days: protection leaked between monthly rounds and
@@ -381,12 +381,12 @@ The two models stay together for the whole fifteen years, through five net
 distributions, sixty SMC rounds and a treatment scale-up. Across the 915
 scenario-months in each panel column, `blink` sits inside the IBM's 10–90%
 replicate band in **83%** of them for prevalence, 84% for both clinical measures
-and 78% for severe incidence -- and since an 80% band contains a
-perfectly-tracking deterministic mean about 80% of the time by construction,
-those are at the target rather than short of it. On the summary a programme
-would actually be judged by -- the mean burden over the fifteen years, against
-the no-intervention reference -- the largest disagreement anywhere in the
-sixteen scenario × outcome cells is **1.8 percentage points**.
+and 78% for severe incidence. Since an 80% band contains a perfectly-tracking
+deterministic mean about 80% of the time by construction, those are at the
+target rather than short of it. On the summary a programme would actually be
+judged by -- the mean burden over the fifteen years, against the no-intervention
+reference -- the largest disagreement anywhere in the sixteen scenario × outcome
+cells is **1.8 percentage points**.
 
 Those in-band fractions are only meaningful alongside how wide the band is, and
 the figure cannot show that well: fifteen years of monthly points is about three
@@ -396,7 +396,7 @@ the panel peak for severe incidence** against 3–6% for the other three. Severe
 the noisiest because it is the rarest: in a population of 10,000 a 30-day bin
 holds only about 20 severe episodes even at the seasonal peak, so Monte-Carlo
 noise on it is irreducible at this population without more replicates. The other
-three are not really smoothed by the median at all -- a *single* IBM replicate
+three are not really smoothed by the median at all: a *single* IBM replicate
 has almost exactly the month-to-month roughness of the ten-replicate median
 (55.5% against 55.3% for under-5 clinical, both essentially blink's own 54.9%),
 because the seasonal signal dwarfs the noise. What looks like smoothing is mostly
@@ -416,7 +416,7 @@ say them identically. Nets are the only intervention here that lowers
 transmission itself, and the sawtooth shows the cost of that: prevalence falls
 to about 9–11% within a year of each distribution and is back to 43% before the
 next one three years later, in both models. SMC and case management do not
-reduce transmission much at all -- SMC cuts under-5 clinical incidence in half
+reduce transmission much at all. SMC cuts under-5 clinical incidence in half
 but all-age clinical incidence by only about a fifth, because it protects a
 narrow age band, and case management barely moves clinical incidence in any age
 band (8–15%) while lowering prevalence by roughly 30%, since treating an episode
@@ -427,8 +427,8 @@ within a percentage point.
 
 ## Where the two models differ, and why
 
-The agreement above is not an accident of tuning -- `blink` has no free
-parameters of its own -- but it is not perfect either, and the gaps are
+The agreement above is not an accident of tuning (`blink` has no free
+parameters of its own), but it is not perfect either, and the gaps are
 systematic rather than random. `vignette("model")` documents each of them
 formally; the ones visible in these figures are:
 
@@ -460,7 +460,7 @@ formally; the ones visible in these figures are:
   mosquito density and seeds at the EIR its own equilibrium under the custom age
   structure then supports, so the same parameter list realises the same
   transmission in both models (13.9 against 13.8 in the demography scenario
-  above) — but `init_EIR` is then not the EIR blink realises. Set
+  above), but `init_EIR` is then not the EIR blink realises. Set
   `parameters$hold_init_EIR = TRUE` if you want it to be.
 - **Lags are Erlang, not fixed.** The human and mosquito delays are gamma-shaped
   chains that are exact at equilibrium and sharpen toward the IBM's fixed delays
@@ -472,10 +472,10 @@ formally; the ones visible in these figures are:
 The 130 IBM runs behind this page took 7.2 CPU-hours: 201 s per 34-year run at
 10,000 people, or 5.9 s per simulated year with ten runs sharing twelve cores
 (about 2.5 s per year for a single uncontended run). blink ran all thirteen
-scenarios in 60 s -- 4.6 s per run, 0.14 s per simulated year -- at
-`atol = 1e-8`, `rtol = 1e-6` and `step_size_max = 10` (the defaults, `1e-8` and
-a 1-day step cap, are slower). Per simulated year that is a factor of 18–43 at
-this population size; and the IBM's cost grows with population while blink's does
+scenarios in 60 s (4.6 s per run, 0.14 s per simulated year) at `atol = 1e-8`,
+`rtol = 1e-6` and `step_size_max = 10` (the defaults, `1e-8` and a 1-day step
+cap, are slower). Per simulated year that is a factor of 18–43 at this
+population size; and the IBM's cost grows with population while blink's does
 not, so the gap widens for the 100,000-person runs typical of country work.
 
 ## Reproducing this page

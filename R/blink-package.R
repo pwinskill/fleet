@@ -13,9 +13,9 @@
 #'
 #' @section Getting started:
 #' \itemize{
-#'   \item [run_simulation_ode()] — run the model; returns a wide, daily count
+#'   \item [run_simulation_ode()]: run the model; returns a wide, daily count
 #'     table (P. falciparum only).
-#'   \item [default_age_lower()] — the default graded age grid.
+#'   \item [default_age_lower()]: the default graded age grid.
 #' }
 #' The count table is malariasimulation-shaped, so post-process it with
 #' \pkg{postie} exactly as you would an IBM run: `postie::get_rates(out)` and

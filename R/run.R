@@ -48,20 +48,20 @@ get_generator <- function(odin_file = NULL) {
 #'   convention; all three default to the validated choice, so you normally leave
 #'   them alone:
 #'   \itemize{
-#'     \item `bite_dedup` (default `1`) — reproduce the IBM's per-timestep bite
+#'     \item `bite_dedup` (default `1`): reproduce the IBM's per-timestep bite
 #'       deduplication. malariasimulation collects the day's bitten individuals in a
 #'       bitset, so a person bitten repeatedly in one timestep is infected at most
 #'       once: the daily infection probability is `(1 - exp(-EPS)) * b`, which
 #'       saturates. Setting `0` uses the unbounded `b * EPS` instead, which
 #'       over-predicts infection where exposure approaches one bite/person/day
 #'       (seasonal peaks, high-`zeta` strata) but makes the `malariaEquilibrium`
-#'       seed an exact fixed point — useful for equilibrium tests.
-#'     \item `acquired_immunity_offset` (default `0`) — the IBM adds `+0.5` to
+#'       seed an exact fixed point, which is useful for equilibrium tests.
+#'     \item `acquired_immunity_offset` (default `0`): the IBM adds `+0.5` to
 #'       positive acquired immunity inside the `b`/`phi`/`theta` Hill functions. That
 #'       is a per-individual detail which does not carry over to a stratum mean; an
 #'       A/B against the IBM ensemble mean favours `0`. Set `0.5` to reproduce the
 #'       IBM's literal Hill calls.
-#'     \item `hold_init_EIR` (default `FALSE`) — only matters with `set_demography()`.
+#'     \item `hold_init_EIR` (default `FALSE`): only matters with `set_demography()`.
 #'       malariasimulation's `set_equilibrium()` sizes the mosquito population from
 #'       the equilibrium under its *default* exponential age structure, so under a
 #'       custom demography the IBM drifts to whatever transmission that density
@@ -83,18 +83,18 @@ get_generator <- function(odin_file = NULL) {
 #' @param tuning ODE solver and discretisation settings, from [ode_tuning()].
 #'   A plain named list of the fields you want to change is also accepted; every
 #'   field left out keeps its default. These are numerical-approximation knobs,
-#'   not model parameters -- nothing epidemiological lives here.
+#'   not model parameters: nothing epidemiological lives here.
 #' @param ... not used. Named arguments that were top-level before the signature
 #'   was cut back to `malariasimulation::run_simulation()`'s are caught here and
 #'   reported with the call that replaces them.
 #' @return a wide, malariasimulation-style daily count table, one row per output
 #'   day. Columns:
 #'   \itemize{
-#'     \item `timestep` — output day (0..timesteps), the row key.
+#'     \item `timestep`: output day (0..timesteps), the row key.
 #'     \item per age band (tags in **days**, `<lo>_<hi>`): `n_age_*` (population),
 #'       `n_detect_lm_*` and `p_detect_lm_*` (LM-positive count and PfPR
 #'       proportion), `n_detect_pcr_*`, `n_inc_clinical_*`, `n_inc_severe_*` and
-#'       `n_inc_*` (all-infection incidence) — all per-day counts.
+#'       `n_inc_*` (all-infection incidence), all per-day counts.
 #'     \item `ft` (treated fraction), `EIR` (per adult per year), `FOIM`.
 #'     \item population-total infection-state counts `S_count`, `D_count`,
 #'       `A_count`, `U_count`, `Tr_count`, `Ph_count` (diagnostic).
@@ -202,12 +202,12 @@ simulate_with_pulses <- function(sys, times, events, meta, uidx, out_idx) {
 #' prevalence_rendering_*, n_inc_* from incidence_rendering_*, n_inc_clinical_*
 #' from clinical_incidence_rendering_*, n_inc_severe_* from
 #' severe_incidence_rendering_*, and only n_age_* over the union). Emitting every
-#' family over the UNION produces OVERLAPPING strata — e.g. a 2-10y prevalence band
-#' alongside a 0-5/5-15/15-100 clinical partition — and postie treats each
+#' family over the UNION produces OVERLAPPING strata (e.g. a 2-10y prevalence band
+#' alongside a 0-5/5-15/15-100 clinical partition), and postie treats each
 #' n_inc_clinical_* column as an independent age stratum. Any person-day-weighted
 #' aggregate (postie::get_rates() |> weighted.mean(clinical, person_days)) then
 #' double-counts the overlapped ages, inflating the all-age rate by
-#' (1 + w*rho)/(1 + w) — measured at ~1.21 for clinical and ~1.10 for severe on a
+#' (1 + w*rho)/(1 + w), measured at ~1.21 for clinical and ~1.10 for severe on a
 #' site::site_parameters() list. Only fall back to the convenience 2-10y / all-age
 #' bands when a family's own rendering list is empty (e.g. a bare get_parameters()).
 #' @noRd

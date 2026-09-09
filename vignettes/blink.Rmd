@@ -28,7 +28,7 @@ size, which makes it well suited to calibration, sweeps and quick scenario work
 where a stochastic IBM would be too slow.
 
 Reach for the IBM (not this) when you need stochastic variation, individual
-heterogeneity beyond the mean field, or *P. vivax* — see **Scope** at the end.
+heterogeneity beyond the mean field, or *P. vivax*; see **Scope** at the end.
 
 ## Install and load
 
@@ -79,7 +79,7 @@ range(out$p_detect_lm_730_3650)   # constant to machine precision
 ## Reading outputs with postie
 
 Because the count table is `malariasimulation`-shaped, it goes straight into
-[postie](https://github.com/mrc-ide/postie) — the same two calls you would make
+[postie](https://github.com/mrc-ide/postie): the same two calls you would make
 on an IBM run, with no blink-specific wrapper in between.
 
 ```{r epi}
@@ -101,8 +101,8 @@ unchanged.
 ### Getting finer age resolution
 
 By default you get the 2-10y and all-ages bands. To emit more, set the
-`malariasimulation` rendering fields on the parameter list before running — the
-same fields the IBM uses:
+`malariasimulation` rendering fields on the parameter list before running (the
+same fields the IBM uses):
 
 ```{r bands}
 p_bands <- p
@@ -118,7 +118,7 @@ grep("^p_detect_lm_", names(out_bands), value = TRUE)
 ## Layering interventions
 
 Interventions are configured with the ordinary `malariasimulation::set_*`
-builders and applied automatically from the list — there are no extra arguments
+builders and applied automatically from the list. There are no extra arguments
 to `run_simulation_ode()`. Every module starts at its baseline at t = 0, so the
 equilibrium seed is preserved and each intervention acts from its scheduled
 timestep. A few representative examples follow.

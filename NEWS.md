@@ -5,7 +5,7 @@
 * **`run_simulation_ode()`'s signature now matches
   `malariasimulation::run_simulation()`.** It was
   `(timesteps, parameters, correlations, init_EIR, age_lower, n_eir, n_foim,
-  n_eip, n_ph, n_phc, atol, rtol, step_size_max, odin_file)` — fourteen
+  n_eip, n_ph, n_phc, atol, rtol, step_size_max, odin_file)`: fourteen
   arguments, eleven of which the IBM does not have. It is now
   `(timesteps, parameters, correlations, tuning)`.
 
@@ -13,7 +13,7 @@
 
   **`init_EIR` is gone as an argument.** The target EIR is a model input, so it
   belongs on the parameter list, and `malariasimulation::set_equilibrium()`
-  already puts it there as `parameters$init_EIR` — which is where the IBM reads
+  already puts it there as `parameters$init_EIR`, which is where the IBM reads
   it from too. Seed the list the way you would for a matched IBM run:
 
   ```r
@@ -36,11 +36,11 @@
   ```
 
   The dividing line is that nothing epidemiological sits outside the parameter
-  list any more — every field of `tuning` is a numerical-approximation knob, and
+  list any more: every field of `tuning` is a numerical-approximation knob, and
   changing one should move the answer only by its own error term.
 
   `ode_tuning()` validates its fields, and an unrecognised name in a `tuning`
-  list is an error rather than a silently ignored field — a mistyped `rtol` that
+  list is an error rather than a silently ignored field; a mistyped `rtol` that
   quietly did nothing would read as the tolerance simply not mattering. Passing
   any of the removed arguments to `run_simulation_ode()` gives a targeted error
   naming the call that replaces it, rather than R's bare "unused argument".
@@ -49,7 +49,7 @@
   `postie::get_rates()` and `postie::get_prevalence()` and returned them in a
   list, plus argument-splitting machinery (`rates_args`, `prevalence_args`,
   `...`) that was more to learn than the two calls it replaced. malariasimulation
-  has no such wrapper — IBM post-processing pipelines call postie directly — and
+  has no such wrapper (IBM post-processing pipelines call postie directly) and
   `blink`'s output table is malariasimulation-shaped, so those pipelines already
   work on a `blink` run unchanged. Replace
   `epi <- get_epi_outputs(out)` with
@@ -69,12 +69,13 @@
   the two models (EIR 20 in blink against 13.8 in the IBM in the comparison
   scenario, PfPR(2–10) 0.55 against 0.49). It now reproduces the IBM's `total_M`
   exactly (`ibm_total_M()`) and root-finds the EIR at which its own equilibrium
-  under the custom demography has that density, seeding there — still a fixed
-  point, so no burn-in (the scenario now seeds at EIR 13.86, PfPR 0.489). Under the
+  under the custom demography has that density, and seeds there. That is still a
+  fixed point, so there is no burn-in (the scenario now seeds at EIR 13.86,
+  PfPR 0.489). Under the
   default demography nothing changes: blink keeps its own sizing there, which is
   the IBM's formula at blink's own equilibrium and lands ~1.5% above the IBM's
   `total_M` (so the same exponential mortality expressed through
-  `set_demography()` seeds at EIR 19.7 rather than 20 — within the IBM's
+  `set_demography()` seeds at EIR 19.7 rather than 20, within the IBM's
   replicate noise). `parameters$hold_init_EIR = TRUE` restores the previous
   behaviour. Every malariaverse site file uses `set_demography()`, so this affects
   all country work: across the 63-country validation set this release moves
@@ -107,23 +108,24 @@
 ## Bug fixes
 
 * **Severe and all-infection incidence are counted with the deduplicated
-  probability, not the raw hazard** — the one change in this release that moves
-  numbers. `clin_inc_a` was already counted with `h_c`; `sev_inc_a` and `inc_a`
-  used `FOI`. These outputs are rates that R integrates over a day, and the right
-  rate depends on how fast the compartment drains. `S` and `U` drain at the full
-  `FOI`, so `int FOI*X exp(-FOI t) dt = X*(1 - exp(-FOI)) = X*p_inf` — the IBM's
-  count, exactly. `A` does not: a sub-clinical re-infection of an `A` leaves them
-  in `A`, so `A` drains only at `h_c` and stays roughly flat over the day, making
-  `int FOI*A dt ~ FOI*A` and over-counting by `FOI/p_inf = -log(1-p_inf)/p_inf`.
-  `A` now takes `p_inf` directly. The IBM draws severe from the *deduplicated*
-  `infections` bitset (`update_severe_disease`), so this is a replication defect,
-  not a modelling choice.
+  probability, not the raw hazard.** This is the one change in this release that
+  moves numbers. `clin_inc_a` was already counted with `h_c`; `sev_inc_a` and
+  `inc_a` used `FOI`. These outputs are rates that R integrates over a day, and
+  the right rate depends on how fast the compartment drains. `S` and `U` drain at
+  the full `FOI`, so `int FOI*X exp(-FOI t) dt = X*(1 - exp(-FOI)) = X*p_inf` —
+  the IBM's count, exactly. `A` does not: a sub-clinical re-infection of an `A`
+  leaves them in `A`, so `A` drains only at `h_c` and stays roughly flat over the
+  day, making `int FOI*A dt ~ FOI*A` and over-counting by
+  `FOI/p_inf = -log(1-p_inf)/p_inf`. `A` now takes `p_inf` directly. The IBM
+  draws severe from the *deduplicated* `infections` bitset
+  (`update_severe_disease`), so this is a replication defect, not a modelling
+  choice.
 
   Measured against 3 IBM replicates of 10,000 people on the same parameter list:
   all-age `n_inc_*` ran **+2.6% (EIR 20) and +4.2% (EIR 50)** above the IBM
   median, both outside its replicate spread; after the fix, **+0.6% and +0.4%**.
   The bias was concentrated in adults, where `A` is a large share of the at-risk
-  pool (under-5 `n_inc_*` was only +0.3% / +1.7%) — the signature of an `A`-only
+  pool (under-5 `n_inc_*` was only +0.3% / +1.7%), the signature of an `A`-only
   defect. Clinical incidence and prevalence are unchanged.
 
   It also makes one comparison worse, and that is worth stating plainly. The same
@@ -140,7 +142,7 @@
 
 * **`test-prophylaxis-chain.R`'s first test no longer errors when
   `malariasimulation` is absent.** It read `AL_params`/`SP_AQ_params` without a
-  `skip_if_not_installed()` guard — the only one of the suite's 57 test blocks to
+  `skip_if_not_installed()` guard, the only one of the suite's 57 test blocks to
   do so. `malariasimulation` is a GitHub Remote in Suggests, so on any check
   machine that could not install it the other 56 blocks skipped and this one
   errored, turning a missing optional dependency into an `R CMD check` failure.
@@ -153,8 +155,8 @@
   fixes in `pev_series()`, both verified bit-identical (`identical()` on the full
   `[n_age, n_time]` multiplier matrix, across the EPI single-timestep path, the
   EPI multi-timestep path and mass campaigns). `.pev_eff_fun()` built its
-  interpolator with `stats::approx()`, which re-runs `regularize.values()` — a
-  sortedness check and a copy of the whole daily grid — on *every* scalar call;
+  interpolator with `stats::approx()`, which re-runs `regularize.values()` (a
+  sortedness check and a copy of the whole daily grid) on *every* scalar call;
   it now builds one `stats::approxfun()` closure. And the EPI loop called
   `pev_protection()` once per grid point when `.booster_cov_vec()`'s admin-time
   argument is ignored (which the single-row `booster_coverage` that
@@ -168,8 +170,8 @@
   treated whatever their state; `blink`'s pulse left people already in `Ph`/`Ph_c`
   decaying from their earlier dose and skipped the slow-clearance treated
   compartment. Both now move to the first stage of `Ph_c` with the rest of the
-  covered fraction — material for monthly SMC rounds, where most of the previous
-  round's recipients are still protected.
+  covered fraction. That is material for monthly SMC rounds, where most of the
+  previous round's recipients are still protected.
 * **`rT_slow` uses the whole-day exit probability.** The slow-parasite-clearance rate
   under antimalarial resistance was `1/dt_slow`; it is now `1 - exp(-1/dt_slow)`,
   the same conversion `build_inputs()` applies to `rA`/`rD`/`rU`/`rT` (the IBM
@@ -177,7 +179,7 @@
 * **Custom demography: top age group's death rate.** The open-ended oldest model
   age group is represented by its lower bound, which the right-closed
   `set_demography()` bins assigned to the band *below* it whenever that bound
-  coincided with a bin edge — 80 y on the default grid, a very common edge. The
+  coincided with a bin edge: 80 y on the default grid, a very common edge. The
   over-80s therefore died at the 60–80 rate (0.05 instead of 0.12 per year in the
   comparison scenario) and the group held ~2.4× too many people (60–85 share 18.2%
   against an analytic 13.1%). The death rate is now looked up one day above the
@@ -189,10 +191,10 @@
   `run_simulation_ode()` call across six scenarios and three horizons, plus the
   population-independence check (flat from 1,000 to 10,000,000 people) and what
   the solver presets cost. Reproduced by `comparison/benchmark.R`, which reports
-  the minimum of five repeats — contention can only add time, so the fastest
+  the minimum of five repeats; contention can only add time, so the fastest
   repeat is the least contaminated estimate.
-* The intervention-impact figure gains two panels — clinical incidence at all
-  ages, and severe incidence at all ages — alongside the existing PfPR(2–10) and
+* The intervention-impact figure gains two panels (clinical incidence at all
+  ages, and severe incidence at all ages) alongside the existing PfPR(2–10) and
   under-5 clinical panels, now laid out 2×2. This needed all-age rendering bands
   in `comparison/run_replicates.R` and a re-run of the five intervention
   scenarios. Together the four panels show *who* each intervention protects: SMC
@@ -206,8 +208,8 @@
   idiom meant two unrelated things: offset layers behind a panel meant "array
   dimension", while a stacked outline behind a box meant "Erlang chain". The
   layering now means one thing. The deck behind the human panel carries one
-  dimension on each visible edge — age *i* = 1 … 52 and biting heterogeneity
-  *j* = 1 … 5 — so the layers illustrate the grid and nothing else.
+  dimension on each visible edge: age *i* = 1 … 52 and biting heterogeneity
+  *j* = 1 … 5, so the layers illustrate the grid and nothing else.
 
   Three elements are gone. The stacked outlines on `P`, `P_c` and the EIP,
   with their three stage-count labels: the chains are disclosed in the caption
@@ -218,7 +220,7 @@
   hazard. And the immunity box with its coupling arrow, which sat in the
   busiest part of the panel to represent something algebraic rather than a
   state. The key is down from six rows to five, and the captions in the README
-  and `vignette("model")` are rewritten to match — they described idioms the
+  and `vignette("model")` are rewritten to match; they described idioms the
   figure no longer uses.
 
   Also fixed while in there: the FIDELITY invariant cited two odin line numbers
@@ -233,14 +235,14 @@
   case management so each is the one before it with one more thing added: no
   interventions, bed nets alone (5 campaigns, 3-yearly), seasonal SMC alone
   (4 rounds a year for 15 years), case management alone (20% → 60%), and all
-  three together. Four outcomes per scenario — PfPR(2–10), clinical incidence in
+  three together. Four outcomes per scenario: PfPR(2–10), clinical incidence in
   under-5s and over all ages, and all-age severe incidence.
 
   Through five net distributions, sixty SMC rounds and a treatment scale-up the
   two models stay together: blink sits inside the IBM's 10–90% replicate band in
-  78–84% of the 915 scenario-months per outcome — an 80% band contains a
+  78–84% of the 915 scenario-months per outcome (an 80% band contains a
   perfectly-tracking deterministic mean about 80% of the time, so that is at the
-  target, not short of it — and the largest disagreement in 15-year mean burden
+  target, not short of it), and the largest disagreement in 15-year mean burden
   reduction across the 16 scenario × outcome cells is 1.8 percentage points. The
   figure needs four separate faceted columns rather than one `facet_grid`,
   because `facet_grid` frees the y scale by row and here the scales differ by
@@ -255,15 +257,16 @@
   band was invisible even where it is wide. It has real width to disclose: over
   the months carrying the top quartile of burden the 10–90% replicate range is
   26% of the panel peak for all-age severe incidence, against 3–6% for prevalence
-  and the two clinical measures — severe being the rarest outcome, a 30-day bin
-  holds only ~20 severe episodes at the seasonal peak in a population of 10,000.
+  and the two clinical measures. Severe is the rarest of the four, so a 30-day
+  bin holds only ~20 severe episodes at the seasonal peak in a population of
+  10,000.
   The caption and the article now give those widths, since the figure can only
   hint at them. Raised locally rather than in `theme.R`, so the four
   already-reviewed figures are not changed unseen.
 * The equilibrium-vs-EIR figure gains the same two panels, also laid out 2×2:
   all-age clinical incidence and all-age severe incidence against EIR, beside the
   existing PfPR(2–10) and under-5 clinical panels. The all-age views carry the
-  *shape* of the relationship rather than its level — clinical incidence spans
+  *shape* of the relationship rather than its level: clinical incidence spans
   3.8-fold across the EIR grid against 18-fold in under-5s, and severe incidence
   is not monotonic at all, plateauing around EIR 20–50 in both models before
   falling by EIR 120. Agreement is looser here than on the under-5 metrics and
@@ -273,10 +276,10 @@
   in under-5s is more than repaid in the 5–20 year bands. `summary_tables.R`
   reports both new outcomes over the grid.
 * Three stale comment blocks are removed, each of which had been left sitting
-  *above* the corrected version that replaced it — so the wrong one is the one a
+  *above* the corrected version that replaced it, so the wrong one is the one a
   reader hits first. `R/interventions.R` documented `drug_mix()`'s weights as each
   drug's peak coverage (now only the `t = NULL` fallback) and `rP` as
-  `mean_W - 1/rT` — the exact approximation the comment 33 lines above it exists
+  `mean_W - 1/rT`, the exact approximation the comment 33 lines above it exists
   to say is wrong (19% error for AL). `inst/odin/malaria_ode.R` described
   `beta_eff` as a per-species interpolated series that varies under nets/IRS; it
   is a plain constant `parameter()`, as the comment 17 lines below it already
@@ -295,14 +298,14 @@
   which previously looked like a single curve. An unused `geom_ibm_envelope()`
   helper that bundled the old order is removed.
 * The country-site comparison figure reads its 1:1 correlation properly (#2). Two
-  changes. The reference line is a plain orange dash — hue-opposed to the indigo
+  changes. The reference line is a plain orange dash, hue-opposed to the indigo
   ramp, and not a series colour, so it cannot be misread as a model. And the low
   end of the hex fill ramp is now near-white: the counts are wildly skewed, with
   52% of the cells carrying 0.2% of the sub-site-months while the top 5% of cells
   carry 90% of them, so the old saturated low end spent most of the plot's ink on
   almost none of the data and buried the ridge it was meant to show. The scale is
-  still log10, so sparse cells stay visible — the scatter is real and worth
-  seeing — they simply no longer out-shout the ridge. The legend gained
+  still log10, so sparse cells stay visible (the scatter is real and worth
+  seeing); they simply no longer out-shout the ridge. The legend gained
   intermediate breaks (1 / 10 / 100 / 1,000 / 10,000) so the ramp can be decoded.
 * New article `vignette("comparison")` — *Comparison with malariasimulation* — with
   a redesigned figure set: equilibrium PfPR and clinical incidence across EIR
@@ -330,7 +333,7 @@ malariasimulation implementation is known. No tuned constants were introduced.
   bands plus hardcoded extras, producing OVERLAPPING strata (e.g. a 2-10y prevalence
   band alongside a 0-5/5-15/15-100 clinical partition, and the 2-10y band twice).
   `postie` treats each column as an independent stratum, so any person-day-weighted
-  aggregate double-counted the overlapped ages — inflating all-age clinical by ~1.21x
+  aggregate double-counted the overlapped ages, inflating all-age clinical by ~1.21x
   and severe by ~1.10x. Each family is now emitted only over its own
   `*_rendering_ages`, exactly as malariasimulation does, with `n_age_*` over the union.
 * **Maternal immunity source band.** `which.min(abs(age_mid - 20*365))` hit an exact
@@ -354,7 +357,7 @@ malariasimulation implementation is known. No tuned constants were introduced.
   now use that form.
 * **Immunity boosting.** Boost rate is now `q/(q*u_eff + 1)` with the deduplicated
   per-day event probability `q = 1-exp(-rate)` and the integer refractory window
-  `u_eff = ceil(u) - 1` — the IBM boosts on a per-day event and tests
+  `u_eff = ceil(u) - 1`: the IBM boosts on a per-day event and tests
   `(timestep - last_boosted) >= u` with an integer timestep. `ICA`/`ID`/`IVA` are
   boosted only for individuals eligible to be infected (`S`/`A`/`U`), as in the IBM;
   `IB` is boosted for everyone bitten.
@@ -386,7 +389,7 @@ Monthly, *P. falciparum* only on both sides, 63 countries / 1,391 sub-sites /
 
 Per-site median monthly clinical r = 0.99. Note the "before" column was measured
 through the overlapping-band artefact, which inflated blink's side by ~1.21x
-(clinical) and ~1.10x (severe) — the apparently unbiased severe slope of 1.02 was two
+(clinical) and ~1.10x (severe); the apparently unbiased severe slope of 1.02 was two
 opposite-signed errors cancelling, and severe now shows its genuine ~3% negative bias.
 
 Known remaining discrepancies, all characterised rather than tuned away:
@@ -420,7 +423,7 @@ odin2/dust2.
   repeatedly in one timestep is infected at most once. The daily infection
   probability is therefore `(1 - exp(-EPS)) * b`, converted to a hazard with
   `-log(1 - p)`. This saturates, where the unbounded `b * EPS` over-predicts
-  infection as exposure approaches one bite/person/day — i.e. at seasonal peaks
+  infection as exposure approaches one bite/person/day, i.e. at seasonal peaks
   and in high-`zeta` strata. Across five countries (36,936 sub-site-months) it
   moves the monthly clinical regression slope vs the IBM from 1.14 to 1.10, with
   the effect correctly gated by exposure: largest in the highest-EIR setting
@@ -461,7 +464,7 @@ A systematic audit of every user-facing `malariasimulation` config function
 parameter flexibility they expose:
 
 * **PEV** now models a full **booster sequence** (not just the first booster),
-  with per-booster profiles, spacing, and (conditional) coverage — for both
+  with per-booster profiles, spacing, and (conditional) coverage, for both
   `set_pev_epi` and `set_mass_pev`; `min_wait` is honoured.
 * **Mass PEV** applies **every** target age band at **every** campaign (multiple
   `min_ages`/`max_ages` are no longer collapsed to the campaign count).

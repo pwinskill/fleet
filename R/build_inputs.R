@@ -43,7 +43,7 @@ get_ft <- function(p, t = 1) {
 #' aging recursion, prophylaxis being an Erlang chain of `n_ph` stages.
 #'
 #' `malariaEquilibrium::human_equilibrium_no_het` computes the prophylaxis inflow
-#' as `bP <- rT*bT + r[i-1]*P[i-1]/betaP` — the `rT*bT` term is not divided by
+#' as `bP <- rT*bT + r[i-1]*P[i-1]/betaP`, in which the `rT*bT` term is not divided by
 #' `betaP`. That makes its P/S columns not the fixed point of the clean-flux
 #' prophylaxis ODE this model implements, so seeding directly from it leaves a
 #' small (ft>0) transient. We reuse its FOI/phi/prop/r columns but re-solve the
