@@ -413,17 +413,22 @@ the IBM as the median of 10 stochastic replicates (10,000 people,
 run. Colour, line type and point shape all encode the model, so the
 figures read in greyscale and under colour-vision deficiency.
 
-![Core transmission relationships: PfPR(2–10) and under-5 clinical
-incidence against EIR in both
-models](reference/figures/cmp_core_eir.png)
+![Core transmission relationships: PfPR(2–10), under-5 clinical
+incidence, all-age clinical incidence and all-age severe incidence
+against EIR in both models](reference/figures/cmp_core_eir.png)
 
-Core transmission relationships: PfPR(2–10) and under-5 clinical
-incidence against EIR in both models
+Core transmission relationships: PfPR(2–10), under-5 clinical incidence,
+all-age clinical incidence and all-age severe incidence against EIR in
+both models
 
-*Equilibrium PfPR(2–10) and under-5 clinical incidence across EIR 1–120.
-blink lies inside the IBM’s 10–90% replicate band at every EIR for
-prevalence (largest gap 0.004) and runs 1–3% above the IBM median for
-under-5 clinical incidence.*
+*Four equilibrium relationships across EIR 1–120. blink lies inside the
+IBM’s 10–90% replicate band at every EIR for prevalence (largest gap
+0.004) and runs 1–3% above the IBM median for under-5 clinical
+incidence. The all-age panels carry the shape of the relationship rather
+than its level: clinical incidence flattens far sooner over all ages
+than in under-5s (3.8-fold across the grid against 18-fold), and severe
+incidence turns over entirely, plateauing around EIR 20–50 in both
+models.*
 
 ![Intervention impact: percentage reduction in prevalence, under-5
 clinical incidence, all-age clinical incidence and all-age severe

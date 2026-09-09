@@ -125,6 +125,19 @@
   replicate range in 15 of the 20 scenario × outcome cells; the noisiest
   is treatment scale-up on severe incidence, where the IBM’s own
   replicates span −12% to +6% and the two models differ in sign.
+- The equilibrium-vs-EIR figure gains the same two panels, also laid out
+  2×2: all-age clinical incidence and all-age severe incidence against
+  EIR, beside the existing PfPR(2–10) and under-5 clinical panels. The
+  all-age views carry the *shape* of the relationship rather than its
+  level — clinical incidence spans 3.8-fold across the EIR grid against
+  18-fold in under-5s, and severe incidence is not monotonic at all,
+  plateauing around EIR 20–50 in both models before falling by EIR 120.
+  Agreement is looser here than on the under-5 metrics and leans the
+  other way: blink runs −1.6% to +2.1% of the IBM median on all-age
+  clinical (inside the replicate band at five of six EIRs) and −5.9% to
+  +0.1% on all-age severe (inside the band at all six), so the small
+  excess blink carries in under-5s is more than repaid in the 5–20 year
+  bands. `summary_tables.R` reports both new outcomes over the grid.
 - The country-site comparison figure reads its 1:1 correlation properly
   ([\#2](https://github.com/pwinskill/blink/issues/2)). Two changes. The
   reference line is a plain orange dash — hue-opposed to the indigo
