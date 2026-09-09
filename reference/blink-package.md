@@ -18,14 +18,12 @@ multi-decade run completes in seconds, independent of population size.
   — run the model; returns a wide, daily count table (P. falciparum
   only).
 
-- [`get_epi_outputs()`](https://pwinskill.github.io/blink/reference/get_epi_outputs.md)
-  — post-process a run into postie `rates` (long) and `prevalence`
-  (wide).
-
 - [`default_age_lower()`](https://pwinskill.github.io/blink/reference/default_age_lower.md)
   — the default graded age grid.
 
-See
+The count table is malariasimulation-shaped, so post-process it with
+postie exactly as you would an IBM run: `postie::get_rates(out)` and
+`postie::get_prevalence(out, diagnostic = "lm")`. See
 [`vignette("blink")`](https://pwinskill.github.io/blink/articles/blink.md)
 for a worked tour, and the README's *Mean-field approximations* section
 for where and how much the ODE departs from the IBM.

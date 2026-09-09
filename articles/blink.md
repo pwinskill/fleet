@@ -30,9 +30,8 @@ library(blink)
 ```
 
 `malariasimulation` (for parameter lists and the `set_*` builders) and
-`postie` (for
-[`get_epi_outputs()`](https://pwinskill.github.io/blink/reference/get_epi_outputs.md))
-are used throughout; both are listed under Suggests.
+`postie` (for post-processing) are used throughout; both are listed
+under Suggests.
 
 ## A basic run
 
@@ -77,28 +76,26 @@ range(out$p_detect_lm_730_3650)   # constant to machine precision
 
 ## Reading outputs with postie
 
-[`get_epi_outputs()`](https://pwinskill.github.io/blink/reference/get_epi_outputs.md)
-post-processes the count table into
-[postie](https://github.com/mrc-ide/postie) format: a long `rates` table
-(one row per timestep x age band) and a wide `prevalence` table.
+Because the count table is `malariasimulation`-shaped, it goes straight
+into [postie](https://github.com/mrc-ide/postie) — the same two calls
+you would make on an IBM run, with no blink-specific wrapper in between.
 
 ``` r
 
-epi <- get_epi_outputs(out)
-#> Warning in (function (x, baseline_year = 2000, ages_as_years = TRUE,
-#> treatment_scaler = 0.42, : required column `ft_sev` (probability
-#> hospitalisation | severe case) not found, assuming ft_sev = 0.8
-
 # prevalence: one <diagnostic>_prevalence_<lo>_<hi> column per age band (years)
-utils::tail(epi$prevalence["lm_prevalence_2_10"], 3)
+prevalence <- postie::get_prevalence(out, diagnostic = "lm")
+utils::tail(prevalence["lm_prevalence_2_10"], 3)
 #>      lm_prevalence_2_10
 #> 5474          0.5482791
 #> 5475          0.5482791
 #> 5476          0.5482791
 
 # rates: clinical / severe incidence, mortality and DALYs by age band
-utils::head(epi$rates[, c("time", "age_lower", "age_upper",
-                          "clinical", "severe", "dalys")])
+rates <- postie::get_rates(out)
+#> Warning in postie::get_rates(out): required column `ft_sev` (probability
+#> hospitalisation | severe case) not found, assuming ft_sev = 0.8
+utils::head(rates[, c("time", "age_lower", "age_upper",
+                      "clinical", "severe", "dalys")])
 #> # A tibble: 6 × 6
 #>    time age_lower age_upper clinical    severe    dalys
 #>   <dbl>     <dbl>     <dbl>    <dbl>     <dbl>    <dbl>
@@ -110,9 +107,10 @@ utils::head(epi$rates[, c("time", "age_lower", "age_upper",
 #> 6 2000.         0       100  0.00180 0.0000314 0.000169
 ```
 
-Use `diagnostic = "pcr"` for PCR prevalence, and pass through extra
-postie arguments via `rates_args` / `prevalence_args` (e.g. `scaler`,
-`treatment_scaler`, `life_expectancy`).
+Use `diagnostic = "pcr"` for PCR prevalence, and postie’s own arguments
+(`scaler`, `treatment_scaler`, `life_expectancy`, …) as you normally
+would. This means a post-processing pipeline written for the IBM works
+on a `blink` run unchanged.
 
 ### Getting finer age resolution
 
@@ -349,7 +347,7 @@ sessionInfo()
 #> [16] generics_0.1.4           postie_1.1.0             knitr_1.52              
 #> [19] MASS_7.3-65              tibble_3.3.1             desc_1.4.3              
 #> [22] monty_0.4.14             bslib_0.12.0             pillar_1.11.1           
-#> [25] rlang_1.3.0              cachem_1.1.0             stringi_1.8.9           
+#> [25] rlang_1.3.0              stringi_1.8.9            cachem_1.1.0            
 #> [28] malariasimulation_3.0.0  dust2_0.3.28             xfun_0.60               
 #> [31] fs_2.1.0                 sass_0.4.10              otel_0.2.0              
 #> [34] cli_3.6.6                withr_3.0.3              pkgdown_2.2.1           

@@ -8,14 +8,6 @@ ODE model.
 - [`run_simulation_ode()`](https://pwinskill.github.io/blink/reference/run_simulation_ode.md)
   : Run the mean-field (ODE) malaria model.
 
-## Post-process outputs
-
-Turn a raw run into tidy, postie-style epidemiological outputs
-(prevalence, incidence, and rates).
-
-- [`get_epi_outputs()`](https://pwinskill.github.io/blink/reference/get_epi_outputs.md)
-  : Post-process an ODE run into postie-format rates and prevalence.
-
 ## Age grid
 
 The default graded age discretisation used throughout the model.

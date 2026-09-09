@@ -105,8 +105,8 @@ see <strong>Scope</strong> at the end.</p>
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://pwinskill.github.io/blink">blink</a></span><span class="op">)</span></span></code></pre></div>
 <p><code>malariasimulation</code> (for parameter lists and the
 <code>set_*</code> builders) and <code>postie</code> (for
-<code><a href="../reference/get_epi_outputs.html">get_epi_outputs()</a></code>) are used throughout; both are listed
-under Suggests.</p>
+post-processing) are used throughout; both are listed under
+Suggests.</p>
 </div>
 <div class="section level2">
 <h2 id="a-basic-run">A basic run<a class="anchor" aria-label="anchor" href="#a-basic-run"></a>
@@ -147,25 +147,25 @@ so the first and last rows agree:</p>
 <div class="section level2">
 <h2 id="reading-outputs-with-postie">Reading outputs with postie<a class="anchor" aria-label="anchor" href="#reading-outputs-with-postie"></a>
 </h2>
-<p><code><a href="../reference/get_epi_outputs.html">get_epi_outputs()</a></code> post-processes the count table into <a href="https://github.com/mrc-ide/postie" class="external-link">postie</a> format: a long
-<code>rates</code> table (one row per timestep x age band) and a wide
-<code>prevalence</code> table.</p>
+<p>Because the count table is <code>malariasimulation</code>-shaped, it
+goes straight into <a href="https://github.com/mrc-ide/postie" class="external-link">postie</a> — the same two calls
+you would make on an IBM run, with no blink-specific wrapper in
+between.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">epi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_epi_outputs.html">get_epi_outputs</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning in (function (x, baseline_year = 2000, ages_as_years = TRUE,</span></span>
-<span><span class="co">#&gt; treatment_scaler = 0.42, : required column `ft_sev` (probability</span></span>
-<span><span class="co">#&gt; hospitalisation | severe case) not found, assuming ft_sev = 0.8</span></span>
-<span></span>
-<span><span class="co"># prevalence: one &lt;diagnostic&gt;_prevalence_&lt;lo&gt;_&lt;hi&gt; column per age band (years)</span></span>
-<span><span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">tail</a></span><span class="op">(</span><span class="va">epi</span><span class="op">$</span><span class="va">prevalence</span><span class="op">[</span><span class="st">"lm_prevalence_2_10"</span><span class="op">]</span>, <span class="fl">3</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># prevalence: one &lt;diagnostic&gt;_prevalence_&lt;lo&gt;_&lt;hi&gt; column per age band (years)</span></span>
+<span><span class="va">prevalence</span> <span class="op">&lt;-</span> <span class="fu">postie</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/postie/man/get_prevalence.html" class="external-link">get_prevalence</a></span><span class="op">(</span><span class="va">out</span>, diagnostic <span class="op">=</span> <span class="st">"lm"</span><span class="op">)</span></span>
+<span><span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">tail</a></span><span class="op">(</span><span class="va">prevalence</span><span class="op">[</span><span class="st">"lm_prevalence_2_10"</span><span class="op">]</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      lm_prevalence_2_10</span></span>
 <span><span class="co">#&gt; 5474          0.5482791</span></span>
 <span><span class="co">#&gt; 5475          0.5482791</span></span>
 <span><span class="co">#&gt; 5476          0.5482791</span></span>
 <span></span>
 <span><span class="co"># rates: clinical / severe incidence, mortality and DALYs by age band</span></span>
-<span><span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">epi</span><span class="op">$</span><span class="va">rates</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"time"</span>, <span class="st">"age_lower"</span>, <span class="st">"age_upper"</span>,</span>
-<span>                          <span class="st">"clinical"</span>, <span class="st">"severe"</span>, <span class="st">"dalys"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">rates</span> <span class="op">&lt;-</span> <span class="fu">postie</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/postie/man/get_rates.html" class="external-link">get_rates</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning in postie::get_rates(out): required column `ft_sev` (probability</span></span>
+<span><span class="co">#&gt; hospitalisation | severe case) not found, assuming ft_sev = 0.8</span></span>
+<span><span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">rates</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"time"</span>, <span class="st">"age_lower"</span>, <span class="st">"age_upper"</span>,</span>
+<span>                      <span class="st">"clinical"</span>, <span class="st">"severe"</span>, <span class="st">"dalys"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 6</span></span></span>
 <span><span class="co">#&gt;    time age_lower age_upper clinical    severe    dalys</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
@@ -175,10 +175,11 @@ so the first and last rows agree:</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> <span style="text-decoration: underline;">2</span>000          0       100  0.001<span style="text-decoration: underline;">80</span> 0.000<span style="text-decoration: underline;">031</span>4 0.000<span style="text-decoration: underline;">169</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> <span style="text-decoration: underline;">2</span>000.         2        10  0.003<span style="text-decoration: underline;">37</span> 0.000<span style="text-decoration: underline;">044</span>4 0.000<span style="text-decoration: underline;">412</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> <span style="text-decoration: underline;">2</span>000.         0       100  0.001<span style="text-decoration: underline;">80</span> 0.000<span style="text-decoration: underline;">031</span>4 0.000<span style="text-decoration: underline;">169</span></span></span></code></pre></div>
-<p>Use <code>diagnostic = "pcr"</code> for PCR prevalence, and pass
-through extra postie arguments via <code>rates_args</code> /
-<code>prevalence_args</code> (e.g. <code>scaler</code>,
-<code>treatment_scaler</code>, <code>life_expectancy</code>).</p>
+<p>Use <code>diagnostic = "pcr"</code> for PCR prevalence, and postie’s
+own arguments (<code>scaler</code>, <code>treatment_scaler</code>,
+<code>life_expectancy</code>, …) as you normally would. This means a
+post-processing pipeline written for the IBM works on a
+<code>blink</code> run unchanged.</p>
 <div class="section level3">
 <h3 id="getting-finer-age-resolution">Getting finer age resolution<a class="anchor" aria-label="anchor" href="#getting-finer-age-resolution"></a>
 </h3>
@@ -414,7 +415,7 @@ argument-by-argument table of every <code>malariasimulation</code>
 <span><span class="co">#&gt; [16] generics_0.1.4           postie_1.1.0             knitr_1.52              </span></span>
 <span><span class="co">#&gt; [19] MASS_7.3-65              tibble_3.3.1             desc_1.4.3              </span></span>
 <span><span class="co">#&gt; [22] monty_0.4.14             bslib_0.12.0             pillar_1.11.1           </span></span>
-<span><span class="co">#&gt; [25] rlang_1.3.0              cachem_1.1.0             stringi_1.8.9           </span></span>
+<span><span class="co">#&gt; [25] rlang_1.3.0              stringi_1.8.9            cachem_1.1.0            </span></span>
 <span><span class="co">#&gt; [28] malariasimulation_3.0.0  dust2_0.3.28             xfun_0.60               </span></span>
 <span><span class="co">#&gt; [31] fs_2.1.0                 sass_0.4.10              otel_0.2.0              </span></span>
 <span><span class="co">#&gt; [34] cli_3.6.6                withr_3.0.3              pkgdown_2.2.1           </span></span>

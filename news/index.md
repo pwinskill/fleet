@@ -2,6 +2,25 @@
 
 ## blink 0.0.0.9000
 
+### API changes
+
+- **`get_epi_outputs()` is removed**
+  ([\#3](https://github.com/pwinskill/blink/issues/3)). It was a thin
+  wrapper that called
+  [`postie::get_rates()`](https://rdrr.io/pkg/postie/man/get_rates.html)
+  and
+  [`postie::get_prevalence()`](https://rdrr.io/pkg/postie/man/get_prevalence.html)
+  and returned them in a list, plus argument-splitting machinery
+  (`rates_args`, `prevalence_args`, `...`) that was more to learn than
+  the two calls it replaced. malariasimulation has no such wrapper — IBM
+  post-processing pipelines call postie directly — and `blink`’s output
+  table is malariasimulation-shaped, so those pipelines already work on
+  a `blink` run unchanged. Replace `epi <- get_epi_outputs(out)` with
+  `postie::get_prevalence(out, diagnostic = "lm")` and
+  `postie::get_rates(out)`; every postie argument is now passed to
+  postie directly. `postie` remains in Suggests for the vignette and
+  tests, but nothing `blink` exports depends on it.
+
 ### Behaviour changes
 
 - **Custom demography: mosquito sizing now replicates
@@ -85,6 +104,23 @@
 
 ### Documentation
 
+- README gains a **Run times** section
+  ([\#1](https://github.com/pwinskill/blink/issues/1)): seconds per
+  complete
+  [`run_simulation_ode()`](https://pwinskill.github.io/blink/reference/run_simulation_ode.md)
+  call across six scenarios and three horizons, plus the
+  population-independence check (flat from 1,000 to 10,000,000 people)
+  and what the solver presets cost. Reproduced by
+  `comparison/benchmark.R`, which reports the minimum of five repeats —
+  contention can only add time, so the fastest repeat is the least
+  contaminated estimate.
+- The 1:1 line on the country-site comparison figure is now an amber
+  dash over a white halo
+  ([\#2](https://github.com/pwinskill/blink/issues/2)). A plain dark
+  dash vanished into the dark end of the hex ramp — which is exactly
+  where the mass of the data sits, so the reference line was invisible
+  where it mattered most. Amber is the complement of the indigo ramp and
+  is not a series colour, so it can never be misread as a model.
 - New article
   [`vignette("comparison")`](https://pwinskill.github.io/blink/articles/comparison.md)
   — *Comparison with malariasimulation* — with a redesigned figure set:
@@ -297,8 +333,7 @@ uses the full parameter flexibility they expose:
 - [`run_simulation_ode()`](https://pwinskill.github.io/blink/reference/run_simulation_ode.md)
   accepts an unmodified `malariasimulation` parameter list and returns a
   wide, `malariasimulation`-style daily count table.
-- [`get_epi_outputs()`](https://pwinskill.github.io/blink/reference/get_epi_outputs.md)
-  returns `postie`-format rates and prevalence.
+- `get_epi_outputs()` returns `postie`-format rates and prevalence.
 - [`default_age_lower()`](https://pwinskill.github.io/blink/reference/default_age_lower.md)
   provides the default graded age grid.
 

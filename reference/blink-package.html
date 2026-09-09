@@ -82,10 +82,11 @@ multi-decade run completes in seconds, independent of population size.</p>
 
 <ul><li><p><code><a href="run_simulation_ode.html">run_simulation_ode()</a></code> — run the model; returns a wide, daily count
 table (P. falciparum only).</p></li>
-<li><p><code><a href="get_epi_outputs.html">get_epi_outputs()</a></code> — post-process a run into postie <code>rates</code> (long)
-and <code>prevalence</code> (wide).</p></li>
 <li><p><code><a href="default_age_lower.html">default_age_lower()</a></code> — the default graded age grid.</p></li>
-</ul><p>See <code><a href="../articles/blink.html">vignette("blink")</a></code> for a worked tour, and the README's <em>Mean-field
+</ul><p>The count table is malariasimulation-shaped, so post-process it with
+<span class="pkg">postie</span> exactly as you would an IBM run: <code>postie::get_rates(out)</code> and
+<code>postie::get_prevalence(out, diagnostic = "lm")</code>.
+See <code><a href="../articles/blink.html">vignette("blink")</a></code> for a worked tour, and the README's <em>Mean-field
 approximations</em> section for where and how much the ODE departs from the IBM.</p>
     </div>
     <div class="section level2">
