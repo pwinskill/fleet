@@ -18,9 +18,19 @@
 # age profile added to every family), so only the reference scenario carries the
 # age-profile bands. Jobs are load-balanced, longest first.
 
-.libPaths("C:/Users/pwinskil/Documents/r_packages_arm64")
+## No absolute paths anywhere in here. BLINK_LIB prepends an R library, for
+## installations that do not pick up R_LIBS_USER (the Windows-arm64 setup this was
+## developed on); leave it unset and your normal library is used. ROOT is found by
+## walking up to the DESCRIPTION, so these scripts run from any working directory
+## and on anyone's checkout, whether via Rscript or source().
+if (nzchar(.l <- Sys.getenv("BLINK_LIB"))) .libPaths(.l)
+.f <- sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE))
+ROOT <- if (length(.f)) normalizePath(dirname(.f), "/") else getwd()
+while (!file.exists(file.path(ROOT, "DESCRIPTION")) && dirname(ROOT) != ROOT)
+  ROOT <- dirname(ROOT)
+if (!file.exists(file.path(ROOT, "DESCRIPTION")))
+  stop("run this from inside the blink checkout (no DESCRIPTION found above ", getwd(), ")")
 suppressMessages(library(malariasimulation))
-ROOT <- "C:/Users/pwinskil/Documents/dev/blink2/blink"
 source(file.path(ROOT, "comparison", "theme.R"))     # scenario constants
 DDIR <- file.path(ROOT, "comparison", "data"); dir.create(DDIR, showWarnings = FALSE)
 N_WORKERS <- 10L
@@ -261,10 +271,13 @@ jobs <- jobs[order(-jobs$cost, jobs$rep), ]; rownames(jobs) <- NULL
 log_msg("IBM: %d runs (%d scenarios x %d reps) on %d workers; ~%.0f min at 2.5 s per sim-year",
         nrow(jobs), length(scenarios), N_REP, N_WORKERS, sum(jobs$cost) * 2.5 / N_WORKERS / 60)
 cl <- parallel::makeCluster(N_WORKERS)
+## workers do not inherit .libPaths(), so hand them the parent's rather than
+## hardcoding one: whatever library this session is using, they use too
+.libs <- .libPaths()
 parallel::clusterExport(cl, c("jobs", "scenarios", "summarise_run", "tag_parts", "band_lo",
-                              "band_hi", "AGE_TAGS", "POP", "BURN_Y", "PROG"))
+                              "band_hi", "AGE_TAGS", "POP", "BURN_Y", "PROG", ".libs"))
 invisible(parallel::clusterEvalQ(cl, {
-  .libPaths("C:/Users/pwinskil/Documents/r_packages_arm64")
+  .libPaths(.libs)
   suppressMessages(library(malariasimulation))
 }))
 t0 <- Sys.time()

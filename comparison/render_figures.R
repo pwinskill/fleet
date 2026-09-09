@@ -13,9 +13,19 @@
 #   programme_ts   five long-horizon programmes x four outcomes, 15 years
 #   int_impact     % reduction per intervention, IBM (replicate range) vs blink
 
-.libPaths("C:/Users/pwinskil/Documents/r_packages_arm64")
+## No absolute paths anywhere in here. BLINK_LIB prepends an R library, for
+## installations that do not pick up R_LIBS_USER (the Windows-arm64 setup this was
+## developed on); leave it unset and your normal library is used. ROOT is found by
+## walking up to the DESCRIPTION, so these scripts run from any working directory
+## and on anyone's checkout, whether via Rscript or source().
+if (nzchar(.l <- Sys.getenv("BLINK_LIB"))) .libPaths(.l)
+.f <- sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE))
+ROOT <- if (length(.f)) normalizePath(dirname(.f), "/") else getwd()
+while (!file.exists(file.path(ROOT, "DESCRIPTION")) && dirname(ROOT) != ROOT)
+  ROOT <- dirname(ROOT)
+if (!file.exists(file.path(ROOT, "DESCRIPTION")))
+  stop("run this from inside the blink checkout (no DESCRIPTION found above ", getwd(), ")")
 suppressMessages({library(dplyr); library(tidyr)})
-ROOT <- "C:/Users/pwinskil/Documents/dev/blink2/blink"
 source(file.path(ROOT, "comparison", "theme.R"))
 SMOKE <- nzchar(Sys.getenv("CMP_SMOKE"))
 DDIR  <- file.path(ROOT, "comparison", "data")
@@ -197,7 +207,7 @@ save_fig(g, "core_seasonal", width = 10, height = 5)
 ## ============================================================================
 ## 4. core_sites -- 63-country monthly comparison (site::site_parameters lists)
 ## ============================================================================
-vdir <- "C:/Users/pwinskil/Documents/dev/blink2/blink2_validate"
+vdir <- VDIR
 fs <- list.files(file.path(vdir, "results"), pattern = "_compare.rds$", full.names = TRUE)
 if (length(fs)) {
   v <- bind_rows(lapply(fs, readRDS))

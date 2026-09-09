@@ -22,6 +22,16 @@
 #     colour.
 #   * One y-axis per panel. Two measures = two panels (patchwork), never a dual axis.
 
+## ---- paths ------------------------------------------------------------------
+## Every comparison script sets ROOT (the checkout root) before sourcing this
+## file, so nothing here is machine-specific either. VDIR points at the optional
+## site-file validation results, which live in their own checkout beside this
+## one; override with BLINK_VALIDATE. The site figure and its table are skipped
+## when it is absent.
+if (!exists("ROOT") || !file.exists(file.path(ROOT, "DESCRIPTION")))
+  stop("source this from a comparison/ script, which sets ROOT to the blink checkout.")
+VDIR <- Sys.getenv("BLINK_VALIDATE", file.path(dirname(ROOT), "blink2_validate"))
+
 suppressMessages({library(ggplot2); library(patchwork)})
 
 ## ---- palette (site colours: _pkgdown.yml primary / danger) ------------------
@@ -98,9 +108,8 @@ envelope <- function(d, by, value = "y") {
 
 ## save to BOTH homes: man/figures (README, GitHub) and vignettes (pkgdown article)
 save_fig <- function(g, name, width, height, dpi = 200) {
-  root <- "C:/Users/pwinskil/Documents/dev/blink2/blink"
   for (dir in c("man/figures", "vignettes")) {
-    f <- file.path(root, dir, paste0("cmp_", name, ".png"))
+    f <- file.path(ROOT, dir, paste0("cmp_", name, ".png"))
     ggsave(f, g, width = width, height = height, dpi = dpi, device = ragg::agg_png,
            bg = SURFACE)
   }

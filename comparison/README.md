@@ -25,8 +25,12 @@ Rscript comparison/render_figures.R     # seconds
 Rscript comparison/summary_tables.R     # seconds
 ```
 
-(The scripts pin the Windows-arm64 R library path at the top; adjust `.libPaths()`
-and `ROOT` for another machine. `N_WORKERS` is set in `run_replicates.R`.)
+(No paths are hardcoded. Each script finds the checkout root by walking up to the
+`DESCRIPTION`, so it runs from any working directory, via `Rscript` or `source()`.
+Two optional environment variables: `BLINK_LIB` prepends an R library, for
+installations that do not pick up `R_LIBS_USER`; `BLINK_VALIDATE` points at the
+site-file validation results, which default to `../blink2_validate` and are
+skipped when absent. `N_WORKERS` is set in `run_replicates.R`.)
 
 ## Design notes
 

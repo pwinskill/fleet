@@ -18,9 +18,19 @@
 # Run this on an otherwise idle machine. Timings are wall-clock on one core;
 # nothing here is parallel.
 
-.libPaths("C:/Users/pwinskil/Documents/r_packages_arm64")
+## No absolute paths anywhere in here. BLINK_LIB prepends an R library, for
+## installations that do not pick up R_LIBS_USER (the Windows-arm64 setup this was
+## developed on); leave it unset and your normal library is used. ROOT is found by
+## walking up to the DESCRIPTION, so these scripts run from any working directory
+## and on anyone's checkout, whether via Rscript or source().
+if (nzchar(.l <- Sys.getenv("BLINK_LIB"))) .libPaths(.l)
+.f <- sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE))
+ROOT <- if (length(.f)) normalizePath(dirname(.f), "/") else getwd()
+while (!file.exists(file.path(ROOT, "DESCRIPTION")) && dirname(ROOT) != ROOT)
+  ROOT <- dirname(ROOT)
+if (!file.exists(file.path(ROOT, "DESCRIPTION")))
+  stop("run this from inside the blink checkout (no DESCRIPTION found above ", getwd(), ")")
 suppressMessages({library(malariasimulation); library(blink)})
-ROOT <- "C:/Users/pwinskil/Documents/dev/blink2/blink"
 DDIR <- file.path(ROOT, "comparison", "data")
 N_REP <- 5L
 POP   <- 1e5                       # output scaling only; see the population table
