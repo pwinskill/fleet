@@ -3,4 +3,4 @@
 export(default_age_lower)
 export(ode_tuning)
 export(run_simulation_ode)
-useDynLib(blink, .registration = TRUE)
+useDynLib(fleet, .registration = TRUE)

@@ -1,7 +1,7 @@
 # Scenario definitions and the shared per-run summariser.
 #
 # Sourced by BOTH run_replicates.R (which runs them through both models and
-# writes the CSVs) and check_drift.R (which re-runs blink only and compares
+# writes the CSVs) and check_drift.R (which re-runs fleet only and compares
 # against the committed reference). They live here so a drift check cannot
 # silently test a different set of scenarios from the one the reference was
 # built on -- and so sourcing the scenarios does not start a 25-minute run.
@@ -200,7 +200,7 @@ summarise_run <- function(df, years, tags = AGE_TAGS) {
     doy = as.numeric(tapply(seq_along(fy), wk, function(ix) mean(ix))),
     pfpr_2_10 = as.numeric(tapply(seq_along(fy), wk, function(ix) prev("730_3650", fy[ix]))),
     clin_0_5  = as.numeric(tapply(seq_along(fy), wk, function(ix) rate("clinical", "0_1825", fy[ix]))))
-  ## realised EIR (IBM emits EIR_<species> as total bites; blink emits per-adult-per-year)
+  ## realised EIR (IBM emits EIR_<species> as total bites; fleet emits per-adult-per-year)
   eir <- if (any(grepl("^EIR_", names(df)))) {
     ec <- grep("^EIR_", names(df), value = TRUE)
     sum(rowSums(df[obs, ec, drop = FALSE])) / length(obs) / POP * 365
@@ -213,7 +213,7 @@ tag_parts <- function(r, nm, model, rep)
 
 ## ---- provenance ---------------------------------------------------------------
 ## A hash of what the IBM was actually run on. The committed IBM rows stay valid
-## for any blink-side change -- the IBM does not depend on blink -- but they go
+## for any fleet-side change -- the IBM does not depend on fleet -- but they go
 ## stale the moment a scenario definition or malariasimulation itself changes.
 ## Without this there is no way to notice that, and a drift check would keep
 ## comparing against a reference built for different scenarios.
@@ -239,26 +239,26 @@ ibm_reference <- function() list(
   n_rep = N_REP, population = POP, burn_in_years = BURN_Y,
   scenarios = sort(names(SCENARIOS_ALL)), scenario_digest = scenario_digest())
 
-## ---- running blink -------------------------------------------------------------
-## Shared so a drift check cannot accidentally run blink differently from the way
+## ---- running fleet -------------------------------------------------------------
+## Shared so a drift check cannot accidentally run fleet differently from the way
 ## the committed reference was produced: same tuning, same horizons, same
 ## summariser, same day-0 row dropped.
-run_blink <- function(scen = scenarios) {
-  suppressMessages(library(blink))
-  log_msg("blink: %d scenarios", length(scen))
+run_fleet <- function(scen = scenarios) {
+  suppressMessages(library(fleet))
+  log_msg("fleet: %d scenarios", length(scen))
   out <- lapply(names(scen), function(nm) {
     s <- scen[[nm]]
     el <- system.time(
       ## s$p already carries init_EIR: every scenario is built through
-      ## set_equilibrium(), which is where blink reads the target EIR from now.
-      o <- blink::run_simulation_ode(timesteps = s$years * 365, parameters = s$p,
+      ## set_equilibrium(), which is where fleet reads the target EIR from now.
+      o <- fleet::run_simulation_ode(timesteps = s$years * 365, parameters = s$p,
                                      tuning = list(rtol = 1e-6, step_size_max = 10))
     )[["elapsed"]]
     r <- summarise_run(o[-1, ], s$years)          # drop the day-0 seed row
     r$timing <- data.frame(years = s$years, elapsed_s = el)
-    tag_parts(r, nm, "blink", 0L)
+    tag_parts(r, nm, "fleet", 0L)
   })
   names(out) <- names(scen)
-  log_msg("blink done: %.1f s total", sum(vapply(out, function(o) o$timing$elapsed_s, numeric(1))))
+  log_msg("fleet done: %.1f s total", sum(vapply(out, function(o) o$timing$elapsed_s, numeric(1))))
   out
 }

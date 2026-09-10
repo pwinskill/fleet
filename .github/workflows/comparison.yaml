@@ -1,7 +1,7 @@
-# Does blink still match malariasimulation?
+# Does fleet still match malariasimulation?
 #
-# The IBM does not depend on blink, so its committed rows in comparison/data/
-# stay valid for any blink-side change. This re-runs blink alone (~2 min) and
+# The IBM does not depend on fleet, so its committed rows in comparison/data/
+# stay valid for any fleet-side change. This re-runs fleet alone (~2 min) and
 # checks it against that frozen reference, which is why this can run on every
 # push while the full IBM sweep cannot.
 
@@ -67,7 +67,7 @@ jobs:
       # and leave check_drift.R with nothing to compare against.
       #
       # `needs: check` below is a no-op, not the mechanism: `needs:` only
-      # appends the packages named in Config/Needs/<field>, and blink's
+      # appends the packages named in Config/Needs/<field>, and fleet's
       # DESCRIPTION has no Config/Needs/check. It is kept because it is the
       # r-lib template's shape, not because it installs anything.
       #
@@ -84,7 +84,7 @@ jobs:
             any::jsonlite
           needs: check
 
-      - name: Install blink
+      - name: Install fleet
         run: R CMD INSTALL --no-multiarch .
         shell: bash
 

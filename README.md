@@ -1,16 +1,16 @@
-# blink
+# fleet
 
 [![Status: work in progress](https://img.shields.io/badge/status-work%20in%20progress-orange?style=for-the-badge)](#not-ready-for-real-use)
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange?style=for-the-badge)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![Not for production use](https://img.shields.io/badge/not%20for-production%20use-red?style=for-the-badge)](#not-ready-for-real-use)
 
-[![R-CMD-check](https://github.com/pwinskill/blink/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/pwinskill/blink/actions/workflows/R-CMD-check.yaml)
-[![pkgdown](https://github.com/pwinskill/blink/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/pwinskill/blink/actions/workflows/pkgdown.yaml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/pwinskill/blink/blob/main/LICENSE.md)
+[![R-CMD-check](https://github.com/pwinskill/fleet/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/pwinskill/fleet/actions/workflows/R-CMD-check.yaml)
+[![pkgdown](https://github.com/pwinskill/fleet/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/pwinskill/fleet/actions/workflows/pkgdown.yaml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/pwinskill/fleet/blob/main/LICENSE.md)
 
 > ## Not ready for real use
 >
-> ⚠️ **`blink` is a work in progress and is not validated for research, policy or
+> ⚠️ **`fleet` is a work in progress and is not validated for research, policy or
 > operational use.** It is published early so the approach and the comparison
 > against `malariasimulation` can be looked at and argued with, not so that
 > anyone can rely on its numbers.
@@ -22,9 +22,9 @@
 > - **Known discrepancies against the IBM are open, not resolved.** All-age
 >   severe incidence runs about 4–6% below `malariasimulation` and sits outside
 >   its replicate band at two of six transmission levels; across the 63-country
->   site-file comparison `blink` runs roughly 9% above the IBM on clinical and
+>   site-file comparison `fleet` runs roughly 9% above the IBM on clinical and
 >   severe incidence, and that excess is **not** explained. See
->   *[Where the two models differ](https://pwinskill.github.io/blink/articles/comparison.html)*.
+>   *[Where the two models differ](https://pwinskill.github.io/fleet/articles/comparison.html)*.
 > - **Severe incidence and anything derived from it (including DALYs) should be
 >   treated as indicative only.**
 > - Nothing here has been peer reviewed, and there is no versioned release.
@@ -34,7 +34,7 @@
 
 > A fast, deterministic **mean-field (ODE) twin** of the [malariasimulation](https://github.com/mrc-ide/malariasimulation) individual-based model of *Plasmodium falciparum* malaria: same inputs, seconds per run, population-independent.
 
-![The blink model](man/figures/model_flow.png)
+![The fleet model](man/figures/model_flow.png)
 
 *The model at a glance: humans above, mosquitoes below, the transmission cycle
 running counter-clockwise. Solid black = a flow of individuals, a rate in the ODE.
@@ -49,24 +49,24 @@ T splits under antimalarial resistance. All three are in `vignette("model")`.*
 
 ## What it is
 
-`blink` reproduces the Griffin-style, age- and biting-heterogeneity-structured human model: states `S / D / A / U / Tr` plus two prophylaxis compartments (`Ph`, treatment-linked, and `Ph_c`, chemoprevention) and the six immunity functions (four acquired states, `IB / ICA / ID / IVA`, plus the two maternal terms, `ICM / IVM`, which are algebraic rather than state variables). The human model is coupled to the compartmental mosquito model (`E / L / P / Sm / EIP-chain / Im` per species). It is written in [odin2](https://github.com/mrc-ide/odin2) / [dust2](https://github.com/mrc-ide/dust2).
+`fleet` reproduces the Griffin-style, age- and biting-heterogeneity-structured human model: states `S / D / A / U / Tr` plus two prophylaxis compartments (`Ph`, treatment-linked, and `Ph_c`, chemoprevention) and the six immunity functions (four acquired states, `IB / ICA / ID / IVA`, plus the two maternal terms, `ICM / IVM`, which are algebraic rather than state variables). The human model is coupled to the compartmental mosquito model (`E / L / P / Sm / EIP-chain / Im` per species). It is written in [odin2](https://github.com/mrc-ide/odin2) / [dust2](https://github.com/mrc-ide/dust2).
 
 It exists to give the malariasimulation ecosystem a **deterministic, Monte-Carlo-free companion** that:
 
 - **Takes the same inputs as the IBM.** `run_simulation_ode()` accepts a `malariasimulation::get_parameters()` list (with the usual `set_*` intervention builders layered on) unchanged. *P. falciparum only.*
 - **Is seeded at, and validated against, equilibrium.** Initial conditions come from `malariaEquilibrium`; with no interventions an undisturbed run relaxes off that seed by under half a percent over the first years and then holds (the IBM is seeded the same way and drifts off it the same way, see [Mean-field approximations](#mean-field-approximations)), and it reproduces the IBM's equilibrium PfPR within the IBM's Monte-Carlo error.
-- **Produces postie-compatible outputs.** The returned wide count table is malariasimulation-shaped, so it feeds straight into `postie::get_rates()` / `postie::get_prevalence()`. A post-processing pipeline written for the IBM works on a `blink` run unchanged, with no wrapper in between.
+- **Produces postie-compatible outputs.** The returned wide count table is malariasimulation-shaped, so it feeds straight into `postie::get_rates()` / `postie::get_prevalence()`. A post-processing pipeline written for the IBM works on a `fleet` run unchanged, with no wrapper in between.
 - **Is fast and population-independent.** All human/mosquito compartments are per-capita densities, so a 30-year daily run takes a few seconds whether you model a thousand people or ten million (see [Run times](#run-times)).
 
 Reach for the IBM instead when you need stochastic variation, individual heterogeneity beyond the mean field, or *P. vivax*.
 
 ## Install
 
-`blink` compiles C++ at install time, as do several of its dependencies, so you need a working C++ toolchain first: Rtools on Windows, the Xcode command line tools on macOS, the usual build tools (`r-base-dev` or equivalent) on Linux.
+`fleet` compiles C++ at install time, as do several of its dependencies, so you need a working C++ toolchain first: Rtools on Windows, the Xcode command line tools on macOS, the usual build tools (`r-base-dev` or equivalent) on Linux.
 
 ```r
 # install.packages("remotes")
-remotes::install_github("pwinskill/blink")
+remotes::install_github("pwinskill/fleet")
 ```
 
 That command also installs the GitHub-only hard dependencies (`dust2`, `monty` and `malariaEquilibrium`), which `DESCRIPTION` `Remotes` points at. It installs nothing from `Suggests`. The examples below need two suggested packages:
@@ -75,12 +75,12 @@ That command also installs the GitHub-only hard dependencies (`dust2`, `monty` a
 remotes::install_github(c("mrc-ide/malariasimulation", "mrc-ide/postie"))
 ```
 
-`malariasimulation` builds the parameter list; `postie` post-processes the output. A third, `odin2`, is not needed to run the model: the ODE is compiled into `blink` from `src/malaria_ode.cpp` and ships with it. Install `odin2` only if you want to regenerate that code or compile an alternative odin source through `ode_tuning(odin_file =)`.
+`malariasimulation` builds the parameter list; `postie` post-processes the output. A third, `odin2`, is not needed to run the model: the ODE is compiled into `fleet` from `src/malaria_ode.cpp` and ships with it. Install `odin2` only if you want to regenerate that code or compile an alternative odin source through `ode_tuning(odin_file =)`.
 
 ## Quick start
 
 ```r
-library(blink)
+library(fleet)
 
 p <- malariasimulation::get_parameters()
 
@@ -110,7 +110,7 @@ p <- malariasimulation::set_bednets(
 out <- run_simulation_ode(timesteps = 3650, parameters = malariasimulation::set_equilibrium(p, init_EIR = 20))
 ```
 
-`run_simulation_ode(timesteps, parameters, correlations)` takes the same three arguments as `malariasimulation::run_simulation()`, and the target EIR reaches it the same way: on the parameter list, via `set_equilibrium()`. Solver and discretisation settings live in a fourth argument, `tuning`; see `ode_tuning()`. For a step-by-step tour see `vignette("blink")`.
+`run_simulation_ode(timesteps, parameters, correlations)` takes the same three arguments as `malariasimulation::run_simulation()`, and the target EIR reaches it the same way: on the parameter list, via `set_equilibrium()`. Solver and discretisation settings live in a fourth argument, `tuning`; see `ode_tuning()`. For a step-by-step tour see `vignette("fleet")`.
 
 ### Exported functions
 
@@ -120,7 +120,7 @@ out <- run_simulation_ode(timesteps = 3650, parameters = malariasimulation::set_
 | `ode_tuning()` | Solver and discretisation settings for the run (`tuning =`). Every default is the validated choice. |
 | `default_age_lower()` | The default graded age grid (fine in infancy, coarse in adulthood). |
 
-Post-processing is `postie`'s job, not blink's: pass the returned table to `postie::get_rates()` / `postie::get_prevalence()` the same way you would an IBM run.
+Post-processing is `postie`'s job, not fleet's: pass the returned table to `postie::get_rates()` / `postie::get_prevalence()` the same way you would an IBM run.
 
 ## Run times
 
@@ -179,11 +179,11 @@ the full ODE system, a table of what each state dimension carries (and what is
 captured *without* one), and an argument-by-argument breakdown of every
 `malariasimulation` `set_*` function.
 
-**Seeding.** `blink` starts each run at the `malariaEquilibrium` analytic fixed point. That solution encodes *simplified* forms (a linear force of infection, refractory immunity boosting on the raw rate, exponential incubation survival), whereas `blink` now reproduces malariasimulation's own per-day semantics (bite deduplication, the integer refractory window, a fixed-delay EIP with `exp(-mu*dem)` survival, whole-day state sojourns). The seed is therefore a close **approximation** to `blink`'s true fixed point rather than the fixed point itself: an undisturbed run relaxes by up to ~0.5% over the first years and then holds. malariasimulation behaves the same way: it is seeded from `malariaEquilibrium` too and drifts off it. Burn in before calibrating. Setting `parameters$bite_dedup = 0` removes the largest of those four departures and roughly halves the largest excursion from the seed (0.14% against 0.28%, for LM prevalence at EIR 20 over 15 years), which is why the equilibrium tests set it. It does **not** make the seed an exact fixed point: the other three departures remain, so the run still moves off it.
+**Seeding.** `fleet` starts each run at the `malariaEquilibrium` analytic fixed point. That solution encodes *simplified* forms (a linear force of infection, refractory immunity boosting on the raw rate, exponential incubation survival), whereas `fleet` now reproduces malariasimulation's own per-day semantics (bite deduplication, the integer refractory window, a fixed-delay EIP with `exp(-mu*dem)` survival, whole-day state sojourns). The seed is therefore a close **approximation** to `fleet`'s true fixed point rather than the fixed point itself: an undisturbed run relaxes by up to ~0.5% over the first years and then holds. malariasimulation behaves the same way: it is seeded from `malariaEquilibrium` too and drifts off it. Burn in before calibrating. Setting `parameters$bite_dedup = 0` removes the largest of those four departures and roughly halves the largest excursion from the seed (0.14% against 0.28%, for LM prevalence at EIR 20 over 15 years), which is why the equilibrium tests set it. It does **not** make the seed an exact fixed point: the other three departures remain, so the run still moves off it.
 
 **Numerics & lags.** The human EIR/FOIM lags and the mosquito EIP are implemented as Erlang (linear-chain) filters rather than `delay()`: robust, pure-ODE, and exact at equilibrium. Stage counts (`n_eir`, `n_foim`, `n_eip`; defaults 10 / 10 / 20) are tunable: larger values sharpen the gamma-shaped lags toward the IBM's fixed delays. The two prophylaxis compartments are Erlang chains as well (`n_ph`, `n_phc`; by default matched to the drug's Weibull shape, see *Treatment & resistance*). The disease-state seed re-solves the prophylaxis aging recursion with a corrected `bP` term (upstream `malariaEquilibrium::human_equilibrium_no_het` has a small artifact), so the model holds flat even under treatment (`ft > 0`).
 
-**Infection hazard.** malariasimulation draws each day's bites from a Poisson and collects the bitten in a **bitset**, so an individual bitten several times in one timestep is infected at most once. `blink` reproduces that cap: the daily infection probability is `(1 - exp(-EPS)) * b`, converted to a hazard with `-log(1 - p)` (matching the IBM's `prob_to_rate`). This **saturates**, whereas the unbounded product `b * EPS` over-predicts infection wherever exposure approaches one infectious bite per person per day: at seasonal peaks and in high-`zeta` strata. The two forms agree to <2% at low exposure. Because `malariaEquilibrium` assumes the linear form, deduplication is the largest single reason its solution is not `blink`'s own fixed point. Setting `parameters$bite_dedup = 0` removes that one reason but leaves the other three, so the seed is still not exact: the model relaxes off it over the first years either way, exactly as the IBM does (it is seeded the same way).
+**Infection hazard.** malariasimulation draws each day's bites from a Poisson and collects the bitten in a **bitset**, so an individual bitten several times in one timestep is infected at most once. `fleet` reproduces that cap: the daily infection probability is `(1 - exp(-EPS)) * b`, converted to a hazard with `-log(1 - p)` (matching the IBM's `prob_to_rate`). This **saturates**, whereas the unbounded product `b * EPS` over-predicts infection wherever exposure approaches one infectious bite per person per day: at seasonal peaks and in high-`zeta` strata. The two forms agree to <2% at low exposure. Because `malariaEquilibrium` assumes the linear form, deduplication is the largest single reason its solution is not `fleet`'s own fixed point. Setting `parameters$bite_dedup = 0` removes that one reason but leaves the other three, so the seed is still not exact: the model relaxes off it over the first years either way, exactly as the IBM does (it is seeded the same way).
 
 **Treatment & resistance.** Drug prophylaxis is an **Erlang chain** moment-matched to the drug's Weibull protection curve. The IBM applies the Weibull survival to each treated person's infection probability, so the cohort's mean protection at a given lag *is* the Weibull survival. The chemoprevention chain has `k = 1/CV²` stages (14 for SP-AQ, 15 for DHA-PQP) and reproduces that curve to within a few points (SP-AQ at day 30: Weibull 0.70, chain 0.67, single exponential 0.42), where a single compartment at the mean leaked protection between monthly SMC rounds. The post-treatment chain follows the exponential treated stage `Tr`, so its mean is the integrated protection left after `Tr` and its length matches the variance of the whole `Tr + Ph` sojourn: 16 stages for SP-AQ, 20 for DHA-PQP, and 1 for AL, whose 10-day protection is already less variable than `Tr` itself. `n_ph`/`n_phc` override the counts; 1 recovers a single exponential compartment. Slow parasite clearance is **not** averaged: `Tr` is split into two parallel compartments (`Tr`/`Tr_slow`), reproducing the IBM's two-component mixture of exponentials exactly. Antimalarial resistance (early-treatment-failure and slow-parasite-clearance) is blended across all treatment drugs by their share of treatment and also applies to a drug used for chemoprevention (SMC/MDA/PMC). The multi-drug blend is **time-varying**: drug efficacy, treated infectivity (`cT`) and the prophylaxis rate are interpolated over the treatment-coverage change times using each drug's *instantaneous* share, so a first-line **switch** is modelled rather than frozen at a constant mixture.
 
@@ -195,33 +195,33 @@ captured *without* one), and an argument-by-argument breakdown of every
 
 **Seasonality.** Rainfall is the truncated Fourier series (matching the IBM), driving `K(t) = K0 · scaler(t) · rainfall(t) / R̄`. The seed is the **annual-mean** state, so the first ~10 years are a transient onto the limit cycle and the seasonal annual-mean EIR sits a few percent below the aseasonal `init_EIR` target (nonlinear averaging). **Burn in before calibrating**. A carrying-capacity `scaler` of exactly 0 is floored at a small residual (`K0 · 1e-4`), so complete vector elimination is not reproduced exactly.
 
-**Demography.** Custom demography is **time-varying**: `mu_age(t)` is a constant-interpolated series over `deathrate_timesteps` (the baseline row seeds the equilibrium age structure, then the age-specific mortality evolves with the demographic transition). If the oldest model age group exceeds the top `deathrate_agegroups`, ages above it take the top death rate here whereas the IBM removes them; raise `default_age_lower(max_age =)` or extend `deathrate_agegroups` to match (a warning fires when they diverge). **Mosquito sizing follows `set_equilibrium()`.** malariasimulation sizes the adult-mosquito population from the human equilibrium under its *default* exponential age structure (custom mortality never enters), so under `set_demography()` the IBM drifts to whatever transmission that density supports. `blink` reproduces that mosquito density exactly and seeds at the EIR its own equilibrium under the custom age structure then supports (still a fixed point: the comparison scenario seeds at EIR 13.9 for `init_EIR = 20`, against the IBM's realised 13.8). `init_EIR` therefore means the same thing in both models; set `parameters$hold_init_EIR = TRUE` to make it the EIR blink realises instead.
+**Demography.** Custom demography is **time-varying**: `mu_age(t)` is a constant-interpolated series over `deathrate_timesteps` (the baseline row seeds the equilibrium age structure, then the age-specific mortality evolves with the demographic transition). If the oldest model age group exceeds the top `deathrate_agegroups`, ages above it take the top death rate here whereas the IBM removes them; raise `default_age_lower(max_age =)` or extend `deathrate_agegroups` to match (a warning fires when they diverge). **Mosquito sizing follows `set_equilibrium()`.** malariasimulation sizes the adult-mosquito population from the human equilibrium under its *default* exponential age structure (custom mortality never enters), so under `set_demography()` the IBM drifts to whatever transmission that density supports. `fleet` reproduces that mosquito density exactly and seeds at the EIR its own equilibrium under the custom age structure then supports (still a fixed point: the comparison scenario seeds at EIR 13.9 for `init_EIR = 20`, against the IBM's realised 13.8). `init_EIR` therefore means the same thing in both models; set `parameters$hold_init_EIR = TRUE` to make it the EIR fleet realises instead.
 
 **Diagnostic conventions.**
 
 - **PCR prevalence** counts all of `D / Tr / A / U` (the malariasimulation IBM convention), not malariaEquilibrium's sub-patent-weighted `pos_PCR`. Across the EIR 1–120 grid LM prevalence matches the IBM median to within 1.6% and clinical incidence to within 2.6%.
-- **Severe incidence** follows the malariaEquilibrium convention and is far more sensitive to the immunity model than prevalence or clinical incidence. The cause is *where* the severe Hill function sits, not how steep it is. Its exponent `kv = 2.00` is the shallowest of the three (`kb = 2.16`, `kc = 2.37`), but its half-point `iv0 = 1.10` is sixteen times lower than the clinical `ic0 = 18.0`. At the EIR 20 equilibrium acquired severe immunity is already 2.6x `iv0` by age 1 and 8.7x by age 3, so `theta` sits far out on its convex `IVA^-2` tail over essentially the whole population, whereas acquired clinical immunity is still 0.17x `ic0` at age 1 and 0.56x at age 3, keeping `phi` near the flat top of its own curve. Evaluating a convex function at a stratum mean instead of averaging it over individuals under-states it, so `blink` runs **below** the IBM on severe incidence, which is the sign observed: −6.2% at EIR 20, −4.0% at EIR 50 and −4.6% at EIR 120, under 1% at EIR 1–10, and 15–25% low in the 5–20 year age bands. (A separate, smaller, opposite-signed effect: the IBM adds a `+0.5` offset to acquired immunity before the severe Hill function. That is a per-individual detail which does not carry over to a stratum mean, and an A/B against the IBM ensemble mean favours omitting it, hence the default `acquired_immunity_offset = 0`. Set it to `0.5` to reproduce the IBM's literal Hill calls.) Treat severe incidence (and the DALYs derived from it) as indicative.
+- **Severe incidence** follows the malariaEquilibrium convention and is far more sensitive to the immunity model than prevalence or clinical incidence. The cause is *where* the severe Hill function sits, not how steep it is. Its exponent `kv = 2.00` is the shallowest of the three (`kb = 2.16`, `kc = 2.37`), but its half-point `iv0 = 1.10` is sixteen times lower than the clinical `ic0 = 18.0`. At the EIR 20 equilibrium acquired severe immunity is already 2.6x `iv0` by age 1 and 8.7x by age 3, so `theta` sits far out on its convex `IVA^-2` tail over essentially the whole population, whereas acquired clinical immunity is still 0.17x `ic0` at age 1 and 0.56x at age 3, keeping `phi` near the flat top of its own curve. Evaluating a convex function at a stratum mean instead of averaging it over individuals under-states it, so `fleet` runs **below** the IBM on severe incidence, which is the sign observed: −6.2% at EIR 20, −4.0% at EIR 50 and −4.6% at EIR 120, under 1% at EIR 1–10, and 15–25% low in the 5–20 year age bands. (A separate, smaller, opposite-signed effect: the IBM adds a `+0.5` offset to acquired immunity before the severe Hill function. That is a per-individual detail which does not carry over to a stratum mean, and an A/B against the IBM ensemble mean favours omitting it, hence the default `acquired_immunity_offset = 0`. Set it to `0.5` to reproduce the IBM's literal Hill calls.) Treat severe incidence (and the DALYs derived from it) as indicative.
 - Reported **`EIR`** is per adult per year (equals `init_EIR` at equilibrium under the default demography; under `set_demography()` it is the EIR the IBM's mosquito sizing supports, as described under *Demography* above). Compare with a malariasimulation run as `EIR_<species> / human_population × 365`.
 
 ## Validation
 
-Every panel in `vignette("comparison")` runs the **same malariasimulation parameter list** through both models: the IBM as the median of 10 stochastic replicates (10,000 people, 30-year burn-in) with a 10–90% band, `blink` as a single deterministic run. Colour, line type and point shape all encode the model, so the figures read in greyscale and under colour-vision deficiency.
+Every panel in `vignette("comparison")` runs the **same malariasimulation parameter list** through both models: the IBM as the median of 10 stochastic replicates (10,000 people, 30-year burn-in) with a 10–90% band, `fleet` as a single deterministic run. Colour, line type and point shape all encode the model, so the figures read in greyscale and under colour-vision deficiency.
 
 ![Core transmission relationships: PfPR(2–10), under-5 clinical incidence, all-age clinical incidence and all-age severe incidence against EIR in both models](man/figures/cmp_core_eir.png)
 
-*Four equilibrium relationships across EIR 1–120. blink lies inside the IBM's 10–90% replicate band at every EIR for prevalence (largest gap 0.004) and runs 0.7–2.6% above the IBM median for under-5 clinical incidence. The all-age panels carry the shape of the relationship rather than its level: clinical incidence flattens far sooner over all ages than in under-5s (3.8-fold across the grid against 18-fold), and severe incidence turns over entirely, plateauing around EIR 20–50 in both models.*
+*Four equilibrium relationships across EIR 1–120. fleet lies inside the IBM's 10–90% replicate band at every EIR for prevalence (largest gap 0.004) and runs 0.7–2.6% above the IBM median for under-5 clinical incidence. The all-age panels carry the shape of the relationship rather than its level: clinical incidence flattens far sooner over all ages than in under-5s (3.8-fold across the grid against 18-fold), and severe incidence turns over entirely, plateauing around EIR 20–50 in both models.*
 
 ![Programmes over fifteen years: five scenarios from no interventions through single interventions to all three combined, each shown as prevalence, under-5 clinical, all-age clinical and all-age severe incidence in both models](man/figures/cmp_programme_ts.png)
 
-*Five programmes (nothing, one intervention, then all three together) followed for 15 years past deployment at EIR 20 in a seasonal setting, across four outcomes. Through five net distributions, sixty SMC rounds and a treatment scale-up the two models stay together: blink sits inside the IBM's 10–90% replicate band in 78–84% of the 915 scenario-months per outcome (an 80% band contains a perfectly-tracking deterministic mean ~80% of the time), and the largest disagreement in 15-year mean burden reduction across the 16 scenario × outcome cells is 1.8 percentage points. The bed-net row shows the sawtooth a repeating campaign produces: prevalence down to ~10% within a year of each distribution, back to ~43% before the next.*
+*Five programmes (nothing, one intervention, then all three together) followed for 15 years past deployment at EIR 20 in a seasonal setting, across four outcomes. Through five net distributions, sixty SMC rounds and a treatment scale-up the two models stay together: fleet sits inside the IBM's 10–90% replicate band in 78–84% of the 915 scenario-months per outcome (an 80% band contains a perfectly-tracking deterministic mean ~80% of the time), and the largest disagreement in 15-year mean burden reduction across the 16 scenario × outcome cells is 1.8 percentage points. The bed-net row shows the sawtooth a repeating campaign produces: prevalence down to ~10% within a year of each distribution, back to ~43% before the next.*
 
 ![Intervention impact: percentage reduction in prevalence, under-5 clinical incidence, all-age clinical incidence and all-age severe incidence over the first three years of five interventions](man/figures/cmp_int_impact.png)
 
-*Five interventions deployed with the ordinary `set_*()` builders (treatment scale-up, RTS,S via EPI, seasonal SMC, IRS and bed nets) across four outcomes. blink lands inside the IBM's 10–90% replicate range in 16 of the 20 scenario × outcome cells, and within 0.6 percentage points of the band in the other four. The four panels also show who each intervention protects: SMC and RTS,S roughly halve their effect when measured over all ages rather than under-5s, while nets and IRS suppress transmission for everyone and so read the same either way.*
+*Five interventions deployed with the ordinary `set_*()` builders (treatment scale-up, RTS,S via EPI, seasonal SMC, IRS and bed nets) across four outcomes. fleet lands inside the IBM's 10–90% replicate range in 16 of the 20 scenario × outcome cells, and within 0.6 percentage points of the band in the other four. The four panels also show who each intervention protects: SMC and RTS,S roughly halve their effect when measured over all ages rather than under-5s, while nets and IRS suppress transmission for everyone and so read the same either way.*
 
-![Country site files: blink against the IBM for 450,684 sub-site-months across 63 countries](man/figures/cmp_core_sites.png)
+![Country site files: fleet against the IBM for 450,684 sub-site-months across 63 countries](man/figures/cmp_core_sites.png)
 
-*Every admin-1 × urban/rural sub-site in the malariaverse site files, monthly, 2000–2026, with its full intervention history: clinical incidence r = 0.98 (slope 1.00), severe r = 0.96 (slope 0.95). blink sits about 9% above the IBM on average, mostly in low-incidence sub-site-months, and that excess is not explained. **A snapshot.** This one takes ~7 hours against the malariaverse site files, so unlike every other figure here it is not refreshed by the comparison harness or by CI: it is re-taken deliberately. It describes the blink version recorded in `comparison/data/site_snapshot.json`, which may be behind the current code.*
+*Every admin-1 × urban/rural sub-site in the malariaverse site files, monthly, 2000–2026, with its full intervention history: clinical incidence r = 0.98 (slope 1.00), severe r = 0.96 (slope 0.95). fleet sits about 9% above the IBM on average, mostly in low-incidence sub-site-months, and that excess is not explained. **A snapshot.** This one takes ~7 hours against the malariaverse site files, so unlike every other figure here it is not refreshed by the comparison harness or by CI: it is re-taken deliberately. It describes the fleet version recorded in `comparison/data/site_snapshot.json`, which may be behind the current code.*
 
 The full set (age profiles, the seasonal cycle, custom demography, intervention time series), with the numbers behind each figure, is in `vignette("comparison")`. Reproduce with:
 
@@ -231,34 +231,34 @@ source("comparison/render_figures.R")   # figures from the saved CSVs (seconds)
 source("comparison/summary_tables.R")   # the numbers quoted in the article -> comparison/data/tables.md
 ```
 
-`comparison/` is excluded from the package build, so it is not in an installed copy of `blink`. Run those three from a [clone of the repository](https://github.com/pwinskill/blink), with the working directory at its root.
+`comparison/` is excluded from the package build, so it is not in an installed copy of `fleet`. Run those three from a [clone of the repository](https://github.com/pwinskill/fleet), with the working directory at its root.
 
 ## Notes & conventions
 
-- **Deterministic seed.** The equilibrium seed is deterministic; there is no random component to a `blink` run.
+- **Deterministic seed.** The equilibrium seed is deterministic; there is no random component to a `fleet` run.
 - **Column stability.** Output column names are stable across parameter sets (interventions on/off), so runs are directly comparable and `rbind`-able.
 - **Population conservation.** Under constant-hazard or custom demography the total human population is conserved to numerical tolerance (a useful sanity check: `S_count + D_count + A_count + U_count + Tr_count + Ph_count`).
 
 ## Further reading
 
-- Getting started: `vignette("blink")`.
+- Getting started: `vignette("fleet")`.
 - **Formal model specification:** `vignette("model")`, the full ODE system, what each
   state dimension captures (and what is captured *without* one), and an
   argument-by-argument table of every `malariasimulation` `set_*` function.
 - **Comparison with malariasimulation:** `vignette("comparison")`, the full
-  IBM-vs-blink figure set (core relationships, country site files, intervention
+  IBM-vs-fleet figure set (core relationships, country site files, intervention
   impact) with the numbers behind each figure.
 - Function reference: `?run_simulation_ode`, `?ode_tuning`, `?default_age_lower`.
 
-Everything below is a path in the [git repository](https://github.com/pwinskill/blink), not in an installed copy of `blink`: an installed package ships the compiled model rather than the `R/` sources, and excludes `comparison/` altogether. Reading along means working from a clone.
+Everything below is a path in the [git repository](https://github.com/pwinskill/fleet), not in an installed copy of `fleet`: an installed package ships the compiled model rather than the `R/` sources, and excludes `comparison/` altogether. Reading along means working from a clone.
 
 - Model source: `inst/odin/malaria_ode.R` (the odin2 model).
 - Parameter translation & equilibrium seeding: `R/build_inputs.R`, `R/translate_params.R`, `R/mosquito_equilibrium.R`.
 - Intervention time-series builders: `R/interventions.R`; run loop & rendering: `R/run.R`.
-- Comparison harness: `comparison/run_replicates.R`, `comparison/render_figures.R`, `comparison/theme.R` (see [comparison/README.md](https://github.com/pwinskill/blink/blob/main/comparison/README.md)).
+- Comparison harness: `comparison/run_replicates.R`, `comparison/render_figures.R`, `comparison/theme.R` (see [comparison/README.md](https://github.com/pwinskill/fleet/blob/main/comparison/README.md)).
 
 ## License
 
 MIT. Copyright (c) 2026 Peter Winskill.
 Written by Peter Winskill. Full text:
-[LICENSE.md](https://github.com/pwinskill/blink/blob/main/LICENSE.md).
+[LICENSE.md](https://github.com/pwinskill/fleet/blob/main/LICENSE.md).

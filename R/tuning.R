@@ -44,7 +44,7 @@
 #' @param odin_file optional path to an odin source to compile instead of the
 #'   generator built into the package (development use; needs 'odin2' and a C++
 #'   toolchain).
-#' @return a `blink_ode_tuning` list.
+#' @return a `fleet_ode_tuning` list.
 #' @seealso [run_simulation_ode()]
 #' @examples
 #' ode_tuning()$atol
@@ -102,7 +102,7 @@ ode_tuning <- function(age_lower = default_age_lower(),
     list(age_lower = age_lower, n_eir = n_eir, n_foim = n_foim, n_eip = n_eip,
          n_ph = n_ph, n_phc = n_phc, atol = atol, rtol = rtol,
          step_size_max = step_size_max, odin_file = odin_file),
-    class = "blink_ode_tuning")
+    class = "fleet_ode_tuning")
 }
 
 #' Coerce a partial named list to a full tuning object.
@@ -112,7 +112,7 @@ ode_tuning <- function(age_lower = default_age_lower(),
 #' did nothing would look like the tolerance simply not mattering.
 #' @noRd
 as_ode_tuning <- function(x) {
-  if (inherits(x, "blink_ode_tuning")) return(x)
+  if (inherits(x, "fleet_ode_tuning")) return(x)
   if (is.null(x)) return(ode_tuning())
   if (!is.list(x)) {
     stop("`tuning` must be an ode_tuning() object or a named list of its fields.",

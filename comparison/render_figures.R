@@ -11,22 +11,22 @@
 #   core_sites     63-country monthly comparison (from blink2_validate results)
 #   int_timeseries five interventions x {prevalence, clinical}, time series
 #   programme_ts   five long-horizon programmes x four outcomes, 15 years
-#   int_impact     % reduction per intervention, IBM (replicate range) vs blink
+#   int_impact     % reduction per intervention, IBM (replicate range) vs fleet
 
-## No absolute paths anywhere in here. BLINK_LIB is prepended to the library
+## No absolute paths anywhere in here. FLEET_LIB is prepended to the library
 ## path, for installations that do not pick up R_LIBS_USER (the Windows-arm64
 ## setup this was developed on); the libraries already on the path are kept, so a
-## BLINK_LIB holding only some of the dependencies still works. Leave it unset and
+## FLEET_LIB holding only some of the dependencies still works. Leave it unset and
 ## your normal library is used. ROOT is found by walking up to the DESCRIPTION, so
 ## these scripts run from any working directory and on anyone's checkout, whether
 ## via Rscript or source().
-if (nzchar(.l <- Sys.getenv("BLINK_LIB"))) .libPaths(c(.l, .libPaths()))
+if (nzchar(.l <- Sys.getenv("FLEET_LIB"))) .libPaths(c(.l, .libPaths()))
 .f <- sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE))
 ROOT <- if (length(.f)) normalizePath(dirname(.f), "/") else getwd()
 while (!file.exists(file.path(ROOT, "DESCRIPTION")) && dirname(ROOT) != ROOT)
   ROOT <- dirname(ROOT)
 if (!file.exists(file.path(ROOT, "DESCRIPTION")))
-  stop("run this from inside the blink checkout (no DESCRIPTION found above ", getwd(), ")")
+  stop("run this from inside the fleet checkout (no DESCRIPTION found above ", getwd(), ")")
 suppressMessages({library(dplyr); library(tidyr)})
 source(file.path(ROOT, "comparison", "theme.R"))
 SMOKE <- nzchar(Sys.getenv("CMP_SMOKE"))
@@ -44,7 +44,7 @@ eq <- rd("eq"); age <- rd("age"); monthly <- rd("monthly"); doy <- rd("doy"); ti
 n_rep <- max(eq$rep)
 ibm_note <- sprintf(paste(
   "IBM: %d stochastic replicates of %s people, %d-year burn-in; line/point = median, band/bar = 10\u201390%% range across replicates.",
-  "blink: one deterministic run seeded at equilibrium."), n_rep, format(POP, big.mark = ","), BURN_Y)
+  "fleet: one deterministic run seeded at equilibrium."), n_rep, format(POP, big.mark = ","), BURN_Y)
 PREV_LAB <- "LM prevalence, ages 2\u201310"
 CLIN_LAB <- "clinical episodes per child-year, ages 0\u20135"
 
@@ -65,7 +65,7 @@ e_long <- eq %>% filter(grepl("^eir_", scenario)) %>%
   pivot_longer(-c(init_EIR, model, rep), names_to = "metric", values_to = "y")
 ibm_e <- e_long %>% filter(model == "IBM") %>% group_by(metric) %>%
   group_modify(~ envelope(.x, by = "init_EIR")) %>% ungroup()
-ode_e <- e_long %>% filter(model == "blink") %>% rename(mid = y)
+ode_e <- e_long %>% filter(model == "fleet") %>% rename(mid = y)
 
 panel_eir <- function(metric_id, ylab) {
   gi <- filter(ibm_e, metric == metric_id); go <- filter(ode_e, metric == metric_id)
@@ -111,7 +111,7 @@ a <- age %>% filter(scenario == paste0("eir_", EIR_REF)) %>%
   pivot_longer(c(prev, clin, sev), names_to = "metric", values_to = "y")
 ibm_a <- a %>% filter(model == "IBM") %>% group_by(metric) %>%
   group_modify(~ envelope(.x, by = "age_mid")) %>% ungroup()
-ode_a <- a %>% filter(model == "blink") %>% rename(mid = y)
+ode_a <- a %>% filter(model == "fleet") %>% rename(mid = y)
 lab_a <- c(prev = "LM prevalence", clin = "clinical episodes per person-year",
            sev = "severe episodes per 1,000 person-years")
 ttl_a <- c(prev = "Prevalence peaks in\nschool-age children",
@@ -134,7 +134,7 @@ panel_age <- function(m) {
 }
 g <- (panel_age("prev") | panel_age("clin") | panel_age("sev")) + plot_annotation(
   title = sprintf("Age structure of infection and disease at EIR %s", EIR_REF),
-  subtitle = "Both models share the immunity functions that shape these profiles; blink tracks them on a 52-group age grid",
+  subtitle = "Both models share the immunity functions that shape these profiles; fleet tracks them on a 52-group age grid",
   caption = cap("Points at age-band midpoints; bands are finer in childhood. Severe incidence is the most immunity-sensitive output and the noisiest in the IBM.", ibm_note),
   theme = theme_cmp())
 save_fig(g, "core_age", width = 10, height = 5.2)
@@ -148,7 +148,7 @@ if ("demography" %in% age$scenario) {
     pivot_longer(c(dens, prev), names_to = "metric", values_to = "y")
   ibm_d <- d %>% filter(model == "IBM") %>% group_by(metric) %>%
     group_modify(~ envelope(.x, by = "age_mid")) %>% ungroup()
-  ode_d <- d %>% filter(model == "blink") %>% rename(mid = y)
+  ode_d <- d %>% filter(model == "fleet") %>% rename(mid = y)
   panel_dem <- function(m, ylab, title, pct = FALSE) {
     gi <- filter(ibm_d, metric == m); go <- filter(ode_d, metric == m)
     ggplot() +
@@ -169,7 +169,7 @@ if ("demography" %in% age$scenario) {
         panel_dem("prev", "LM prevalence", "Age-prevalence under that demography", TRUE)) +
     plot_annotation(
       title = sprintf("Custom demography at EIR %s: high infant and elderly mortality", EIR_REF),
-      subtitle = cap("set_demography() with age-specific death rates from 4.8% per year in infancy to 12% per year over 80; blink derives its equilibrium age structure from the same schedule", width = 115),
+      subtitle = cap("set_demography() with age-specific death rates from 4.8% per year in infancy to 12% per year over 80; fleet derives its equilibrium age structure from the same schedule", width = 115),
       caption = cap("Population shares are per band divided by band width, so bands of different width are comparable; the bands cover ages 0-85.", ibm_note),
       theme = theme_cmp())
   save_fig(g, "core_demography", width = 10, height = 5)
@@ -182,7 +182,7 @@ s <- doy %>% filter(scenario == "seasonal") %>%
   pivot_longer(c(pfpr_2_10, clin_0_5), names_to = "metric", values_to = "y")
 ibm_s <- s %>% filter(model == "IBM") %>% group_by(metric) %>%
   group_modify(~ envelope(.x, by = "doy")) %>% ungroup()
-ode_s <- s %>% filter(model == "blink") %>% rename(mid = y)
+ode_s <- s %>% filter(model == "fleet") %>% rename(mid = y)
 mon_brk <- cumsum(c(0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30))[c(1, 4, 7, 10)] + 1
 panel_doy <- function(m, ylab, title, pct = FALSE) {
   gi <- filter(ibm_s, metric == m); go <- filter(ode_s, metric == m)
@@ -251,8 +251,8 @@ if (length(fs)) {
                           labels = scales::label_comma()) +
       coord_equal(xlim = c(0, top), ylim = c(0, top), expand = FALSE) +
       labs(title = title,
-           subtitle = sprintf("r = %.2f \u00b7 slope = %.2f\nblink \u2212 IBM on average: %+.1f%% of the IBM mean", st$r, st$slope, 100 * st$bias),
-           x = sprintf("IBM (%s)", unit), y = sprintf("blink (%s)", unit)) +
+           subtitle = sprintf("r = %.2f \u00b7 slope = %.2f\nfleet \u2212 IBM on average: %+.1f%% of the IBM mean", st$r, st$slope, 100 * st$bias),
+           x = sprintf("IBM (%s)", unit), y = sprintf("fleet (%s)", unit)) +
       theme_cmp() + theme(legend.position = "right", legend.justification = "center",
                           legend.title = element_text(size = rel(0.8), colour = INK2),
                           panel.grid.major = element_blank())
@@ -264,7 +264,7 @@ if (length(fs)) {
                       format(st_c$n, big.mark = ","), length(unique(v$iso3c))),
       subtitle = sprintf("Every P. falciparum admin-1 \u00d7 urban/rural sub-site in the malariaverse site files, %d\u2013%d, with its full intervention history",
                          min(v$year), max(v$year)),
-      caption = cap("Dashed line = perfect agreement. All ages, P. falciparum only on both sides. Cell colour = number of sub-site-months (log scale). IBM values are the site files' own calibration diagnostic runs; blink was run here from the same site_parameters() lists."),
+      caption = cap("Dashed line = perfect agreement. All ages, P. falciparum only on both sides. Cell colour = number of sub-site-months (log scale). IBM values are the site files' own calibration diagnostic runs; fleet was run here from the same site_parameters() lists."),
       theme = theme_cmp())
   save_fig(g, "core_sites", width = 10, height = 5.4)
 }
@@ -280,7 +280,7 @@ m <- monthly %>% filter(scenario %in% INT, year >= BURN_Y - 3, year < BURN_Y + 6
          metric = factor(metric, levels = c("pfpr_2_10", "clin_0_5"), labels = c(PREV_LAB, CLIN_LAB)))
 ibm_m <- m %>% filter(model == "IBM") %>% group_by(scenario, metric) %>%
   group_modify(~ envelope(.x, by = "year")) %>% ungroup()
-ode_m <- m %>% filter(model == "blink") %>% rename(mid = y)
+ode_m <- m %>% filter(model == "fleet") %>% rename(mid = y)
 smc_rounds <- data.frame(scenario = factor(INT_LABELS[["smc"]], levels = INT_LABELS),
                          x = as.vector(sapply(0:2, function(y) BURN_Y + y + (c(0, 30, 60, 90) + 200) / 365)))
 onset_lab <- data.frame(scenario = factor(INT_LABELS[[INT[1]]], levels = INT_LABELS),
@@ -329,7 +329,7 @@ if (all(TS %in% monthly$scenario)) {
     mutate(scenario = factor(scenario, levels = TS, labels = TS_LABELS))
   ibm_t <- ts_long %>% filter(model == "IBM") %>% group_by(scenario, metric) %>%
     group_modify(~ envelope(.x, by = "year")) %>% ungroup()
-  ode_t <- ts_long %>% filter(model == "blink") %>% rename(mid = y)
+  ode_t <- ts_long %>% filter(model == "fleet") %>% rename(mid = y)
   ## net distributions marked only in the two rows that have them -- the SMC
   ## pulses are 4 a year for 15 years and would be a picket fence, so those are
   ## left to show themselves in the clinical sawtooth
@@ -389,7 +389,7 @@ if (all(TS %in% monthly$scenario)) {
 }
 
 ## ============================================================================
-## 6. int_impact -- % reduction over the first three years, IBM range vs blink
+## 6. int_impact -- % reduction over the first three years, IBM range vs fleet
 ## ============================================================================
 ## Four outcomes: the two young-child measures a trial would report, and the two
 ## all-age measures a programme carries. Severe is the noisiest of them in the
@@ -414,20 +414,20 @@ red <- monthly %>% filter(scenario %in% INT) %>%
 ibm_r <- red %>% filter(model == "IBM") %>% group_by(scenario, metric) %>%
   summarise(mid = median(reduction), lo = unname(quantile(reduction, .1)),
             hi = unname(quantile(reduction, .9)), .groups = "drop") %>% mutate(model = "IBM")
-ode_r <- red %>% filter(model == "blink") %>% transmute(scenario, metric, mid = reduction, model = "blink")
+ode_r <- red %>% filter(model == "fleet") %>% transmute(scenario, metric, mid = reduction, model = "fleet")
 both <- bind_rows(ibm_r, ode_r) %>%
   mutate(scenario = factor(scenario, levels = INT, labels = INT_LABELS),
          metric = factor(metric, levels = MET_R))
 write.csv(both, file.path(DDIR, "int_impact_summary.csv"), row.names = FALSE)
 seg  <- both %>% select(scenario, metric, model, mid) %>% pivot_wider(names_from = model, values_from = mid)
-XCOL <- c(IBM = 1.08, blink = 1.22)                 # value columns to the right of the data
+XCOL <- c(IBM = 1.08, fleet = 1.22)                 # value columns to the right of the data
 vals <- both %>% mutate(x = XCOL[model], lab = scales::percent(mid, accuracy = 1))
 hdr  <- data.frame(x = XCOL, lab = names(XCOL))
 xmin <- min(-0.04, floor(min(c(both$lo, both$mid), na.rm = TRUE) * 20) / 20 - 0.03)
 
 g <- ggplot(both, aes(y = scenario)) +
   geom_vline(xintercept = 0, colour = AXIS, linewidth = 0.5) +
-  geom_segment(data = seg, aes(x = IBM, xend = blink, yend = scenario), colour = GRID,
+  geom_segment(data = seg, aes(x = IBM, xend = fleet, yend = scenario), colour = GRID,
                linewidth = 2.2, lineend = "round") +
   geom_linerange(data = filter(both, model == "IBM"), aes(xmin = lo, xmax = hi, colour = model),
                  linewidth = 0.9, alpha = 0.55) +
@@ -442,7 +442,7 @@ g <- ggplot(both, aes(y = scenario)) +
   scale_y_discrete(limits = rev(unname(INT_LABELS)), expand = expansion(add = c(0.6, 1.3))) +
   coord_cartesian(clip = "off") +
   labs(title = "Intervention impact summarised: reduction over the first three years",
-       subtitle = "Relative to the three pre-deployment years of the same run. Circle = IBM median with 10\u201390% replicate range; triangle = blink",
+       subtitle = "Relative to the three pre-deployment years of the same run. Circle = IBM median with 10\u201390% replicate range; triangle = fleet",
        x = "reduction relative to baseline", y = NULL,
        caption = cap("Columns give the plotted medians.", ibm_note)) +
   theme_cmp() + theme(panel.grid.major.y = element_blank(), axis.line.x = element_blank(),

@@ -17,7 +17,7 @@
 # HOW to regenerate, when a model change is intended and the new numbers are the
 # ones to keep:
 #
-#   BLINK_REGENERATE_REFERENCE=1 Rscript -e 'devtools::test(filter = "reference")'
+#   FLEET_REGENERATE_REFERENCE=1 Rscript -e 'devtools::test(filter = "reference")'
 #
 # which rewrites tests/testthat/reference-values.csv from the current model and
 # then trivially passes. Do it deliberately, and read the CSV diff: it is the
@@ -100,12 +100,12 @@ test_that("model output matches the committed reference values", {
 
   got <- reference_summary()
 
-  if (nzchar(Sys.getenv("BLINK_REGENERATE_REFERENCE"))) {
+  if (nzchar(Sys.getenv("FLEET_REGENERATE_REFERENCE"))) {
     # Deliberate regeneration (see the header). Full double precision: the test
     # asserts to 1e-6, so the file must not be the thing that loses digits.
     write.csv(transform(got, value = vapply(got$value, format, character(1), digits = 17)),
               test_path("reference-values.csv"), row.names = FALSE, quote = FALSE)
-    message("BLINK_REGENERATE_REFERENCE: rewrote reference-values.csv from the current model")
+    message("FLEET_REGENERATE_REFERENCE: rewrote reference-values.csv from the current model")
   }
 
   ref <- utils::read.csv(test_path("reference-values.csv"))
@@ -200,10 +200,10 @@ test_that("intervention output matches the committed reference values", {
 
   got <- reference_int_summary()
 
-  if (nzchar(Sys.getenv("BLINK_REGENERATE_REFERENCE"))) {
+  if (nzchar(Sys.getenv("FLEET_REGENERATE_REFERENCE"))) {
     write.csv(transform(got, value = vapply(got$value, format, character(1), digits = 17)),
               test_path("reference-interventions.csv"), row.names = FALSE, quote = FALSE)
-    message("BLINK_REGENERATE_REFERENCE: rewrote reference-interventions.csv")
+    message("FLEET_REGENERATE_REFERENCE: rewrote reference-interventions.csv")
   }
 
   ref <- utils::read.csv(test_path("reference-interventions.csv"))

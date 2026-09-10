@@ -1,8 +1,8 @@
 ---
-title: "Getting started with blink"
+title: "Getting started with fleet"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Getting started with blink}
+  %\VignetteIndexEntry{Getting started with fleet}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -18,18 +18,18 @@ knitr::opts_chunk$set(eval = can_run)
 ```
 
 > **⚠️ Work in progress: not ready for real use.**
-> `blink` is published early so the approach, and its comparison against
+> `fleet` is published early so the approach, and its comparison against
 > `malariasimulation`, can be examined and argued with, not so that anyone can
 > rely on its numbers: the API is unstable and nothing here has been peer
 > reviewed. The known discrepancies against the IBM are open rather than
 > resolved, the largest being all-age severe incidence, which runs about 4 to 6%
 > below the IBM, alongside a roughly 9% excess on clinical and severe incidence
 > across the 63-country site files that is not yet explained. The full statement
-> is on the [package front page](https://pwinskill.github.io/blink/); if you need
+> is on the [package front page](https://pwinskill.github.io/fleet/); if you need
 > results you can defend today, use
 > [malariasimulation](https://github.com/mrc-ide/malariasimulation).
 
-`blink` is a fast, deterministic **mean-field (ODE) twin** of the
+`fleet` is a fast, deterministic **mean-field (ODE) twin** of the
 [malariasimulation](https://github.com/mrc-ide/malariasimulation) individual-based
 model of *Plasmodium falciparum* malaria. It reproduces the same age- and
 biting-heterogeneity-structured human model and compartmental mosquito model,
@@ -48,11 +48,11 @@ heterogeneity beyond the mean field, or *P. vivax*; see **Scope** at the end.
 
 ```{r install, eval = FALSE}
 # install.packages("remotes")
-remotes::install_github("pwinskill/blink")
+remotes::install_github("pwinskill/fleet")
 ```
 
 ```{r load}
-library(blink)
+library(fleet)
 ```
 
 `malariasimulation` (for parameter lists and the `set_*` builders) and `postie`
@@ -98,8 +98,8 @@ That relaxation is expected, and it is not a numerical error. The seed is the
 [malariaEquilibrium](https://github.com/mrc-ide/malariaEquilibrium) analytic
 fixed point, and that solution encodes *simplified* forms (a linear force of
 infection, refractory immunity boosting on the raw rate, exponential incubation
-survival), whereas `blink` reproduces `malariasimulation`'s own per-day
-semantics. The seed is therefore a close **approximation** to `blink`'s true
+survival), whereas `fleet` reproduces `malariasimulation`'s own per-day
+semantics. The seed is therefore a close **approximation** to `fleet`'s true
 fixed point rather than the fixed point itself. `malariasimulation` is seeded
 from the same solution and drifts off it the same way. Burn in before
 calibrating, and read a settled window rather than day 0.
@@ -108,7 +108,7 @@ calibrating, and read a settled window rather than day 0.
 
 Because the count table is `malariasimulation`-shaped, it goes straight into
 [postie](https://github.com/mrc-ide/postie): the same two calls you would make
-on an IBM run, with no blink-specific wrapper in between.
+on an IBM run, with no fleet-specific wrapper in between.
 
 ```{r epi}
 # prevalence: one <diagnostic>_prevalence_<lo>_<hi> column per age band (years)
@@ -123,7 +123,7 @@ utils::head(rates[, c("time", "age_lower", "age_upper",
 
 Use `diagnostic = "pcr"` for PCR prevalence, and postie's own arguments
 (`scaler`, `treatment_scaler`, `life_expectancy`, …) as you normally would. This
-means a post-processing pipeline written for the IBM works on a `blink` run
+means a post-processing pipeline written for the IBM works on a `fleet` run
 unchanged.
 
 ### Getting finer age resolution
@@ -295,7 +295,7 @@ lets dip below zero. `?ode_tuning` documents every field.
 ## How far it has been checked
 
 None of what follows is completed validation; it is the evidence that exists so
-far. `blink` is checked two ways. **First, self-consistency:** with no
+far. `fleet` is checked two ways. **First, self-consistency:** with no
 interventions it stays on the `malariaEquilibrium` seed to within a few tenths
 of a percent and then holds, as described under *A basic run* above (and it behaves the same way
 with treatment, `ft > 0`, thanks to a corrected prophylaxis-aging recursion).
@@ -305,11 +305,11 @@ model seeded at equilibrium, across eighteen scenarios (`comparison/`).
 Representative agreement:
 
 - Equilibrium PfPR(2-10) vs EIR tracks the IBM closely (at EIR 20 the IBM median
-  is 0.5479 against blink's 0.5483; at EIR 120, 0.7857 against 0.7855).
-- The age-prevalence profile at EIR 20 agrees to `max |IBM - blink| = 0.005`
+  is 0.5479 against fleet's 0.5483; at EIR 120, 0.7857 against 0.7855).
+- The age-prevalence profile at EIR 20 agrees to `max |IBM - fleet| = 0.005`
   (mean 0.002) across twelve bands from infancy to 85y.
 - Custom demography reproduces the IBM's under-5 population fraction
-  (IBM 0.088 vs blink 0.088).
+  (IBM 0.088 vs fleet 0.088).
 
 The other scenarios cover bed nets, IRS, seasonality, SMC, RTS,S, treatment
 scale-up and fifteen-year multi-intervention programmes, with clinical and severe

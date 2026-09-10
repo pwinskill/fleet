@@ -4,7 +4,7 @@
 # Split out of theme.R so the scripts that do not draw anything -- the 25-minute
 # IBM run and the drift check -- do not have to load ggplot2, patchwork, ragg and
 # systemfonts just to read POP and EIR_GRID. That keeps the drift check's CI
-# dependency list to blink, malariasimulation, digest and jsonlite, which is both
+# dependency list to fleet, malariasimulation, digest and jsonlite, which is both
 # faster and one less thing to break when a plotting package changes.
 #
 # theme.R sources this, so anything that draws still gets these too.
@@ -13,11 +13,11 @@
 ## Every comparison script sets ROOT (the checkout root) before sourcing this
 ## file, so nothing here is machine-specific either. VDIR points at the optional
 ## site-file validation results, which live in their own checkout beside this
-## one; override with BLINK_VALIDATE. The site figure and its table are skipped
+## one; override with FLEET_VALIDATE. The site figure and its table are skipped
 ## when it is absent.
 if (!exists("ROOT") || !file.exists(file.path(ROOT, "DESCRIPTION")))
-  stop("source this from a comparison/ script, which sets ROOT to the blink checkout.")
-VDIR <- Sys.getenv("BLINK_VALIDATE", file.path(dirname(ROOT), "blink2_validate"))
+  stop("source this from a comparison/ script, which sets ROOT to the fleet checkout.")
+VDIR <- Sys.getenv("FLEET_VALIDATE", file.path(dirname(ROOT), "blink2_validate"))
 
 ## ---- shared scenario constants (must match run_replicates.R) ----------------
 BURN_Y   <- 30L                 # IBM burn-in years before observation / intervention

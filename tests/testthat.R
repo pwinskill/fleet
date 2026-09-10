@@ -1,4 +1,4 @@
 library(testthat)
-library(blink)
+library(fleet)
 
-test_check("blink")
+test_check("fleet")

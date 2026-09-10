@@ -232,7 +232,7 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
                          timesteps = 3650) {
   p <- parameters
   if (!is.null(p$parasite) && p$parasite == "vivax") {
-    stop("blink supports P. falciparum only (parasite = 'vivax' not supported)")
+    stop("fleet supports P. falciparum only (parasite = 'vivax' not supported)")
   }
   # A single finite positive NUMBER. `is.na() || <= 0` alone let two values through
   # to die far downstream in messages that never mention init_EIR: Inf (reaches
@@ -271,7 +271,7 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
   # Disease-progression rates: malariasimulation advances states once per whole day
   # with exit probability rate_to_prob(1/d) = 1 - exp(-1/d) (competing_hazards.R:78,
   # utils.R:118), so the REALISED mean dwell is 1/(1 - exp(-1/d)) -- e.g. 5.517 d for
-  # dd = dt = 5, not 5. Use that exit rate so blink's dwell matches the IBM's. Must be
+  # dd = dt = 5, not 5. Use that exit rate so fleet's dwell matches the IBM's. Must be
   # applied AFTER the eq_params merge above, or set_equilibrium's stored rates silently
   # overwrite it. Not applied to rP: ms models prophylaxis as a hazard multiplier, not
   # a compartment, so there is no per-day census of it.
@@ -359,7 +359,7 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
     # malariaEquilibrium::human_equilibrium(h = gq_normal(n)) with these nodes
     # untouched, and the IBM's individuals draw zeta from the continuous
     # distribution, so that invariant is one neither library imposes. Rescaling
-    # here would be a mean-matched fudge that moves blink off the mechanism it
+    # here would be a mean-matched fudge that moves fleet off the mechanism it
     # replicates.
   }
 
@@ -499,8 +499,8 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
          Xf0 = Xf0, foim0 = foim0, total_M = (EIR / 365) * hp / denom)
   }
 
-  ## Which EIR to seed at. Under the default demography blink's own sizing is
-  ## malariasimulation's formula evaluated at blink's own equilibrium (its age
+  ## Which EIR to seed at. Under the default demography fleet's own sizing is
+  ## malariasimulation's formula evaluated at fleet's own equilibrium (its age
   ## grid, whole-day rates, drug-linked cT and ft*eff), which lands within ~1-2% of
   ## the IBM's total_M, so the seed is at init_EIR. Under a custom demography the two conventions part
   ## ways: set_equilibrium() sizes total_M from the equilibrium under the DEFAULT
@@ -508,27 +508,27 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
   ## equilibrium_total_M; custom mortality never enters), and the IBM then drifts to
   ## whatever transmission that mosquito density supports under the custom
   ## mortality. Replicate that: take the IBM's total_M and find the EIR at which
-  ## blink's equilibrium under the custom age structure has exactly that density --
+  ## fleet's equilibrium under the custom age structure has exactly that density --
   ## a fixed point, so no burn-in is needed and the same parameter list realises the
   ## same transmission in both models. parameters$hold_init_EIR = TRUE keeps the
-  ## previous behaviour (init_EIR is the EIR blink realises).
+  ## previous behaviour (init_EIR is the EIR fleet realises).
   eir_seed <- init_EIR
   total_M_ibm <- NA_real_
   sub_threshold <- FALSE
   if (isTRUE(p$custom_demography) && !isTRUE(p$hold_init_EIR)) {
     total_M_ibm <- ibm_total_M(p, init_EIR, eqp_ibm, ft)
-    # blink's total_M(EIR) is increasing in EIR and tends to the transmission
+    # fleet's total_M(EIR) is increasing in EIR and tends to the transmission
     # threshold M_crit as EIR -> 0, so a root exists iff M_crit < total_M_ibm:
     # test at a near-zero EIR rather than at an arbitrary fraction of init_EIR.
     f <- function(lE) seed_human(exp(lE))$total_M - total_M_ibm
     lo <- log(init_EIR * 1e-6); f_lo <- f(lo)
     if (f_lo > 0) {
-      # The IBM's mosquito density is below blink's transmission threshold under
+      # The IBM's mosquito density is below fleet's transmission threshold under
       # this demography: transmission is not sustainable, and the IBM decays to
-      # elimination from its seed. Keep the IBM's density (so blink decays too) and
+      # elimination from its seed. Keep the IBM's density (so fleet decays too) and
       # start the humans at a near-zero EIR.
       warning("Under this custom demography the mosquito population that ",
-              "set_equilibrium() implies is below blink's transmission threshold (",
+              "set_equilibrium() implies is below fleet's transmission threshold (",
               signif(total_M_ibm, 4), " vs ", signif(f_lo + total_M_ibm, 4), " adults); ",
               "seeding the mosquitoes at the IBM's density and the humans at a near-zero ",
               "EIR, so transmission decays as it would in the IBM. Set ",

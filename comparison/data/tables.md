@@ -1,6 +1,6 @@
 ## Equilibrium vs EIR (final 3 years)
 
-| init EIR | IBM realised EIR | blink realised EIR | IBM PfPR (2-10) | blink PfPR (2-10) | IBM clinical (0-5, per child-year) | blink clinical |
+| init EIR | IBM realised EIR | fleet realised EIR | IBM PfPR (2-10) | fleet PfPR (2-10) | IBM clinical (0-5, per child-year) | fleet clinical |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | 1.0 | 1.0 | 0.115 (0.107–0.118) | 0.114 | 0.16 (0.15–0.17) | 0.16 |
 | 3 | 3.0 | 3.0 | 0.240 (0.231–0.245) | 0.237 | 0.42 (0.39–0.44) | 0.42 |
@@ -9,11 +9,11 @@
 | 50 | 50.0 | 50.1 | 0.684 (0.678–0.694) | 0.686 | 2.27 (2.23–2.33) | 2.31 |
 | 120 | 121.3 | 120.4 | 0.786 (0.781–0.791) | 0.786 | 2.84 (2.81–2.86) | 2.86 |
 
-max |blink - IBM median| PfPR(2-10): 0.004 (at EIR 3); clinical incidence relative difference range: 0.7% to 2.6%
+max |fleet - IBM median| PfPR(2-10): 0.004 (at EIR 3); clinical incidence relative difference range: 0.7% to 2.6%
 
-blink inside the IBM 10-90% band: PfPR at 6 of 6 EIRs; clinical at 5 of 6
+fleet inside the IBM 10-90% band: PfPR at 6 of 6 EIRs; clinical at 5 of 6
 
-| init EIR | IBM clinical (all ages, per person-year) | blink clinical | IBM severe (all ages, per 1,000 person-years) | blink severe |
+| init EIR | IBM clinical (all ages, per person-year) | fleet clinical | IBM severe (all ages, per 1,000 person-years) | fleet severe |
 | --- | --- | --- | --- | --- |
 | 1 | 0.208 (0.198–0.218) | 0.213 | 4.73 (4.20–5.08) | 4.69 |
 | 3 | 0.388 (0.368–0.400) | 0.386 | 6.51 (5.83–6.97) | 6.52 |
@@ -24,13 +24,13 @@ blink inside the IBM 10-90% band: PfPR at 6 of 6 EIRs; clinical at 5 of 6
 
 all-ages relative difference: clinical -1.6% to 2.1%, severe -6.2% to 0.1%
 
-blink inside the IBM 10-90% band: all-age clinical at 5 of 6 EIRs; all-age severe at 4 of 6
+fleet inside the IBM 10-90% band: all-age clinical at 5 of 6 EIRs; all-age severe at 4 of 6
 
-fold change across the grid (blink): clinical 0-5 18.0x, clinical all ages 3.8x; severe all ages peaks at EIR 50
+fold change across the grid (fleet): clinical 0-5 18.0x, clinical all ages 3.8x; severe all ages peaks at EIR 50
 
 ## Age profile at EIR 20
 
-| age band (y) | IBM prevalence | blink prevalence | IBM clinical | blink clinical | IBM severe /1000 | blink severe /1000 |
+| age band (y) | IBM prevalence | fleet prevalence | IBM clinical | fleet clinical | IBM severe /1000 | fleet severe /1000 |
 | --- | --- | --- | --- | --- | --- | --- |
 | 0–1 | 0.283 | 0.288 | 1.09 | 1.09 | 53.9 | 52.5 |
 | 1–2 | 0.441 | 0.441 | 1.85 | 1.85 | 57.2 | 60.8 |
@@ -45,11 +45,11 @@ fold change across the grid (blink): clinical 0-5 18.0x, clinical all ages 3.8x;
 | 40–60 | 0.197 | 0.199 | 0.12 | 0.15 | 0.2 | 0.2 |
 | 60–85 | 0.194 | 0.195 | 0.09 | 0.11 | 0.0 | 0.1 |
 
-max |blink - IBM| prevalence across bands: 0.005; under-20 bands: clinical relative diff range -4.9% to 2.6%, severe relative diff range -25% to 6%; blink severe inside IBM band in 11 of 12 bands
+max |fleet - IBM| prevalence across bands: 0.005; under-20 bands: clinical relative diff range -4.9% to 2.6%, severe relative diff range -25% to 6%; fleet severe inside IBM band in 11 of 12 bands
 
 ## Custom demography at EIR 20
 
-| age band (y) | IBM population share | blink population share | IBM prevalence | blink prevalence |
+| age band (y) | IBM population share | fleet population share | IBM prevalence | fleet prevalence |
 | --- | --- | --- | --- | --- |
 | 0-1 | 1.8% | 1.8% | 0.229 | 0.232 |
 | 1-2 | 1.8% | 1.8% | 0.367 | 0.372 |
@@ -64,16 +64,16 @@ max |blink - IBM| prevalence across bands: 0.005; under-20 bands: clinical relat
 | 40-60 | 23.2% | 22.1% | 0.185 | 0.187 |
 | 60-85 | 12.4% | 14.5% | 0.182 | 0.185 |
 
-under-5 share: IBM 8.8%, blink 8.8%; max |share diff| 2.05 pp; max |prevalence diff| 0.008
+under-5 share: IBM 8.8%, fleet 8.8%; max |share diff| 2.05 pp; max |prevalence diff| 0.008
 
 ## Seasonal cycle (final year, weekly bins)
 
-prevalence peak: IBM 0.670 (day 326), blink 0.668 (day 326); trough: IBM 0.315 (day 151), blink 0.315 (day 144)
-clinical peak (per child-year): IBM 4.53 (day 305), blink 4.50 (day 298); annual mean clinical IBM 1.50 blink 1.54
+prevalence peak: IBM 0.670 (day 326), fleet 0.668 (day 326); trough: IBM 0.315 (day 151), fleet 0.315 (day 144)
+clinical peak (per child-year): IBM 4.53 (day 305), fleet 4.50 (day 298); annual mean clinical IBM 1.50 fleet 1.54
 
-seasonal realised EIR: IBM 18.7, blink 18.7 (target 20); annual PfPR IBM 0.492 (0.484–0.499), blink 0.490
+seasonal realised EIR: IBM 18.7, fleet 18.7 (target 20); annual PfPR IBM 0.492 (0.484–0.499), fleet 0.490
 
-## Country site files (snapshot: 2026-09-09, blink 0.0.0.9000)
+## Country site files (snapshot: 2026-09-09, fleet 0.0.0.9000)
 
 countries: 63; sub-sites: 1391; years 2000–2026
 clinical: n = 450,684, r = 0.982, slope = 0.997, relative bias = 8.7%
@@ -82,7 +82,7 @@ NOT refreshed by this harness or by CI: re-take with CMP_REFRESH_SITES=1 when th
 
 ## Intervention impact: reduction over post-deployment years 0-3 vs pre-deployment years -3-0
 
-| Scenario | Outcome | IBM reduction (10-90%) | blink reduction |
+| Scenario | Outcome | IBM reduction (10-90%) | fleet reduction |
 | --- | --- | --- | --- |
 | Treatment scale-up | PfPR 2-10 | 19% (18%–20%) | 19% |
 | Treatment scale-up | clinical, 0-5 | 4% (1%–6%) | 5% |
@@ -105,9 +105,9 @@ NOT refreshed by this harness or by CI: re-take with CMP_REFRESH_SITES=1 when th
 | Bed-net campaign | clinical, all ages | 67% (66%–67%) | 66% |
 | Bed-net campaign | severe, all ages | 50% (44%–53%) | 49% |
 
-largest |blink - IBM median| gap: 10.2 pp (treatment, severe, all ages); blink inside the IBM 10-90% band in 16 of 20 scenario x outcome cells
+largest |fleet - IBM median| gap: 10.2 pp (treatment, severe, all ages); fleet inside the IBM 10-90% band in 16 of 20 scenario x outcome cells
 
-| scenario | mean prevalence gap (blink - IBM, pp) | mean clinical gap (% of IBM) |
+| scenario | mean prevalence gap (fleet - IBM, pp) | mean clinical gap (% of IBM) |
 | --- | --- | --- |
 | irs | -0.2 | 0.7% |
 | nets | +0.7 | 3.1% |
@@ -117,7 +117,7 @@ largest |blink - IBM median| gap: 10.2 pp (treatment, severe, all ages); blink i
 
 ## Long-horizon programmes (15 years past deployment)
 
-| outcome | scenario-months | blink inside IBM 10-90% |
+| outcome | scenario-months | fleet inside IBM 10-90% |
 | --- | --- | --- |
 | clin_0_5 | 915 | 84% |
 | clin_all | 915 | 84% |
@@ -126,7 +126,7 @@ largest |blink - IBM median| gap: 10.2 pp (treatment, severe, all ages); blink i
 
 (an 80% band contains a perfectly-tracking deterministic mean ~80% of the time, so ~80% is the target, not a ceiling)
 
-| scenario | outcome | IBM reduction | blink reduction | gap (pp) |
+| scenario | outcome | IBM reduction | fleet reduction | gap (pp) |
 | --- | --- | --- | --- | --- |
 | All three together | clin_0_5 | 87% | 87% | +0.3 |
 | All three together | clin_all | 68% | 69% | +0.5 |
@@ -145,13 +145,13 @@ largest |blink - IBM median| gap: 10.2 pp (treatment, severe, all ages); blink i
 | Seasonal SMC | pfpr_2_10 | 28% | 29% | +1.3 |
 | Seasonal SMC | sev_all | 22% | 23% | +1.2 |
 
-largest |blink - IBM| gap in 15-year mean reduction: 1.8 pp
+largest |fleet - IBM| gap in 15-year mean reduction: 1.8 pp
 
 ## Run time
 
 | model | runs | s per simulated year | mean run (s) | mean horizon (y) |
 | --- | --- | --- | --- | --- |
 | IBM | 180 | 4.61 | 170.5 | 37 |
-| blink | 18 | 0.16 | 6.1 | 37 |
+| fleet | 18 | 0.16 | 6.1 | 37 |
 
-IBM total CPU: 8.5 h across 180 runs; blink total: 110 s across 18 runs (IBM/blink per-year ratio 28x)
+IBM total CPU: 8.5 h across 180 runs; fleet total: 110 s across 18 runs (IBM/fleet per-year ratio 28x)

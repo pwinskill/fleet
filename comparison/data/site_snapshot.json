@@ -1,7 +1,7 @@
 {
   "taken": "2026-09-09",
-  "blink": "0.0.0.9000",
-  "note": "A SNAPSHOT. The 63-country site-file comparison is a ~7-hour run against the malariaverse site files and is NOT refreshed by the comparison harness or by CI; it is re-taken deliberately, at a release. The figure and these statistics therefore describe the blink version named above, not necessarily the current HEAD.",
+  "fleet": "0.0.0.9000",
+  "note": "A SNAPSHOT. The 63-country site-file comparison is a ~7-hour run against the malariaverse site files and is NOT refreshed by the comparison harness or by CI; it is re-taken deliberately, at a release. The figure and these statistics therefore describe the fleet version named above, not necessarily the current HEAD.",
   "countries": 63,
   "sub_sites": 1391,
   "year_from": 2000,

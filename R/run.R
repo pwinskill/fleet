@@ -1,4 +1,4 @@
-.blink_env <- new.env(parent = emptyenv())
+.fleet_env <- new.env(parent = emptyenv())
 
 #' The mean-field model generator.
 #'
@@ -14,12 +14,12 @@ get_generator <- function(odin_file = NULL) {
   if (!requireNamespace("odin2", quietly = TRUE)) {
     stop("Compiling a custom `odin_file` needs the 'odin2' package.", call. = FALSE)
   }
-  if (is.null(.blink_env$generators)) .blink_env$generators <- list()
+  if (is.null(.fleet_env$generators)) .fleet_env$generators <- list()
   key <- normalizePath(odin_file, mustWork = TRUE)
-  if (is.null(.blink_env$generators[[key]])) {
-    .blink_env$generators[[key]] <- odin2::odin(odin_file, quiet = TRUE)
+  if (is.null(.fleet_env$generators[[key]])) {
+    .fleet_env$generators[[key]] <- odin2::odin(odin_file, quiet = TRUE)
   }
-  .blink_env$generators[[key]]
+  .fleet_env$generators[[key]]
 }
 
 #' Run the mean-field (ODE) malaria model.
@@ -40,7 +40,7 @@ get_generator <- function(odin_file = NULL) {
 #'   where `malariasimulation` puts it and reads it from too. Seed it the same way
 #'   you would for the IBM, before calling this function:
 #'   `parameters <- malariasimulation::set_equilibrium(parameters, init_EIR = 20)`.
-#'   That call also stores `eq_params`, which `blink` honours if present. Setting
+#'   That call also stores `eq_params`, which `fleet` honours if present. Setting
 #'   `parameters$init_EIR` by hand works but skips that.
 #'
 #'   Three further optional fields tune how faithfully the mean field mirrors the
@@ -72,7 +72,7 @@ get_generator <- function(odin_file = NULL) {
 #'       malariasimulation's `set_equilibrium()` sizes the mosquito population from
 #'       the equilibrium under its *default* exponential age structure, so under a
 #'       custom demography the IBM drifts to whatever transmission that density
-#'       supports. By default blink replicates that: it takes the IBM's mosquito
+#'       supports. By default fleet replicates that: it takes the IBM's mosquito
 #'       density and seeds at the EIR its own equilibrium under the custom age
 #'       structure then supports (a fixed point, so no burn-in), which is generally
 #'       *not* `init_EIR`. Set `TRUE` to seed at `init_EIR` exactly instead.
@@ -224,7 +224,7 @@ run_simulation_ode <- function(timesteps, parameters = NULL, correlations = NULL
 .reject_tuning_as_correlations <- function(correlations) {
   if (is.null(correlations)) return(invisible(NULL))
   known <- names(formals(ode_tuning))
-  if (inherits(correlations, "blink_ode_tuning")) {
+  if (inherits(correlations, "fleet_ode_tuning")) {
     stop("an `ode_tuning()` object was passed as the third argument, which is ",
          "`correlations` -- the signature mirrors ",
          "malariasimulation::run_simulation(timesteps, parameters, correlations), ",
@@ -259,7 +259,7 @@ simulate_with_pulses <- function(sys, times, events, meta, uidx, out_idx) {
   # these events at `<timestep> - 1` days from the start of its loop
   # (initialise_events()) and individual rejects the resulting negative delay
   # outright -- set_mda/set_smc(timesteps = 0, ...) dies with "delay must be >= 0",
-  # so a timestep-0 round is not a round the IBM ever runs. blink keeps running and
+  # so a timestep-0 round is not a round the IBM ever runs. fleet keeps running and
   # drops it, but says so: silently returning a trajectory identical to no
   # chemoprevention at all is what this warning exists to stop.
   early <- ev_days[ev_days < 1]

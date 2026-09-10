@@ -50,9 +50,9 @@ erlang_stages <- function(shape, scale = 1, w = 1, tr = 0, m_chain = NULL) {
 # Mean protection the post-treatment chain must carry. The IBM's Weibull clock
 # starts at treatment and runs IN PARALLEL with the Tr sojourn (exponential at rT),
 # so a treated person is unprotected at lag t with probability F_Tr(t)*(1 - W(t));
-# blink's chain starts when Tr ends. Matching the integrated protection,
+# fleet's chain starts when Tr ends. Matching the integrated protection,
 #   int (1 - F_Tr (1 - W)) dt = 1/rT + mean_W - int exp(-rT t) W(t) dt,
-# against blink's 1/rT + mean_chain gives mean_chain = mean_W - int exp(-rT t) W dt.
+# against fleet's 1/rT + mean_chain gives mean_chain = mean_W - int exp(-rT t) W dt.
 # This reduces to mean_W - 1/rT only when W ~ 1 throughout the Tr sojourn (true for
 # SP-AQ, 29.2 vs 29.2 d; not for AL's ~10-day protection, 5.5 vs 4.6 d).
 .chain_mean_after_tr <- function(shape, scale, rT) {
@@ -536,8 +536,8 @@ apply_chemoprevention_pulse <- function(sys, uidx, meta, event) {
 # (e.g. RTS,S rho sigma ~ 1.0, R21 cs sigma ~ 0.84) and the Hill function is
 # nonlinear, so the two differ materially. Integrate with a tensor Gauss-Hermite
 # rule over the four independent normal variates -- the same quadrature idiom
-# blink already uses for biting heterogeneity.
-pev_efficacy_curve <- function(profile, t, n_gq = getOption("blink.pev_gq", 7L)) {
+# fleet already uses for biting heterogeneity.
+pev_efficacy_curve <- function(profile, t, n_gq = getOption("fleet.pev_gq", 7L)) {
   g <- malariaEquilibrium::gq_normal(n_gq)          # standard-normal nodes/weights
   z <- g$nodes; w <- g$weights / sum(g$weights)
   sig <- function(f) if (length(profile[[f]]) > 1L) profile[[f]][2] else 0
@@ -621,7 +621,7 @@ pev_series <- function(p, age_mid, timesteps) {
   # (it is only ever written, pev_parameters.R:166,242); the EPI and mass processes are
   # gated on pev_epi_coverages/pev_epi_timesteps and mass_pev_timesteps
   # (processes.R:179). Gating on p$pev made the same parameter list mean "PEV on" to ms
-  # and "PEV off" to blink.
+  # and "PEV off" to fleet.
   has_epi <- length(p$pev_epi_timesteps) > 0 &&
     !is.null(p$pev_epi_coverages) && any(unlist(p$pev_epi_coverages) > 0)
   has_mass <- length(p$mass_pev_timesteps) > 0 &&

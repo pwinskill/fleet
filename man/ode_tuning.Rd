@@ -54,7 +54,7 @@ generator built into the package (development use; needs 'odin2' and a C++
 toolchain).}
 }
 \value{
-a \code{blink_ode_tuning} list.
+a \code{fleet_ode_tuning} list.
 }
 \description{
 Numerical settings for \code{\link[=run_simulation_ode]{run_simulation_ode()}}. Every default is the validated

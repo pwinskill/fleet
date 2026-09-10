@@ -155,7 +155,7 @@ test_that("custom demography sizes mosquitoes as set_equilibrium() does", {
     timesteps = 0, deathrates = matrix(dr, nrow = 1))
   p <- malariasimulation::set_equilibrium(p, init_EIR = 20)
   inp <- build_inputs(p, 20)
-  # the IBM's own total_M is reproduced exactly, and blink seeds at the EIR its
+  # the IBM's own total_M is reproduced exactly, and fleet seeds at the EIR its
   # equilibrium under the custom age structure supports for that density -- an
   # older population sustains less transmission (the IBM realises ~13.8 here)
   expect_equal(inp$meta$total_M_ibm, p$total_M, tolerance = 1e-8)
@@ -175,8 +175,8 @@ test_that("custom demography sizes mosquitoes as set_equilibrium() does", {
 
 test_that("invalid inputs error clearly", {
   skip_if_not_installed("malariasimulation")
-  # a non-positive EIR reaching blink directly on the list -- set_equilibrium()
-  # rejects one of its own before blink sees it, so this is the path blink owns
+  # a non-positive EIR reaching fleet directly on the list -- set_equilibrium()
+  # rejects one of its own before fleet sees it, so this is the path fleet owns
   p0 <- malariasimulation::get_parameters(); p0$init_EIR <- 0
   expect_error(run_simulation_ode(10, p0), "positive")
   expect_error(run_simulation_ode(10, eqm(malariasimulation::get_parameters(parasite = "vivax"), 10)), "falciparum")
@@ -200,7 +200,7 @@ test_that("the run signature mirrors run_simulation() and points at the replacem
 })
 
 test_that("ode_tuning validates its fields and accepts a partial list", {
-  expect_s3_class(ode_tuning(), "blink_ode_tuning")
+  expect_s3_class(ode_tuning(), "fleet_ode_tuning")
   expect_equal(ode_tuning()$atol, 1e-8)
   # a partial list fills the rest from the defaults
   tn <- as_ode_tuning(list(rtol = 1e-6))

@@ -1,4 +1,4 @@
-## The target EIR reaches blink on the parameter list, exactly as it reaches the
+## The target EIR reaches fleet on the parameter list, exactly as it reaches the
 ## IBM -- run_simulation_ode() has no init_EIR argument. This alias keeps a test
 ## call on one line; it is nothing but set_equilibrium(), and tests that care
 ## about the seeding convention itself should spell that out instead.

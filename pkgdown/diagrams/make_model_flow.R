@@ -1,4 +1,4 @@
-# Generate the blink model flow diagram used by the README and vignette("model").
+# Generate the fleet model flow diagram used by the README and vignette("model").
 #
 #   Rscript pkgdown/diagrams/make_model_flow.R
 #
@@ -7,7 +7,7 @@
 #
 # Outputs vignettes/model_flow.png and man/figures/model_flow.png, both
 # committed, so neither the vignette nor the README needs flodia at build time.
-# Set BLINK_DIAGRAM_OUT to write elsewhere, plus a 700-px proof (development).
+# Set FLEET_DIAGRAM_OUT to write elsewhere, plus a 700-px proof (development).
 #
 # ---------------------------------------------------------------------------
 # INVARIANTS. Break one of these and the figure states something false.
@@ -351,7 +351,7 @@ model_flow <- function() {
 }
 
 ## ---- write ------------------------------------------------------------------
-out <- Sys.getenv("BLINK_DIAGRAM_OUT", "")
+out <- Sys.getenv("FLEET_DIAGRAM_OUT", "")
 tmp <- tempfile(fileext = ".png")
 flodia_png(model_flow, filepath = tmp, width = 2400, res = 250)
 if (nzchar(out)) {

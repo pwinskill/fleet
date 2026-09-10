@@ -1,7 +1,7 @@
-url: https://pwinskill.github.io/blink
+url: https://pwinskill.github.io/fleet
 
-# Not on CRAN. Says so on the version badge, and see the sidebar note below:
-# there is a DIFFERENT package called blink that is on CRAN.
+# Not on CRAN, and no released version: `mode: unreleased` says so on the
+# version badge in the navbar.
 development:
   mode: unreleased
 
@@ -36,35 +36,19 @@ navbar:
   components:
     intro:
       text: Get started
-      href: articles/blink.html
+      href: articles/fleet.html
     github:
       icon: fab fa-github
-      href: https://github.com/pwinskill/blink
+      href: https://github.com/pwinskill/fleet
       aria-label: GitHub repository
 
 home:
-  title: blink • a fast ODE twin of malariasimulation
+  title: fleet • a fast ODE twin of malariasimulation
   description: >
     A fast, deterministic mean-field (ODE) counterpart to the malariasimulation
     individual-based model of Plasmodium falciparum malaria, built on odin2 / dust2.
-  # NOTE the structure says sourcelinks, not links, and that is deliberate.
-  #
-  # There is an unrelated package called blink on CRAN (Steorts, "Record
-  # Linkage for Empirically Motivated Priors"). pkgdown's built-in `links`
-  # component probes CRAN by package NAME at build time, gets a hit on that
-  # one, and renders "View on CRAN" pointing at
-  # https://cloud.r-project.org/package=blink: the front page of this site
-  # would send readers to someone else's package. There is no setting that
-  # turns the probe off (development.mode does not, checked against pkgdown
-  # 2.2.0), and a `links:` entry under components is ignored because pkgdown
-  # only reads components for names it has no default for. So the section is
-  # rebuilt by hand under a name pkgdown has no default for, which is what
-  # drops the CRAN link while keeping the two links that were worth having.
-  #
-  # If blink is ever published on CRAN, put `links` back and delete
-  # sourcelinks.
   sidebar:
-    structure: [glance, sourcelinks, citation, license, authors, dev]
+    structure: [glance, links, citation, license, authors, dev]
     components:
       glance:
         title: At a glance
@@ -72,18 +56,11 @@ home:
           A single multi-decade run finishes in **seconds**, independent of
           population size. Feed it an unmodified `malariasimulation` parameter
           list and get `postie`-style outputs straight back.
-      sourcelinks:
-        title: Links
-        text: |
-          [Browse source code](https://github.com/pwinskill/blink)
-
-          [Report a bug](https://github.com/pwinskill/blink/issues)
-
 articles:
 - title: Articles
   navbar: ~
   contents:
-  - blink
+  - fleet
   - model
   - comparison
 
@@ -110,4 +87,4 @@ reference:
   desc: >
     Background, scope, and pointers to the mean-field approximations.
   contents:
-  - blink-package
+  - fleet-package

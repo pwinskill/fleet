@@ -30,7 +30,7 @@ apply). See the README for the mean-field approximations used by each module.
 where \code{malariasimulation} puts it and reads it from too. Seed it the same way
 you would for the IBM, before calling this function:
 \code{parameters <- malariasimulation::set_equilibrium(parameters, init_EIR = 20)}.
-That call also stores \code{eq_params}, which \code{blink} honours if present. Setting
+That call also stores \code{eq_params}, which \code{fleet} honours if present. Setting
 \code{parameters$init_EIR} by hand works but skips that.
 
 Three further optional fields tune how faithfully the mean field mirrors the
@@ -62,7 +62,7 @@ IBM's literal Hill calls.
 malariasimulation's \code{set_equilibrium()} sizes the mosquito population from
 the equilibrium under its \emph{default} exponential age structure, so under a
 custom demography the IBM drifts to whatever transmission that density
-supports. By default blink replicates that: it takes the IBM's mosquito
+supports. By default fleet replicates that: it takes the IBM's mosquito
 density and seeds at the EIR its own equilibrium under the custom age
 structure then supports (a fixed point, so no burn-in), which is generally
 \emph{not} \code{init_EIR}. Set \code{TRUE} to seed at \code{init_EIR} exactly instead.

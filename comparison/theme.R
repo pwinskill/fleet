@@ -1,11 +1,11 @@
-# House style for the blink-vs-malariasimulation comparison figures.
+# House style for the fleet-vs-malariasimulation comparison figures.
 #
 # Sourced by run_replicates.R (live) and render_figures.R (re-render from saved
 # CSVs), so the two never drift. Everything visual lives here: palette, theme,
 # series scales, and the small helpers every figure shares.
 #
 # Design rules (see the dataviz method the figures were built against):
-#   * Two series, IBM vs blink, encoded THREE ways -- colour, line type, point
+#   * Two series, IBM vs fleet, encoded THREE ways -- colour, line type, point
 #     shape -- so every panel reads in greyscale and under colour-vision
 #     deficiency. Palette validated: indigo/coral pass CVD dE 27 (protan) and
 #     normal-vision dE 38; both >= 3:1 on white.
@@ -13,8 +13,8 @@
 #     10-90% envelope at ~15% opacity, never as one noisy realisation.
 #   * LAYER ORDER: where the two series overlap -- which, when the models agree,
 #     is everywhere -- the mark that hides less goes on top. So the IBM's dashed
-#     median draws OVER blink's solid line (the solid shows through the gaps, so
-#     both read), while blink's hollow point draws OVER the IBM's filled one.
+#     median draws OVER fleet's solid line (the solid shows through the gaps, so
+#     both read), while fleet's hollow point draws OVER the IBM's filled one.
 #     The envelope always sits at the bottom. Get this backwards and agreement
 #     looks like a single series.
 #   * Thin marks, hairline SOLID gridlines one step off the surface, no panel
@@ -28,9 +28,9 @@ source(file.path(ROOT, "comparison", "constants.R"))
 suppressMessages({library(ggplot2); library(patchwork)})
 
 ## ---- palette (site colours: _pkgdown.yml primary / danger) ------------------
-COL <- c(IBM = "#E5533F", blink = "#4338CA")
-LTY <- c(IBM = "22",      blink = "solid")        # dashed / solid
-SHP <- c(IBM = 21,        blink = 24)             # filled circle / triangle
+COL <- c(IBM = "#E5533F", fleet = "#4338CA")
+LTY <- c(IBM = "22",      fleet = "solid")        # dashed / solid
+SHP <- c(IBM = 21,        fleet = 24)             # filled circle / triangle
 INK   <- "#111827"; INK2 <- "#52514E"; MUTED <- "#898781"
 ## reference lines (1:1 agreement). Orange, because it is hue-opposed to the
 ## indigo hex ramp and is NOT a series colour, so it can never be read as a
@@ -73,11 +73,11 @@ theme_cmp <- function(base_size = 13) {
 
 ## series scales -- every panel that draws both models uses exactly these
 scale_models <- function(shapes = TRUE, lines = TRUE) {
-  s <- list(scale_colour_manual(values = COL, breaks = c("IBM", "blink")),
-            scale_fill_manual(values = COL, breaks = c("IBM", "blink"), guide = "none"),
+  s <- list(scale_colour_manual(values = COL, breaks = c("IBM", "fleet")),
+            scale_fill_manual(values = COL, breaks = c("IBM", "fleet"), guide = "none"),
             labs(colour = NULL, linetype = NULL, shape = NULL))
-  if (lines)  s <- c(s, list(scale_linetype_manual(values = LTY, breaks = c("IBM", "blink"))))
-  if (shapes) s <- c(s, list(scale_shape_manual(values = SHP, breaks = c("IBM", "blink"))))
+  if (lines)  s <- c(s, list(scale_linetype_manual(values = LTY, breaks = c("IBM", "fleet"))))
+  if (shapes) s <- c(s, list(scale_shape_manual(values = SHP, breaks = c("IBM", "fleet"))))
   s
 }
 ## a legend that shows line + point together, in the same order everywhere

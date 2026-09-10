@@ -1,4 +1,4 @@
-# blink 0.0.0.9001
+# fleet 0.0.0.9001
 
 The defects a full package review found, fixed. Three of them move model output:
 the age-band rendering weights, five intervention series that took effect before
@@ -24,7 +24,7 @@ with the model age grid, in a run with no interventions, is unchanged.
   strengthened: over a set of bands that partition a span of the age axis the
   weights sum to exactly 1 per group inside that span, so a group straddling a
   boundary is split between the two bands rather than handed whole to whichever
-  one owns its midpoint. `blink` now also warns when a rendering band overlaps no
+  one owns its midpoint. `fleet` now also warns when a rendering band overlaps no
   model age group at all, and reports the share of the population no band
   captured. **This moves published numbers for any band that does not align with
   the model age grid**, in every scenario, with or without interventions. Bands
@@ -102,7 +102,7 @@ with the model age grid, in a run with no interventions, is unchanged.
   `build_inputs()` merges that over the live translation, so the stored copy wins
   for every shared biological constant: an edit made afterwards (`p$du <- 10`) is
   a silent no-op. That contract stands, since `set_equilibrium()` is meant to be
-  the last call on the list, but a violation of it must not be silent. `blink`
+  the last call on the list, but a violation of it must not be silent. `fleet`
   now compares the two and warns, naming the `malariasimulation` fields whose
   live translation no longer agrees with the frozen copy, so the message points
   at the field you typed rather than at its equilibrium alias. Values that merely
@@ -154,15 +154,15 @@ with the model age grid, in a run with no interventions, is unchanged.
   `skip_if_not_installed("malariasimulation")`, so a machine where the package
   was missing or unloadable ran the handful of dependency-free blocks, skipped
   the rest, and reported success having tested almost nothing.
-  `tests/testthat/setup.R` now errors, with `BLINK_ALLOW_SKIP` as the deliberate
+  `tests/testthat/setup.R` now errors, with `FLEET_ALLOW_SKIP` as the deliberate
   escape hatch.
 
 * **`NAMESPACE` is roxygen-generated.** It was hand-written and held the only
-  copy of `useDynLib(blink, .registration = TRUE)`, so the first
+  copy of `useDynLib(fleet, .registration = TRUE)`, so the first
   `devtools::document()` would have dropped it and left the package unable to
   load.
 
-# blink 0.0.0.9000
+# fleet 0.0.0.9000
 
 ## API changes
 
@@ -186,7 +186,7 @@ with the model age grid, in a run with no interventions, is unchanged.
   ```
 
   Setting `parameters$init_EIR` by hand still works, but skips the `eq_params`
-  that `set_equilibrium()` stores and `blink` honours. This is numerically inert
+  that `set_equilibrium()` stores and `fleet` honours. This is numerically inert
   for anyone already calling `set_equilibrium()`: the whole comparison harness
   reproduces bit-identically through the new API.
 
@@ -214,12 +214,12 @@ with the model age grid, in a run with no interventions, is unchanged.
   list, plus argument-splitting machinery (`rates_args`, `prevalence_args`,
   `...`) that was more to learn than the two calls it replaced. malariasimulation
   has no such wrapper (IBM post-processing pipelines call postie directly) and
-  `blink`'s output table is malariasimulation-shaped, so those pipelines already
-  work on a `blink` run unchanged. Replace
+  `fleet`'s output table is malariasimulation-shaped, so those pipelines already
+  work on a `fleet` run unchanged. Replace
   `epi <- get_epi_outputs(out)` with
   `postie::get_prevalence(out, diagnostic = "lm")` and `postie::get_rates(out)`;
   every postie argument is now passed to postie directly. `postie` remains in
-  Suggests for the vignette and tests, but nothing `blink` exports depends on it.
+  Suggests for the vignette and tests, but nothing `fleet` exports depends on it.
 
 ## Behaviour changes
 
@@ -228,28 +228,28 @@ with the model age grid, in a run with no interventions, is unchanged.
   under its *default* exponential age structure (`set_equilibrium()` →
   `equilibrium_total_M()`; custom mortality never enters), so under
   `set_demography()` the IBM drifts to whatever transmission that density supports.
-  `blink` used to re-solve the equilibrium under the custom age structure and hold
+  `fleet` used to re-solve the equilibrium under the custom age structure and hold
   `init_EIR` exactly, so the same parameter list realised different transmission in
-  the two models (EIR 20 in blink against 13.8 in the IBM in the comparison
+  the two models (EIR 20 in fleet against 13.8 in the IBM in the comparison
   scenario, PfPR(2–10) 0.55 against 0.49). It now reproduces the IBM's `total_M`
   exactly (`ibm_total_M()`) and root-finds the EIR at which its own equilibrium
   under the custom demography has that density, and seeds there. That is still a
   fixed point, so there is no burn-in (the scenario now seeds at EIR 13.86,
   PfPR 0.489). Under the
-  default demography nothing changes: blink keeps its own sizing there, which is
-  the IBM's formula at blink's own equilibrium and lands ~1.5% above the IBM's
+  default demography nothing changes: fleet keeps its own sizing there, which is
+  the IBM's formula at fleet's own equilibrium and lands ~1.5% above the IBM's
   `total_M` (so the same exponential mortality expressed through
   `set_demography()` seeds at EIR 19.7 rather than 20, within the IBM's
   replicate noise). `parameters$hold_init_EIR = TRUE` restores the previous
   behaviour. Every malariaverse site file uses `set_demography()`, so this affects
   all country work: across the 63-country validation set this release moves
-  blink's mean clinical-incidence excess over the IBM from +10.1% to +8.7% and the
+  fleet's mean clinical-incidence excess over the IBM from +10.1% to +8.7% and the
   regression slope from 1.02 to 1.00 (r 0.980 → 0.982); severe from +9.4% to +8.8%.
 
 * **Prophylaxis is an Erlang chain, not one exponential compartment.** The IBM
   applies the Weibull survival `W(t - t_drug)` to each treated person's infection
   probability, so a treated cohort's mean protection at lag `t` is exactly `W(t)`.
-  `blink` represented both prophylaxis compartments (`Ph` post-treatment, `Ph_c`
+  `fleet` represented both prophylaxis compartments (`Ph` post-treatment, `Ph_c`
   chemoprevention) as a single exponential at the Weibull mean, which leaks
   protection early — for SP-AQ (shape 4.3, scale 38.1) only 42% are still protected
   at day 30 against the Weibull's 70% — and under-estimated seasonal SMC (under-5
@@ -295,7 +295,7 @@ with the model age grid, in a run with no interventions, is unchanged.
   defect. Clinical incidence and prevalence are unchanged.
 
   It also makes one comparison worse, and that is worth stating plainly. The same
-  correction lowers severe incidence slightly, and blink already ran below the
+  correction lowers severe incidence slightly, and fleet already ran below the
   IBM there: all-age severe goes from −5.9% to −6.2% at EIR 20 and from −3.4% to
   −4.0% at EIR 50, dropping just outside the IBM's 10–90% band at those two EIRs
   (by 0.2% and 0.3% of the lower edge) where it had been marginally inside. The
@@ -333,7 +333,7 @@ with the model age grid, in a run with no interventions, is unchanged.
 
 * **Chemoprevention pulses renew existing protection and clear `Tr_slow`.** The
   IBM's `update_mass_drug_admin()` resets `drug_time` for everyone successfully
-  treated whatever their state; `blink`'s pulse left people already in `Ph`/`Ph_c`
+  treated whatever their state; `fleet`'s pulse left people already in `Ph`/`Ph_c`
   decaying from their earlier dose and skipped the slow-clearance treated
   compartment. Both now move to the first stage of `Ph_c` with the rest of the
   covered fraction. That is material for monthly SMC rounds, where most of the
@@ -365,7 +365,7 @@ with the model age grid, in a run with no interventions, is unchanged.
   in `comparison/run_replicates.R` and a re-run of the five intervention
   scenarios. Together the four panels show *who* each intervention protects: SMC
   and RTS,S roughly halve their effect when measured over all ages rather than
-  under-5s, while nets and IRS read the same either way. blink lands inside the
+  under-5s, while nets and IRS read the same either way. fleet lands inside the
   IBM's 10–90% replicate range in 16 of the 20 scenario × outcome cells; the
   noisiest is treatment scale-up on severe incidence, where the IBM's own
   replicates span −12% to +6% and the two models differ in sign.
@@ -375,7 +375,7 @@ with the model age grid, in a run with no interventions, is unchanged.
   the figure and its statistics are therefore frozen rather than kept in step,
   and both now say so — in the README caption, in a callout above the figure in
   `vignette("comparison")`, and in `comparison/data/site_snapshot.json`, which
-  records when the snapshot was taken and against which `blink` version.
+  records when the snapshot was taken and against which `fleet` version.
 
   This also closes a hole. `summary_tables.R` used to compute those statistics
   live and silently omit the whole section when the validation checkout was
@@ -416,19 +416,19 @@ with the model age grid, in a run with no interventions, is unchanged.
   rest.
 
 * **New `comparison/check_drift.R`: check the match without re-running the IBM.**
-  The IBM does not depend on `blink`, so its committed rows stay valid for any
-  blink-side change, and there was never a reason to re-run a 25-minute IBM sweep
-  to find out whether the match still holds. The check re-runs blink alone
+  The IBM does not depend on `fleet`, so its committed rows stay valid for any
+  fleet-side change, and there was never a reason to re-run a 25-minute IBM sweep
+  to find out whether the match still holds. The check re-runs fleet alone
   (~2 min for all 18 scenarios, ~20 s for a `CMP_ONLY` subset) and compares
   against the frozen reference.
 
   It answers two questions separately, because they mean different things. **Did
-  anything move?** blink now against blink's committed rows, to 1e-6. A moved
+  anything move?** fleet now against fleet's committed rows, to 1e-6. A moved
   number is not automatically wrong — a deliberate model fix moves numbers — but
   it must be seen; silent movement is how a regression ships. **Is the match
-  still good?** blink now against the committed IBM medians and 10–90% bands, at
+  still good?** fleet now against the committed IBM medians and 10–90% bands, at
   per-outcome thresholds set from what the models achieve today with headroom
-  (max |blink − IBM| of 2% for PfPR, 5% for both clinical measures, 10% for
+  (max |fleet − IBM| of 2% for PfPR, 5% for both clinical measures, 10% for
   severe; and a tolerated count of grid points falling outside the replicate
   band, expressed as failures allowed rather than successes required so a subset
   run does not make the limit unreachable). Only the second fails the run;
@@ -445,7 +445,7 @@ with the model age grid, in a run with no interventions, is unchanged.
   time the expensive re-run is genuinely required — so the script says when,
   rather than leaving it to memory.
 
-  The scenario definitions, the shared summariser and the blink-run loop moved
+  The scenario definitions, the shared summariser and the fleet-run loop moved
   into `comparison/scenarios.R`, sourced by both scripts. Otherwise a drift check
   could quietly test a different set of scenarios, or a different solver tuning,
   from the one the reference was built on.
@@ -486,7 +486,7 @@ with the model age grid, in a run with no interventions, is unchanged.
   under-5s and over all ages, and all-age severe incidence.
 
   Through five net distributions, sixty SMC rounds and a treatment scale-up the
-  two models stay together: blink sits inside the IBM's 10–90% replicate band in
+  two models stay together: fleet sits inside the IBM's 10–90% replicate band in
   78–84% of the 915 scenario-months per outcome (an 80% band contains a
   perfectly-tracking deterministic mean about 80% of the time, so that is at the
   target, not short of it), and the largest disagreement in 15-year mean burden
@@ -495,7 +495,7 @@ with the model age grid, in a run with no interventions, is unchanged.
   because `facet_grid` frees the y scale by row and here the scales differ by
   column. `summary_tables.R` reports both statistics; it deliberately does *not*
   report a per-month relative error, because the seasonal dry-season trough goes
-  to within rounding of zero and |blink − IBM| / IBM then reaches billions of
+  to within rounding of zero and |fleet − IBM| / IBM then reaches billions of
   percent on months carrying no burden.
 
   The IBM envelope on this figure is drawn heavier than on the rest of the set
@@ -517,9 +517,9 @@ with the model age grid, in a run with no interventions, is unchanged.
   3.8-fold across the EIR grid against 18-fold in under-5s, and severe incidence
   is not monotonic at all, plateauing around EIR 20–50 in both models before
   falling by EIR 120. Agreement is looser here than on the under-5 metrics and
-  leans the other way: blink runs −1.6% to +2.1% of the IBM median on all-age
+  leans the other way: fleet runs −1.6% to +2.1% of the IBM median on all-age
   clinical (inside the replicate band at five of six EIRs) and −5.9% to +0.1% on
-  all-age severe (inside the band at all six), so the small excess blink carries
+  all-age severe (inside the band at all six), so the small excess fleet carries
   in under-5s is more than repaid in the 5–20 year bands. `summary_tables.R`
   reports both new outcomes over the grid.
 * Three stale comment blocks are removed, each of which had been left sitting
@@ -533,12 +533,12 @@ with the model age grid, in a run with no interventions, is unchanged.
   said. `tests/testthat/test-package.R` called `rT_slow` a reciprocal time three
   lines above the comment (and the assertion) that correctly make it a whole-day
   exit probability.
-* Every line figure now draws the IBM's dashed median *over* blink's solid line
+* Every line figure now draws the IBM's dashed median *over* fleet's solid line
   rather than under it. Where the models agree — which, on these figures, is
   nearly everywhere — the line drawn last is the only one visible, so the old
   order quietly hid the IBM and made a two-series panel read as one. Dashes let
   the solid line show through the gaps, so both read. Points keep the opposite
-  order for the same reason: blink's hollow marker hides less than the IBM's
+  order for the same reason: fleet's hollow marker hides less than the IBM's
   filled one, so it goes on top. The rule is written down in `comparison/theme.R`
   and applies to `core_eir`, `core_age`, `core_demography`, `core_seasonal` and
   `int_timeseries`; the effect is largest on the low-noise intervention panels,
@@ -565,14 +565,14 @@ with the model age grid, in a run with no interventions, is unchanged.
   and a shared theme; the per-replicate summaries are committed so the figures can
   be redrawn without re-running the models. The pre-replication-pass figures
   (`A_`–`F_`, `inc_*`) and the scripts that made them are removed.
-* The comparison surfaced three blink-side items, all addressed in this release
+* The comparison surfaced three fleet-side items, all addressed in this release
   (see *Behaviour changes* and *Bug fixes* above): the top age group's death rate
   under `set_demography()`, exponential prophylaxis under-estimating seasonal SMC,
   and the `set_equilibrium()` convention under custom demography.
 
 ## Exact-replication pass (malariasimulation v3.0.0)
 
-A systematic audit replaced every place `blink` approximated a mechanism whose
+A systematic audit replaced every place `fleet` approximated a mechanism whose
 malariasimulation implementation is known. No tuned constants were introduced.
 
 * **Output bands — bug fix, affects every user.** `render_output()` emitted
@@ -593,7 +593,7 @@ malariasimulation implementation is known. No tuned constants were introduced.
   loss-free delay with the survival applied at the exit, matching
   `adult_mosquito_eqs.cpp`; `total_M` needs no compensation.
 * **Slow parasite clearance.** The IBM assigns each treated individual to `dt` or
-  `dt_slow` by a Bernoulli draw — a two-component mixture. `blink` collapsed this into
+  `dt_slow` by a Bernoulli draw — a two-component mixture. `fleet` collapsed this into
   one exponential at the blended mean; `Tr` is now split into parallel `Tr`/`Tr_slow`.
 * **Clinical event counting.** The IBM resolves at most one infection outcome per
   person per day, so clinical episodes are `phi*p*N`. Using `phi*FOI` over-counted
@@ -613,7 +613,7 @@ malariasimulation implementation is known. No tuned constants were introduced.
   of being evaluated at the profile median — the latter overstated R21 efficacy by up
   to ~4.7 pp. Validated against a Monte-Carlo of the IBM's own sampler to <5e-4.
 * **PEV gating.** malariasimulation never reads `parameters$pev`; it gates on
-  `pev_epi_coverages`/`pev_epi_timesteps`/`mass_pev_timesteps`. `blink` gated on
+  `pev_epi_coverages`/`pev_epi_timesteps`/`mass_pev_timesteps`. `fleet` gated on
   `pev$pev`, so the same list could mean "PEV on" to one model and "off" to the other.
 * **Seeding consequence.** Because `malariaEquilibrium` encodes the simplified forms,
   the analytic seed is now a close approximation rather than an exact fixed point: an
@@ -643,13 +643,13 @@ and RMSE in absolute incidence units were measured at the pass and are not
 carried in the snapshot, which records relative bias instead.
 
 Per-site median monthly clinical r = 0.99. Note the "before the pass" column was
-measured through the overlapping-band artefact, which inflated blink's side by
+measured through the overlapping-band artefact, which inflated fleet's side by
 ~1.21x (clinical) and ~1.10x (severe); the apparently unbiased severe slope of
 1.02 was two opposite-signed errors cancelling.
 
 Known remaining discrepancies, all characterised rather than tuned away:
 
-* **A positive offset against the site files.** blink runs 8.7% above the IBM on
+* **A positive offset against the site files.** fleet runs 8.7% above the IBM on
   average for monthly clinical incidence and 8.8% for severe, in the snapshot
   above. With the slopes at 1.00 and 0.95 that excess is an intercept, a few
   hundredths of an episode per person-year, so it matters in low-incidence
@@ -684,7 +684,7 @@ odin2/dust2.
   with the full immunity system (`IB`/`ICA`/`ICM`/`ID`/`IVA`/`IVM`), coupled to
   the compartmental mosquito model (`E`/`L`/`P`/`Sm`/EIP-chain/`Im`) per species.
 * Seeded at the `malariaEquilibrium` analytic solution. That solution encodes
-  simplified forms, so it is a close approximation to `blink`'s own fixed point
+  simplified forms, so it is a close approximation to `fleet`'s own fixed point
   rather than the fixed point itself: an undisturbed run relaxes by up to ~0.5%
   over the first years and then holds, exactly as malariasimulation does off the
   same seed. The four departures are bite deduplication, the integer refractory
@@ -706,7 +706,7 @@ odin2/dust2.
   the effect correctly gated by exposure: largest in the highest-EIR setting
   (BFA slope 1.10 -> 1.04) and nil at low transmission (MMR unchanged).
   `parameters$bite_dedup = 0` restores the linear form. That removes the largest
-  single reason the `malariaEquilibrium` seed is not `blink`'s own fixed point,
+  single reason the `malariaEquilibrium` seed is not `fleet`'s own fixed point,
   but it does not make the seed exact, because the other three departures remain.
   It does roughly halve the largest excursion from the seed: over an undisturbed
   15-year run at EIR 20, PfPR(2-10) departs from its seeded value by at most
@@ -773,7 +773,7 @@ parameter flexibility they expose:
 * `default_age_lower()` provides the default graded age grid.
 
 Those three are the whole export list. Post-processing is `postie`'s job, not
-`blink`'s: pass the returned table to `postie::get_rates()` /
+`fleet`'s: pass the returned table to `postie::get_rates()` /
 `postie::get_prevalence()` exactly as you would an IBM run.
 
 ## Validation

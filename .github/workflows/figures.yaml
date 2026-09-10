@@ -66,7 +66,7 @@ jobs:
       # the whole Suggests tree: malariasimulation and postie, both GitHub
       # remotes that compile from source, for a job that loads neither. The two
       # scripts here read committed CSVs and JSON and draw pictures; nothing in
-      # them calls the IBM, and nothing in them loads blink either, so the job
+      # them calls the IBM, and nothing in them loads fleet either, so the job
       # does not install the package under test at all.
       #
       # The list below is what the scripts actually reach for: dplyr and tidyr

@@ -1,5 +1,5 @@
 # =============================================================================
-# blink: mean-field (ODE) twin of malariasimulation (P. falciparum)
+# fleet: mean-field (ODE) twin of malariasimulation (P. falciparum)
 # Core transmission model (Phase 1): human S/D/A/U/Tr/Ph over [age, het] with
 # the six Griffin immunity functions, coupled to the compartmental mosquito
 # model (E/L/P/Sm/[EIP chain]/Im per species).
@@ -309,7 +309,7 @@ deriv(Ph_c[2:n_age, , 2:n_phc]) <- r_age[i - 1] * Ph_c[i - 1, j, k] +
 # u_eff = ceil(u) - 1. The event probability q is the DEDUPLICATED per-day one:
 #   IB          -> bitten at least once, q = 1 - exp(-EPS)  (bitten_humans is a Bitset)
 #   ICA/ID/IVA  -> infected that day,    q = 1 - exp(-FOI)  (one outcome per person/day)
-# blink previously used the raw rates EPS/FOI, over-boosting where exposure is high.
+# fleet previously used the raw rates EPS/FOI, over-boosting where exposure is high.
 # ICA/ID/IVA are boosted only for individuals eligible to be INFECTED (ms restricts
 # source_humans to S/A/U), so their boost is scaled by the at-risk fraction; IB is
 # boosted for everyone bitten, whatever their state, so it is not scaled.
@@ -351,7 +351,7 @@ deriv(Sm[]) <- 0.5 * MP[i] / dpl - Sm[i] * foim[i] - Sm[i] * mum[i]
 # (src/adult_mosquito_eqs.cpp: incubation_survival = exp(-model.mu * model.tau);
 #  dE/dt = S*foim - lagged_incubating*incubation_survival - E*mu;
 #  dI/dt = lagged_incubating*incubation_survival - I*mu).
-# blink substitutes an Erlang chain for the delay (odin2's delay() is unreliable
+# fleet substitutes an Erlang chain for the delay (odin2's delay() is unreliable
 # here), but the chain must be LOSS-FREE: putting death in every stage gives
 # through-survival (reip/(reip+mum))^n_eip instead of exp(-mum*dem), which is
 # ~4% too high at baseline mum and worsens as vector control raises mum (the

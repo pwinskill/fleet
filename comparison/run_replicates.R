@@ -5,12 +5,12 @@
 #   CMP_ONLY=nets,smc Rscript comparison/run_replicates.R   # re-run a subset, merge into the CSVs
 #
 # The IBM (malariasimulation) is run N_REP times per scenario with different
-# seeds, in parallel on a PSOCK cluster, and summarised per replicate; blink is
+# seeds, in parallel on a PSOCK cluster, and summarised per replicate; fleet is
 # run once (it is deterministic). Both get the SAME parameter list, with the
 # rendering bands set once so their output columns line up exactly.
 #
 # Every scenario is burned in BURN_Y years in the IBM so it reaches its own
-# stochastic steady state; blink is seeded at the malariaEquilibrium fixed point
+# stochastic steady state; fleet is seeded at the malariaEquilibrium fixed point
 # and integrated over the same horizon so both are on a common clock.
 #
 # Cost note: the IBM's per-band rendering dominates its run time at 10k people
@@ -18,20 +18,20 @@
 # age profile added to every family), so only the reference scenario carries the
 # age-profile bands. Jobs are load-balanced, longest first.
 
-## No absolute paths anywhere in here. BLINK_LIB is prepended to the library
+## No absolute paths anywhere in here. FLEET_LIB is prepended to the library
 ## path, for installations that do not pick up R_LIBS_USER (the Windows-arm64
 ## setup this was developed on); the libraries already on the path are kept, so a
-## BLINK_LIB holding only some of the dependencies still works. Leave it unset and
+## FLEET_LIB holding only some of the dependencies still works. Leave it unset and
 ## your normal library is used. ROOT is found by walking up to the DESCRIPTION, so
 ## these scripts run from any working directory and on anyone's checkout, whether
 ## via Rscript or source().
-if (nzchar(.l <- Sys.getenv("BLINK_LIB"))) .libPaths(c(.l, .libPaths()))
+if (nzchar(.l <- Sys.getenv("FLEET_LIB"))) .libPaths(c(.l, .libPaths()))
 .f <- sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE))
 ROOT <- if (length(.f)) normalizePath(dirname(.f), "/") else getwd()
 while (!file.exists(file.path(ROOT, "DESCRIPTION")) && dirname(ROOT) != ROOT)
   ROOT <- dirname(ROOT)
 if (!file.exists(file.path(ROOT, "DESCRIPTION")))
-  stop("run this from inside the blink checkout (no DESCRIPTION found above ", getwd(), ")")
+  stop("run this from inside the fleet checkout (no DESCRIPTION found above ", getwd(), ")")
 suppressMessages(library(malariasimulation))
 source(file.path(ROOT, "comparison", "constants.R"))
 DDIR <- file.path(ROOT, "comparison", "data"); dir.create(DDIR, showWarnings = FALSE)
@@ -48,17 +48,17 @@ log_msg <- function(...) cat(sprintf("[%s] %s\n", format(Sys.time(), "%H:%M:%S")
 ## Scenario definitions and the shared summariser. Kept in their own file so the
 ## drift check can reach them without starting a run.
 source(file.path(ROOT, "comparison", "scenarios.R"))
-## CMP_BLINK_ONLY=1 -> re-run only blink (the IBM rows are kept): for a blink-side
+## CMP_FLEET_ONLY=1 -> re-run only fleet (the IBM rows are kept): for a fleet-side
 ## model change, when the IBM results are unaffected
-BLINK_ONLY <- nzchar(Sys.getenv("CMP_BLINK_ONLY"))
+FLEET_ONLY <- nzchar(Sys.getenv("CMP_FLEET_ONLY"))
 
 
-## ---- run blink (deterministic, seconds) --------------------------------------
-ode <- run_blink()
+## ---- run fleet (deterministic, seconds) --------------------------------------
+ode <- run_fleet()
 
 ## ---- run the IBM replicates in parallel --------------------------------------
 ibm <- list()
-if (!BLINK_ONLY) {
+if (!FLEET_ONLY) {
 jobs <- expand.grid(scenario = names(scenarios), rep = seq_len(N_REP),
                     stringsAsFactors = FALSE)
 ## rough cost in default-band sim-years, so the load balancer starts the longest jobs first
@@ -96,9 +96,9 @@ log_msg("IBM done in %.1f min", as.numeric(Sys.time() - t0, units = "mins"))
 bind <- function(part) do.call(rbind, c(lapply(ode, `[[`, part), lapply(ibm, `[[`, part)))
 for (part in c("eq", "age", "monthly", "doy", "timing")) {
   d <- bind(part); f <- file.path(DDIR, paste0("rep_", part, ".csv"))
-  if ((length(ONLY) || BLINK_ONLY) && file.exists(f)) {   # partial run: replace just those rows
+  if ((length(ONLY) || FLEET_ONLY) && file.exists(f)) {   # partial run: replace just those rows
     old <- read.csv(f, stringsAsFactors = FALSE)
-    drop <- old$scenario %in% names(scenarios) & (if (BLINK_ONLY) old$model == "blink" else TRUE)
+    drop <- old$scenario %in% names(scenarios) & (if (FLEET_ONLY) old$model == "fleet" else TRUE)
     old <- old[!drop, ]
     for (nm in setdiff(names(d), names(old))) old[[nm]] <- NA
     for (nm in setdiff(names(old), names(d))) d[[nm]] <- NA
@@ -108,9 +108,9 @@ for (part in c("eq", "age", "monthly", "doy", "timing")) {
   log_msg("wrote rep_%s.csv (%d rows)", part, nrow(d))
 }
 ## the IBM rows just changed, so stamp what produced them. Skipped under
-## BLINK_ONLY and CMP_ONLY, where the committed IBM rows are only partly
+## FLEET_ONLY and CMP_ONLY, where the committed IBM rows are only partly
 ## refreshed and the existing stamp still describes the rest.
-if (!BLINK_ONLY && !length(ONLY) && !SMOKE) {
+if (!FLEET_ONLY && !length(ONLY) && !SMOKE) {
   jsonlite::write_json(ibm_reference(), file.path(DDIR, "ibm_reference.json"),
                        auto_unbox = TRUE, pretty = TRUE)
   log_msg("wrote ibm_reference.json (scenario digest %s)", scenario_digest())

@@ -1,4 +1,4 @@
-Package: blink
+Package: fleet
 Title: Mean-Field (ODE) Twin of the 'malariasimulation' Malaria Model
 Version: 0.0.0.9001
 Authors@R: c(
@@ -18,8 +18,8 @@ Description: Provides a fast, deterministic mean-field (ordinary differential
   seconds, independent of population size.
 License: MIT + file LICENSE
 SystemRequirements: C++17
-URL: https://pwinskill.github.io/blink, https://github.com/pwinskill/blink
-BugReports: https://github.com/pwinskill/blink/issues
+URL: https://pwinskill.github.io/fleet, https://github.com/pwinskill/fleet
+BugReports: https://github.com/pwinskill/fleet/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3

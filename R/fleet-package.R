@@ -1,4 +1,4 @@
-#' blink: a mean-field (ODE) twin of malariasimulation
+#' fleet: a mean-field (ODE) twin of malariasimulation
 #'
 #' A fast, deterministic mean-field (ODE) counterpart to the
 #' \pkg{malariasimulation} individual-based model of *Plasmodium falciparum*
@@ -22,9 +22,9 @@
 #' The count table is malariasimulation-shaped, so post-process it with
 #' \pkg{postie} exactly as you would an IBM run: `postie::get_rates(out)` and
 #' `postie::get_prevalence(out, diagnostic = "lm")`.
-#' See `vignette("blink")` for a worked tour, and the README's *Mean-field
+#' See `vignette("fleet")` for a worked tour, and the README's *Mean-field
 #' approximations* section for where and how much the ODE departs from the IBM.
 #'
 #' @keywords internal
-#' @useDynLib blink, .registration = TRUE
+#' @useDynLib fleet, .registration = TRUE
 "_PACKAGE"
