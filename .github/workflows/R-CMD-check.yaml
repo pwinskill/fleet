@@ -1,6 +1,7 @@
 # Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
 on:
+  workflow_dispatch:
   push:
     branches: [main, master]
     # Skip the five-runner matrix for a docs-only or figures-only commit.
@@ -115,12 +116,28 @@ jobs:
           # So name what "hard" leaves out and the job actually needs: odin2,
           # which is what the step below calls, and the packages the generators
           # reach for that are only Suggests of odin2/dust2/cpp11 themselves --
-          # pkgload for odin_package(), and cpp11's own
-          # Config/Needs/cpp11/cpp_register list -- which pak will not install on
-          # their behalf.
+          # pkgload for odin_package(), cpp11's own
+          # Config/Needs/cpp11/cpp_register list, and withr (see below) --
+          # which pak will not install on their behalf.
+          #
+          # odin2 is named by the GitHub ref DESCRIPTION's Remotes: already
+          # uses, NOT as any::odin2. The any:: prefix is a standard, CRAN-style
+          # ref: pkgdepends resolves it from repository metadata alone and never
+          # consults GitHub or Remotes:, so any::odin2 on a package that is not
+          # on CRAN fails at resolution ("Can't find package called
+          # any::odin2") and the job dies during the dependency install.
+          #
+          # withr IS on CRAN, so any:: is right for it, but why it is here is
+          # not obvious: odin_package() ends in cpp11::cpp_register(), whose
+          # get_call_entries() wraps its scan in withr::with_collate("C", ...)
+          # to make the CallEntries table locale-independent. withr is only a
+          # Suggests of cpp11 and is not in cpp11's own
+          # Config/Needs/cpp11/cpp_register list, so nothing in this job's
+          # hard-dependency closure installs it; without it the job writes
+          # cpp11.R and then fails with "there is no package called 'withr'".
           dependencies: '"hard"'
           extra-packages: |
-            any::odin2
+            mrc-ide/odin2
             any::pkgload
             any::brio
             any::cli
@@ -129,6 +146,7 @@ jobs:
             any::glue
             any::tibble
             any::vctrs
+            any::withr
           needs: check
 
       - name: Regenerate the model from inst/odin
@@ -140,12 +158,23 @@ jobs:
       # version is stamped into the header of every file they write, and pak
       # installs them from the Remotes pin at HEAD. Either way the fix is the
       # same -- regenerate and commit.
+      #
+      # git status --porcelain, not git diff: diff only compares against the
+      # index, so a generated file that has never been committed is UNTRACKED
+      # and invisible to it, and the guard passes on a tree that is missing a
+      # file the build needs. status sees both. It must stay SCOPED to these
+      # paths, though: setup-r-dependencies writes an untracked .github/pkg.lock
+      # into the tree, so a bare git status --porcelain would fail every run.
       - name: The generated model must match inst/odin
         run: |
-          if ! git diff --exit-code -- src R/dust.R R/cpp11.R inst/dust; then
+          dirty=$(git status --porcelain -- src R/dust.R R/cpp11.R inst/dust)
+          if [ -n "$dirty" ]; then
+            echo "$dirty"
+            git diff -- src R/dust.R R/cpp11.R inst/dust
             echo "::error::the compiled model is stale. src/malaria_ode.cpp,"
             echo "::error::R/dust.R, R/cpp11.R and inst/dust are generated from"
-            echo "::error::inst/odin/malaria_ode.R and no longer match it, so a"
+            echo "::error::inst/odin/malaria_ode.R and no longer match it (or a"
+            echo "::error::newly generated one was never committed), so a"
             echo "::error::build here would compile the old model. Run"
             echo "::error::odin2::odin_package('.') locally and commit the"
             echo "::error::regenerated files."

@@ -13,12 +13,14 @@
 #   programme_ts   five long-horizon programmes x four outcomes, 15 years
 #   int_impact     % reduction per intervention, IBM (replicate range) vs blink
 
-## No absolute paths anywhere in here. BLINK_LIB prepends an R library, for
-## installations that do not pick up R_LIBS_USER (the Windows-arm64 setup this was
-## developed on); leave it unset and your normal library is used. ROOT is found by
-## walking up to the DESCRIPTION, so these scripts run from any working directory
-## and on anyone's checkout, whether via Rscript or source().
-if (nzchar(.l <- Sys.getenv("BLINK_LIB"))) .libPaths(.l)
+## No absolute paths anywhere in here. BLINK_LIB is prepended to the library
+## path, for installations that do not pick up R_LIBS_USER (the Windows-arm64
+## setup this was developed on); the libraries already on the path are kept, so a
+## BLINK_LIB holding only some of the dependencies still works. Leave it unset and
+## your normal library is used. ROOT is found by walking up to the DESCRIPTION, so
+## these scripts run from any working directory and on anyone's checkout, whether
+## via Rscript or source().
+if (nzchar(.l <- Sys.getenv("BLINK_LIB"))) .libPaths(c(.l, .libPaths()))
 .f <- sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE))
 ROOT <- if (length(.f)) normalizePath(dirname(.f), "/") else getwd()
 while (!file.exists(file.path(ROOT, "DESCRIPTION")) && dirname(ROOT) != ROOT)

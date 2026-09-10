@@ -140,7 +140,7 @@ test_that("custom demography changes the equilibrium age structure", {
   # N_last / N_prev = r_prev / mu_last = (1 / 5y) / (0.12 / y)
   n <- length(prop)
   expect_equal(prop[n] / prop[n - 1], (1 / 5) / 0.12, tolerance = 1e-6)
-  # default (constant hazard) still holds flat at equilibrium (offset 0 = exact seed)
+  # default (constant hazard) still holds flat at equilibrium (offset 0 = least drift)
   pflat <- gp(); pflat$acquired_immunity_offset <- 0; pflat$bite_dedup <- 0
   o <- run_simulation_ode(400, eqm(pflat, 20))
   expect_lt(max(abs(o$EIR - o$EIR[1])) / o$EIR[1], 1e-2)

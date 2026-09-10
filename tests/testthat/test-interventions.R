@@ -5,7 +5,7 @@ test_that("no intervention (multi-species) holds flat at equilibrium", {
     p, list(malariasimulation::arab_params, malariasimulation::fun_params),
     c(0.6, 0.4)
   )
-  p$acquired_immunity_offset <- 0; p$bite_dedup <- 0                    # flat-machinery check (exact seed)
+  p$acquired_immunity_offset <- 0; p$bite_dedup <- 0                    # flat-machinery check (least drift)
   o <- run_simulation_ode(1000, eqm(p, 20))
   expect_lt(max(abs(o$EIR - o$EIR[1])) / o$EIR[1], 1e-2)
   expect_lt(max(abs(o$p_detect_lm_730_3650 - o$p_detect_lm_730_3650[1])) / o$p_detect_lm_730_3650[1], 1e-2)

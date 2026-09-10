@@ -43,7 +43,7 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Peter Winskill \email{p.winskill@imperial.ac.uk}
+\strong{Maintainer}: Peter Winskill \email{p.winskill@imperial.ac.uk} [copyright holder]
 
 }
 \keyword{internal}

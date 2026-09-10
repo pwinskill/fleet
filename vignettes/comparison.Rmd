@@ -20,6 +20,18 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE, echo = TRUE
 fig <- function(name) knitr::include_graphics(paste0("cmp_", name, ".png"))  # alt text: chunk fig.alt
 ```
 
+> **⚠️ Work in progress: not ready for real use.**
+> `blink` is published early so the approach, and the comparison set out below,
+> can be examined and argued with, not so that anyone can rely on its numbers:
+> the API is unstable and nothing here has been peer reviewed. The discrepancies
+> reported on this page are open rather than resolved, the largest being all-age
+> severe incidence, which runs about 4 to 6% below the IBM, alongside a roughly
+> 9% excess on clinical and severe incidence across the 63-country site files
+> that is not yet explained. The full statement is on the
+> [package front page](https://pwinskill.github.io/blink/); if you need results
+> you can defend today, use
+> [malariasimulation](https://github.com/mrc-ide/malariasimulation).
+
 `blink` is meant to be a drop-in *mean-field twin* of the
 [malariasimulation](https://github.com/mrc-ide/malariasimulation) individual-based
 model (IBM): hand both models the same parameter list and they should tell the
@@ -110,10 +122,10 @@ back by EIR 120, as immunity outruns exposure.
 
 | EIR | IBM clinical, all ages, per person-year (10–90%) | blink clinical | IBM severe, all ages, per 1,000 person-years (10–90%) | blink severe |
 | --- | --- | --- | --- | --- |
-| 1 | 0.208 (0.198–0.218) | 0.213 | 4.73 (4.20–5.09) | 4.69 |
+| 1 | 0.208 (0.198–0.218) | 0.213 | 4.73 (4.20–5.08) | 4.69 |
 | 3 | 0.388 (0.368–0.400) | 0.386 | 6.51 (5.83–6.97) | 6.52 |
 | 10 | 0.585 (0.577–0.595) | 0.585 | 8.39 (7.83–8.90) | 8.38 |
-| 20 | 0.692 (0.675–0.700) | 0.683 | 9.63 (9.05–9.99) | 9.03 |
+| 20 | 0.692 (0.675–0.699) | 0.683 | 9.63 (9.05–9.99) | 9.03 |
 | 50 | 0.785 (0.774–0.789) | 0.772 | 9.53 (9.18–10.03) | 9.15 |
 | 120 | 0.822 (0.801–0.840) | 0.811 | 8.81 (8.23–9.64) | 8.40 |
 
@@ -234,28 +246,36 @@ first year and settles within a few years.
 ## Country site files
 
 The equilibrium scenarios are clean but artificial. The harder test is the
-real-world parameter lists that the malariaverse produces for every
+real-world parameter lists that the
+[malariaverse](https://github.com/mrc-ide/malariaverse) produces for every
 administrative-1 x urban/rural sub-site of every malaria-endemic country -- each
 with its own seasonality, demography, treatment history and years of
 vector-control and chemoprevention deployment. `blink` was run from the same
-`site::site_parameters()` lists that feed the IBM's own calibration diagnostic
-runs, and the two were compared **monthly** (annual means would hide the
-seasonal cycle, which is where a mean-field model is most likely to slip).
+[`site::site_parameters()`](https://github.com/mrc-ide/site) lists that feed the
+IBM's own calibration diagnostic runs, and the two were compared **monthly**
+(annual means would hide the seasonal cycle, which is where a mean-field model
+is most likely to slip).
 
 ```{r core-sites, eval = TRUE, echo = FALSE, fig.alt = "Two hexagonally binned scatter plots of blink against IBM monthly incidence for every sub-site-month in 63 countries: clinical episodes per person-year on the left, severe on the right, both with the mass of points tight along the 1:1 line. Reported statistics: clinical r = 0.98, slope 1.00; severe r = 0.96, slope 0.95."}
 fig("core_sites")
 ```
 
-> **This one is a snapshot.** Every other figure on this page is redrawn from
-> committed per-replicate summaries whenever the harness runs, and a drift check
-> re-runs `blink` against them on demand. This comparison cannot work that way:
-> it is a roughly seven-hour run against the malariaverse site files, held in a
-> separate checkout that is not part of the package repository. So it is re-taken
-> deliberately rather than kept in step, and both the figure and the statistics
-> below describe the `blink` version recorded in
-> `comparison/data/site_snapshot.json`, which may be behind the code you are
-> reading about. Treat it as evidence that the approach holds up across real
-> settings, not as a live check on the current model.
+> **This one is a snapshot, and you cannot reproduce it.** Every other figure on
+> this page is redrawn from committed per-replicate summaries whenever the
+> harness runs, and a drift check re-runs `blink` against them on demand. This
+> comparison cannot work that way: it is a roughly seven-hour run against the
+> malariaverse site files, driven by a separate harness called `blink2_validate`
+> that is **not part of this repository and is not public**. There is no
+> `blink2_validate` repository you can clone, so nobody outside the project can
+> obtain or re-run it. What you can inspect is
+> `comparison/data/site_snapshot.json`, the committed summary that carries the
+> statistics quoted below; the figure above is the committed PNG from the same
+> run, and is not redrawn on an ordinary render. Together they are the whole
+> public record of this comparison. Because the snapshot is re-taken deliberately
+> rather than kept in step, it describes the `blink` version recorded in it,
+> which may be behind the code you are reading about. Treat it as evidence that
+> the approach holds up across real settings, not as a live check on the current
+> model.
 
 Across 450,684 sub-site-months in 1,391 sub-sites of 63 countries, monthly
 clinical incidence correlates at r = 0.98 with a regression slope of 1.00, and
@@ -531,10 +551,33 @@ source("comparison/render_figures.R")
 source("comparison/summary_tables.R")
 ```
 
-`comparison/theme.R` holds the house style and the scenario constants shared by
-all three scripts. The saved per-replicate summaries (`comparison/data/rep_*.csv`)
-are committed, so the figures can be re-styled, and the numbers rechecked,
-without re-running the models. `comparison/check_drift.R` re-runs `blink` alone
-against those committed rows in about two minutes and fails on drift.
-The country-site comparison is produced by the separate `blink2_validate`
-harness, whose per-country results the renderer reads directly.
+Three smaller files sit behind those scripts. `comparison/constants.R` holds the
+paths and the scenario constants (population, replicate count, EIR grid, age
+bands, the seasonal profile) that every script must agree on;
+`comparison/scenarios.R` defines the scenarios themselves and is sourced by
+`run_replicates.R` and `check_drift.R`, so a drift check cannot silently test a
+different set from the one the reference was built on; `comparison/theme.R` holds
+the figure house style, and is sourced only by `render_figures.R` and
+`summary_tables.R`, which get the constants through it. Neither
+`run_replicates.R` nor `check_drift.R` loads `theme.R` at all, which keeps
+ggplot2 and its stack off the 25-minute IBM run and off the drift check in CI.
+
+**`comparison/data/tables.md` is the generated source of truth.** Every table and
+quoted statistic above is transcribed from it by hand, so if the two ever
+disagree, `tables.md` is right and this page has drifted: re-run
+`summary_tables.R` and compare.
+
+The saved per-replicate summaries (`comparison/data/rep_*.csv`) are committed, so
+the figures can be re-styled, and the numbers rechecked, without re-running the
+models. `comparison/check_drift.R` re-runs `blink` alone against those committed
+rows in about two minutes and fails on drift.
+
+The country-site comparison is the exception. It comes from `blink2_validate`, a
+separate harness that is not part of this repository and is not public: there is
+no repository to clone and no way for a reader to run it. Its results reach this
+page only through the committed snapshot `comparison/data/site_snapshot.json`,
+which `summary_tables.R` reads for the statistics, and the committed
+`cmp_core_sites.png`. Neither is regenerated by an ordinary run of the scripts
+above; both are re-taken deliberately, with `CMP_REFRESH_SITES=1`, and only on a
+machine that has the validation results. That snapshot and that figure are the
+whole public record of the comparison.

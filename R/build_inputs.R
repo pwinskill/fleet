@@ -610,7 +610,7 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
     acq_offset = acq_offset,
     # Reproduce the IBM's per-timestep bite deduplication (saturating hazard) by default;
     # parameters$bite_dedup = 0 restores the linear b*EPS form, for which the
-    # malariaEquilibrium seed is an exact fixed point (used by the flat-equilibrium tests).
+    # drift off the malariaEquilibrium seed is smallest (used by the flat-equilibrium tests).
     bite_dedup = bite_dedup,
     b0 = eqp[["b0"]], b1 = eqp[["b1"]], ib0 = eqp[["IB0"]], kb = eqp[["kb"]],
     phi0 = eqp[["phi0"]], phi1 = eqp[["phi1"]], ic0 = eqp[["IC0"]], kc = eqp[["kc"]],

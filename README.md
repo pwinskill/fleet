@@ -1,16 +1,16 @@
 # blink
 
-[![Status: work in progress](https://img.shields.io/badge/status-work%20in%20progress-orange?style=for-the-badge)](#-not-ready-for-real-use)
+[![Status: work in progress](https://img.shields.io/badge/status-work%20in%20progress-orange?style=for-the-badge)](#not-ready-for-real-use)
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange?style=for-the-badge)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
-[![Not for production use](https://img.shields.io/badge/not%20for-production%20use-red?style=for-the-badge)](#-not-ready-for-real-use)
+[![Not for production use](https://img.shields.io/badge/not%20for-production%20use-red?style=for-the-badge)](#not-ready-for-real-use)
 
 [![R-CMD-check](https://github.com/pwinskill/blink/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/pwinskill/blink/actions/workflows/R-CMD-check.yaml)
 [![pkgdown](https://github.com/pwinskill/blink/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/pwinskill/blink/actions/workflows/pkgdown.yaml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/pwinskill/blink/blob/main/LICENSE.md)
 
-> ## ⚠️ Not ready for real use
+> ## Not ready for real use
 >
-> **`blink` is a work in progress and is not validated for research, policy or
+> ⚠️ **`blink` is a work in progress and is not validated for research, policy or
 > operational use.** It is published early so the approach and the comparison
 > against `malariasimulation` can be looked at and argued with, not so that
 > anyone can rely on its numbers.
@@ -62,18 +62,20 @@ Reach for the IBM instead when you need stochastic variation, individual heterog
 
 ## Install
 
+`blink` compiles C++ at install time, as do several of its dependencies, so you need a working C++ toolchain first: Rtools on Windows, the Xcode command line tools on macOS, the usual build tools (`r-base-dev` or equivalent) on Linux.
+
 ```r
 # install.packages("remotes")
 remotes::install_github("pwinskill/blink")
 ```
 
-The GitHub-only core dependencies (`odin2`, `dust2`, `malariaEquilibrium`) are pulled automatically from `DESCRIPTION` `Remotes`. The examples below also need two suggested packages:
+That command also installs the GitHub-only hard dependencies (`dust2`, `monty` and `malariaEquilibrium`), which `DESCRIPTION` `Remotes` points at. It installs nothing from `Suggests`. The examples below need two suggested packages:
 
 ```r
 remotes::install_github(c("mrc-ide/malariasimulation", "mrc-ide/postie"))
 ```
 
-`malariasimulation` is used to build the parameter list; `postie` post-processes the output.
+`malariasimulation` builds the parameter list; `postie` post-processes the output. A third, `odin2`, is not needed to run the model: the ODE is compiled into `blink` from `src/malaria_ode.cpp` and ships with it. Install `odin2` only if you want to regenerate that code or compile an alternative odin source through `ode_tuning(odin_file =)`.
 
 ## Quick start
 
@@ -133,7 +135,7 @@ Seconds for one complete `run_simulation_ode()` call: building the inputs, seedi
 | Seasonal + SMC (4 rounds/yr) | 1.4 s | 2.5 s | 7.8 s |
 | All of the above + RTS,S | 1.5 s | 3.0 s | 11.2 s |
 
-Three things to read off it. **Seasonality adds about 80% to the cost** (1.8x, 1.7x and 1.8x on the three horizons), because rainfall drives the larval carrying capacity on a daily interpolation grid. **Chemoprevention is the expensive intervention**, not because of the compartments it adds but because each round splits the integration into a fresh segment, so a schedule with many rounds pays for many solver restarts; prefer a coarser cadence when the extra resolution buys nothing. And **cost is close to proportional to the horizon**: fit the no-intervention row and you get 0.102 s per simulated year on an intercept of −0.01 s, so the equilibrium solve is not a meaningful fixed charge. The only row here that is dearer per simulated year at 5 years than at 30 is seasonal + nets + IRS (0.32 s/y against 0.16 s/y); what is fixed there is building the intervention time series, not the seed.
+Three things to read off it. **Seasonality adds about 80% to the cost** (1.8x, 1.7x and 1.8x on the three horizons), because rainfall drives the larval carrying capacity on a daily interpolation grid. **Chemoprevention is the expensive intervention**, not because of the compartments it adds but because each round splits the integration into a fresh segment, so a schedule with many rounds pays for many solver restarts; prefer a coarser cadence when the extra resolution buys nothing. And **cost is close to proportional to the horizon**: fit the no-intervention row and you get 0.102 s per simulated year on an intercept of −0.01 s, so the equilibrium solve is not a meaningful fixed charge. Three rows are dearer per simulated year at 5 years than at 30: seasonal + nets + IRS by a wide margin (0.32 s/y against 0.16 s/y), then seasonal + SMC (0.27 against 0.26) and seasonal + treatment (0.20 against 0.19) by a little. What is fixed in those rows is building the intervention time series, not the seed.
 
 Population size is irrelevant, as it should be; the compartments are per-capita densities, and `human_population` only rescales the count columns on the way out:
 
@@ -141,13 +143,13 @@ Population size is irrelevant, as it should be; the compartments are per-capita 
 | --- | --- | --- | --- | --- | --- |
 | 30-year seasonal run | 5.6 s | 5.8 s | 5.6 s | 5.6 s | 5.6 s |
 
-The solver settings are worth knowing about for long projections: the same 30-year seasonal run takes **7.9 s** at the `ode_tuning()` defaults (`atol = rtol = 1e-8`, step ≤ 1 day, which hold the flat equilibrium exactly), **5.5 s** at the preset above, and **5.4 s** with `atol` loosened to `1e-6`. That last one is not worth having: the prophylaxis chain stages hold occupancies of order `1e-6`, and a looser absolute tolerance lets them go slightly negative.
+The solver settings are worth knowing about for long projections: the same 30-year seasonal run takes **7.9 s** at the `ode_tuning()` defaults (`atol = rtol = 1e-8`, step ≤ 1 day, which hold the near-flat equilibrium to the tolerance the equilibrium tests assert), **5.5 s** at the preset above, and **5.4 s** with `atol` loosened to `1e-6`. That last one is not worth having: the prophylaxis chain stages hold occupancies of order `1e-6`, and a looser absolute tolerance lets them go slightly negative.
 
 Measured with `comparison/benchmark.R` (minimum of five repeats, since contention can only add time) on R 4.5.2, `aarch64-w64-mingw32`. Treat them as indicative: they are one machine, one core, and a laptop under load will be slower.
 
 ## Feature support
 
-Everything malariasimulation models for *P. falciparum* is represented, each seeded so the equilibrium is preserved until the intervention's scheduled start.
+Every malariasimulation intervention module for *P. falciparum* is represented, each seeded so the equilibrium is preserved until the intervention's scheduled start. Not everything the IBM offers carries over. `get_correlation_parameters()` is warned and ignored (the mean field assumes independence between interventions), `run_metapop_simulation()` and `run_resumable_simulation()` have no equivalent here, and several individual-level parameter groups are ignored: user-supplied initial state proportions and initial immunity, `human_population_timesteps`, `init_foim`, the RDT conversion coefficients, the IBM's own engine and solver settings, and the PEV `min_wait` re-vaccination exclusion. `vignette("model")` is the specification: it lists every `set_*` argument and says what happens to it.
 
 | Module | Status | How it is modelled |
 | --- | --- | --- |
@@ -177,7 +179,7 @@ the full ODE system, a table of what each state dimension carries (and what is
 captured *without* one), and an argument-by-argument breakdown of every
 `malariasimulation` `set_*` function.
 
-**Seeding.** `blink` starts each run at the `malariaEquilibrium` analytic fixed point. That solution encodes *simplified* forms (a linear force of infection, refractory immunity boosting on the raw rate, exponential incubation survival), whereas `blink` now reproduces malariasimulation's own per-day semantics (bite deduplication, the integer refractory window, a fixed-delay EIP with `exp(-mu*dem)` survival, whole-day state sojourns). The seed is therefore a close **approximation** to `blink`'s true fixed point rather than the fixed point itself: an undisturbed run relaxes by up to ~0.5% over the first years and then holds. malariasimulation behaves the same way: it is seeded from `malariaEquilibrium` too and drifts off it. Burn in before calibrating. Setting `parameters$bite_dedup = 0` removes the largest single departure, but it does not make the seed exact and it does not make the run flat: at EIR 20 an undisturbed 15-year run then relaxes by +0.14%, against -0.05% at the default, because the other three departures remain.
+**Seeding.** `blink` starts each run at the `malariaEquilibrium` analytic fixed point. That solution encodes *simplified* forms (a linear force of infection, refractory immunity boosting on the raw rate, exponential incubation survival), whereas `blink` now reproduces malariasimulation's own per-day semantics (bite deduplication, the integer refractory window, a fixed-delay EIP with `exp(-mu*dem)` survival, whole-day state sojourns). The seed is therefore a close **approximation** to `blink`'s true fixed point rather than the fixed point itself: an undisturbed run relaxes by up to ~0.5% over the first years and then holds. malariasimulation behaves the same way: it is seeded from `malariaEquilibrium` too and drifts off it. Burn in before calibrating. Setting `parameters$bite_dedup = 0` removes the largest of those four departures and roughly halves the largest excursion from the seed (0.14% against 0.28%, for LM prevalence at EIR 20 over 15 years), which is why the equilibrium tests set it. It does **not** make the seed an exact fixed point: the other three departures remain, so the run still moves off it.
 
 **Numerics & lags.** The human EIR/FOIM lags and the mosquito EIP are implemented as Erlang (linear-chain) filters rather than `delay()`: robust, pure-ODE, and exact at equilibrium. Stage counts (`n_eir`, `n_foim`, `n_eip`; defaults 10 / 10 / 20) are tunable: larger values sharpen the gamma-shaped lags toward the IBM's fixed delays. The two prophylaxis compartments are Erlang chains as well (`n_ph`, `n_phc`; by default matched to the drug's Weibull shape, see *Treatment & resistance*). The disease-state seed re-solves the prophylaxis aging recursion with a corrected `bP` term (upstream `malariaEquilibrium::human_equilibrium_no_het` has a small artifact), so the model holds flat even under treatment (`ft > 0`).
 
@@ -207,7 +209,7 @@ Every panel in `vignette("comparison")` runs the **same malariasimulation parame
 
 ![Core transmission relationships: PfPR(2–10), under-5 clinical incidence, all-age clinical incidence and all-age severe incidence against EIR in both models](man/figures/cmp_core_eir.png)
 
-*Four equilibrium relationships across EIR 1–120. blink lies inside the IBM's 10–90% replicate band at every EIR for prevalence (largest gap 0.004) and runs 1–3% above the IBM median for under-5 clinical incidence. The all-age panels carry the shape of the relationship rather than its level: clinical incidence flattens far sooner over all ages than in under-5s (3.8-fold across the grid against 18-fold), and severe incidence turns over entirely, plateauing around EIR 20–50 in both models.*
+*Four equilibrium relationships across EIR 1–120. blink lies inside the IBM's 10–90% replicate band at every EIR for prevalence (largest gap 0.004) and runs 0.7–2.6% above the IBM median for under-5 clinical incidence. The all-age panels carry the shape of the relationship rather than its level: clinical incidence flattens far sooner over all ages than in under-5s (3.8-fold across the grid against 18-fold), and severe incidence turns over entirely, plateauing around EIR 20–50 in both models.*
 
 ![Programmes over fifteen years: five scenarios from no interventions through single interventions to all three combined, each shown as prevalence, under-5 clinical, all-age clinical and all-age severe incidence in both models](man/figures/cmp_programme_ts.png)
 
@@ -229,6 +231,8 @@ source("comparison/render_figures.R")   # figures from the saved CSVs (seconds)
 source("comparison/summary_tables.R")   # the numbers quoted in the article -> comparison/data/tables.md
 ```
 
+`comparison/` is excluded from the package build, so it is not in an installed copy of `blink`. Run those three from a [clone of the repository](https://github.com/pwinskill/blink), with the working directory at its root.
+
 ## Notes & conventions
 
 - **Deterministic seed.** The equilibrium seed is deterministic; there is no random component to a `blink` run.
@@ -245,11 +249,16 @@ source("comparison/summary_tables.R")   # the numbers quoted in the article -> c
   IBM-vs-blink figure set (core relationships, country site files, intervention
   impact) with the numbers behind each figure.
 - Function reference: `?run_simulation_ode`, `?ode_tuning`, `?default_age_lower`.
+
+Everything below is a path in the [git repository](https://github.com/pwinskill/blink), not in an installed copy of `blink`: an installed package ships the compiled model rather than the `R/` sources, and excludes `comparison/` altogether. Reading along means working from a clone.
+
 - Model source: `inst/odin/malaria_ode.R` (the odin2 model).
 - Parameter translation & equilibrium seeding: `R/build_inputs.R`, `R/translate_params.R`, `R/mosquito_equilibrium.R`.
 - Intervention time-series builders: `R/interventions.R`; run loop & rendering: `R/run.R`.
-- Comparison harness: `comparison/run_replicates.R`, `comparison/render_figures.R`, `comparison/theme.R` (see `comparison/README.md`).
+- Comparison harness: `comparison/run_replicates.R`, `comparison/render_figures.R`, `comparison/theme.R` (see [comparison/README.md](https://github.com/pwinskill/blink/blob/main/comparison/README.md)).
 
 ## License
 
-MIT © Peter Winskill.
+MIT. Copyright (c) 2026 Peter Winskill.
+Written by Peter Winskill. Full text:
+[LICENSE.md](https://github.com/pwinskill/blink/blob/main/LICENSE.md).

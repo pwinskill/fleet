@@ -53,6 +53,27 @@ reason that has nothing to do with staleness — which is exactly the failure th
 guard cannot afford, because its whole value is that a red means one specific
 thing.
 
+**Two entries in that list look wrong and are not.** `odin2` is named as the
+GitHub ref `mrc-ide/odin2`, not as `any::odin2`, because `any::` is a
+CRAN-style ref: pkgdepends resolves it from repository metadata alone and never
+consults GitHub or `Remotes:`. odin2 is not on CRAN, so `any::odin2` fails at
+resolution ("Can't find package called any::odin2") and the job dies during the
+dependency install. `withr` is on CRAN, so `any::` is right for it, but nothing
+visible asks for it: `odin_package()` ends in `cpp11::cpp_register()`, whose
+`get_call_entries()` wraps its scan in `withr::with_collate("C", ...)` to make
+the generated `CallEntries` table locale-independent. withr is only a `Suggests`
+of cpp11 and is not in cpp11's own `Config/Needs/cpp11/cpp_register` list, so
+nothing in this job's hard-dependency closure installs it, and without it the
+job writes `cpp11.R` and then fails with "there is no package called 'withr'".
+
+**And the guard reads `git status`, not `git diff`.** `git diff` compares
+against the index, so a generated file that has never been committed is
+untracked and invisible to it: the guard would pass on a tree that is missing a
+file the build needs. `git status --porcelain` sees both. It stays scoped to
+`src`, `R/dust.R`, `R/cpp11.R` and `inst/dust`, because `setup-r-dependencies`
+leaves an untracked `.github/pkg.lock` in the tree and an unscoped check would
+go red on every run.
+
 **A missing `malariasimulation` now fails the check instead of quietly emptying
 it.** Nearly every `test_that()` block opens with
 `skip_if_not_installed("malariasimulation")` — it is a Suggests dependency and
@@ -76,7 +97,9 @@ model".** A deny-list of things that provably cannot (markdown, PNGs, the pkgdow
 site) stays correct when the package grows a new source directory. An allow-list
 would quietly stop checking it, and nothing would say so. `figures.yaml` is the
 exception and uses `paths`, because there the question is the narrow one of
-whether a specific set of inputs changed.
+whether a specific set of inputs changed. The cost of that is that the list has
+to name every input: `site_snapshot.json` is one, because `summary_tables.R`
+reads it and writes its numbers into `tables.md`, and it was missing.
 
 **The drift check does not re-run the IBM.** The IBM does not depend on blink, so
 its committed rows stay valid for any blink-side change. `check_drift.R` re-runs
@@ -102,10 +125,20 @@ on GitHub's schedule, not ours; the failure mode without it is a red build one
 morning for a reason that has nothing to do with the package. Monthly and grouped
 into a single PR, because a PR that gets ignored is worse than one that gets read.
 
-**`figures.yaml` fails on the tables, warns on the images.** A PNG can differ
+**`figures.yaml` fails on the text outputs, warns on the images.** A PNG can differ
 byte-for-byte between machines from font hinting alone, so failing on images would
-produce noise that trains you to ignore it. `tables.md` is plain text computed
-from the same CSVs, so a genuinely stale figure almost always shows up there too.
+produce noise that trains you to ignore it. There are two text outputs and both are
+checked strictly: `tables.md` from `summary_tables.R` and
+`comparison/data/int_impact_summary.csv` from `render_figures.R`. Both are plain
+text computed from the same CSVs, so a genuinely stale figure almost always shows
+up in one of them too.
+
+**It is hard dependencies only as well.** The two render scripts read committed
+CSVs and JSON and draw pictures. Neither loads `malariasimulation` or `postie`,
+so on the action's default of `"all"` this job built both from source for
+nothing: a long install, and two more ways for it to go red without a figure
+having moved. Neither loads blink either, which is why the job never installs
+the package under test.
 
 ## Two committed baselines of blink's own numbers
 
@@ -149,9 +182,12 @@ unlimited standard-runner minutes. The full `R-CMD-check` matrix costs roughly 8
 billed minutes per run — macOS is charged at 10x and is 56% of that, despite being
 the fastest job on the wall clock. The generated-code job, and the drift and
 figures workflows, are Ubuntu-only and cost a few minutes each. The generated-code
-job is cheap only because of its `dependencies: '"hard"'`: what it spends is a
-dependency install, so widening that set is the one edit that would make it
-expensive as well as flaky.
+job is cheap only because of its `dependencies: '"hard"'`, and the figures job
+for the same reason: what they spend is a dependency install, so widening either
+set is the one edit that would make them expensive as well as flaky. The drift
+check is the opposite case and its default `'"all"'` is deliberate: `Suggests` is
+where `malariasimulation` lives, and narrowing that job would leave
+`check_drift.R` with nothing to compare against.
 
 If this repository stays private, the cheapest further saving by far is moving the
 macOS row off every-push and onto the weekly schedule. If it goes public, none of

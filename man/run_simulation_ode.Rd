@@ -42,10 +42,17 @@ them alone:
 deduplication. malariasimulation collects the day's bitten individuals in a
 bitset, so a person bitten repeatedly in one timestep is infected at most
 once: the daily infection probability is \code{(1 - exp(-EPS)) * b}, which
-saturates. Setting \code{0} uses the unbounded \code{b * EPS} instead, which
-over-predicts infection where exposure approaches one bite/person/day
-(seasonal peaks, high-\code{zeta} strata) but makes the \code{malariaEquilibrium}
-seed an exact fixed point, which is useful for equilibrium tests.
+saturates. Setting \code{0} uses the unbounded \code{b * EPS} instead, the linear
+form \code{malariaEquilibrium} assumes, which over-predicts infection where
+exposure approaches one bite/person/day (seasonal peaks, high-\code{zeta}
+strata). It does \strong{not} make the \code{malariaEquilibrium} seed an exact fixed
+point, and it does not make a run flat: deduplication is only the largest
+of four departures from that solution (the README lists all four). What it
+does do is roughly halve the largest excursion from the seed: over an
+undisturbed 15-year run at EIR 20, PfPR(2-10) departs from its seeded value
+by at most 0.14\% with \code{0}, against 0.28\% at the default. That is the metric
+the package's own equilibrium tests assert, which is why they set it.
+Leave it at \code{1} for any scientific run.
 \item \code{acquired_immunity_offset} (default \code{0}): the IBM adds \code{+0.5} to
 positive acquired immunity inside the \code{b}/\code{phi}/\code{theta} Hill functions. That
 is a per-individual detail which does not carry over to a stratum mean; an

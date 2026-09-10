@@ -6,7 +6,7 @@ model. That framing drives almost every rule below: where the two models can be 
 to agree, they should agree *by construction*, not by fitting.
 
 > `blink` is a work in progress and is not ready for real use. See the warning at the
-> top of the [README](README.md).
+> top of the [README](https://github.com/pwinskill/blink#not-ready-for-real-use).
 
 ## The one thing that will catch you out
 
@@ -40,9 +40,10 @@ install.packages("remotes")
 remotes::install_deps(dependencies = TRUE)
 ```
 
-`odin2`, `dust2` and `monty` come from [r-universe](https://mrc-ide.r-universe.dev);
-`malariasimulation`, `malariaEquilibrium` and `postie` from GitHub. You need a C++
-toolchain (Rtools on Windows).
+None of the six modelling dependencies (`odin2`, `dust2`, `monty`, `malariaEquilibrium`,
+`malariasimulation`, `postie`) are on CRAN. `DESCRIPTION`'s `Remotes` points all six at
+GitHub, so that is where `install_deps()` fetches them from. You need a C++ toolchain
+(Rtools on Windows).
 
 ## Running the tests
 
@@ -66,7 +67,7 @@ refreshing **both**, and reading both diffs.
 | `comparison/data/rep_*.csv` | agreement with the IBM | `CMP_BLINK_ONLY=1 Rscript comparison/run_replicates.R` |
 
 The IBM rows do not need re-running: nothing in `blink` can affect them. See
-[comparison/README.md](comparison/README.md).
+[comparison/README.md](https://github.com/pwinskill/blink/blob/main/comparison/README.md).
 
 **Never regenerate a baseline to make a red test green.** The diff *is* the record of
 what your change did to the model. Read it, and put it in the pull request.

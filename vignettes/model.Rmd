@@ -17,6 +17,18 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
 ```
 
+> **⚠️ Work in progress: not ready for real use.**
+> `blink` is published early so the approach, and its comparison against
+> `malariasimulation`, can be examined and argued with, not so that anyone can
+> rely on its numbers: the API is unstable and nothing here has been peer
+> reviewed. The known discrepancies against the IBM are open rather than
+> resolved, the largest being all-age severe incidence, which runs about 4 to 6%
+> below the IBM, alongside a roughly 9% excess on clinical and severe incidence
+> across the 63-country site files that is not yet explained. The full statement
+> is on the [package front page](https://pwinskill.github.io/blink/); if you need
+> results you can defend today, use
+> [malariasimulation](https://github.com/mrc-ide/malariasimulation).
+
 This article is the reference description of the system of ordinary
 differential equations that `blink` integrates, and of how every user-facing
 `malariasimulation` parameterisation function maps onto it. It is written to be
@@ -700,7 +712,7 @@ default demography, as the IBM's own value under a custom one).
 ### Results to treat with caution
 
 **Severe incidence.** `blink` runs below the IBM here, by 6.2% on all ages at
-EIR 20, 4.0% at EIR 50 and 4.7% at EIR 120, and by 15–25% in the 5–20 year
+EIR 20, 4.0% at EIR 50 and 4.6% at EIR 120, and by 15–25% in the 5–20 year
 bands; the DALYs derived from severe incidence inherit that. It is the largest
 open discrepancy between the two models (`vignette("comparison")`), so it is
 worth being exact about the cause, because the obvious explanation is the wrong
@@ -921,8 +933,13 @@ low exposure and diverge at seasonal peaks and in high-$\zeta$ strata. Note that
 the hazard, while the boosting terms of §B.5 keep the deduplicated event
 probability, the integer refractory window $\lceil u\rceil - 1$ and the at-risk
 restriction, and the state exit rates keep the whole-day form $1 - e^{-1/d}$.
-What it does is reduce the residual drift to well under 1%, which is why the
-package's equilibrium tests use it.
+What it does is roughly halve the residual drift. Measured as the largest
+excursion from the seeded value over an undisturbed 15-year run at EIR 20,
+PfPR(2-10) departs by at most 0.14% with `bite_dedup = 0` against 0.28% at the
+default. That maximum-excursion form is the metric the package's equilibrium
+tests assert, which is why they set it. Note that the *endpoint* tells the
+opposite story (the default happens to return close to its seed, ending -0.05%
+off it against +0.14% with `0`), so the metric has to be stated.
 
 **Hazard splitting.** In the IBM each person resolves at most one infection
 outcome per day, so the daily clinical count is $\phi p N$ for susceptibles.

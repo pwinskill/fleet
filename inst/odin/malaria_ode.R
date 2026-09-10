@@ -56,7 +56,7 @@ ub_eff <- parameter(); uc_eff <- parameter(); ud_eff <- parameter(); uv_eff <- p
 acq_offset <- parameter(0)
 # 1 = reproduce the IBM's per-timestep bite deduplication (saturating infection
 # hazard, see the FOI block); 0 = the plain linear b*EPS, for which the
-# malariaEquilibrium seed is an exact fixed point.
+# malariaEquilibrium seed drifts least (it is still not an exact fixed point).
 bite_dedup <- parameter(1)
 b0 <- parameter(); b1 <- parameter(); ib0 <- parameter(); kb <- parameter()
 phi0 <- parameter(); phi1 <- parameter(); ic0 <- parameter(); kc <- parameter()
@@ -198,7 +198,7 @@ EPS[, ] <- eir_lag * zeta[j] * psi[i]              # expected infectious bites/p
 # infection where EPS approaches 1 -- at seasonal peaks and in high-zeta strata (the
 # clinical incidence "peaks too high" bias; severe is spared because young children
 # have small psi). bite_dedup = 0 restores the linear form, which is what
-# malariaEquilibrium assumes -- the seed is an exact fixed point only then.
+# malariaEquilibrium assumes, which halves the drift off the seed without
 p_inf[, ] <- (1 - exp(-EPS[i, j])) * b[i, j] * pev_factor[i]
 FOI[, ] <- bite_dedup * (-log(1 - p_inf[i, j])) +
   (1 - bite_dedup) * (b[i, j] * EPS[i, j] * pev_factor[i])

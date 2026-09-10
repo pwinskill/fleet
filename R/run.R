@@ -52,10 +52,17 @@ get_generator <- function(odin_file = NULL) {
 #'       deduplication. malariasimulation collects the day's bitten individuals in a
 #'       bitset, so a person bitten repeatedly in one timestep is infected at most
 #'       once: the daily infection probability is `(1 - exp(-EPS)) * b`, which
-#'       saturates. Setting `0` uses the unbounded `b * EPS` instead, which
-#'       over-predicts infection where exposure approaches one bite/person/day
-#'       (seasonal peaks, high-`zeta` strata) but makes the `malariaEquilibrium`
-#'       seed an exact fixed point, which is useful for equilibrium tests.
+#'       saturates. Setting `0` uses the unbounded `b * EPS` instead, the linear
+#'       form `malariaEquilibrium` assumes, which over-predicts infection where
+#'       exposure approaches one bite/person/day (seasonal peaks, high-`zeta`
+#'       strata). It does **not** make the `malariaEquilibrium` seed an exact fixed
+#'       point, and it does not make a run flat: deduplication is only the largest
+#'       of four departures from that solution (the README lists all four). What it
+#'       does do is roughly halve the largest excursion from the seed: over an
+#'       undisturbed 15-year run at EIR 20, PfPR(2-10) departs from its seeded value
+#'       by at most 0.14% with `0`, against 0.28% at the default. That is the metric
+#'       the package's own equilibrium tests assert, which is why they set it.
+#'       Leave it at `1` for any scientific run.
 #'     \item `acquired_immunity_offset` (default `0`): the IBM adds `+0.5` to
 #'       positive acquired immunity inside the `b`/`phi`/`theta` Hill functions. That
 #'       is a per-individual detail which does not carry over to a stratum mean; an

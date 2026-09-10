@@ -59,10 +59,20 @@ jobs:
         with:
           use-public-rspm: true
 
-      # `needs: check` installs Suggests, which is where malariasimulation lives,
-      # and DESCRIPTION's Remotes says where to get it -- so that stays a single
-      # source of truth and is not repeated here. These two are the only packages
-      # the harness needs that DESCRIPTION has no reason to know about.
+      # Do NOT add `dependencies:` here. What installs malariasimulation, which
+      # this check cannot run without, is the action's DEFAULT of '"all"': that
+      # is the setting that pulls in Suggests, and DESCRIPTION's Remotes says
+      # where to get it, so that stays a single source of truth and is not
+      # repeated here. Narrowing this to '"hard"' would silently drop the IBM
+      # and leave check_drift.R with nothing to compare against.
+      #
+      # `needs: check` below is a no-op, not the mechanism: `needs:` only
+      # appends the packages named in Config/Needs/<field>, and blink's
+      # DESCRIPTION has no Config/Needs/check. It is kept because it is the
+      # r-lib template's shape, not because it installs anything.
+      #
+      # The two packages below are the only ones the harness needs that
+      # DESCRIPTION has no reason to know about.
       #
       # The list is short because check_drift.R sources constants.R rather than
       # theme.R and so needs no plotting stack. Every package here is one more

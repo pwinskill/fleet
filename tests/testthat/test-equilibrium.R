@@ -4,7 +4,7 @@ test_that("model stays near the malariaEquilibrium seed (ft = 0)", {
 
   p <- malariasimulation::get_parameters()
   # default acq_offset is 0 (the validated best mean-field match), for which the seed IS
-  # the exact fixed point; this verifies the numerical machinery (equilibrium seeding,
+  # the least-drifting configuration; this verifies the numerical machinery (seeding,
   # immunity flux-aging, Erlang-lag seeding) holds flat. Set explicitly for clarity.
   p$acquired_immunity_offset <- 0; p$bite_dedup <- 0
   out <- run_simulation_ode(3650, eqm(p, 20))
@@ -39,7 +39,7 @@ test_that("model stays near the malariaEquilibrium seed with treatment (ft > 0)"
 test_that("acquired-immunity offset toggle: default 0 holds flat, 0.5 shifts like the IBM Hill", {
   skip_if_not_installed("malariasimulation")
   p <- malariasimulation::get_parameters()
-  p$bite_dedup <- 0                          # isolate the offset: linear FOI => exact seed
+  p$bite_dedup <- 0                          # isolate the offset: linear FOI, least drift
   off <- run_simulation_ode(3650, eqm(p, 20))             # default offset 0 -> flat seed
   p_on <- p; p_on$acquired_immunity_offset <- 0.5
   on  <- run_simulation_ode(3650, eqm(p_on, 20))          # +0.5 -> literal IBM Hill calls

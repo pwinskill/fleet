@@ -1,6 +1,6 @@
 # MIT License
 
-Copyright (c) 2026 Imperial College of Science, Technology and Medicine
+Copyright (c) 2026 Peter Winskill
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

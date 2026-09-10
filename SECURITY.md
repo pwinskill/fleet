@@ -33,5 +33,6 @@ Out of scope, and better raised as a normal issue:
 ## Supported versions
 
 There is no released version yet. Only the current `main` branch is supported. See the
-warning at the top of the [README](README.md) before using this package for anything
-that matters.
+warning at the top of the
+[README](https://github.com/pwinskill/blink#not-ready-for-real-use) before using this
+package for anything that matters.
