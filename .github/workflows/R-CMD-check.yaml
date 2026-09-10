@@ -3,34 +3,33 @@
 on:
   push:
     branches: [main, master]
-    # TO ENABLE (see .github/CI.md): uncomment to stop a docs-only or
-    # figures-only commit spending a full five-runner matrix. paths-ignore, not
-    # paths: a deny-list of what provably cannot break the build stays correct
-    # when the package grows a new source directory.
-    # paths-ignore:
-    #   - '**.md'
-    #   - 'man/figures/**'
-    #   - 'vignettes/**.png'
-    #   - 'pkgdown/**'
-    #   - 'docs/**'
+    # Skip the five-runner matrix for a docs-only or figures-only commit.
+    # paths-ignore, not paths: a deny-list of what provably cannot break the
+    # build stays correct when the package grows a new source directory.
+    paths-ignore:
+      - '**.md'
+      - 'man/figures/**'
+      - 'vignettes/**.png'
+      - 'pkgdown/**'
+      - 'docs/**'
   pull_request:
-    # paths-ignore:
-    #   - '**.md'
-    #   - 'man/figures/**'
-    #   - 'vignettes/**.png'
-    #   - 'pkgdown/**'
-    #   - 'docs/**'
+    paths-ignore:
+      - '**.md'
+      - 'man/figures/**'
+      - 'vignettes/**.png'
+      - 'pkgdown/**'
+      - 'docs/**'
 
 name: R-CMD-check.yaml
 
 permissions: read-all
 
-# TO ENABLE: uncomment. Supersedes an in-flight matrix when the same branch is
-# pushed again, which on a private repo is the single biggest saving available:
-# three pushes ten minutes apart currently run three full matrices to completion.
-# concurrency:
-#   group: R-CMD-check-${{ github.ref }}
-#   cancel-in-progress: true
+# Supersedes an in-flight matrix when the same branch is pushed again, which on
+# a private repo is the single biggest saving available: three pushes ten minutes
+# apart would otherwise run three full matrices to completion.
+concurrency:
+  group: R-CMD-check-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   R-CMD-check:
@@ -71,3 +70,86 @@ jobs:
         with:
           upload-snapshots: true
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+
+  # Is the compiled model still the model in inst/odin?
+  #
+  # inst/odin/malaria_ode.R is the source of truth, but the artifact the matrix
+  # above compiles is the committed, generated src/malaria_ode.cpp (with
+  # R/dust.R, R/cpp11.R, src/cpp11.cpp and inst/dust). Edit the odin model,
+  # forget to regenerate, and all five runners compile the OLD model and pass;
+  # so do the tests; and comparison/check_drift.R passes loudest of all,
+  # printing "nothing moved" -- which reads as "my change was numerically inert"
+  # rather than "my change was never compiled".
+  #
+  # So: regenerate from inst/odin and fail if the working tree comes out dirty.
+  # One Ubuntu job, not a sixth matrix row -- the generated code is the same on
+  # every platform, so checking it five times says nothing new. The package
+  # itself is never built here: odin_package() only writes code, so the job is a
+  # dependency install plus seconds. The install is hard dependencies only (see
+  # below) -- dust2, monty and cpp11, which do compile because the Remotes pins
+  # make them source builds, but not the Suggests tree behind them.
+  generated-code:
+    runs-on: ubuntu-latest
+    name: generated code matches inst/odin
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          # Hard dependencies only. This job calls one generator and diffs the
+          # result; it never loads malariasimulation, postie, knitr, rmarkdown or
+          # testthat. Pulling the whole Suggests tree in (dependencies: '"all"',
+          # which is the action's default) only means this guard can go red
+          # because malariasimulation failed to build on a runner -- a false
+          # alarm on the one job whose entire value is that a red means one
+          # specific thing.
+          #
+          # So name what "hard" leaves out and the job actually needs: odin2,
+          # which is what the step below calls, and the packages the generators
+          # reach for that are only Suggests of odin2/dust2/cpp11 themselves --
+          # pkgload for odin_package(), and cpp11's own
+          # Config/Needs/cpp11/cpp_register list -- which pak will not install on
+          # their behalf.
+          dependencies: '"hard"'
+          extra-packages: |
+            any::odin2
+            any::pkgload
+            any::brio
+            any::cli
+            any::decor
+            any::desc
+            any::glue
+            any::tibble
+            any::vctrs
+          needs: check
+
+      - name: Regenerate the model from inst/odin
+        run: Rscript -e 'odin2::odin_package(".")'
+        shell: bash
+
+      # A dirty tree means the committed generated files are behind
+      # inst/odin/malaria_ode.R. It can also mean odin2 or dust2 moved: their
+      # version is stamped into the header of every file they write, and pak
+      # installs them from the Remotes pin at HEAD. Either way the fix is the
+      # same -- regenerate and commit.
+      - name: The generated model must match inst/odin
+        run: |
+          if ! git diff --exit-code -- src R/dust.R R/cpp11.R inst/dust; then
+            echo "::error::the compiled model is stale. src/malaria_ode.cpp,"
+            echo "::error::R/dust.R, R/cpp11.R and inst/dust are generated from"
+            echo "::error::inst/odin/malaria_ode.R and no longer match it, so a"
+            echo "::error::build here would compile the old model. Run"
+            echo "::error::odin2::odin_package('.') locally and commit the"
+            echo "::error::regenerated files."
+            exit 1
+          fi
+          echo "the generated model is up to date with inst/odin/malaria_ode.R"
+        shell: bash

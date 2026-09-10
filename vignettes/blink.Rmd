@@ -68,13 +68,27 @@ prevalence, `EIR` is per adult per year, and `ft` is the treated fraction. Becau
 the model is mean-field, prevalence and EIR are population-independent;
 `human_population` only rescales the count columns.
 
-With no interventions the model holds flat at the seeded equilibrium, so the
-first and last rows agree:
+With no interventions the run settles rather than holding perfectly still:
 
 ```{r flat}
 range(out$EIR)                    # ~20 throughout
-range(out$p_detect_lm_730_3650)   # constant to machine precision
+range(out$p_detect_lm_730_3650)   # a ~0.3% relaxation over the first years
 ```
+
+Over these fifteen years LM prevalence in 2-10 year olds runs between 0.5485
+(the seed, at day 0) and 0.5470 (its low point near the end of the first year),
+a spread of 0.28%, and is flat to 0.02% over the last five years. EIR stays
+within 0.5% of its target throughout.
+
+That relaxation is expected, and it is not a numerical error. The seed is the
+[malariaEquilibrium](https://github.com/mrc-ide/malariaEquilibrium) analytic
+fixed point, and that solution encodes *simplified* forms (a linear force of
+infection, refractory immunity boosting on the raw rate, exponential incubation
+survival), whereas `blink` reproduces `malariasimulation`'s own per-day
+semantics. The seed is therefore a close **approximation** to `blink`'s true
+fixed point rather than the fixed point itself. `malariasimulation` is seeded
+from the same solution and drifts off it the same way. Burn in before
+calibrating, and read a settled window rather than day 0.
 
 ## Reading outputs with postie
 
@@ -235,28 +249,61 @@ range(final_year$EIR)   # seasonal swing in the settled cycle
 mean(final_year$EIR)    # a few % below the aseasonal target of 20
 ```
 
+### Solver settings
+
+Every run above uses the default numerics. They live in `run_simulation_ode()`'s
+fourth argument, `tuning`: the solver tolerances and maximum step, the age grid,
+and the lengths of the Erlang lag and prophylaxis chains. Pass an `ode_tuning()`
+object or a plain named list of just the fields you want to change. Nothing
+epidemiological sits there (model parameters, the target EIR included, stay on
+the parameter list), and every default is the validated choice, so leaving
+`tuning` alone is almost always right.
+
+The exception is a long projection like the 20-year run above, where the solver,
+rather than the daily output grid, sets the step count. Loosening the relative
+tolerance and letting the step grow runs about 1.4-1.7x faster on a seasonal
+projection, and moves the aggregate outputs far less than anything you would
+report:
+
+```{r tuning}
+seas_fast <- run_simulation_ode(
+  20 * 365, malariasimulation::set_equilibrium(p_seas, init_EIR = 20),
+  tuning = list(rtol = 1e-6, step_size_max = 10))
+
+c(default = mean(final_year$EIR),
+  faster  = mean(seas_fast$EIR[(nrow(seas_fast) - 365 + 1):nrow(seas_fast)]))
+```
+
+Leave `atol` at its `1e-8` default whatever else you change: the prophylaxis
+chain stages hold occupancies of order `1e-6`, which a looser absolute tolerance
+lets dip below zero. `?ode_tuning` documents every field.
+
 ## The validation story
 
-`blink` is checked two ways. **First, self-consistency:** with no
-interventions it holds flat at the `malariaEquilibrium` seed to machine precision
-(and still holds flat with treatment, `ft > 0`, thanks to a corrected
-prophylaxis-aging recursion). **Second, agreement with the IBM:** the same
-parameter list is passed to both models — `malariasimulation` burned in 30 years
-at a population of 10,000, this model seeded at equilibrium — across six
-scenarios (`comparison/`). Representative agreement:
+`blink` is checked two ways. **First, self-consistency:** with no interventions
+it stays on the `malariaEquilibrium` seed to within a few tenths of a percent and
+then holds, as described under *A basic run* above (and it behaves the same way
+with treatment, `ft > 0`, thanks to a corrected prophylaxis-aging recursion).
+**Second, agreement with the IBM:** the same parameter list is passed to both
+models, `malariasimulation` burned in 30 years at a population of 10,000 and this
+model seeded at equilibrium, across eighteen scenarios (`comparison/`).
+Representative agreement:
 
-- Equilibrium PfPR(2-10) vs EIR tracks the IBM closely (e.g. at EIR 20:
-  IBM 0.553 vs ODE 0.547; at EIR 120: 0.788 vs 0.786).
-- The age-prevalence profile at EIR 20 agrees to `max |IBM - ODE| = 0.008`
-  (mean 0.004) across bands from infancy to 85y.
+- Equilibrium PfPR(2-10) vs EIR tracks the IBM closely (at EIR 20 the IBM median
+  is 0.5479 against blink's 0.5483; at EIR 120, 0.7857 against 0.7855).
+- The age-prevalence profile at EIR 20 agrees to `max |IBM - blink| = 0.005`
+  (mean 0.002) across twelve bands from infancy to 85y.
 - Custom demography reproduces the IBM's under-5 population fraction
-  (IBM 0.090 vs ODE 0.088).
+  (IBM 0.088 vs blink 0.088).
 
-Bed nets, seasonality and SMC scenarios are compared as well (including clinical
-and severe incidence time series); see `comparison/plots/` for the figures. LM
-prevalence and clinical incidence match the IBM to within ~1%. **Severe
+The other scenarios cover bed nets, IRS, seasonality, SMC, RTS,S, treatment
+scale-up and fifteen-year multi-intervention programmes, with clinical and severe
+incidence time series throughout; `vignette("comparison")` has the figures and
+the numbers behind each of them. Across the EIR 1-120 grid LM prevalence matches
+the IBM median to within 1.6% and clinical incidence to within 2.6%. **Severe
 incidence** (and DALYs derived from it) is more sensitive to the immunity model
-and can differ by ~5-20% (largest at low EIR); treat it as indicative.
+and can differ by ~5-20%, largest at EIR 20 and above and in the 5-20 year age
+bands; treat it as indicative.
 
 ## Scope and approximations
 

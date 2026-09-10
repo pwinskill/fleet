@@ -16,7 +16,8 @@
 #'
 #' @param age_lower age-group lower edges in **years** (default graded grid:
 #'   monthly to 1 year, quarterly to 5, yearly to 15, then 5-yearly to an
-#'   absorbing top group). Must start at 0 and increase strictly.
+#'   absorbing top group). Must start at 0, increase strictly, and stay in years:
+#'   a top edge above 1000 is rejected as a grid supplied in days.
 #' @param n_eir,n_foim,n_eip Erlang-chain stage counts for the EIR lag, FOIM lag
 #'   and mosquito EIP. Larger values sharpen the (otherwise gamma-shaped) lags
 #'   toward the IBM's fixed delays; equilibrium is exact for any value.
@@ -72,6 +73,24 @@ ode_tuning <- function(age_lower = default_age_lower(),
       !all(is.finite(age_lower)) || age_lower[1] != 0 || is.unsorted(age_lower, strictly = TRUE)) {
     stop("`age_lower` must be a finite numeric vector of at least two age-group ",
          "lower edges in years, starting at 0 and strictly increasing.", call. = FALSE)
+  }
+  ## ...and in YEARS. A grid handed over in days (default_age_lower() * 365 is the
+  ## easy slip, since every rendering band and every output tag is in days) passes
+  ## every check above, then quietly puts the whole population in the first age
+  ## group: n_age_730_3650 comes back 0 and the run looks merely uninteresting.
+  ##
+  ## The threshold only has to separate years from days, and the two scales differ
+  ## by 365x, so it belongs an order of magnitude above any plausible lifespan
+  ## rather than just above it. At 200 it rejected grids the package itself builds
+  ## -- default_age_lower(max_age = 250) is accepted there (its own guard asks only
+  ## for >= 20) and returns a perfectly usable absorbing top group -- while the
+  ## smallest days-valued grid it needs to catch, default_age_lower(max_age = 20) *
+  ## 365, tops out at 7300. 1000 years rejects every days grid with 7x to spare and
+  ## accepts every years grid a caller could mean.
+  if (max(age_lower) > 1000) {
+    stop("`age_lower` must be in YEARS, but its top edge is ", signif(max(age_lower), 6),
+         " -- not a plausible human age. A grid supplied in days (for example ",
+         "default_age_lower() * 365) is the usual cause; divide by 365.", call. = FALSE)
   }
   for (nm in c("n_eir", "n_foim", "n_eip")) pos_int(get(nm), nm)
   for (nm in c("n_ph", "n_phc")) pos_int(get(nm), nm, allow_null = TRUE)

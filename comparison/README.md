@@ -45,6 +45,29 @@ the IBM:
 CMP_BLINK_ONLY=1 Rscript comparison/run_replicates.R   # ~1 min
 ```
 
+### The unit-test suite pins blink's numbers too — refresh both
+
+These committed rows are not the only baseline of blink's own output.
+`tests/testthat/test-reference.R` holds a second one: absolute levels for one
+quantity from every output family, at three EIRs, pinned to 1e-6 in
+`tests/testthat/reference-values.csv` and checked on every `devtools::test()` and
+every `R CMD check` run. It answers a different question — *did anything move at
+all*, rather than *is the match to the IBM still good* — but it is a snapshot of
+the same model, so a deliberate model change makes both stale at once. Regenerate
+both, in the commit that makes the change:
+
+```bash
+BLINK_REGENERATE_REFERENCE=1 Rscript -e 'devtools::test(filter = "reference")'
+CMP_BLINK_ONLY=1 Rscript comparison/run_replicates.R
+```
+
+Do one and not the other and the one left behind stops carrying information:
+stale comparison rows make `check_drift.R` report movement that was reviewed and
+accepted weeks ago, and a stale CSV turns the test suite red for the same reason
+— which is the pressure that gets a reference regenerated to make a red test
+green. Read both diffs; between them they are the record of what the change did.
+`.github/CI.md` has the same note from the CI side.
+
 ### When the IBM *does* need re-running
 
 Only when the reference itself goes stale, which `check_drift.R` tells you about

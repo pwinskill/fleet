@@ -220,9 +220,19 @@ vector_control_series <- function(p, timesteps) {
   n_spp <- length(p$species_proportions)
   nets <- isTRUE(p$bednets)
   spray <- isTRUE(p$spraying)
+  # Knots: a coarse 10-day grid for the smooth within-round decay, every
+  # deployment day, AND the day BEFORE every deployment. a/mu are interpolated
+  # LINEARLY (inst/odin/malaria_ode.R:122 -- correct for the IRS logistic phase
+  # decay, which the IBM recomputes every timestep), so a deployment day that is
+  # not preceded by an adjacent knot ramps in from the previous knot up to 10
+  # days early: nets scheduled for day 100 had reached -66% of their effect on
+  # EIR by day 99, before a single net existed. The onset-1 knot pins the
+  # pre-deployment value one day out, confining the ramp to the single step onto
+  # the deployment day, so a round takes effect within a day of its schedule --
+  # the same resolution the chemoprevention pulses already have.
+  onsets <- c(if (nets) p$bednet_timesteps, if (spray) p$spraying_timesteps)
   grid <- sort(unique(c(seq(0, timesteps, by = 10), timesteps,
-                        if (nets) p$bednet_timesteps,
-                        if (spray) p$spraying_timesteps)))
+                        onsets, onsets - 1)))
   grid <- grid[grid >= 0 & grid <= timesteps]
   ng <- length(grid)
   # Net-usage weights (species-independent). At each grid time, every past
@@ -308,6 +318,77 @@ vector_control_series <- function(p, timesteps) {
     }
   }
   list(times = grid, a = a_out, mum = mum_out)
+}
+
+# ---- age-band targeting ----------------------------------------------------
+# Every age-targeted intervention (chemoprevention bands, mass-PEV bands, TBV
+# year sets) selects a slice of the population that the model's age GROUPS only
+# approximate. Selecting the groups whose MIDPOINT falls in the target is a
+# knife edge: a target that happens to straddle no midpoint selects nothing at
+# all and the intervention is a silent no-op (set_tbv(ages = 18:20) and
+# set_mass_pev(min_ages = 20*365, max_ages = 21*365) were both bit-identical to
+# no intervention on the default grid, whose represented years above 14 are only
+# 17, 22, 27, ...). Weighting each group by the FRACTION of it inside the target
+# instead is exact where the target aligns with group edges, degrades gracefully
+# where it does not, and cannot silently select nothing.
+
+# Fraction of each age group [lo, hi) lying in the target interval
+# [band_lo, band_hi). The absorbing top group has infinite width, so num / w
+# would be Inf / Inf; it counts as fully covered iff the band reaches its lower
+# edge, and not at all otherwise.
+.band_overlap <- function(band_lo, band_hi, lo, hi) {
+  w <- hi - lo
+  num <- pmax(0, pmin(band_hi, hi) - pmax(band_lo, lo))
+  ov <- ifelse(is.finite(w), num / w,
+               as.numeric(band_lo <= lo & band_hi > lo))
+  # Snap to the closed ends. Edges reconstructed from midpoints (.age_edges)
+  # carry ~1e-14 of relative round-off, so a band that meets a group edge can
+  # otherwise leave a 1e-16 sliver of coverage on the neighbouring group -- and
+  # a band flush with a group's edges can come back as 1 - 1e-16 instead of the
+  # exactly-1 weight that must reproduce whole-group selection bit for bit. The
+  # tolerance is ~5 orders of magnitude above that round-off and ~7 below any
+  # fraction of a group that means anything epidemiologically.
+  ov[ov < 1e-9] <- 0
+  ov[ov > 1 - 1e-9] <- 1
+  ov
+}
+
+# Fraction of each age group in a SET of integer years. The IBM tests each
+# individual's floor(age / 365) against the set, so year y is the day interval
+# [365 y, 365 (y + 1)). Contiguous years are merged into runs first, so a run
+# like 5:15 is one interval and the shared edges are not double counted.
+.year_set_overlap <- function(years, lo, hi) {
+  y <- sort(unique(years[is.finite(years)]))
+  if (!length(y)) return(numeric(length(lo)))
+  brk <- c(0L, which(diff(y) != 1), length(y))
+  ov <- numeric(length(lo))
+  for (i in seq_len(length(brk) - 1L)) {
+    run <- y[(brk[i] + 1L):brk[i + 1L]]
+    ov <- ov + .band_overlap(365 * min(run), 365 * (max(run) + 1), lo, hi)
+  }
+  pmin(ov, 1)
+}
+
+# Age-group edges implied by the group MIDPOINTS. pev_series()/tbv_series() are
+# handed age_mid only, but overlap weighting needs the edges. build_inputs()
+# builds age_mid as c((a[-n] + a[-1]) / 2, a[n]) from the lower edges `a` (the
+# absorbing top group has width Inf and is represented by its own lower edge),
+# which the forward recursion a[1] = 0, a[i+1] = 2 age_mid[i] - a[i] inverts
+# exactly -- its round-off alternates in sign at constant magnitude rather than
+# accumulating, and a[n] == age_mid[n] is a self-check on the reconstruction.
+# A caller passing something that is not a genuine midpoint vector (a synthetic
+# test grid) fails that check and gets the half-way points between neighbouring
+# midpoints instead, which is monotone for any increasing age_mid.
+.age_edges <- function(age_mid) {
+  n <- length(age_mid)
+  if (n < 2L) return(list(lo = 0, hi = Inf))
+  lo <- numeric(n)
+  for (i in seq_len(n - 1L)) lo[i + 1L] <- 2 * age_mid[i] - lo[i]
+  tol <- 1e-6 * max(1, abs(age_mid[n]))
+  if (!(all(diff(lo) > 0) && abs(lo[n] - age_mid[n]) <= tol)) {
+    lo <- c(0, (age_mid[-n] + age_mid[-1]) / 2)
+  }
+  list(lo = lo, hi = c(lo[-1], Inf))
 }
 
 # ---- chemoprevention pulses (MDA / SMC / PMC) ------------------------------
@@ -402,13 +483,7 @@ apply_chemoprevention_pulse <- function(sys, uidx, meta, event) {
   # that overlaps the target band). Weighting by overlap (not midpoint membership)
   # stops narrow bands from being silently dropped and coarse groups from being
   # fully treated when only partly targeted.
-  w <- meta$age_hi - meta$age_lo
-  num <- pmax(0, pmin(event$hi, meta$age_hi) - pmax(event$lo, meta$age_lo))
-  # finite groups: fraction of the group overlapping [lo, hi). The absorbing top
-  # group has width Inf (num/w would be Inf/Inf = NaN when hi = Inf): treat it as
-  # fully covered iff the band reaches its lower edge, else not at all.
-  ov <- ifelse(is.finite(w), num / w,
-               as.numeric(event$lo <= meta$age_lo & event$hi > meta$age_lo))
+  ov <- .band_overlap(event$lo, event$hi, meta$age_lo, meta$age_hi)
   arows <- which(ov > 0)
   if (length(arows) == 0) return(invisible())
   fr <- event$frac * ov[arows]                       # length(arows) vector
@@ -555,9 +630,21 @@ pev_series <- function(p, age_mid, timesteps) {
     return(list(times = c(0, timesteps), vals = matrix(1, n_age, 2)))
   last_dose <- if (length(p$pev_doses)) max(p$pev_doses) else 0
   onsets <- c(p$pev_epi_timesteps, p$mass_pev_timesteps) + last_dose
+  # Knots: a coarse 30-day grid for the smooth antibody decay, every distribution
+  # day, every efficacy-onset day (+7/+14 to resolve the fast initial decay), AND
+  # the day BEFORE each of those. As in vector_control_series(), the multiplier is
+  # interpolated LINEARLY (inst/odin/malaria_ode.R), so an instant that is not
+  # preceded by an adjacent knot ramps in from the previous knot up to 29 days
+  # early: a mass campaign on day 400 (efficacy onset 490) had already delivered
+  # 34% of its FOI reduction by day 485, before anyone was protected. The onset-1
+  # knot pins the pre-onset value one day out, confining the ramp to the single
+  # step onto the onset day. sort(unique()) absorbs duplicates (an instant one day
+  # after another, an instant already on the 30-day grid) and the >= 0 filter drops
+  # the negative knot an event at timestep 0 would generate.
   grid <- sort(unique(c(seq(0, timesteps, by = 30), timesteps, timesteps + 365,
-                        p$pev_epi_timesteps, p$mass_pev_timesteps, onsets,
-                        onsets + 7, onsets + 14)))
+                        p$pev_epi_timesteps, p$pev_epi_timesteps - 1,
+                        p$mass_pev_timesteps, p$mass_pev_timesteps - 1,
+                        onsets, onsets - 1, onsets + 7, onsets + 14)))
   grid <- grid[grid >= 0]
   ng <- length(grid)
   red <- matrix(0, n_age, ng)
@@ -611,17 +698,46 @@ pev_series <- function(p, age_mid, timesteps) {
     lo <- p$mass_pev_min_ages; hi <- p$mass_pev_max_ages   # bands applied at EVERY campaign
     nc <- length(p$mass_pev_timesteps)
     cov <- .recycle(p$mass_pev_coverages, nc)
-    for (k in seq_len(nc)) {
+    # Fraction of each age group inside each [min_age, max_age) band, rather than
+    # the groups whose midpoint lands in it: a band narrower than the groups it
+    # falls between (min_ages = 20*365, max_ages = 21*365 on the default grid,
+    # whose midpoints jump 17y -> 22y) selected NO group and the campaign was a
+    # silent no-op. The weight is the covered fraction of the group, so it
+    # multiplies coverage exactly as an age-restricted campaign should; a band
+    # aligned with group edges gives weight 1 and reproduces the midpoint rule.
+    edges <- .age_edges(age_mid)
+    bwt <- lapply(seq_along(lo), function(b) {
+      w <- .band_overlap(lo[b], hi[b], edges$lo, edges$hi)
+      if (!any(w > 0) && any(cov > 0)) {
+        warning("Mass PEV age band [", signif(lo[b] / 365, 4), ", ",
+                signif(hi[b] / 365, 4), ") years overlaps no model age group, ",
+                "so this campaign vaccinates nobody. Widen the band or refine ",
+                "the age grid (see default_age_lower()).", call. = FALSE)
+      }
+      w
+    })
+    # The bands are ONE campaign, so their weights ADD into a single per-group
+    # covered fraction BEFORE the campaign loop. Folding each band into `red`
+    # separately combined them with .combine() = 1 - (1-a)(1-b) -- the rule for
+    # INDEPENDENT campaigns -- which is wrong here: cov[k] and pev_protection()
+    # do not depend on the band, so a group's value must be (sum_b w_b) * cov * prot.
+    # The midpoint rule could not expose this (a group belonged to at most one
+    # band), but fractional weights can: splitting min_ages/max_ages at 1195 days
+    # gives the group straddling that edge weights 0.09589 + 0.90411 = 1, and the
+    # separate folds returned 0.6834 against 0.7295 for the identical single band
+    # -- a 6.3% shortfall on a split that should change nothing. .combine() is
+    # kept ACROSS campaigns (k), where independent protection IS the right rule.
+    cw <- pmin(Reduce(`+`, bwt, numeric(n_age)), 1)
+    rows <- which(cw > 0); wrow <- cw[rows]
+    if (length(rows)) for (k in seq_len(nc)) {
       tc <- p$mass_pev_timesteps[k]
       # each booster read at its admin date tc + last_dose + bspace[j] (final dose + spacing)
       bcov <- .booster_cov_vec(bcovm, p$mass_pev_timesteps, tc + last_dose + bspace)
-      for (b in seq_along(lo)) {
-        inband <- which(age_mid >= lo[b] & age_mid < hi[b])
-        if (!length(inband)) next
-        for (g in seq_len(ng)) if (grid[g] >= tc + last_dose) {
-          tsince <- grid[g] - tc - last_dose
-          red[inband, g] <- .combine(red[inband, g], cov[k] * pev_protection(prof, bprofs, bspace, bcov, tsince))
-        }
+      for (g in seq_len(ng)) if (grid[g] >= tc + last_dose) {
+        tsince <- grid[g] - tc - last_dose
+        red[rows, g] <- .combine(
+          red[rows, g],
+          wrow * cov[k] * pev_protection(prof, bprofs, bspace, bcov, tsince))
       }
     }
   }
@@ -640,8 +756,15 @@ tbv_series <- function(p, age_mid, timesteps) {
   ones <- matrix(1, n_age, 2)
   if (!isTRUE(p$tbv))
     return(list(times = c(0, timesteps), fU = ones, fA = ones, fD = ones, fT = ones))
+  # As in vector_control_series()/pev_series(): the multiplier is interpolated
+  # LINEARLY, so each vaccination day needs the knot before it or the effect ramps
+  # in from the previous 30-day knot. A round on day 400 had fU = 1 at day 390 but
+  # 0.513 by 395 and 0.124 by 399 -- 88% of a vaccine's transmission blocking
+  # delivered the day before anyone was vaccinated. sort(unique()) absorbs
+  # duplicate knots (rounds one day apart, a round already on the 30-day grid) and
+  # the >= 0 filter drops the negative knot a round at timestep 0 would generate.
   grid <- sort(unique(c(seq(0, timesteps, by = 30), timesteps, timesteps + 365,
-                        p$tbv_timesteps)))
+                        p$tbv_timesteps, p$tbv_timesteps - 1)))
   grid <- grid[grid >= 0]
   ng <- length(grid)
   rU <- rA <- rD <- rT <- matrix(0, n_age, ng)
@@ -649,9 +772,25 @@ tbv_series <- function(p, age_mid, timesteps) {
                                     (1 - p$tbv_rho) * exp(-t * log(2) / p$tbv_dl))
   tra_of <- function(ab) (ab / p$tbv_tra_mu)^p$tbv_gamma1 /
     ((ab / p$tbv_tra_mu)^p$tbv_gamma1 + p$tbv_gamma2)
+  # Fraction of each age group whose ages fall in the target year set, rather
+  # than the groups whose midpoint year is a member: the IBM vaccinates every
+  # individual with floor(age / 365) in tbv_ages, but only the years 17, 22, 27,
+  # ... are represented by a midpoint above age 14 on the default grid, so a set
+  # like 18:20 matched nothing and the whole vaccine was a silent no-op. A year
+  # set aligned with group edges gives weight 1 and reproduces the old rule.
+  edges <- .age_edges(age_mid)
+  wt <- .year_set_overlap(p$tbv_ages, edges$lo, edges$hi)
+  inband <- which(wt > 0)
+  if (!length(inband) && any(unlist(p$tbv_coverages) > 0)) {
+    yrs <- if (length(p$tbv_ages)) paste0(paste(range(p$tbv_ages), collapse = "-"), "y")
+           else "an empty age set"
+    warning("set_tbv() targets ", yrs, ", which overlaps no model age group, so ",
+            "the vaccine has no effect. Widen the target or refine the age grid ",
+            "(see default_age_lower()).", call. = FALSE)
+  }
+  wband <- wt[inband]
   for (k in seq_along(p$tbv_timesteps)) {
-    tc <- p$tbv_timesteps[k]; cov <- p$tbv_coverages[k]
-    inband <- which(trunc(age_mid / 365) %in% p$tbv_ages)   # exact year set (IBM convention)
+    tc <- p$tbv_timesteps[k]; cov <- wband * p$tbv_coverages[k]
     for (g in seq_len(ng)) if (grid[g] >= tc) {
       tra <- tra_of(ab_of(grid[g] - tc))
       rU[inband, g] <- .combine(rU[inband, g], cov * .calculate_TBA(p$tbv_mu, p$tbv_k, tra))
@@ -686,8 +825,14 @@ carrying_capacity_series <- function(p, K0, timesteps) {
   # daily grid under seasonality (matches the IBM's per-day rainfall; avoids
   # clipping the seasonal peak), coarser when only a carrying-capacity schedule.
   by <- if (seasonal) 1 else 5
+  # As in vector_control_series(): Kcap is interpolated linearly, but a
+  # set_carrying_capacity() scaler is a STEP in the IBM, so each change time
+  # needs the knot before it or the new scaler ramps in from up to `by` days
+  # early (a halving at day 100 started moving EIR on day 99 off the 5-day
+  # grid). Redundant but harmless under seasonality, where `by` is already 1.
   grid <- sort(unique(c(seq(0, timesteps, by = by), timesteps, timesteps + 365,
-                        if (flexcc) p$carrying_capacity_timesteps)))
+                        if (flexcc) p$carrying_capacity_timesteps,
+                        if (flexcc) p$carrying_capacity_timesteps - 1)))
   grid <- grid[grid >= 0]
   ng <- length(grid)
   R_bar <- if (seasonal) mean(.rainfall(1:365, p$g0, p$g, p$h, p$rainfall_floor)) else 1

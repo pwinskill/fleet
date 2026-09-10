@@ -4,45 +4,38 @@
 # stay valid for any blink-side change. This re-runs blink alone (~2 min) and
 # checks it against that frozen reference, which is why this can run on every
 # push while the full IBM sweep cannot.
-#
-# ---------------------------------------------------------------------------
-# NOT YET ENABLED. Only workflow_dispatch is live, so this never runs on its
-# own. To turn it on, uncomment the `push`, `pull_request` and `schedule` keys
-# below. See .github/CI.md for the whole go-live checklist.
-# ---------------------------------------------------------------------------
 
 name: comparison
 
 on:
   workflow_dispatch:
-  # TO ENABLE: uncomment from here to the end of this block.
   #
   # paths-ignore, not paths. A deny-list of things that provably cannot move the
   # model is robust to this repo growing: add a new source directory and it is
   # covered by default. An allow-list would silently stop checking it.
-  # push:
-  #   branches: [main, master]
-  #   paths-ignore:
-  #     - '**.md'
-  #     - 'man/figures/**'
-  #     - 'vignettes/**.png'
-  #     - 'pkgdown/**'
-  #     - 'docs/**'
-  #     - '.github/**'
-  # pull_request:
-  #   paths-ignore:
-  #     - '**.md'
-  #     - 'man/figures/**'
-  #     - 'vignettes/**.png'
-  #     - 'pkgdown/**'
-  #     - 'docs/**'
-  #     - '.github/**'
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - '**.md'
+      - 'man/figures/**'
+      - 'vignettes/**.png'
+      - 'pkgdown/**'
+      - 'docs/**'
+      - '.github/**'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'man/figures/**'
+      - 'vignettes/**.png'
+      - 'pkgdown/**'
+      - 'docs/**'
+      - '.github/**'
   #
   # The weekly run is the only thing that catches malariasimulation changing
   # underneath us, which is the one staleness cause that never shows up in our
   # own commits. GitHub emails the repo owner when a scheduled run fails.
-  # schedule:
-  #   - cron: '0 6 * * 1'   # Mondays, 06:00 UTC
+  schedule:
+    - cron: '0 6 * * 1'   # Mondays, 06:00 UTC
 
 permissions: read-all
 

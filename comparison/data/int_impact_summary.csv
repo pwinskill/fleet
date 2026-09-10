@@ -40,21 +40,21 @@
 "Treatment scale-up
 20% → 60% of clinical cases","severe incidence, all ages",-0.0680218455481564,-0.119499048924047,0.0627303460215678,"IBM"
 "Indoor residual spraying
-80% coverage, annual","LM prevalence, ages 2–10",0.79584848142447,NA,NA,"blink"
+80% coverage, annual","LM prevalence, ages 2–10",0.789391051005242,NA,NA,"blink"
 "Indoor residual spraying
-80% coverage, annual","clinical incidence, ages 0–5",0.982182354783761,NA,NA,"blink"
+80% coverage, annual","clinical incidence, ages 0–5",0.976409499828236,NA,NA,"blink"
 "Indoor residual spraying
-80% coverage, annual","clinical incidence, all ages",0.98269127377629,NA,NA,"blink"
+80% coverage, annual","clinical incidence, all ages",0.976941076813113,NA,NA,"blink"
 "Indoor residual spraying
-80% coverage, annual","severe incidence, all ages",0.976390368795485,NA,NA,"blink"
+80% coverage, annual","severe incidence, all ages",0.970267960029225,NA,NA,"blink"
 "Bed-net campaign
-80% coverage, one round","LM prevalence, ages 2–10",0.469545241626246,NA,NA,"blink"
+80% coverage, one round","LM prevalence, ages 2–10",0.464958537905419,NA,NA,"blink"
 "Bed-net campaign
-80% coverage, one round","clinical incidence, ages 0–5",0.659388359853103,NA,NA,"blink"
+80% coverage, one round","clinical incidence, ages 0–5",0.655033667380634,NA,NA,"blink"
 "Bed-net campaign
-80% coverage, one round","clinical incidence, all ages",0.66477068815461,NA,NA,"blink"
+80% coverage, one round","clinical incidence, all ages",0.660516260149059,NA,NA,"blink"
 "Bed-net campaign
-80% coverage, one round","severe incidence, all ages",0.495157645401514,NA,NA,"blink"
+80% coverage, one round","severe incidence, all ages",0.492368254056018,NA,NA,"blink"
 "RTS,S via EPI
 90% at 5 months, booster","LM prevalence, ages 2–10",0.00818154614860789,NA,NA,"blink"
 "RTS,S via EPI

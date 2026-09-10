@@ -3,37 +3,73 @@
      .github/README.md silently REPLACES the package README on the repo home
      page. It did, briefly. Keep this as CI.md. -->
 
-# CI: what runs, what does not yet, and how to turn it on
+# CI: what runs, and why it is built this way
 
-Two of the four workflows are **prepared but inert**. They carry only a
-`workflow_dispatch` trigger, so they never fire on their own; their real triggers
-sit directly above, commented, one uncomment away. That way they can be tested on
-demand (Actions tab → the workflow → *Run workflow*) before anything becomes
-automatic.
+All four workflows are live. Each also keeps its `workflow_dispatch` trigger, so
+any of them can be run on demand from the Actions tab (→ the workflow → *Run
+workflow*) without waiting for a matching push.
 
-| Workflow | Runs now | When enabled |
+| Workflow | When it runs | What it does |
 | --- | --- | --- |
-| `R-CMD-check.yaml` | every push and PR, 5-runner matrix | same, minus docs-only commits, and superseded runs cancelled |
-| `pkgdown.yaml` | every push, PR and release | unchanged |
-| `comparison.yaml` | **manual only** | every push touching the model, plus Mondays |
-| `figures.yaml` | **manual only** | pushes touching the comparison data or renderers |
+| `R-CMD-check.yaml` | every push and PR, except docs-only commits; superseded runs cancelled | a 5-runner matrix, plus one Ubuntu job checking the generated model code is current |
+| `pkgdown.yaml` | every push, PR and release | builds and deploys the site to `gh-pages` |
+| `comparison.yaml` | every push and PR touching the model, plus Mondays 06:00 UTC | re-runs blink alone against the frozen IBM rows and checks the match still holds |
+| `figures.yaml` | pushes and PRs touching the comparison data or renderers | re-renders from the committed CSVs and fails if the tree comes out dirty |
 
-## Going live
+`dependabot.yml` is active and needs no switch.
 
-Three edits, all uncommenting a block that is already written and marked
-`TO ENABLE`:
-
-1. **`comparison.yaml`** — uncomment `push`, `pull_request` and `schedule`.
-   This is the one that matters: it means a change to the model cannot land
-   without the blink-vs-IBM match being re-checked.
-2. **`figures.yaml`** — uncomment `push` and `pull_request`.
-3. **`R-CMD-check.yaml`** — uncomment the two `paths-ignore` blocks and the
-   `concurrency` block.
-
-Nothing else needs configuring. `dependabot.yml` is already active on merge and
-needs no switch.
+The Monday run is the one with no substitute: it is the only thing that catches
+`malariasimulation` changing underneath us, which is the single staleness cause
+that never appears in our own commits. GitHub emails the repository owner when a
+scheduled run fails.
 
 ## Why it is built this way
+
+**The compiled model can go stale while everything stays green.**
+`inst/odin/malaria_ode.R` is the model's source of truth, but the artifact that
+actually gets compiled is the committed, generated `src/malaria_ode.cpp` — along
+with `R/dust.R`, `R/cpp11.R`, `src/cpp11.cpp` and `inst/dust/`. No ordinary build
+regenerates any of them. So: edit the odin model, forget to run
+`odin2::odin_package(".")`, and all five check runners compile the *old* model
+and pass, the tests pass, and `check_drift.R` passes most emphatically of all —
+"nothing moved" reads as *my change was numerically inert* when what it really
+means is *my change was never compiled*. The `generated code matches inst/odin`
+job in `R-CMD-check.yaml` closes that gap: it regenerates from `inst/odin` and
+fails if the working tree comes out dirty. It runs once, on Ubuntu, rather than
+as a sixth matrix row, because the generated code comes out the same whatever
+platform writes it and the package itself is never built. It also goes red when
+odin2 or dust2 themselves move, since the generator's version is stamped into the
+header of every file it writes and the `Remotes:` pins are to HEAD rather than to
+a tag; the fix is the same either way — regenerate and commit.
+
+**And its dependency set is hard dependencies only.** The job calls one
+generator, so it installs `Imports`/`LinkingTo` plus `odin2` and the few
+generator helpers named in the workflow — not `dependencies: "all"`, which would
+drag in the whole `Suggests` tree: `malariasimulation` and `postie`, both GitHub
+remotes that have to compile from source, plus `knitr`, `rmarkdown` and
+`testthat`. This job loads none of them. With them installed, a
+`malariasimulation` build failure on a runner turns the staleness guard red for a
+reason that has nothing to do with staleness — which is exactly the failure this
+guard cannot afford, because its whole value is that a red means one specific
+thing.
+
+**A missing `malariasimulation` now fails the check instead of quietly emptying
+it.** Nearly every `test_that()` block opens with
+`skip_if_not_installed("malariasimulation")` — it is a Suggests dependency and
+the source of every parameter list the model is driven with. So a runner where it
+was missing or unloadable used to run the handful of dependency-free tests, skip
+the rest, and report `OK, 0 errors`: a green tick meaning "we tested three
+things". `tests/testthat/setup.R` now `stop()`s in that case, which changes how
+the matrix fails. Before, a runner that could not build or load the IBM from the
+`Remotes:` pin passed alongside the four that could, and nothing said the
+difference. Now that row goes red at the test step, naming the missing package,
+while the others stay green — so a one-platform dependency problem reads as one,
+instead of as a model that passed everywhere. Nothing else in the check would
+have said so:
+`vignettes/blink.Rmd` gates every chunk on `malariasimulation` and `postie` being
+installed, so it knits to prose and passes with no code run at all, and the other
+two vignettes are `eval = FALSE` throughout. The test suite is the only part of
+`R CMD check` that notices.
 
 **`paths-ignore`, not `paths`, wherever the question is "could this break the
 model".** A deny-list of things that provably cannot (markdown, PNGs, the pkgdown
@@ -71,13 +107,51 @@ byte-for-byte between machines from font hinting alone, so failing on images wou
 produce noise that trains you to ignore it. `tables.md` is plain text computed
 from the same CSVs, so a genuinely stale figure almost always shows up there too.
 
+## Two committed baselines of blink's own numbers
+
+There are two, they are regenerated by different commands, and a deliberate model
+change moves **both**.
+
+| Baseline | Pinned in | Checked by | Regenerate with |
+| --- | --- | --- | --- |
+| Unit-test reference | `tests/testthat/reference-values.csv` | `tests/testthat/test-reference.R`, in every check run | `BLINK_REGENERATE_REFERENCE=1 Rscript -e 'devtools::test(filter = "reference")'` |
+| Comparison rows | the `model == "blink"` rows of `comparison/data/rep_*.csv` (the drift check reads `rep_eq.csv`) | `comparison/check_drift.R`, in `comparison.yaml` | `CMP_BLINK_ONLY=1 Rscript comparison/run_replicates.R` |
+
+They answer different questions — the CSV pins absolute output levels at three
+EIRs to 1e-6 so that *any* movement is visible, the comparison rows exist to be
+measured against the frozen IBM medians — but they are both snapshots of the same
+model, so they go stale together. Refresh both in the commit that makes the
+change, and read both diffs: they are the record of what the change did.
+
+Regenerate only one and the other decays into noise. Leave the CSV behind and the
+next check run is red for a change already accepted, which is the pressure that
+gets a reference regenerated to make a red test green. Leave the comparison rows
+behind and `check_drift.R` keeps reporting movement that was reviewed weeks ago,
+which is how real drift arrives in a report you have stopped reading.
+
+## Environment variables
+
+The two the test suite reads. Neither should ever be set in CI.
+
+| Variable | Read by | What it does |
+| --- | --- | --- |
+| `BLINK_ALLOW_SKIP` | `tests/testthat/setup.R` | Any non-empty value restores the old behaviour: a missing `malariasimulation` skips the suite instead of erroring. For a deliberate local run on a machine where the IBM genuinely cannot be built, where you want the handful of dependency-free tests. Setting it in CI re-opens exactly the hole the `stop()` closes. |
+| `BLINK_REGENERATE_REFERENCE` | `tests/testthat/test-reference.R` | Any non-empty value rewrites `tests/testthat/reference-values.csv` from the current model, then passes trivially. Only for a model change that was intended and reviewed — and see the section above, because the comparison rows need refreshing in the same commit. Never to turn a red test green. |
+
+`comparison/`'s own variables (`CMP_ONLY`, `CMP_STRICT`, `CMP_SMOKE`,
+`CMP_BLINK_ONLY`, `CMP_REFRESH_SITES`, `BLINK_LIB`, `BLINK_VALIDATE`) are
+documented in `comparison/README.md`.
+
 ## A note on Actions minutes
 
 Private repositories consume the account's Actions quota; public ones get
 unlimited standard-runner minutes. The full `R-CMD-check` matrix costs roughly 87
 billed minutes per run — macOS is charged at 10x and is 56% of that, despite being
-the fastest job on the wall clock. The drift and figures workflows are Ubuntu-only
-and cost a few minutes each.
+the fastest job on the wall clock. The generated-code job, and the drift and
+figures workflows, are Ubuntu-only and cost a few minutes each. The generated-code
+job is cheap only because of its `dependencies: '"hard"'`: what it spends is a
+dependency install, so widening that set is the one edit that would make it
+expensive as well as flaky.
 
 If this repository stays private, the cheapest further saving by far is moving the
 macOS row off every-push and onto the weekly schedule. If it goes public, none of

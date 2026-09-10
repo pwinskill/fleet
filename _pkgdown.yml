@@ -67,6 +67,13 @@ reference:
     ODE model.
   contents:
   - run_simulation_ode
+- title: Solver settings
+  desc: >
+    Numerical tolerances and the discretisation of the age grid, the Erlang lag
+    chains and the prophylaxis compartments. Every default is the validated
+    choice: change one only when you have a reason to.
+  contents:
+  - ode_tuning
 - title: Age grid
   desc: >
     The default graded age discretisation used throughout the model.

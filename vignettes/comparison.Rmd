@@ -125,7 +125,7 @@ in under-5s is more than repaid at older ages. Decomposing the EIR 20 gap band
 by band, the 5–20 year olds account for more than the whole −1.3% deficit,
 partly offset by adults, where blink runs higher. All-age severe incidence is
 where blink sits furthest below the IBM -- −6.2% at EIR 20, −4.0% at EIR 50 and
-−4.7% at EIR 120 -- and it falls just outside the 10–90% band at EIR 20 and
+−4.6% at EIR 120 -- and it falls just outside the 10–90% band at EIR 20 and
 EIR 50 (by 0.2% and 0.3% of the lower edge), inside it at the other four. Both
 curves still flatten over EIR 20–50 and fall away by EIR 120. About half of that
 gap comes from the under-5 bands and the rest from 5–20 year olds, the same age
@@ -253,7 +253,7 @@ fig("core_sites")
 > separate checkout that is not part of the package repository. So it is re-taken
 > deliberately rather than kept in step, and both the figure and the statistics
 > below describe the `blink` version recorded in
-> `comparison/data/site_snapshot.json` — which may be behind the code you are
+> `comparison/data/site_snapshot.json`, which may be behind the code you are
 > reading about. Treat it as evidence that the approach holds up across real
 > settings, not as a live check on the current model.
 
@@ -288,8 +288,9 @@ after deployment.
 fig("int_timeseries")
 ```
 
-Row by row. **Treatment scale-up** moves prevalence in 2–10 year olds from 0.55
-to 0.39 in both models while leaving under-5 clinical incidence almost untouched
+Row by row. **Treatment scale-up** moves prevalence in 2–10 year olds from 0.50
+(the level 20% baseline case management already holds it at) to 0.39 in both
+models while leaving under-5 clinical incidence almost untouched
 (a 4–5% reduction in both): more infections are cleared, but the lower exposure
 erodes clinical immunity, and the two effects nearly cancel. **RTS,S via EPI**
 acts on one birth cohort at a time, so under-5 incidence drifts down gradually as
@@ -326,19 +327,20 @@ fig("int_impact")
 | | clinical, 0–5 | 52% (51–54%) | 54% |
 | | clinical, all ages | 25% (24–26%) | 26% |
 | | severe, all ages | 33% (32–42%) | 38% |
-| Indoor residual spraying | PfPR~2–10~ | 79% (78–79%) | 80% |
+| Indoor residual spraying | PfPR~2–10~ | 79% (78–79%) | 79% |
 | | clinical, 0–5 | 97% (97–98%) | 98% |
 | | clinical, all ages | 97% (97–98%) | 98% |
-| | severe, all ages | 97% (97–97%) | 98% |
-| Bed-net campaign | PfPR~2–10~ | 48% (47–49%) | 47% |
+| | severe, all ages | 97% (97–97%) | 97% |
+| Bed-net campaign | PfPR~2–10~ | 48% (47–49%) | 46% |
 | | clinical, 0–5 | 66% (65–67%) | 66% |
 | | clinical, all ages | 67% (66–67%) | 66% |
-| | severe, all ages | 50% (44–53%) | 50% |
+| | severe, all ages | 50% (44–53%) | 49% |
 
 Summarised as the reduction over the first three post-deployment years relative
 to the three years before, **blink lands inside the IBM's 10–90% replicate range
-in 15 of the 20 scenario × outcome cells**, and within about a point of the band
-in the other five. On the two clinical outcomes and prevalence the two models
+in 16 of the 20 scenario × outcome cells**, and within 0.6 percentage points of
+the band in the other four (bed-net prevalence, and IRS prevalence and both
+clinical outcomes). On the two clinical outcomes and prevalence the two models
 agree to within two percentage points everywhere.
 
 Reading across the four panels shows *who* each intervention protects, and the
@@ -346,7 +348,7 @@ two models agree on that too. **SMC and RTS,S are targeted**, so their all-age
 clinical effect is roughly half their under-5 effect (SMC 25% against 52%; RTS,S
 5% against 10%). They protect a slice of the population, and the rest of it
 carries on as before. **Nets and IRS are not**: they suppress transmission for
-everyone, so the all-age and under-5 reductions are the same (67% and 97%).
+everyone, so the all-age and under-5 reductions are the same (about 66% and 97%).
 
 The one genuine disagreement in sign is **treatment scale-up on severe
 incidence**: the IBM's median says severe disease *rises* by 7%, blink's single
@@ -447,10 +449,19 @@ formally; the ones visible in these figures are:
   outcomes. Severe incidence, incidence in narrow age bands, and anything in a
   dry-season trough carry visible Monte-Carlo noise, and the IBM replicate band
   is the honest yardstick for what counts as a difference.
-- **Severe disease.** The severe Hill function is steep, so the small differences
-  in acquired immunity between a stratum mean and a population of individuals are
-  amplified. Expect 5-20% discrepancies in severe incidence, largest at low EIR;
-  treat severe outputs (and the DALYs derived from them) as indicative.
+- **Severe disease.** The cause is *where* the severe Hill function sits, not how
+  steep it is. Its exponent `kv = 2.00` is the shallowest of the three immunity
+  exponents (`kb = 2.16`, `kc = 2.37`), but its half-point `iv0 = 1.10` is sixteen
+  times lower than the clinical `ic0 = 18.0`. At the EIR 20 equilibrium acquired
+  severe immunity is already 2.6x `iv0` by age 1 and 8.7x by age 3, so `theta`
+  sits far out on its convex `IVA^-2` tail over essentially the whole population,
+  while acquired clinical immunity is still 0.17x `ic0` at age 1 and 0.56x at age
+  3, keeping `phi` near the flat top of its own curve. Evaluating a convex
+  function at a stratum mean rather than averaging it over a population of
+  individuals under-states it, so blink runs *below* the IBM on severe incidence,
+  which is the sign seen in the panels above. Expect 5-20% discrepancies, largest
+  at EIR 20 and above and in the 5-20 year age bands; treat severe outputs (and
+  the DALYs derived from them) as indicative.
 - **Correlated protection under vector control.** In the IBM the same protected
   individuals avoid bite after bite; `blink` averages net and spray protection
   over the population. Through the intervention era the ODE therefore tends to
@@ -480,18 +491,31 @@ formally; the ones visible in these figures are:
 
 ## Run time
 
-The 130 IBM runs behind this page took 7.2 CPU-hours: 201 s per 34-year run at
-10,000 people, or 5.9 s per simulated year with ten runs sharing twelve cores
-(about 2.5 s per year for a single uncontended run). blink ran all thirteen
-scenarios in 60 s (4.6 s per run, 0.14 s per simulated year) at `atol = 1e-8`,
-`rtol = 1e-6` and `step_size_max = 10` (the defaults, `1e-8` and a 1-day step
-cap, are slower). Per simulated year that is a factor of 18–43 at this
-population size; and the IBM's cost grows with population while blink's does
-not, so the gap widens for the 100,000-person runs typical of country work.
+Every run on this page is timed, and the timings are committed alongside the
+model outputs in `comparison/data/rep_timing.csv`, so the numbers below are
+regenerated with the data rather than maintained by hand (see *Reproducing this
+page*).
+
+The 180 IBM runs behind this page took **8.5 CPU-hours**: 170 s for an average
+run, over horizons of 33 to 45 years at 10,000 people, which is **4.6 s per
+simulated year** with ten replicates sharing the cores. `blink` ran the same
+eighteen scenarios in **110 s** (6.1 s per run, **0.165 s per simulated year**)
+at `atol = 1e-8`, `rtol = 1e-6` and `step_size_max = 10` (the defaults, `1e-8`
+and a 1-day step cap, are slower). Pooled over everything, that is a factor of
+**28** per simulated year at this population size.
+
+Read the per-scenario factors with more care than the pooled one. They span 9x
+(seasonal SMC) to 113x (the EIR 20 baseline), but most of that spread sits in the
+IBM's own cost, which ranged from 2.3 to 12.9 s per simulated year across the
+batches depending on how many replicates were competing for cores at the time.
+blink's cost varies only 2.6-fold across the eighteen scenarios, from 0.10 s per
+simulated year on the plain EIR-grid runs to 0.26 s on the seasonal SMC ones. The
+IBM's cost also grows with population while blink's does not, so the gap widens
+for the 100,000-person runs typical of country work.
 
 ## Reproducing this page
 
-Everything here is generated by two scripts in the package repository's
+Everything here is generated by three scripts in the package repository's
 `comparison/` directory (not part of the installed package):
 
 ```{r, eval = FALSE}
@@ -501,10 +525,16 @@ source("comparison/run_replicates.R")
 # 2. draw the figures from those CSVs (seconds); writes man/figures/cmp_*.png
 #    and vignettes/cmp_*.png
 source("comparison/render_figures.R")
+
+# 3. recompute every number quoted on this page (seconds); writes
+#    comparison/data/tables.md, from which the tables and statistics above are taken
+source("comparison/summary_tables.R")
 ```
 
 `comparison/theme.R` holds the house style and the scenario constants shared by
-both scripts. The saved per-replicate summaries (`comparison/data/rep_*.csv`)
-are committed, so the figures can be re-styled without re-running the models.
+all three scripts. The saved per-replicate summaries (`comparison/data/rep_*.csv`)
+are committed, so the figures can be re-styled, and the numbers rechecked,
+without re-running the models. `comparison/check_drift.R` re-runs `blink` alone
+against those committed rows in about two minutes and fails on drift.
 The country-site comparison is produced by the separate `blink2_validate`
 harness, whose per-country results the renderer reads directly.

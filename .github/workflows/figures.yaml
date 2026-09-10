@@ -6,33 +6,28 @@
 #
 # This re-renders from the committed CSVs and fails if the working tree comes out
 # dirty. It runs no model, so it is seconds plus the cost of installing ggplot2.
-#
-# ---------------------------------------------------------------------------
-# NOT YET ENABLED. Only workflow_dispatch is live. To turn it on, uncomment the
-# `push` and `pull_request` keys. See .github/CI.md.
-# ---------------------------------------------------------------------------
 
 name: figures
 
 on:
   workflow_dispatch:
-  # TO ENABLE: uncomment. Scoped to the things that can change what is drawn --
-  # the data, the renderers, the style, or the constants they share.
-  # push:
-  #   branches: [main, master]
-  #   paths:
-  #     - 'comparison/data/rep_*.csv'
-  #     - 'comparison/render_figures.R'
-  #     - 'comparison/summary_tables.R'
-  #     - 'comparison/theme.R'
-  #     - 'comparison/constants.R'
-  # pull_request:
-  #   paths:
-  #     - 'comparison/data/rep_*.csv'
-  #     - 'comparison/render_figures.R'
-  #     - 'comparison/summary_tables.R'
-  #     - 'comparison/theme.R'
-  #     - 'comparison/constants.R'
+  # Scoped to the things that can change what is drawn: the data, the renderers,
+  # the style, or the constants they share.
+  push:
+    branches: [main, master]
+    paths:
+      - 'comparison/data/rep_*.csv'
+      - 'comparison/render_figures.R'
+      - 'comparison/summary_tables.R'
+      - 'comparison/theme.R'
+      - 'comparison/constants.R'
+  pull_request:
+    paths:
+      - 'comparison/data/rep_*.csv'
+      - 'comparison/render_figures.R'
+      - 'comparison/summary_tables.R'
+      - 'comparison/theme.R'
+      - 'comparison/constants.R'
 
 permissions: read-all
 

@@ -65,7 +65,10 @@ structure then supports (a fixed point, so no burn-in), which is generally
 \code{malariasimulation::run_simulation(timesteps, parameters, correlations)}
 exactly (drop-in call compatibility). Intervention correlation is an
 individual-level feature with no mean-field analogue, so a non-NULL value is
-ignored with a warning (the ODE assumes independence between interventions).}
+ignored with a warning (the ODE assumes independence between interventions).
+\code{tuning} is the \emph{fourth} argument: an \code{\link[=ode_tuning]{ode_tuning()}} object (or a list of its
+fields) passed positionally here would land in \code{correlations} and be thrown
+away, so that is an error rather than a silently defaulted run.}
 
 \item{tuning}{ODE solver and discretisation settings, from \code{\link[=ode_tuning]{ode_tuning()}}.
 A plain named list of the fields you want to change is also accepted; every
@@ -84,7 +87,21 @@ day. Columns:
 \item per age band (tags in \strong{days}, \verb{<lo>_<hi>}): \verb{n_age_*} (population),
 \verb{n_detect_lm_*} and \verb{p_detect_lm_*} (LM-positive count and PfPR
 proportion), \verb{n_detect_pcr_*}, \verb{n_inc_clinical_*}, \verb{n_inc_severe_*} and
-\verb{n_inc_*} (all-infection incidence), all per-day counts.
+\verb{n_inc_*} (all-infection incidence), all per-day counts. A band is
+aggregated by exact overlap: each model age group contributes the fraction
+of its own width that lies inside the band, so a band need not align with
+the \code{age_lower} grid, and bands that partition a span of the age axis
+partition the population living in that span exactly. The one age group
+that is not a finite interval is the absorbing top group, which holds
+everyone from its lower edge upward: a band is given all of it if it
+extends \emph{above} that edge and none of it if it stops exactly on it. So a
+band \verb{[0, 36500)} renders the whole population on the default grid (top
+group from 29200 days) but leaves the top group out on a grid built with
+\code{max_age = 100} -- 1.3\% of the population, at the default demography.
+That is not silent: the run warns, names the share of the population no
+\verb{n_age_*} band renders, and names the age groups it sits in. A band that
+overlaps no age group at all (it lies above the open-ended top group)
+warns too, and its \verb{p_detect_lm_*} is \code{NA} rather than 0.
 \item \code{ft} (treated fraction), \code{EIR} (per adult per year), \code{FOIM}.
 \item population-total infection-state counts \code{S_count}, \code{D_count},
 \code{A_count}, \code{U_count}, \code{Tr_count}, \code{Ph_count} (diagnostic).

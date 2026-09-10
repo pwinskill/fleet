@@ -1,6 +1,6 @@
 Package: blink
 Title: Mean-Field (ODE) Twin of the 'malariasimulation' Malaria Model
-Version: 0.0.0.9000
+Version: 0.0.0.9001
 Authors@R: c(
   person("Peter", "Winskill", role = c("aut", "cre"), email = "p.winskill@imperial.ac.uk"))
 Description: Provides a fast, deterministic mean-field (ordinary differential
@@ -32,17 +32,18 @@ Remotes:
     mrc-ide/malariasimulation,
     mrc-ide/postie
 Imports:
-    dust2,
-    malariaEquilibrium,
-    stats
+    dust2 (>= 0.3.28),
+    malariaEquilibrium (>= 1.0.1),
+    stats,
+    utils
 LinkingTo:
     cpp11,
     dust2,
     monty
 Suggests:
-    odin2,
-    malariasimulation,
-    postie,
+    odin2 (>= 0.3.46),
+    malariasimulation (>= 3.0.0),
+    postie (>= 1.1.0),
     knitr,
     rmarkdown,
     testthat (>= 3.0.0)

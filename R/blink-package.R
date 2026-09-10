@@ -16,6 +16,8 @@
 #'   \item [run_simulation_ode()]: run the model; returns a wide, daily count
 #'     table (P. falciparum only).
 #'   \item [default_age_lower()]: the default graded age grid.
+#'   \item [ode_tuning()]: solver and discretisation settings, passed as
+#'     `tuning =`.
 #' }
 #' The count table is malariasimulation-shaped, so post-process it with
 #' \pkg{postie} exactly as you would an IBM run: `postie::get_rates(out)` and
@@ -24,4 +26,5 @@
 #' approximations* section for where and how much the ODE departs from the IBM.
 #'
 #' @keywords internal
+#' @useDynLib blink, .registration = TRUE
 "_PACKAGE"

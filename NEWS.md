@@ -99,8 +99,8 @@
   of the whole `Tr + Ph` sojourn: 16 for SP-AQ, 20 for DHA-PQP, and 1 for AL, whose
   10-day protection is already less variable than `Tr` itself (measured
   output-identical to a 20-stage chain at half the run time). Counts are capped at
-  20. `run_simulation_ode(n_ph =, n_phc =)` override them; 1 recovers the old
-  behaviour. The equilibrium seed distributes the prophylaxis mass across the
+  20. `run_simulation_ode(tuning = ode_tuning(n_ph =, n_phc =))` overrides them;
+  1 recovers the old behaviour. The equilibrium seed distributes the prophylaxis mass across the
   stages exactly (`solve_disease_block()` generalised), so runs still hold flat.
   Runs now record only the output variables rather than the full state, which
   keeps memory flat despite the larger state.
@@ -108,8 +108,10 @@
 ## Bug fixes
 
 * **Severe and all-infection incidence are counted with the deduplicated
-  probability, not the raw hazard.** This is the one change in this release that
-  moves numbers. `clin_inc_a` was already counted with `h_c`; `sev_inc_a` and
+  probability, not the raw hazard.** This is the change in this release that
+  moves the no-intervention numbers; the review-pass fixes below move
+  intervention scenarios and misaligned rendering bands, and nothing else.
+  `clin_inc_a` was already counted with `h_c`; `sev_inc_a` and
   `inc_a` used `FOI`. These outputs are rates that R integrates over a day, and
   the right rate depends on how fast the compartment drains. `S` and `U` drain at
   the full `FOI`, so `int FOI*X exp(-FOI t) dt = X*(1 - exp(-FOI)) = X*p_inf` —
@@ -139,6 +141,106 @@
   `vignette("comparison")` and its tables are re-rendered accordingly; the
   comparison harness does not render all-infection incidence, so those figures
   show this change's cost without showing its benefit.
+
+* **Output age bands are rendered by exact overlap, not by age-group midpoint.**
+  A model age group used to contribute its whole population to a rendering band
+  if its midpoint fell inside the band, and nothing at all otherwise. Two things
+  went wrong with that. A band narrower than the group it lands in captures no
+  midpoint, so the whole column family came back as hard zeros: 52 of the 65
+  single-year bands from 15 to 80 years on the default grid, where
+  `p_detect_lm_7300_7665 = 0` reads as "no malaria in 20-21 year olds" rather
+  than "no data". And a partial overlap counted the whole group or none of it,
+  so the standard 6-59-month band came back 2.2% light on a default parameter
+  list, an error that flowed into every PfPR denominator and every postie
+  person-day. A group now contributes the fraction of its own width lying inside
+  `[min_age, max_age)`. The partition invariant is preserved and in fact
+  strengthened: over a set of bands that partition a span of the age axis the
+  weights sum to exactly 1 per group inside that span, so a group straddling a
+  boundary is split between the two bands rather than handed whole to whichever
+  one owns its midpoint. `blink` now also warns when a rendering band overlaps no
+  model age group at all, and reports the share of the population no band
+  captured. **This moves published numbers for any band that does not align with
+  the model age grid**, in every scenario, with or without interventions. Bands
+  that do align are unaffected: regenerating the unit-test reference outputs,
+  whose bands are grid-aligned, produced a byte-identical file.
+
+* **Bed nets, IRS, carrying capacity, PEV and TBV no longer take effect before
+  their scheduled date.** All five series are interpolated linearly, which is
+  right for the within-round decay each of them carries, but it means a value
+  that changes on a scheduled day ramps in from whatever knot precedes it, and
+  the background grids are coarse: 10 days for vector control, 30 for TBV and
+  PEV, 5 for carrying capacity without seasonality. So an intervention arrived
+  early, in some cases almost entirely. Nets scheduled for day 100 had reached
+  66% of their effect on EIR by day 99, before a single net existed. A TBV round
+  on day 400 had delivered 88% of its transmission blocking by day 399. A mass
+  PEV campaign whose efficacy onset was day 490 had delivered 34% of its FOI
+  reduction by day 485. A carrying-capacity halving at day 100 started moving
+  EIR on day 99. Each grid now carries a knot at `onset - 1` as well as at every
+  scheduled day, pinning the pre-deployment value one day out and confining the
+  ramp to the single step onto the scheduled day, so a round takes effect within
+  a day of its schedule: the resolution the chemoprevention pulses already had.
+  Every scenario using one of these five interventions moves: impact now starts
+  on schedule instead of up to a grid step early, so the days around each
+  deployment shift later.
+
+* **TBV and mass-PEV age targeting weights by the fraction of each group
+  covered.** Both used to select the model age groups whose midpoint fell in the
+  target, so a target that straddled no midpoint selected nothing and the whole
+  campaign was a silent no-op. Above age 14 the default grid is 5-yearly and only
+  the years 17, 22, 27 and so on are midpoints, so `set_tbv(ages = 18:20)`
+  vaccinated nobody, as did a mass PEV band of `min_ages = 20 * 365`,
+  `max_ages = 21 * 365`, which falls between the midpoints at 17 and 22 years.
+  Each group now carries the fraction of its own width inside the target, which
+  multiplies coverage exactly as an age-restricted campaign should; a target
+  aligned with group edges gives weight 1 and reproduces the old result exactly.
+  A target that overlaps no group at all now warns instead of doing nothing
+  quietly.
+
+  Fractional weights then exposed a second defect in mass PEV. The several
+  `min_ages`/`max_ages` bands of a *single* campaign were folded in one at a
+  time with the independent-protection rule `1 - (1-a)(1-b)`, which is the rule
+  for separate campaigns, not for two bands of the same one. The midpoint rule
+  could not expose it, because a group belonged to at most one band. Splitting
+  one band into two at 1195 days, which should change nothing, moved a
+  straddling group's covered fraction from 0.7295 to 0.6834, a 6.3% shortfall.
+  The bands of one campaign now add into a single covered fraction (capped at 1)
+  before coverage is applied; independent combination is kept across campaigns,
+  where it is the right rule.
+
+* **Inputs that could not mean what they said are rejected rather than run.**
+  Each of these used to be accepted, or to fail somewhere downstream with a
+  message that never named the parameter at fault:
+
+  * `parameters$n_heterogeneity_groups` of 1 or 2. Fewer than three
+    Gauss-Hermite nodes do not integrate the log-normal biting distribution,
+    they just move every human off it: at `n = 1` the single node sits at
+    `zeta = exp(-s2/2) = 0.434`, so every human in the model experienced 43% of
+    the EIR the output column reported, and nothing said so. For a genuine
+    no-heterogeneity run set `parameters$enable_heterogeneity = FALSE`, which
+    collapses to one stratum at `zeta = 1` exactly.
+  * `parameters$bite_dedup` outside 0/1 (`TRUE`/`FALSE` still accepted). It is a
+    switch between two hazard forms, not a dial, and a value of 0.5 was silently
+    a third thing.
+  * `parameters$acquired_immunity_offset` outside `[0, 1]`.
+  * `default_age_lower(max_age =)` below 20 years, which made the grid's
+    5-yearly section `seq(15, max_age - 5, by = 5)` run backwards and died with
+    base R's "wrong sign in 'by' argument".
+  * `timesteps` that is not a single finite whole number `>= 1`. This also
+    catches the swapped-argument call `run_simulation_ode(parameters,
+    timesteps)`, which used to die on `parameters$init_EIR` with "$ operator is
+    invalid for atomic vectors".
+
+* **Editing the parameter list after `set_equilibrium()` now warns.**
+  `set_equilibrium()` stores its back-translation as `parameters$eq_params`, and
+  `build_inputs()` merges that over the live translation, so the stored copy wins
+  for every shared biological constant: an edit made afterwards (`p$du <- 10`) is
+  a silent no-op. That contract stands, since `set_equilibrium()` is meant to be
+  the last call on the list, but a violation of it must not be silent. `blink`
+  now compares the two and warns, naming the `malariasimulation` fields whose
+  live translation no longer agrees with the frozen copy, so the message points
+  at the field you typed rather than at its equilibrium alias. Values that merely
+  took a different arithmetic route to the same number cannot trigger it, and a
+  deliberate custom `eq_params` is called out in the message as expected.
 
 * **`test-prophylaxis-chain.R`'s first test no longer errors when
   `malariasimulation` is absent.** It read `AL_params`/`SP_AQ_params` without a
@@ -534,8 +636,8 @@ odin2/dust2.
   and accumulate repeated distributions as the full mean-field usage mixture
   (most-recent-receipt x retention survival, per-distribution net-age decay) —
   needed to run real `site::site_parameters()` inputs.
-* `run_simulation_ode()` exposes the dust2 solver controls (`atol`, `rtol`,
-  `step_size_max`) for faster long dynamic projections.
+* The dust2 solver controls (`atol`, `rtol`, `step_size_max`) are exposed
+  through `ode_tuning()` for faster long dynamic projections.
 
 ## Parameter-ingestion completeness
 
@@ -566,8 +668,13 @@ parameter flexibility they expose:
 
 * `run_simulation_ode()` accepts an unmodified `malariasimulation` parameter
   list and returns a wide, `malariasimulation`-style daily count table.
-* `get_epi_outputs()` returns `postie`-format rates and prevalence.
+* `ode_tuning()` carries the solver and discretisation settings, as the fourth
+  argument `tuning`; every default is the validated choice.
 * `default_age_lower()` provides the default graded age grid.
+
+Those three are the whole export list. Post-processing is `postie`'s job, not
+`blink`'s: pass the returned table to `postie::get_rates()` /
+`postie::get_prevalence()` exactly as you would an IBM run.
 
 ## Validation
 

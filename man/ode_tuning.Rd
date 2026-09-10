@@ -20,7 +20,8 @@ ode_tuning(
 \arguments{
 \item{age_lower}{age-group lower edges in \strong{years} (default graded grid:
 monthly to 1 year, quarterly to 5, yearly to 15, then 5-yearly to an
-absorbing top group). Must start at 0 and increase strictly.}
+absorbing top group). Must start at 0, increase strictly, and stay in years:
+a top edge above 1000 is rejected as a grid supplied in days.}
 
 \item{n_eir, n_foim, n_eip}{Erlang-chain stage counts for the EIR lag, FOIM lag
 and mosquito EIP. Larger values sharpen the (otherwise gamma-shaped) lags

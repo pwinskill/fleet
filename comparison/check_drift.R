@@ -81,8 +81,14 @@ if (!file.exists(ref_f)) {
               as.character(utils::packageVersion("malariasimulation"))))
   cat(sprintf("  %d replicates of %s people, %d-year burn-in\n",
               ref$n_rep, format(ref$population, big.mark = ","), ref$burn_in_years))
+  ## a FAIL, not a warning, for the same reason as the digest below: the whole
+  ## design rests on the IBM rows staying valid while blink changes. A different
+  ## malariasimulation is a different IBM, so section 2 would be comparing blink
+  ## against a reference the current upstream would no longer produce -- and
+  ## `blink` exists to be a twin of one specific version. This is the condition
+  ## the weekly run exists to catch, so it must be loud enough to stop the build.
   if (!identical(ref$malariasimulation, as.character(utils::packageVersion("malariasimulation"))))
-    warn <- c(warn, sprintf("malariasimulation has changed since the IBM rows were made (%s -> %s). The reference may be stale; re-run run_replicates.R.",
+    fail <- c(fail, sprintf("malariasimulation has changed since the IBM rows were made (%s -> %s), so the agreement below compares blink against a reference the installed IBM would no longer reproduce. Re-run comparison/run_replicates.R (without CMP_BLINK_ONLY) to rebuild the IBM rows.",
                             ref$malariasimulation, utils::packageVersion("malariasimulation")))
   now <- scenario_digest()
   if (!identical(ref$scenario_digest, now)) {

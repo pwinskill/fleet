@@ -5,10 +5,16 @@
 #'
 #' Lower edges (in years) of the age groups. Fine in infancy, where immunity and
 #' maternal dynamics move fast, and coarse in adulthood. Band aggregation in the
-#' outputs assigns each age group to a band by its midpoint, so bands whose edges
-#' fall inside a group (on a coarse custom grid) may be mis-binned; the default
-#' grid places edges at 2, 5, 10 and 15 years.
-#' @param max_age oldest age-group lower edge, in years (absorbing top group).
+#' outputs weights each age group by the exact fraction of its own width that
+#' falls inside the band, so a band edge landing inside a group (as it can on a
+#' coarse custom grid) apportions that group between the two bands instead of
+#' handing it whole to one of them; the default grid places edges at 2, 5, 10 and
+#' 15 years, so the usual rendering bands fall on group boundaries exactly and
+#' every weight is 0 or 1.
+#' @param max_age oldest age-group lower edge, in **years** (absorbing top
+#'   group). Must be a single finite number `>= 20`: the grid is graded up to a
+#'   5-yearly section starting at 15, so there is no room for an absorbing top
+#'   group below 20.
 #' @return numeric vector of age-group lower edges in years.
 #' @examples
 #' default_age_lower()
@@ -16,6 +22,15 @@
 #' default_age_lower(max_age = 60)
 #' @export
 default_age_lower <- function(max_age = 80) {
+  # Below 20 the 5-yearly section seq(15, max_age - 5, by = 5) runs backwards and
+  # dies with base R's opaque "wrong sign in 'by' argument", which says nothing
+  # about age grids. Reject it here, in the units the caller is thinking in.
+  if (length(max_age) != 1L || !is.numeric(max_age) || !is.finite(max_age) ||
+      max_age < 20) {
+    stop("`max_age` must be a single finite number >= 20 (years). The graded grid ",
+         "runs 5-yearly from 15, so an absorbing top group below 20 years leaves ",
+         "no room for it.", call. = FALSE)
+  }
   c(
     seq(0, 1 - 1 / 12, by = 1 / 12),   # monthly 0-1y   (12)
     seq(1, 5 - 0.25, by = 0.25),       # quarterly 1-5y (16)
@@ -153,6 +168,49 @@ check_unsupported <- function(p) {
   invisible(NULL)
 }
 
+#' Which frozen `eq_params` entries no longer agree with the live parameter list.
+#'
+#' `set_equilibrium()` stores its back-translation as `parameters$eq_params` (even
+#' when passed `eq_params = NULL`), and `build_inputs()` merges that OVER
+#' `translate_parameters()`, so the stored copy wins for every shared constant. On
+#' the ordinary path the two are bit-identical, so this returns nothing; it returns
+#' names only when the live list has moved underneath the frozen copy.
+#'
+#' Compared with a relative tolerance so that a value which merely took a different
+#' arithmetic route to the same number (1/x re-inverted, a weighted mean recomputed)
+#' cannot warn. Non-scalar and non-finite entries are skipped rather than guessed at.
+#' @param live `translate_parameters(p)`, the current translation.
+#' @param stored `as.list(p$eq_params)`, the frozen copy.
+#' @param tol relative tolerance for "the same number".
+#' @return character vector of offenders, labelled `eq_name (ibm_name)` where the
+#'   malariasimulation name that feeds the constant can be identified; empty when
+#'   the two agree.
+#' @noRd
+.stale_eq_params <- function(live, stored, tol = 1e-8) {
+  nms <- intersect(names(live), names(stored))
+  differs <- vapply(nms, function(k) {
+    a <- live[[k]]; b <- stored[[k]]
+    if (!is.numeric(a) || !is.numeric(b) || length(a) != 1L || length(b) != 1L) return(FALSE)
+    if (!is.finite(a) || !is.finite(b)) return(FALSE)
+    abs(a - b) > tol * max(1, abs(a), abs(b))
+  }, logical(1))
+  bad <- nms[differs]
+  if (!length(bad)) return(character(0))
+  # Only now (never on the clean path) pay for the reverse name map: users edit
+  # `du`, not `rU`, so the warning has to name the field they actually typed.
+  eq2ibm <- list()
+  for (ibm in names(.back_translations)) {
+    tr <- .back_translations[[ibm]]
+    eq <- if (is.character(tr)) tr else environment(tr)[["new_name"]]
+    if (!is.character(eq) || length(eq) != 1L) next
+    eq2ibm[[eq]] <- c(eq2ibm[[eq]], ibm)
+  }
+  vapply(bad, function(k) {
+    ibm <- eq2ibm[[k]]
+    if (is.null(ibm)) k else sprintf("%s (eq `%s`)", paste(ibm, collapse = "/"), k)
+  }, character(1), USE.NAMES = FALSE)
+}
+
 #' Build odin2 inputs.
 #' @param parameters a malariasimulation::get_parameters() list (falciparum).
 #' @param init_EIR target adult EIR (infectious bites per adult per year).
@@ -176,7 +234,12 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
   if (!is.null(p$parasite) && p$parasite == "vivax") {
     stop("blink supports P. falciparum only (parasite = 'vivax' not supported)")
   }
-  if (length(init_EIR) != 1 || is.na(init_EIR) || init_EIR <= 0) {
+  # A single finite positive NUMBER. `is.na() || <= 0` alone let two values through
+  # to die far downstream in messages that never mention init_EIR: Inf (reaches
+  # `if (max(K0) > 0)` as NaN) and the string "20" (compared as a string, "20" <= 0
+  # is FALSE, then dies at `EIR * zeta[j]`).
+  if (length(init_EIR) != 1 || !is.numeric(init_EIR) || !is.finite(init_EIR) ||
+      init_EIR <= 0) {
     stop("init_EIR must be a single positive number (bites per adult per year).")
   }
   check_unsupported(p)
@@ -184,7 +247,26 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
   # honour a user-supplied custom equilibrium parameter set (set_equilibrium's
   # eq_params) explicitly, rather than relying on it round-tripping through the
   # IBM parameter names.
-  if (!is.null(p$eq_params)) eqp <- utils::modifyList(eqp, as.list(p$eq_params))
+  if (!is.null(p$eq_params)) {
+    eqp_stored <- as.list(p$eq_params)
+    # eq_params wins, which means set_equilibrium() FREEZES every translated
+    # biological constant at the value it had when it was called: an edit to the
+    # live list afterwards (p$du <- 10) is a silent no-op. That contract stands --
+    # set_equilibrium() is meant to be the last call on the list -- but a violation
+    # of it must not be silent, so name the parameters whose live translation no
+    # longer agrees with the frozen copy.
+    stale <- .stale_eq_params(eqp, eqp_stored)
+    eqp <- utils::modifyList(eqp, eqp_stored)
+    if (length(stale)) {
+      warning("parameters$eq_params (stored by set_equilibrium()) overrides the live ",
+              "parameter list, so the following no longer has any effect: ",
+              paste(stale, collapse = ", "), ". set_equilibrium() freezes the ",
+              "translated biological constants at the values they had when it was ",
+              "called, so call it LAST, after every other set_*() and manual edit. ",
+              "(If you passed a custom `eq_params` to set_equilibrium(), this is ",
+              "expected and can be ignored.)", call. = FALSE)
+    }
+  }
   eqp_ibm <- eqp                           # the IBM's own (unconverted) rates, for ibm_total_M()
   # Disease-progression rates: malariasimulation advances states once per whole day
   # with exit probability rate_to_prob(1/d) = 1 - exp(-1/d) (competing_hazards.R:78,
@@ -219,6 +301,27 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
   if (!is.null(p$hold_init_EIR) && !(is.logical(p$hold_init_EIR) &&
                                      length(p$hold_init_EIR) == 1 && !is.na(p$hold_init_EIR)))
     stop("parameters$hold_init_EIR must be TRUE or FALSE.", call. = FALSE)
+  # The two mean-field fidelity knobs, validated here rather than passed straight
+  # through to dust2. Both went unchecked, and both silently accept nonsense:
+  # `bite_dedup` is a 0/1 switch that the odin model uses as a blend weight, so 2
+  # and -1 both run and both extrapolate outside either documented endpoint; and
+  # `acquired_immunity_offset = 50` runs, changing clinical incidence 12-fold,
+  # while -5 makes (IB + offset)^kb non-finite and dies in the stepper.
+  bite_dedup <- if (is.null(p$bite_dedup)) 1 else p$bite_dedup
+  if (is.logical(bite_dedup) && length(bite_dedup) == 1L && !is.na(bite_dedup)) {
+    bite_dedup <- as.numeric(bite_dedup)   # FALSE is the natural spelling of "0"
+  }
+  if (length(bite_dedup) != 1 || !is.numeric(bite_dedup) || !is.finite(bite_dedup) ||
+      !(bite_dedup == 0 || bite_dedup == 1))
+    stop("parameters$bite_dedup must be 0 or 1 (TRUE/FALSE also accepted): 1 ",
+         "reproduces the IBM's per-timestep bite deduplication, 0 the linear ",
+         "b*EPS form. It is a switch, not a dial.", call. = FALSE)
+  acq_offset <- if (is.null(p$acquired_immunity_offset)) 0 else p$acquired_immunity_offset
+  if (length(acq_offset) != 1 || !is.numeric(acq_offset) || !is.finite(acq_offset) ||
+      acq_offset < 0 || acq_offset > 1)
+    stop("parameters$acquired_immunity_offset must be a single number in [0, 1]: 0 ",
+         "(the default) is the better mean-field match, 0.5 reproduces the IBM's ",
+         "literal per-individual +0.5 in the b/phi/theta Hill functions.", call. = FALSE)
   ft_seed <- ft * dser$seed$drug_eff       # effective treated fraction = coverage * efficacy
 
   ## heterogeneity nodes
@@ -230,10 +333,34 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
     n_het <- 1
     gq <- list(nodes = 0, weights = 1)
   } else {
+    # A Gauss-Hermite rule needs enough nodes to be a quadrature at all. Below 3 it
+    # is not one: at n = 1 the single node sits at zeta = exp(-s2/2) = 0.434, so
+    # every human in the model experiences 43% of the EIR the output column reports,
+    # and nothing said so. Unvalidated, n = 0 and NA both died in gq_normal() or in
+    # `if` with messages that never mention heterogeneity.
+    if (length(n_het) != 1 || !is.numeric(n_het) || is.na(n_het) ||
+        !is.finite(n_het) || n_het != round(n_het) || n_het < 3) {
+      stop("parameters$n_heterogeneity_groups must be a single whole number >= 3: ",
+           "fewer Gauss-Hermite nodes than that do not integrate the log-normal ",
+           "biting distribution, they just move every human off it. For a genuine ",
+           "no-heterogeneity run set parameters$enable_heterogeneity = FALSE, which ",
+           "collapses to one stratum at zeta = 1 exactly.", call. = FALSE)
+    }
+    n_het <- as.integer(n_het)
     gq <- malariaEquilibrium::gq_normal(n_het)
     s2 <- eqp[["s2"]]
     zeta <- exp(gq$nodes * sqrt(s2) - s2 / 2)
     het_wt <- gq$weights
+    # The nodes are used exactly as malariaEquilibrium emits them. The continuous
+    # log-normal has E[zeta] = 1 by construction; the finite quadrature of it does
+    # not (sum(w*zeta) is 0.99972 at the default 5 nodes, 0.97506 at 3), and
+    # neither does a finite IBM sample. Do NOT renormalise to force sum(w*zeta) = 1:
+    # malariasimulation::set_equilibrium() seeds through
+    # malariaEquilibrium::human_equilibrium(h = gq_normal(n)) with these nodes
+    # untouched, and the IBM's individuals draw zeta from the continuous
+    # distribution, so that invariant is one neither library imposes. Rescaling
+    # here would be a mean-matched fudge that moves blink off the mechanism it
+    # replicates.
   }
 
   ## age grid + demography (replicates malariaEquilibrium::human_equilibrium_no_het)
@@ -480,11 +607,11 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
     # individual; empirically (A/B vs the ms 3.0.0 IBM ensemble mean) offset 0 is the
     # better mean-field match, so default 0. Set parameters$acquired_immunity_offset =
     # 0.5 to reproduce the IBM's literal per-individual Hill functions.
-    acq_offset = if (!is.null(p$acquired_immunity_offset)) p$acquired_immunity_offset else 0,
+    acq_offset = acq_offset,
     # Reproduce the IBM's per-timestep bite deduplication (saturating hazard) by default;
     # parameters$bite_dedup = 0 restores the linear b*EPS form, for which the
     # malariaEquilibrium seed is an exact fixed point (used by the flat-equilibrium tests).
-    bite_dedup = if (!is.null(p$bite_dedup)) p$bite_dedup else 1,
+    bite_dedup = bite_dedup,
     b0 = eqp[["b0"]], b1 = eqp[["b1"]], ib0 = eqp[["IB0"]], kb = eqp[["kb"]],
     phi0 = eqp[["phi0"]], phi1 = eqp[["phi1"]], ic0 = eqp[["IC0"]], kc = eqp[["kc"]],
     d1 = eqp[["d1"]], id0 = eqp[["ID0"]], kd = eqp[["kd"]],

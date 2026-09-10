@@ -10,3 +10,5 @@
 ^LICENSE\.md$
 ^cran-comments\.md$
 ^\.vscode$
+^CONTRIBUTING\.md$
+^SECURITY\.md$

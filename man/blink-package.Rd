@@ -23,6 +23,8 @@ multi-decade run completes in seconds, independent of population size.
 \item \code{\link[=run_simulation_ode]{run_simulation_ode()}}: run the model; returns a wide, daily count
 table (P. falciparum only).
 \item \code{\link[=default_age_lower]{default_age_lower()}}: the default graded age grid.
+\item \code{\link[=ode_tuning]{ode_tuning()}}: solver and discretisation settings, passed as
+\verb{tuning =}.
 }
 The count table is malariasimulation-shaped, so post-process it with
 \pkg{postie} exactly as you would an IBM run: \code{postie::get_rates(out)} and

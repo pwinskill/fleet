@@ -75,6 +75,9 @@ get_generator <- function(odin_file = NULL) {
 #'   exactly (drop-in call compatibility). Intervention correlation is an
 #'   individual-level feature with no mean-field analogue, so a non-NULL value is
 #'   ignored with a warning (the ODE assumes independence between interventions).
+#'   `tuning` is the *fourth* argument: an [ode_tuning()] object (or a list of its
+#'   fields) passed positionally here would land in `correlations` and be thrown
+#'   away, so that is an error rather than a silently defaulted run.
 #' @details Seasonal runs oscillate around a limit cycle rather than holding flat;
 #'   the state is seeded at the annual-mean (aseasonal) equilibrium, so the first
 #'   ~10 years are a transient onto the cycle and the seasonal annual-mean EIR
@@ -94,7 +97,21 @@ get_generator <- function(odin_file = NULL) {
 #'     \item per age band (tags in **days**, `<lo>_<hi>`): `n_age_*` (population),
 #'       `n_detect_lm_*` and `p_detect_lm_*` (LM-positive count and PfPR
 #'       proportion), `n_detect_pcr_*`, `n_inc_clinical_*`, `n_inc_severe_*` and
-#'       `n_inc_*` (all-infection incidence), all per-day counts.
+#'       `n_inc_*` (all-infection incidence), all per-day counts. A band is
+#'       aggregated by exact overlap: each model age group contributes the fraction
+#'       of its own width that lies inside the band, so a band need not align with
+#'       the `age_lower` grid, and bands that partition a span of the age axis
+#'       partition the population living in that span exactly. The one age group
+#'       that is not a finite interval is the absorbing top group, which holds
+#'       everyone from its lower edge upward: a band is given all of it if it
+#'       extends *above* that edge and none of it if it stops exactly on it. So a
+#'       band `[0, 36500)` renders the whole population on the default grid (top
+#'       group from 29200 days) but leaves the top group out on a grid built with
+#'       `max_age = 100` -- 1.3% of the population, at the default demography.
+#'       That is not silent: the run warns, names the share of the population no
+#'       `n_age_*` band renders, and names the age groups it sits in. A band that
+#'       overlaps no age group at all (it lies above the open-ended top group)
+#'       warns too, and its `p_detect_lm_*` is `NA` rather than 0.
 #'     \item `ft` (treated fraction), `EIR` (per adult per year), `FOIM`.
 #'     \item population-total infection-state counts `S_count`, `D_count`,
 #'       `A_count`, `U_count`, `Tr_count`, `Ph_count` (diagnostic).
@@ -120,6 +137,7 @@ run_simulation_ode <- function(timesteps, parameters = NULL, correlations = NULL
   if (is.null(parameters)) {
     stop("`parameters` is required (a malariasimulation::get_parameters() list).")
   }
+  .reject_tuning_as_correlations(correlations)
   if (!is.null(correlations)) {
     warning("`correlations` is accepted for run_simulation() signature ",
             "compatibility but not modelled: intervention correlation is an ",
@@ -127,6 +145,21 @@ run_simulation_ode <- function(timesteps, parameters = NULL, correlations = NULL
             "assumes independence). Ignoring it.", call. = FALSE)
   }
   tn <- as_ode_tuning(tuning)
+  ## `timesteps` is validated here, next to the init_EIR guard, because nothing
+  ## downstream fails on it usefully: a fractional value was silently truncated by
+  ## seq(), and every other bad value surfaced as an error from deep inside seq(),
+  ## dust2 or the interpolation grids that never named the argument at fault
+  ## ("wrong sign in 'by' argument", "'to' must be a finite number", "Time variable
+  ## 'cc_times' must be strictly increasing"). The swapped-argument call
+  ## run_simulation_ode(parameters, timesteps) lands here too, and used to die on
+  ## `parameters$init_EIR` with "$ operator is invalid for atomic vectors".
+  if (!is.numeric(timesteps) || length(timesteps) != 1L || !is.finite(timesteps) ||
+      timesteps < 1 || timesteps != round(timesteps)) {
+    stop("`timesteps` must be a single finite whole number >= 1 (the number of ",
+         "days to simulate; the run returns timesteps + 1 rows, day 0 being the ",
+         "seeded equilibrium). Got ", .describe_value(timesteps), ".\n",
+         "  run_simulation_ode(timesteps = 3650, parameters = p)", call. = FALSE)
+  }
   init_EIR <- parameters$init_EIR
   if (is.null(init_EIR)) {
     stop("`parameters$init_EIR` is not set, so there is no target transmission ",
@@ -166,6 +199,45 @@ run_simulation_ode <- function(timesteps, parameters = NULL, correlations = NULL
   render_output(y, times, inp, uidx, out_idx)
 }
 
+#' Describe a bad argument compactly, for an error message.
+#' @noRd
+.describe_value <- function(x) {
+  if (is.numeric(x) && length(x) == 1L) return(format(x))
+  if (is.atomic(x) && length(x) == 1L && !is.null(x)) return(deparse(x, nlines = 1L))
+  paste0("a ", class(x)[1], " of length ", length(x))
+}
+
+## The third positional argument is `correlations`, mirroring
+## malariasimulation::run_simulation(timesteps, parameters, correlations). `tuning`
+## is the FOURTH, so run_simulation_ode(t, p, ode_tuning(...)) put the tuning into
+## `correlations`, which is ignored -- the run silently used default tuning while
+## the warning it printed talked about intervention correlation. Caught by name and
+## reported with the call that works, in the voice of .reject_moved_args().
+#' @noRd
+.reject_tuning_as_correlations <- function(correlations) {
+  if (is.null(correlations)) return(invisible(NULL))
+  known <- names(formals(ode_tuning))
+  if (inherits(correlations, "blink_ode_tuning")) {
+    stop("an `ode_tuning()` object was passed as the third argument, which is ",
+         "`correlations` -- the signature mirrors ",
+         "malariasimulation::run_simulation(timesteps, parameters, correlations), ",
+         "so `tuning` is the fourth. Pass it by name:\n",
+         "  run_simulation_ode(timesteps, parameters, tuning = ode_tuning(...))",
+         call. = FALSE)
+  }
+  nm <- names(correlations)
+  if (is.list(correlations) && length(correlations) && !is.null(nm) &&
+      all(nzchar(nm)) && all(nm %in% known)) {
+    stop("the third argument is `correlations`, but this list holds only `tuning` ",
+         "field(s) (", paste0("`", nm, "`", collapse = ", "), ") -- the signature ",
+         "mirrors malariasimulation::run_simulation(timesteps, parameters, ",
+         "correlations), so `tuning` is the fourth. Pass it by name:\n",
+         "  run_simulation_ode(timesteps, parameters, tuning = list(",
+         paste0(nm, " = ...", collapse = ", "), "))", call. = FALSE)
+  }
+  invisible(NULL)
+}
+
 # odin output/aggregate variables recorded from each run (all of render_output's inputs)
 OUTPUT_VARS <- c("n_g", "det_lm_g", "det_pcr_g", "clin_g", "sev_g", "inc_g",
                  "S_g", "D_g", "A_g", "U_g", "Tr_g", "Ph_g", "EIR_yr", "FOIM", "ft_out")
@@ -175,6 +247,23 @@ OUTPUT_VARS <- c("n_g", "det_lm_g", "det_pcr_g", "clin_g", "sev_g", "inc_g",
 simulate_with_pulses <- function(sys, times, events, meta, uidx, out_idx) {
   timesteps <- max(times)
   ev_days <- sort(unique(vapply(events, function(e) e$time, numeric(1))))
+  # A round scheduled before day 1 cannot be delivered: the run integrates days
+  # 1..timesteps, day 0 being the seeded equilibrium. malariasimulation schedules
+  # these events at `<timestep> - 1` days from the start of its loop
+  # (initialise_events()) and individual rejects the resulting negative delay
+  # outright -- set_mda/set_smc(timesteps = 0, ...) dies with "delay must be >= 0",
+  # so a timestep-0 round is not a round the IBM ever runs. blink keeps running and
+  # drops it, but says so: silently returning a trajectory identical to no
+  # chemoprevention at all is what this warning exists to stop.
+  early <- ev_days[ev_days < 1]
+  if (length(early)) {
+    warning("chemoprevention round(s) scheduled at timestep ",
+            paste(early, collapse = ", "), " cannot be delivered and are dropped: ",
+            "the simulation runs days 1..", timesteps, " (day 0 is the seeded ",
+            "equilibrium). malariasimulation rejects such a schedule outright ",
+            "(\"delay must be >= 0\"). Schedule the round at timestep 1 or later.",
+            call. = FALSE)
+  }
   ev_days <- ev_days[ev_days >= 1 & ev_days <= timesteps]
   bnds <- sort(unique(c(0, ev_days, timesteps)))
   cols <- vector("list", length(bnds) - 1)
@@ -235,6 +324,66 @@ output_bands <- function(p, family = c("all", "prevalence", "incidence",
     all = unique(c(prev, inc, clin, sev, agrp, default)))
 }
 
+#' Warn when the `n_age_*` bands do not render the whole population.
+#'
+#' The check is on the union family (`output_bands(p, "all")`) and only on it. The
+#' other families are legitimately partial -- clinical incidence over 0-5 and 2-10
+#' renders a fifth of the population on purpose, and a shortfall warning there
+#' would fire on every ordinary run. The union family is different: it always
+#' contains the all-age band `c(0, 36500)` (output_bands() appends the defaults),
+#' it is the family postie matches every incidence and detection column to for a
+#' denominator, and so a person it misses is a person missing from every all-age
+#' rate the run supports. That is the loss worth a warning.
+#'
+#' HOW MUCH is missing, not WHETHER: `n_age_0_36500` is not exactly the conserved
+#' total even when every band lands right (~8.5e-14 of ODE solution residual at
+#' HEAD), so this compares against a relative tolerance far above solver noise. The
+#' failure it is built for is 1.3e-2 -- the whole absorbing top group, dropped by a
+#' band whose upper edge sits exactly on that group's lower edge (see
+#' band_weights()) -- and anything of that order announces itself here.
+#'
+#' @param covered per age group, the summed band weight over the union family.
+#'   Capped at 1 before use: those bands overlap by design (2-10 sits inside
+#'   all-age), and a group rendered twice is still a group rendered.
+#' @param n_g `[n_age, nt]` population fractions per age group per output day.
+#' @noRd
+warn_unrendered_population <- function(covered, n_g, age_lo, age_hi, tol = 1e-6) {
+  frac <- pmin(1, covered)
+  total <- colSums(n_g)
+  ok <- is.finite(total) & total > 0
+  if (!any(ok)) return(invisible(NULL))
+  short <- max(1 - colSums(n_g * frac)[ok] / total[ok])
+  if (!is.finite(short) || short <= tol) return(invisible(NULL))
+  miss <- which(frac < 1 - tol)
+  edge <- function(x) if (is.finite(x)) format(round(x)) else "Inf"
+  shown <- utils::head(miss, 3L)
+  where <- paste0(vapply(shown, function(i) paste0("[", edge(age_lo[i]), ", ",
+                                                   edge(age_hi[i]), ")"),
+                         character(1)), collapse = ", ")
+  if (length(miss) > length(shown)) {
+    where <- paste0(where, " and ", length(miss) - length(shown), " more")
+  }
+  top <- if (length(age_lo) %in% miss) {
+    paste0(" That includes the absorbing top age group, which holds everyone ",
+           "aged ", edge(age_lo[length(age_lo)]), " days and over: a rendering band ",
+           "whose upper edge is exactly ", edge(age_lo[length(age_lo)]), " days asks ",
+           "for ages strictly below it and so renders none of that group. Give the ",
+           "top band an upper edge ABOVE ", edge(age_lo[length(age_lo)]),
+           " days, or move the grid's top edge below your bands with ",
+           "tuning = ode_tuning(age_lower = default_age_lower(max_age = ...)).")
+  } else {
+    paste0(" Widen the rendering bands (or add an age_group_rendering_* band) to ",
+           "cover that range, or move the grid's top edge with ",
+           "tuning = ode_tuning(age_lower = default_age_lower(max_age = ...)).")
+  }
+  warning("the rendering age bands leave ", format(100 * short, digits = 4),
+          "% of the population out of every `n_age_*` column, so all-age ",
+          "denominators -- and every rate postie derives from one -- are short by ",
+          "that much, silently. Unrendered age group(s), in days: ", where, ".",
+          top, call. = FALSE)
+  invisible(short)
+}
+
 #' Render dust2 output into a wide malariasimulation-style count table that can
 #' be passed directly to postie::get_rates() / postie::get_prevalence().
 #' @noRd
@@ -247,44 +396,111 @@ render_output <- function(y, times, inp, uidx, out_idx) {
   }
   meta <- inp$meta
   hp <- meta$human_population
-  age_mid <- meta$age_mid
   nt <- length(times)
   # per-age-group time series are [n_age, nt] matrices
   n_g <- get("n_g"); det_lm_g <- get("det_lm_g"); det_pcr_g <- get("det_pcr_g")
   clin_g <- get("clin_g"); sev_g <- get("sev_g"); inc_g <- get("inc_g")
 
-  band_sum <- function(m, lo, hi) {
-    idx <- which(age_mid >= lo & age_mid < hi)
-    if (length(idx) == 0) return(rep(0, ncol(m)))
-    colSums(m[idx, , drop = FALSE])
+  ## Exact-overlap band weighting. A model age group contributes to a rendering
+  ## band the fraction of its OWN width that lies inside [lo, hi) -- the weighting
+  ## apply_chemoprevention_pulse() already uses for chemoprevention targeting
+  ## (R/interventions.R). It replaces midpoint membership ("the group is in the band
+  ## iff its midpoint is"), which had two failure modes:
+  ##   * a band narrower than the group it lands in captures NO midpoint, and the
+  ##     whole column family came back as hard zeros -- 52 of the 65 single-year
+  ##     bands from 15 to 80 years on the default grid. `p_detect_lm_7300_7665 = 0`
+  ##     reads as "zero prevalence in 20-21 year-olds", not "no data".
+  ##   * a partial overlap counted the whole group or none of it, so e.g. the
+  ##     standard 6-59-month band came back 2.2% light on a default parameter list,
+  ##     and that error flowed into every PfPR denominator and postie person-day.
+  ## The output_bands() partition invariant is preserved and in fact strengthened:
+  ## over a set of bands that partition a span of the age axis these weights sum to
+  ## exactly 1 per age group INSIDE that span (a group straddling a boundary is
+  ## SPLIT between the two bands rather than handed whole to whichever one owns its
+  ## midpoint), so no family double-counts and no family loses anyone it renders.
+  ## The absorbing top group is the exception the invariant cannot cover, because
+  ## it is not a finite interval -- see band_weights() below and
+  ## warn_unrendered_population(), which reports the population no band captured.
+  age_lo <- meta$age_lo; age_hi <- meta$age_hi
+  wid <- age_hi - age_lo
+  band_weights <- function(lo, hi) {
+    num <- pmax(0, pmin(hi, age_hi) - pmax(lo, age_lo))
+    # The absorbing top group is open-ended (width Inf), so its upper edge is not a
+    # real boundary and num/wid means nothing there: it is captured iff the band
+    # reaches ABOVE its lower edge, and then wholly, since everyone in it is older.
+    #
+    # `hi > age_lo`, not `hi >= age_lo`, and deliberately so. A band [lo, hi) whose
+    # hi lands exactly on the top group's lower edge asks for ages strictly below
+    # that edge, and every person in the top group is at or above it -- so it gets
+    # none of them, and the grid's own top edge is the only place that answer can
+    # surprise anyone (it is where `age_lower`'s top edge and a rendering band's
+    # top edge collide, e.g. the idiomatic all-age band [0, 36500) on a grid built
+    # with max_age = 100). Relaxing this to `>=` would hand the top group to that
+    # band AND to any band starting at the same edge -- {[0, 36500), [36500, 73000)}
+    # would then both claim it, rowsums 2, exactly the double-counting the
+    # partition invariant above exists to prevent (measured at +21% on all-age
+    # clinical incidence when postie last saw overlapping strata). A rule that
+    # cannot double-count and a warning that names the missing people beats a rule
+    # that silently reassigns them, so the shortfall is REPORTED, not papered over.
+    ifelse(is.finite(wid), num / wid, as.numeric(lo <= age_lo & hi > age_lo))
   }
+  band_sum <- function(m, wt) colSums(m * wt)
 
   out <- data.frame(timestep = times)
   p <- meta$parameters
   tag_of <- function(b) paste0(round(b[1]), "_", round(b[2]))
+  ## Weights are computed once per distinct band (each is asked for by up to two
+  ## families), which also makes the empty-band warning fire exactly once.
+  wt_cache <- list()
+  band_wt <- function(b) {
+    key <- paste(b[1], b[2], sep = "/")
+    if (!is.null(wt_cache[[key]])) return(wt_cache[[key]])
+    wt <- band_weights(b[1], b[2])
+    if (sum(wt) == 0) {
+      warning("rendering age band [", b[1], ", ", b[2], ") days overlaps no model ",
+              "age group, so its `*_", tag_of(b), "` columns carry no data: the ",
+              "counts are 0 and `p_detect_lm_", tag_of(b), "` is NA, which is not ",
+              "the same as a zero prevalence. The age grid covers [", age_lo[1],
+              ", ", age_lo[length(age_lo)], ") days plus an open-ended top group ",
+              "from ", age_lo[length(age_lo)], " days, which only a band reaching ",
+              "its lower edge can render. Widen the band, or extend the grid with ",
+              "tuning = ode_tuning(age_lower = default_age_lower(max_age = ...)).",
+              call. = FALSE)
+    }
+    wt_cache[[key]] <<- wt
+    wt
+  }
   # n_age_* over the union (as malariasimulation does): postie derives its
   # denominators by matching these to each incidence/detection column's tag.
+  # `covered` accumulates, per model age group, the weight the union of those bands
+  # gives it -- the input to the population-coverage check below.
+  covered <- numeric(length(age_lo))
   for (b in output_bands(p, "all")) {
-    out[[paste0("n_age_", tag_of(b))]] <- band_sum(n_g, b[1], b[2]) * hp
+    wt <- band_wt(b)
+    covered <- covered + wt
+    out[[paste0("n_age_", tag_of(b))]] <- band_sum(n_g, wt) * hp
   }
+  warn_unrendered_population(covered, n_g, age_lo, age_hi)
   # every other family strictly over ITS OWN rendering bands, so the strata each
   # postie column family sees form a partition (see output_bands()).
   for (b in output_bands(p, "prevalence")) {
-    tag <- tag_of(b)
-    n_age <- band_sum(n_g, b[1], b[2]) * hp
-    n_lm  <- band_sum(det_lm_g, b[1], b[2]) * hp
+    tag <- tag_of(b); wt <- band_wt(b)
+    n_age <- band_sum(n_g, wt) * hp
+    n_lm  <- band_sum(det_lm_g, wt) * hp
     out[[paste0("n_detect_lm_", tag)]] <- n_lm
-    out[[paste0("p_detect_lm_", tag)]] <- ifelse(n_age > 0, n_lm / n_age, 0)
-    out[[paste0("n_detect_pcr_", tag)]] <- band_sum(det_pcr_g, b[1], b[2]) * hp
+    # NA, not 0: a band with nobody in it has no prevalence to report, and a 0
+    # here would be read (by postie, by a plot, by a person) as "nobody positive".
+    out[[paste0("p_detect_lm_", tag)]] <- ifelse(n_age > 0, n_lm / n_age, NA_real_)
+    out[[paste0("n_detect_pcr_", tag)]] <- band_sum(det_pcr_g, wt) * hp
   }
   for (b in output_bands(p, "clinical")) {
-    out[[paste0("n_inc_clinical_", tag_of(b))]] <- band_sum(clin_g, b[1], b[2]) * hp
+    out[[paste0("n_inc_clinical_", tag_of(b))]] <- band_sum(clin_g, band_wt(b)) * hp
   }
   for (b in output_bands(p, "severe")) {
-    out[[paste0("n_inc_severe_", tag_of(b))]] <- band_sum(sev_g, b[1], b[2]) * hp
+    out[[paste0("n_inc_severe_", tag_of(b))]] <- band_sum(sev_g, band_wt(b)) * hp
   }
   for (b in output_bands(p, "incidence")) {
-    out[[paste0("n_inc_", tag_of(b))]] <- band_sum(inc_g, b[1], b[2]) * hp
+    out[[paste0("n_inc_", tag_of(b))]] <- band_sum(inc_g, band_wt(b)) * hp
   }
   out$ft <- get("ft_out", FALSE)
   out$EIR <- get("EIR_yr", FALSE)

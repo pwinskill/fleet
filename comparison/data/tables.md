@@ -96,21 +96,21 @@ NOT refreshed by this harness or by CI: re-take with CMP_REFRESH_SITES=1 when th
 | Seasonal SMC | clinical, 0-5 | 52% (51%–54%) | 54% |
 | Seasonal SMC | clinical, all ages | 25% (24%–26%) | 26% |
 | Seasonal SMC | severe, all ages | 33% (32%–42%) | 38% |
-| Indoor residual spraying | PfPR 2-10 | 79% (78%–79%) | 80% |
+| Indoor residual spraying | PfPR 2-10 | 79% (78%–79%) | 79% |
 | Indoor residual spraying | clinical, 0-5 | 97% (97%–98%) | 98% |
 | Indoor residual spraying | clinical, all ages | 97% (97%–98%) | 98% |
-| Indoor residual spraying | severe, all ages | 97% (97%–97%) | 98% |
-| Bed-net campaign | PfPR 2-10 | 48% (47%–49%) | 47% |
+| Indoor residual spraying | severe, all ages | 97% (97%–97%) | 97% |
+| Bed-net campaign | PfPR 2-10 | 48% (47%–49%) | 46% |
 | Bed-net campaign | clinical, 0-5 | 66% (65%–67%) | 66% |
 | Bed-net campaign | clinical, all ages | 67% (66%–67%) | 66% |
-| Bed-net campaign | severe, all ages | 50% (44%–53%) | 50% |
+| Bed-net campaign | severe, all ages | 50% (44%–53%) | 49% |
 
-largest |blink - IBM median| gap: 10.2 pp (treatment, severe, all ages); blink inside the IBM 10-90% band in 15 of 20 scenario x outcome cells
+largest |blink - IBM median| gap: 10.2 pp (treatment, severe, all ages); blink inside the IBM 10-90% band in 16 of 20 scenario x outcome cells
 
 | scenario | mean prevalence gap (blink - IBM, pp) | mean clinical gap (% of IBM) |
 | --- | --- | --- |
-| irs | -0.4 | 0.1% |
-| nets | +0.6 | 2.8% |
+| irs | -0.2 | 0.7% |
+| nets | +0.7 | 3.1% |
 | pev | +0.1 | 2.0% |
 | smc | -0.6 | 0.3% |
 | treatment | -0.2 | 0.3% |
@@ -152,6 +152,6 @@ largest |blink - IBM| gap in 15-year mean reduction: 1.8 pp
 | model | runs | s per simulated year | mean run (s) | mean horizon (y) |
 | --- | --- | --- | --- | --- |
 | IBM | 180 | 4.61 | 170.5 | 37 |
-| blink | 18 | 0.16 | 6.0 | 37 |
+| blink | 18 | 0.16 | 6.1 | 37 |
 
-IBM total CPU: 8.5 h across 180 runs; blink total: 107 s across 18 runs (IBM/blink per-year ratio 29x)
+IBM total CPU: 8.5 h across 180 runs; blink total: 110 s across 18 runs (IBM/blink per-year ratio 28x)
