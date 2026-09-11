@@ -222,14 +222,31 @@ tag_parts <- function(r, nm, model, rep)
 ## from a bare get_parameters(), plus the EIR and horizon. Deliberately not the
 ## whole list, which carries defaults that shift between malariasimulation
 ## versions for reasons unrelated to these scenarios.
+##
+## Hashes TEXT, with serialize = FALSE, and that is the point. digest()'s default
+## path serialises the object first, so the hash depends on R's binary
+## serialisation format -- which varies with R version, platform and digest's own
+## dynamic serializeVersion default, none of which say anything about whether a
+## scenario changed. That made the digest a fingerprint of the machine rather than
+## of the scenarios: it matched only on the machine that stamped the reference, so
+## the check could never pass in CI (R 4.6.1 there against 4.5.2 here was enough).
+## deparse() of the declared values is stable across both.
 scenario_digest <- function(scen = SCENARIOS_ALL) {
   base <- get_parameters()
+  ## explicit width.cutoff and control so a future change to deparse()'s defaults
+  ## cannot silently move the hash
+  dep <- function(x) paste(deparse(x, width.cutoff = 500L,
+                                   control = c("keepNA", "keepInteger",
+                                               "niceNames", "showAttributes")),
+                           collapse = " ")
   canon <- function(s) {
     changed <- Filter(function(k) !identical(s$p[[k]], base[[k]]), names(s$p))
-    list(eir = s$eir, years = s$years,
-         p = lapply(sort(changed), function(k) list(k, s$p[[k]])))
+    c(paste0("eir=", dep(s$eir)), paste0("years=", dep(s$years)),
+      vapply(sort(changed), function(k) paste0(k, "=", dep(s$p[[k]])), character(1)))
   }
-  digest::digest(lapply(scen[sort(names(scen))], canon), algo = "xxhash64")
+  nm <- sort(names(scen))
+  txt <- unlist(lapply(nm, function(n) c(paste0("[", n, "]"), canon(scen[[n]]))))
+  digest::digest(paste(txt, collapse = "\n"), algo = "xxhash64", serialize = FALSE)
 }
 
 ibm_reference <- function() list(

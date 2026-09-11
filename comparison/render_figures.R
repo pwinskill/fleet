@@ -418,7 +418,15 @@ ode_r <- red %>% filter(model == "fleet") %>% transmute(scenario, metric, mid = 
 both <- bind_rows(ibm_r, ode_r) %>%
   mutate(scenario = factor(scenario, levels = INT, labels = INT_LABELS),
          metric = factor(metric, levels = MET_R))
-write.csv(both, file.path(DDIR, "int_impact_summary.csv"), row.names = FALSE)
+## Round before writing. This file is committed and CI byte-compares it against a
+## fresh render, but the values come out of quantile() on different hardware, and
+## cross-platform floating point is not bit-identical: a Linux runner reproduced
+## 0.324024697880216 where this machine wrote ...217, one ulp, and the check
+## failed on it. These are summary percentages for an article, so nothing needs
+## more than a few significant figures; 10 is far beyond the reporting precision
+## and far above the platform noise, which makes the artifact reproducible.
+write.csv(dplyr::mutate(both, dplyr::across(where(is.numeric), ~ signif(.x, 10))),
+          file.path(DDIR, "int_impact_summary.csv"), row.names = FALSE)
 seg  <- both %>% select(scenario, metric, model, mid) %>% pivot_wider(names_from = model, values_from = mid)
 XCOL <- c(IBM = 1.08, fleet = 1.22)                 # value columns to the right of the data
 vals <- both %>% mutate(x = XCOL[model], lab = scales::percent(mid, accuracy = 1))
