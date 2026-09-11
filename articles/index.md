@@ -3,8 +3,8 @@
 ### Articles
 
 - [Getting started with
-  blink](https://pwinskill.github.io/blink/articles/blink.md):
-- [The blink model: formal
-  specification](https://pwinskill.github.io/blink/articles/model.md):
+  fleet](https://pwinskill.github.io/fleet/articles/fleet.md):
+- [The fleet model: formal
+  specification](https://pwinskill.github.io/fleet/articles/model.md):
 - [Comparison with
-  malariasimulation](https://pwinskill.github.io/blink/articles/comparison.md):
+  malariasimulation](https://pwinskill.github.io/fleet/articles/comparison.md):

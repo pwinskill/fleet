@@ -2,10 +2,13 @@
 
 Lower edges (in years) of the age groups. Fine in infancy, where
 immunity and maternal dynamics move fast, and coarse in adulthood. Band
-aggregation in the outputs assigns each age group to a band by its
-midpoint, so bands whose edges fall inside a group (on a coarse custom
-grid) may be mis-binned; the default grid places edges at 2, 5, 10 and
-15 years.
+aggregation in the outputs weights each age group by the exact fraction
+of its own width that falls inside the band, so a band edge landing
+inside a group (as it can on a coarse custom grid) apportions that group
+between the two bands instead of handing it whole to one of them; the
+default grid places edges at 2, 5, 10 and 15 years, so the usual
+rendering bands fall on group boundaries exactly and every weight is 0
+or 1.
 
 ## Usage
 
@@ -17,7 +20,10 @@ default_age_lower(max_age = 80)
 
 - max_age:
 
-  oldest age-group lower edge, in years (absorbing top group).
+  oldest age-group lower edge, in **years** (absorbing top group). Must
+  be a single finite number `>= 20`: the grid is graded up to a 5-yearly
+  section starting at 15, so there is no room for an absorbing top group
+  below 20.
 
 ## Value
 

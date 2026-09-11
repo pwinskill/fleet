@@ -1,16 +1,21 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
-<url><loc>https://pwinskill.github.io/blink/404.html</loc></url>
-<url><loc>https://pwinskill.github.io/blink/LICENSE-text.html</loc></url>
-<url><loc>https://pwinskill.github.io/blink/articles/blink.html</loc></url>
-<url><loc>https://pwinskill.github.io/blink/articles/comparison.html</loc></url>
-<url><loc>https://pwinskill.github.io/blink/articles/index.html</loc></url>
-<url><loc>https://pwinskill.github.io/blink/articles/model.html</loc></url>
-<url><loc>https://pwinskill.github.io/blink/authors.html</loc></url>
-<url><loc>https://pwinskill.github.io/blink/index.html</loc></url>
-<url><loc>https://pwinskill.github.io/blink/news/index.html</loc></url>
-<url><loc>https://pwinskill.github.io/blink/reference/blink-package.html</loc></url>
-<url><loc>https://pwinskill.github.io/blink/reference/default_age_lower.html</loc></url>
-<url><loc>https://pwinskill.github.io/blink/reference/index.html</loc></url>
-<url><loc>https://pwinskill.github.io/blink/reference/run_simulation_ode.html</loc></url>
+<url><loc>https://pwinskill.github.io/fleet/404.html</loc></url>
+<url><loc>https://pwinskill.github.io/fleet/CI.html</loc></url>
+<url><loc>https://pwinskill.github.io/fleet/CONTRIBUTING.html</loc></url>
+<url><loc>https://pwinskill.github.io/fleet/LICENSE-text.html</loc></url>
+<url><loc>https://pwinskill.github.io/fleet/LICENSE.html</loc></url>
+<url><loc>https://pwinskill.github.io/fleet/SECURITY.html</loc></url>
+<url><loc>https://pwinskill.github.io/fleet/articles/comparison.html</loc></url>
+<url><loc>https://pwinskill.github.io/fleet/articles/fleet.html</loc></url>
+<url><loc>https://pwinskill.github.io/fleet/articles/index.html</loc></url>
+<url><loc>https://pwinskill.github.io/fleet/articles/model.html</loc></url>
+<url><loc>https://pwinskill.github.io/fleet/authors.html</loc></url>
+<url><loc>https://pwinskill.github.io/fleet/index.html</loc></url>
+<url><loc>https://pwinskill.github.io/fleet/news/index.html</loc></url>
+<url><loc>https://pwinskill.github.io/fleet/reference/default_age_lower.html</loc></url>
+<url><loc>https://pwinskill.github.io/fleet/reference/fleet-package.html</loc></url>
+<url><loc>https://pwinskill.github.io/fleet/reference/index.html</loc></url>
+<url><loc>https://pwinskill.github.io/fleet/reference/ode_tuning.html</loc></url>
+<url><loc>https://pwinskill.github.io/fleet/reference/run_simulation_ode.html</loc></url>
 </urlset>
 

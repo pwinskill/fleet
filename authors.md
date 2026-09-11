@@ -2,21 +2,21 @@
 
 ## Authors
 
-- **Peter Winskill**. Author, maintainer.
+- **Peter Winskill**. Author, maintainer, copyright holder.
 
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/pwinskill/blink/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/pwinskill/fleet/blob/main/DESCRIPTION)
 
-Winskill P (2026). *blink: Mean-Field (ODE) Twin of the
-'malariasimulation' Malaria Model*. R package version 0.0.0.9000,
-<https://pwinskill.github.io/blink>.
+Winskill P (2026). *fleet: Mean-Field (ODE) Twin of the
+'malariasimulation' Malaria Model*. R package version 0.0.0.9001,
+<https://pwinskill.github.io/fleet>.
 
     @Manual{,
-      title = {blink: Mean-Field (ODE) Twin of the 'malariasimulation' Malaria Model},
+      title = {fleet: Mean-Field (ODE) Twin of the 'malariasimulation' Malaria Model},
       author = {Peter Winskill},
       year = {2026},
-      note = {R package version 0.0.0.9000},
-      url = {https://pwinskill.github.io/blink},
+      note = {R package version 0.0.0.9001},
+      url = {https://pwinskill.github.io/fleet},
     }

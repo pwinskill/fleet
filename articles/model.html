@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>The blink model: formal specification • blink</title>
+<title>The fleet model: formal specification • fleet</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
@@ -18,7 +18,7 @@
 <link href="../deps/Baloo_2-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="The blink model: formal specification">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="The fleet model: formal specification">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -26,9 +26,9 @@
 
     <nav class="navbar navbar-expand-lg fixed-top " aria-label="Site navigation"><div class="container">
 
-    <a class="navbar-brand me-2" href="../index.html">blink</a>
+    <a class="navbar-brand me-2" href="../index.html">fleet</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.0.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,12 +37,12 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
-<li class="nav-item"><a class="nav-link" href="../articles/blink.html">Get started</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/fleet.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/model.html">The blink model: formal specification</a></li>
+<li><a class="dropdown-item" href="../articles/model.html">The fleet model: formal specification</a></li>
     <li><a class="dropdown-item" href="../articles/comparison.html">Comparison with malariasimulation</a></li>
   </ul>
 </li>
@@ -60,7 +60,7 @@
     <li><button class="dropdown-item" data-bs-theme-value="auto"><span class="fa fa-adjust"></span> Auto</button></li>
   </ul>
 </li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/pwinskill/blink" aria-label="GitHub repository"><span class="fa fab fa-github"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/pwinskill/fleet" aria-label="GitHub repository"><span class="fa fab fa-github"></span></a></li>
       </ul>
 </div>
 
@@ -73,22 +73,35 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.svg" class="logo" alt=""><h1>The blink model: formal specification</h1>
+      <img src="../logo.svg" class="logo" alt=""><h1>The fleet model: formal specification</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/pwinskill/blink/blob/main/vignettes/model.Rmd" class="external-link"><code>vignettes/model.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/pwinskill/fleet/blob/main/vignettes/model.Rmd" class="external-link"><code>vignettes/model.Rmd</code></a></small>
       <div class="d-none name"><code>model.Rmd</code></div>
     </div>
 
     
     
+<blockquote>
+<p><strong>⚠️ Work in progress: not ready for real use.</strong>
+<code>fleet</code> is published early so the approach, and its
+comparison against <code>malariasimulation</code>, can be examined and
+argued with, not so that anyone can rely on its numbers: the API is
+unstable and nothing here has been peer reviewed. The known
+discrepancies against the IBM are open rather than resolved, the largest
+being all-age severe incidence, which runs about 4 to 6% below the IBM,
+alongside a roughly 9% excess on clinical and severe incidence across
+the 63-country site files that is not yet explained. The full statement
+is on the <a href="https://pwinskill.github.io/fleet/">package front
+page</a>; if you need results you can defend today, use <a href="https://github.com/mrc-ide/malariasimulation" class="external-link">malariasimulation</a>.</p>
+</blockquote>
 <p>This article is the reference description of the system of ordinary
-differential equations that <code>blink</code> integrates, and of how
+differential equations that <code>fleet</code> integrates, and of how
 every user-facing <code>malariasimulation</code> parameterisation
 function maps onto it. It is written to be read alongside the model
 source in <code>inst/odin/malaria_ode.R</code> and the input builders in
 <code>R/build_inputs.R</code> / <code>R/interventions.R</code>.</p>
-<p>For a task-oriented introduction with runnable code, see <a href="blink.html">Getting started with <code>blink</code></a>.
+<p>For a task-oriented introduction with runnable code, see <a href="fleet.html">Getting started with <code>fleet</code></a>.
 <strong>This article is the canonical description of the model and of
 what it approximates:</strong> §3 says what the state space does and
 does not carry, §4 covers every <code>malariasimulation</code> argument
@@ -99,7 +112,7 @@ and not the IBM. If you read only one section, read §5.</p>
 <div class="section level2">
 <h2 id="scope-and-design">1. Scope and design<a class="anchor" aria-label="anchor" href="#scope-and-design"></a>
 </h2>
-<p><code>blink</code> is a deterministic mean-field (ODE) counterpart to
+<p><code>fleet</code> is a deterministic mean-field (ODE) counterpart to
 the <code>malariasimulation</code> individual-based model (IBM) of
 <em>Plasmodium falciparum</em>.</p>
 <p><em>Mean field</em> means the model tracks the <strong>distribution
@@ -108,12 +121,12 @@ themselves. Any quantity that depends on two attributes belonging to the
 <em>same</em> person — owning a net <em>and</em> being vaccinated, say —
 is therefore unavailable by construction. Almost everything in §3.2 and
 §3.4 follows from that one fact.</p>
-<p><code>blink</code> targets the IBM’s <em>code</em>, not the published
+<p><code>fleet</code> targets the IBM’s <em>code</em>, not the published
 equations. <code>malariasimulation</code>’s implementation departs from
 the analytic Griffin-style model in four places: it deduplicates bites
 within a day, rounds immunity-boosting refractory windows to whole days,
 holds people in a state for whole days, and applies extrinsic-incubation
-survival at a fixed delay. Wherever the two differ, <code>blink</code>
+survival at a fixed delay. Wherever the two differ, <code>fleet</code>
 reproduces what the IBM does.</p>
 <p>The design constraint that shapes everything below is that
 <strong>the state must not carry per-individual attributes</strong>. The
@@ -121,9 +134,9 @@ IBM tracks, for each person, their net, their spray status, their
 vaccine doses and antibody titres, their drug and the date they took it,
 and the date each of their four immunity functions last boosted. A
 mean-field model cannot afford a state dimension for each.
-<code>blink</code> therefore keeps only two human structuring dimensions
-— age and biting heterogeneity — and represents everything else either
-as a <strong>time-varying coefficient</strong> in the ODE, or as a
+<code>fleet</code> therefore keeps only two human structuring dimensions
+(age and biting heterogeneity) and represents everything else either as
+a <strong>time-varying coefficient</strong> in the ODE, or as a
 <strong>discrete state jump</strong> between integration segments.
 §3.1–3.4 set out exactly which is which.</p>
 </div>
@@ -131,28 +144,25 @@ as a <strong>time-varying coefficient</strong> in the ODE, or as a
 <h2 id="the-model-at-a-glance">2. The model at a glance<a class="anchor" aria-label="anchor" href="#the-model-at-a-glance"></a>
 </h2>
 <div class="float">
-<img src="model_flow.png" alt="Flow diagram of the blink model, in two panels, each sitting on a deck of offset copies that stands for the array the panel is replicated over. The upper panel holds the human compartments: susceptible; untreated clinical disease; treated; asymptomatic and sub-patent infection; and two prophylaxis compartments, one post-treatment and one for chemoprevention, each drawn as a stack of boxes to mark it as an Erlang chain with its stage count beside it. Its deck is labelled for the 52 age groups, and a note records that every box is also an array over the five biting-heterogeneity nodes, that people age between layers, die from every box, and are born into susceptible. A dotted region encloses the four states infectious to mosquitoes; a dotted ring round the susceptible, asymptomatic and sub-patent boxes marks the states the infection hazard acts on. The treated state is drawn once; the model splits it in two when antimalarial resistance is switched on. The infection hazard leaves a vertical spine and splits three ways, into treated, untreated and asymptomatic; recovery returns everyone to susceptible. A small box holds the four immunity arrays, coupled into the hazard. A dashed red path marks the chemoprevention pulse, a discrete jump rather than a rate, drawn leaving both the susceptible state and the infectious pool. The lower panel holds the mosquito compartments, running right to left: early and late larvae and pupae, then susceptible, exposed and infectious adults, with a death outflow from each and a return flow in which all adult females lay eggs back into the first larval stage. A second dotted region encloses the adult females, and the panel’s deck is labelled for the species dimension. Two dashed indigo paths couple the panels: the entomological inoculation rate driving human infection, and human infectivity driving the mosquito force of infection, both lagged. A key at the right names each line style."><div class="figcaption">Flow diagram of the blink model, in two panels,
+<img src="model_flow.png" alt="Flow diagram of the fleet model, in two panels, each sitting on a deck of offset copies that stands for the array the panel is replicated over. The upper panel holds the human compartments: susceptible; untreated clinical disease; treated; asymptomatic and sub-patent infection; and two prophylaxis compartments, one post-treatment and one for chemoprevention. Its deck carries one array dimension on each visible edge, age one to fifty-two and biting heterogeneity one to five, and a note records that people age along the age dimension, die from every box, and are born into susceptible. A dotted region encloses the four states infectious to mosquitoes. The treated state is drawn once; the model splits it in two when antimalarial resistance is switched on. The infection hazard leaves a vertical spine and splits three ways, into treated, untreated and asymptomatic, and is labelled as acting on the susceptible, asymptomatic and sub-patent states; recovery returns everyone to susceptible. A dashed red path marks the chemoprevention pulse, a discrete jump rather than a rate, drawn leaving both the susceptible state and the infectious pool. The lower panel holds the mosquito compartments, running right to left: early and late larvae and pupae, then susceptible, exposed and infectious adults, with a death outflow from each and a return flow in which all adult females lay eggs back into the first larval stage. A second dotted region encloses the adult females, and the panel’s deck is labelled for the species dimension. Two dashed indigo paths couple the panels: the entomological inoculation rate driving human infection, and human infectivity driving the mosquito force of infection, both lagged. A key at the right names each line style."><div class="figcaption">Flow diagram of the fleet model, in two panels,
 each sitting on a deck of offset copies that stands for the array the
 panel is replicated over. The upper panel holds the human compartments:
 susceptible; untreated clinical disease; treated; asymptomatic and
 sub-patent infection; and two prophylaxis compartments, one
-post-treatment and one for chemoprevention, each drawn as a stack of
-boxes to mark it as an Erlang chain with its stage count beside it. Its
-deck is labelled for the 52 age groups, and a note records that every
-box is also an array over the five biting-heterogeneity nodes, that
-people age between layers, die from every box, and are born into
-susceptible. A dotted region encloses the four states infectious to
-mosquitoes; a dotted ring round the susceptible, asymptomatic and
-sub-patent boxes marks the states the infection hazard acts on. The
+post-treatment and one for chemoprevention. Its deck carries one array
+dimension on each visible edge, age one to fifty-two and biting
+heterogeneity one to five, and a note records that people age along the
+age dimension, die from every box, and are born into susceptible. A
+dotted region encloses the four states infectious to mosquitoes. The
 treated state is drawn once; the model splits it in two when
 antimalarial resistance is switched on. The infection hazard leaves a
 vertical spine and splits three ways, into treated, untreated and
-asymptomatic; recovery returns everyone to susceptible. A small box
-holds the four immunity arrays, coupled into the hazard. A dashed red
-path marks the chemoprevention pulse, a discrete jump rather than a
-rate, drawn leaving both the susceptible state and the infectious pool.
-The lower panel holds the mosquito compartments, running right to left:
-early and late larvae and pupae, then susceptible, exposed and
+asymptomatic, and is labelled as acting on the susceptible, asymptomatic
+and sub-patent states; recovery returns everyone to susceptible. A
+dashed red path marks the chemoprevention pulse, a discrete jump rather
+than a rate, drawn leaving both the susceptible state and the infectious
+pool. The lower panel holds the mosquito compartments, running right to
+left: early and late larvae and pupae, then susceptible, exposed and
 infectious adults, with a death outflow from each and a return flow in
 which all adult females lay eggs back into the first larval stage. A
 second dotted region encloses the adult females, and the panel’s deck is
@@ -164,41 +174,54 @@ A key at the right names each line style.</div>
 <p>The figure uses four grammars, not two:</p>
 <ul>
 <li>
-<strong>Solid black</strong> — a flow of individuals, i.e. a term in
+<strong>Solid black</strong>: a flow of individuals, i.e. a term in
 the ODE.</li>
 <li>
-<strong>Dashed indigo</strong> — a <em>scalar coupling</em>: it sets
+<strong>Dashed indigo</strong>: a <em>scalar coupling</em>. It sets
 a rate in the other panel, and nobody moves along it.</li>
 <li>
-<strong>Dashed red</strong> — people <em>do</em> move, but
+<strong>Dashed red</strong>: people <em>do</em> move, but
 instantaneously, as a state jump between integration segments rather
 than at a rate.</li>
 <li>
-<strong>Dotted grey</strong> — a grouping or a set membership, never
-a compartment, and always labelled. There are three: the infectious
-pool, the adult mosquitoes, and the ring round
+<strong>Dotted grey</strong>: a grouping, never a compartment, and
+always labelled. There are two: the infectious pool and the adult
+mosquitoes. That
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Λ</mi><annotation encoding="application/x-tex">\Lambda</annotation></semantics></math>
+acts on
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
 and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>
-marking the states
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Λ</mi><annotation encoding="application/x-tex">\Lambda</annotation></semantics></math>
-acts on. Drawing that last one as a <em>ring</em> rather than as lines
-back to the spine is deliberate: a line from
+is stated in words beside the hazard rather than drawn, because a line
+from
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
-would read as a flow
+back to the spine would read as a flow
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>→</mo><mi>A</mi></mrow><annotation encoding="application/x-tex">A \to A</annotation></semantics></math>,
-which the model does not have (§B.4).</li>
+which the model does not have (§B.4). And a whole grammar element for
+one fact was not paying for itself.</li>
 <li>
-<strong>A stacked outline</strong> — an array or an Erlang chain,
-with its count. The deck behind each panel is the dimension that panel
-is replicated over (age
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>×</mi><annotation encoding="application/x-tex">\times</annotation></semantics></math>
-heterogeneity for humans, species for mosquitoes); the stacked boxes are
-the two prophylaxis chains and the EIP delay.</li>
+<strong>Offset layers</strong>: the array dimensions, and only
+those. The deck behind the human panel carries one dimension on each
+visible edge (age
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi><mo>=</mo><mn>1</mn><mi>…</mi><mn>52</mn></mrow><annotation encoding="application/x-tex">i = 1 \dots 52</annotation></semantics></math>,
+biting heterogeneity
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi><mo>=</mo><mn>1</mn><mi>…</mi><mn>5</mn></mrow><annotation encoding="application/x-tex">j = 1 \dots 5</annotation></semantics></math>);
+the deck behind the mosquito panel is species.</li>
 </ul>
-<p>The transmission cycle runs counter-clockwise — humans left to right,
-mosquitoes right to left — so the two couplings never cross. Where the
+<p>Three things the figure deliberately does not draw, because showing
+them cost more legibility than they bought.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mi>c</mi></msub><annotation encoding="application/x-tex">P_c</annotation></semantics></math>
+and the EIP are <strong>Erlang chains</strong>, not single compartments;
+they were once drawn with a stacked outline of their own, which made the
+same layered idiom mean two unrelated things (§B.4 gives the stage
+counts, which vary by drug). <strong>Immunity</strong> is algebraic
+rather than a state, so it is named on the hazard rather than boxed. And
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
+splits under antimalarial resistance (§B.4).</p>
+<p>The transmission cycle runs counter-clockwise (humans left to right,
+mosquitoes right to left), so the two couplings never cross. Where the
 EIR coupling must cross a return lane it hops it, as in a circuit
 diagram.</p>
 <p>Reading it:</p>
@@ -207,8 +230,8 @@ diagram.</p>
 <strong>Humans, above.</strong> The infection hazard
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Λ</mi><annotation encoding="application/x-tex">\Lambda</annotation></semantics></math>
 acts on the whole at-risk pool
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>+</mo><mi>A</mi><mo>+</mo><mi>U</mi></mrow><annotation encoding="application/x-tex">S + A + U</annotation></semantics></math>
-— asymptomatic and sub-patent people can be re-infected, and at moderate
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>+</mo><mi>A</mi><mo>+</mo><mi>U</mi></mrow><annotation encoding="application/x-tex">S + A + U</annotation></semantics></math>.
+Asymptomatic and sub-patent people can be re-infected, and at moderate
 transmission that is where most clinical episodes come from. It splits
 three ways: untreated clinical disease
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>,
@@ -219,8 +242,8 @@ or a non-clinical infection landing in
 Recovery runs
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mo>→</mo><mi>A</mi><mo>→</mo><mi>U</mi></mrow><annotation encoding="application/x-tex">D \to A \to U</annotation></semantics></math>,
 and everyone returns to
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>
-— from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>,
+from
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>
 directly, from
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
@@ -281,7 +304,7 @@ four immunity arrays
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mi>D</mi></msub><annotation encoding="application/x-tex">I_D</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>V</mi><mi>A</mi></mrow></msub><annotation encoding="application/x-tex">I_{VA}</annotation></semantics></math>
 appear as one box coupled into the hazard, but which function each
-drives is not drawn —
+drives is not drawn:
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>
 and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>
@@ -293,9 +316,9 @@ act on the infectivity coupling and the severe-incidence output. Not
 drawn at all: the two Erlang lag chains behind the couplings
 (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mi>E</mi></msub><annotation encoding="application/x-tex">n_E</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mi>F</mi></msub><annotation encoding="application/x-tex">n_F</annotation></semantics></math>
-stages — the couplings are marked “lagged”, and the EIP chain
-<em>is</em> drawn); the individual layers of each deck, so ageing
-between age groups, human death and the births that replenish
+stages; the couplings are marked “lagged”, and the EIP chain <em>is</em>
+drawn); the individual layers of each deck, so ageing between age
+groups, human death and the births that replenish
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>
 are noted on the panel rather than drawn as arrows (unlike the mosquito
 deaths, which are drawn because
@@ -373,7 +396,7 @@ of the log-normal relative-biting-rate distribution with variance
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>σ</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\sigma^2</annotation></semantics></math>
 (<code>sigma_squared</code>);
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ζ</mi><mi>j</mi></msub><mo>=</mo><mrow><mi mathvariant="normal">exp</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>z</mi><mi>j</mi></msub><mi>σ</mi><mo>−</mo><msup><mi>σ</mi><mn>2</mn></msup><mi>/</mi><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\zeta_j = \exp(z_j\sigma - \sigma^2/2)</annotation></semantics></math>.
-Fixed at birth, never mixed — a person stays in their stratum for life,
+Fixed at birth, never mixed: a person stays in their stratum for life,
 as in the IBM.</td>
 </tr>
 <tr class="odd">
@@ -389,7 +412,7 @@ coupled only through the shared human population.</td>
 <td>EIR lag stage</td>
 <td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>n</mi><mi>E</mi></msub></mrow><annotation encoding="application/x-tex">1,\dots,n_E</annotation></semantics></math></td>
 <td>10 (<code>n_eir</code>)</td>
-<td><code>run_simulation_ode(n_eir =)</code></td>
+<td><code>ode_tuning(n_eir =)</code></td>
 <td>Erlang chain approximating the sporozoite-to-infection delay
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>τ</mi><mi>E</mi></msub><annotation encoding="application/x-tex">\tau_E</annotation></semantics></math>
 (<code>de</code>).</td>
@@ -398,7 +421,7 @@ coupled only through the shared human population.</td>
 <td>FOIM lag stage</td>
 <td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>n</mi><mi>F</mi></msub></mrow><annotation encoding="application/x-tex">1,\dots,n_F</annotation></semantics></math></td>
 <td>10 (<code>n_foim</code>)</td>
-<td><code>run_simulation_ode(n_foim =)</code></td>
+<td><code>ode_tuning(n_foim =)</code></td>
 <td>Erlang chain approximating the gametocyte delay
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>τ</mi><mi>l</mi></msub><annotation encoding="application/x-tex">\tau_l</annotation></semantics></math>
 (<code>delay_gam</code>).</td>
@@ -407,7 +430,7 @@ coupled only through the shared human population.</td>
 <td>EIP stage</td>
 <td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>n</mi><mi>P</mi></msub></mrow><annotation encoding="application/x-tex">1,\dots,n_P</annotation></semantics></math></td>
 <td>20 (<code>n_eip</code>)</td>
-<td><code>run_simulation_ode(n_eip =)</code></td>
+<td><code>ode_tuning(n_eip =)</code></td>
 <td>Loss-free Erlang chain approximating the fixed extrinsic incubation
 period
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>τ</mi><mi>M</mi></msub><annotation encoding="application/x-tex">\tau_M</annotation></semantics></math>
@@ -418,7 +441,7 @@ period
 <p>Human compartments, all
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><msub><mi>n</mi><mi>a</mi></msub><mo>×</mo><msub><mi>n</mi><mi>z</mi></msub><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">[n_a \times n_z]</annotation></semantics></math>.
 The last column gives the column name in the output table, which is
-where you will meet these in practice — note that eight compartments are
+where you will meet these in practice. Note that eight compartments are
 reported in six columns.</p>
 <table class="table">
 <colgroup>
@@ -500,8 +523,8 @@ itself); 1 with no clinical drugs</td>
 <td>folded into <code>Ph_count</code>
 </td>
 <td>Chemoprevention prophylaxis (MDA/SMC/PMC), its own chain because its
-drug — and hence its mean duration and shape — differs from the clinical
-first line;
+drug differs from the clinical first line, and hence so do its mean
+duration and shape;
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><msub><mi>P</mi><mi>c</mi></msub></msub><mo>=</mo><mtext mathvariant="normal">round</mtext><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mi>/</mi><msubsup><mtext mathvariant="normal">CV</mtext><mi>W</mi><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">k_{P_c} = \text{round}(1/\text{CV}_W^2)</annotation></semantics></math>:
 14 for SP-AQ, 15 for DHA-PQP</td>
 </tr>
@@ -564,7 +587,7 @@ except the EIP chain:</p>
 </tr>
 <tr class="odd">
 <td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>X</mi><mrow><mi>s</mi><mo>,</mo><mn>1</mn><mi>.</mi><mi>.</mi><msub><mi>n</mi><mi>P</mi></msub></mrow><mrow><mo stretchy="false" form="prefix">(</mo><mi>P</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><annotation encoding="application/x-tex">X^{(P)}_{s,1..n_P}</annotation></semantics></math></td>
-<td>EIP delay chain (odin <code>Xi</code>) — a pure delay line, carries
+<td>EIP delay chain (odin <code>Xi</code>): a pure delay line, carries
 no mortality</td>
 </tr>
 <tr class="even">
@@ -598,7 +621,7 @@ has 6546.</p>
 <h3 id="what-is-captured-without-a-dimension">3.2 What is captured <em>without</em> a dimension<a class="anchor" aria-label="anchor" href="#what-is-captured-without-a-dimension"></a>
 </h3>
 <p>These are the mechanisms the IBM carries as per-individual attributes
-and <code>blink</code> carries as <strong>time-varying (and sometimes
+and <code>fleet</code> carries as <strong>time-varying (and sometimes
 age-varying) coefficients</strong>. Each row is a dimension that was
 <em>not</em> added.</p>
 <table class="table">
@@ -612,7 +635,7 @@ age-varying) coefficients</strong>. Each row is a dimension that was
 <th>Mechanism</th>
 <th>IBM representation</th>
 <th>
-<code>blink</code> representation</th>
+<code>fleet</code> representation</th>
 <th>Cost of the collapse</th>
 </tr></thead>
 <tbody>
@@ -716,9 +739,8 @@ IBM)</td>
 <td><strong>Vaccination status, dose count, booster stratum, antibody
 titre</strong></td>
 <td>Per-person dose history and last-vaccination date. Antibody
-parameters are <em>not</em> stored — the IBM re-draws all four from
-their profile distributions every timestep, for every vaccinated
-person</td>
+parameters are <em>not</em> stored: the IBM re-draws all four from their
+profile distributions every timestep, for every vaccinated person</td>
 <td>One
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><msub><mi>n</mi><mi>a</mi></msub><mo>×</mo><msub><mi>n</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">[n_a \times n_t]</annotation></semantics></math>
 multiplier
@@ -819,7 +841,7 @@ would be wrong</td>
 </h3>
 <p>Mass drug administration cannot be written as a smooth rate: it is a
 short, near-instantaneous clearance of a target age band.
-<code>blink</code> splits the integration at every scheduled MDA/SMC/PMC
+<code>fleet</code> splits the integration at every scheduled MDA/SMC/PMC
 timestep and applies a <strong>state jump</strong> (§E), then resumes.
 This keeps chemoprevention out of the ODE right-hand side entirely.</p>
 </div>
@@ -847,7 +869,7 @@ This keeps chemoprevention out of the ODE right-hand side entirely.</p>
 <td>Individual mosquitoes
 (<code>individual_mosquitoes = TRUE</code>)</td>
 <td>
-<code>blink</code> is always compartmental</td>
+<code>fleet</code> is always compartmental</td>
 <td>Ignored</td>
 </tr>
 <tr class="odd">
@@ -881,7 +903,7 @@ these upstream in <code>set_antimalarial_resistance()</code>
 <p>This section covers every user-facing <code>malariasimulation</code>
 parameterisation function, argument by argument, as of
 <strong><code>malariasimulation</code> v3.0.0</strong>.</p>
-<p>Arguments named <code>parameters</code> are omitted throughout — they
+<p>Arguments named <code>parameters</code> are omitted throughout; they
 are the list being modified.</p>
 <div class="section level3">
 <h3 id="legend">Legend<a class="anchor" aria-label="anchor" href="#legend"></a>
@@ -1061,7 +1083,7 @@ first.</p>
 <thead><tr class="header">
 <th>Argument</th>
 <th>malariasimulation meaning</th>
-<th><code>blink</code></th>
+<th><code>fleet</code></th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -1075,7 +1097,7 @@ below</td>
 <td>
 <code>"falciparum"</code> or <code>"vivax"</code>
 </td>
-<td>✅ falciparum. ⛔ vivax — <code>build_inputs()</code> stops with an
+<td>✅ falciparum. ⛔ vivax: <code>build_inputs()</code> stops with an
 error</td>
 </tr>
 </tbody>
@@ -1092,7 +1114,7 @@ error</td>
 <thead><tr class="header">
 <th>Group</th>
 <th>Parameters</th>
-<th><code>blink</code></th>
+<th><code>fleet</code></th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -1102,7 +1124,7 @@ error</td>
 <code>a_proportion</code>, <code>u_proportion</code>,
 <code>t_proportion</code>
 </td>
-<td>⛔ Ignored — <code>blink</code> seeds at the
+<td>⛔ Ignored. <code>fleet</code> seeds at the
 <code>malariaEquilibrium</code> fixed point for <code>init_EIR</code>
 (or, under a custom demography, for the EIR the IBM’s mosquito sizing
 supports, §4.3), not at user-supplied proportions</td>
@@ -1113,7 +1135,7 @@ supports, §4.3), not at user-supplied proportions</td>
 <code>init_ib</code>, <code>init_ica</code>, <code>init_iva</code>,
 <code>init_icm</code>, <code>init_ivm</code>, <code>init_id</code>
 </td>
-<td>⛔ Ignored — same reason</td>
+<td>⛔ Ignored, same reason</td>
 </tr>
 <tr class="odd">
 <td>Population size</td>
@@ -1124,8 +1146,7 @@ independent of it</td>
 <tr class="even">
 <td></td>
 <td><code>human_population_timesteps</code></td>
-<td>⛔ Ignored — population is conserved; no dynamic population
-size</td>
+<td>⛔ Ignored. Population is conserved; no dynamic population size</td>
 </tr>
 <tr class="odd">
 <td>Baseline demography</td>
@@ -1161,8 +1182,11 @@ the constant death hazard and the equilibrium age structure when
 <td></td>
 <td><code>n_heterogeneity_groups</code></td>
 <td>✅ Number of Gauss–Hermite nodes
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mi>z</mi></msub><annotation encoding="application/x-tex">n_z</annotation></semantics></math>
-</td>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mi>z</mi></msub><annotation encoding="application/x-tex">n_z</annotation></semantics></math>.
+Must be a whole number
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≥</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">\geq 3</annotation></semantics></math>:
+fewer nodes than that are not a quadrature on the log-normal at all,
+they just move every human off it</td>
 </tr>
 <tr class="even">
 <td></td>
@@ -1190,14 +1214,14 @@ equations</td>
 <code>foraging_time</code>, <code>species</code>,
 <code>species_proportions</code>
 </td>
-<td>✅ Per-species; <code>total_M</code> is re-derived — from
+<td>✅ Per-species; <code>total_M</code> is re-derived: from
 <code>init_EIR</code> under the default demography, as the IBM’s own
 value under a custom one (§4.3)</td>
 </tr>
 <tr class="odd">
 <td></td>
 <td><code>init_foim</code></td>
-<td>⛔ Ignored — <code>blink</code> recomputes FOIM from its own seeded
+<td>⛔ Ignored: <code>fleet</code> recomputes FOIM from its own seeded
 human infectivity, which must be self-consistent with its seed</td>
 </tr>
 <tr class="even">
@@ -1218,7 +1242,7 @@ on a daily grid</td>
 </td>
 <td>✅ See §4.10. (<code>carrying_capacity_scalers</code> is
 <em>not</em> a <code>get_parameters()</code> default and cannot be
-passed in <code>overrides</code> — it is created only by
+passed in <code>overrides</code>; it is created only by
 <code>set_carrying_capacity()</code>.)</td>
 </tr>
 <tr class="even">
@@ -1336,7 +1360,7 @@ whenever clinical drugs are set</td>
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>τ</mi><mi>E</mi></msub><annotation encoding="application/x-tex">\tau_E</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>τ</mi><mi>l</mi></msub><annotation encoding="application/x-tex">\tau_l</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>τ</mi><mi>M</mi></msub><annotation encoding="application/x-tex">\tau_M</annotation></semantics></math>
-— the three Erlang chains</td>
+(the three Erlang chains)</td>
 </tr>
 <tr class="odd">
 <td>Vector-control shape</td>
@@ -1365,15 +1389,15 @@ algebra</td>
 <td>
 <code>ib_</code>/<code>id_</code>/<code>ica_</code>/<code>iva_</code>/<code>idm_</code>/<code>icm_</code>/<code>ivm_rendering_*</code>
 </td>
-<td>⛔ <code>blink</code> does not render mean immunity by band</td>
+<td>⛔ <code>fleet</code> does not render mean immunity by band</td>
 </tr>
 <tr class="even">
 <td>Metapopulation test-and-treat</td>
 <td>
 <code>rdt_intercept</code>, <code>rdt_coeff</code>
 </td>
-<td>⛔ Ignored — they parameterise the PCR→RDT conversion used by
-<code>run_metapop_simulation()</code>’s mixing, which <code>blink</code>
+<td>⛔ Ignored. They parameterise the PCR→RDT conversion used by
+<code>run_metapop_simulation()</code>’s mixing, which <code>fleet</code>
 does not support (§4.19)</td>
 </tr>
 <tr class="odd">
@@ -1383,9 +1407,9 @@ does not support (§4.19)</td>
 <code>r_tol</code>, <code>a_tol</code>, <code>ode_max_steps</code>,
 <code>progress_bar</code>
 </td>
-<td>⛔ Ignored — <code>blink</code> is always compartmental and exposes
+<td>⛔ Ignored: <code>fleet</code> is always compartmental and exposes
 its own <code>atol</code>/<code>rtol</code>/<code>step_size_max</code>
-on <code><a href="../reference/run_simulation_ode.html">run_simulation_ode()</a></code>
+through <code><a href="../reference/ode_tuning.html">ode_tuning()</a></code>
 </td>
 </tr>
 <tr class="even">
@@ -1399,8 +1423,8 @@ on <code><a href="../reference/run_simulation_ode.html">run_simulation_ode()</a>
 </table>
 </div>
 <div class="section level4">
-<h4 id="blink-only-extension-fields">
-<code>blink</code>-only extension fields<a class="anchor" aria-label="anchor" href="#blink-only-extension-fields"></a>
+<h4 id="fleet-only-extension-fields">
+<code>fleet</code>-only extension fields<a class="anchor" aria-label="anchor" href="#fleet-only-extension-fields"></a>
 </h4>
 <p>Neither is a <code>malariasimulation</code> parameter; both may be
 added to the list and both default to the validated choice.</p>
@@ -1425,7 +1449,9 @@ added to the list and both default to the validated choice.</p>
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>b</mi><mi>ε</mi></mrow><annotation encoding="application/x-tex">b\varepsilon</annotation></semantics></math>
 that <code>malariaEquilibrium</code> assumes, cutting the residual drift
 off the seed to well under 1% — but not to zero, since it gates only the
-hazard and not the boosting or sojourn forms</td>
+hazard and not the boosting or sojourn forms. It is a switch: anything
+but 0 or 1 (<code>TRUE</code>/<code>FALSE</code> accepted) is an
+error</td>
 </tr>
 <tr class="even">
 <td><code>acquired_immunity_offset</code></td>
@@ -1436,7 +1462,9 @@ in the
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>/<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>/<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
 Hill functions. <code>0.5</code> reproduces the IBM’s literal
 per-individual offset; <code>0</code> is the better mean-field match
-against the IBM ensemble mean</td>
+against the IBM ensemble mean. Must lie in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">[0, 1]</annotation></semantics></math>
+</td>
 </tr>
 </tbody>
 </table>
@@ -1454,7 +1482,7 @@ against the IBM ensemble mean</td>
 <thead><tr class="header">
 <th>Argument</th>
 <th>malariasimulation meaning</th>
-<th><code>blink</code></th>
+<th><code>fleet</code></th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -1495,27 +1523,27 @@ evaluate
 <thead><tr class="header">
 <th>Argument</th>
 <th>malariasimulation meaning</th>
-<th><code>blink</code></th>
+<th><code>fleet</code></th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td><code>init_EIR</code></td>
 <td>Target EIR to seed from</td>
-<td>✅ Stored as <code>parameters$init_EIR</code> and read by
-<code><a href="../reference/run_simulation_ode.html">run_simulation_ode()</a></code> when its own <code>init_EIR</code>
-argument is <code>NULL</code>. It means the same thing in both models:
-under the default demography it is the EIR <code>blink</code> realises;
-under <code>set_demography()</code> it sizes the mosquito population
-exactly as the IBM’s does and <code>blink</code> seeds at the EIR that
-density supports (§4.4)</td>
+<td>✅ Stored as <code>parameters$init_EIR</code>, which is where
+<code><a href="../reference/run_simulation_ode.html">run_simulation_ode()</a></code> reads it from; it has no
+<code>init_EIR</code> argument of its own. It means the same thing in
+both models: under the default demography it is the EIR
+<code>fleet</code> realises; under <code>set_demography()</code> it
+sizes the mosquito population exactly as the IBM’s does and
+<code>fleet</code> seeds at the EIR that density supports (§4.4)</td>
 </tr>
 <tr class="even">
 <td><code>eq_params</code></td>
 <td>Custom <code>malariaEquilibrium</code> parameter set</td>
-<td>✅ Merged over <code>blink</code>’s own back-translation and takes
+<td>✅ Merged over <code>fleet</code>’s own back-translation and takes
 precedence. Note <code>set_equilibrium()</code> writes this field
-<strong>even when passed <code>NULL</code></strong> — storing its own
-back-translation — so after any call to it, that stored set, not
+<strong>even when passed <code>NULL</code></strong> (storing its own
+back-translation), so after any call to it, that stored set, not
 <code>R/translate_params.R</code>, supplies every shared constant
 (§F)</td>
 </tr>
@@ -1524,9 +1552,9 @@ back-translation — so after any call to it, that stored set, not
 <td>
 <code>"adult"</code> (default) or <code>"total"</code>
 </td>
-<td>✅ Handled upstream — <code>malariasimulation</code> converts a
+<td>✅ Handled upstream: <code>malariasimulation</code> converts a
 total-population EIR to adult EIR before storing it, and
-<code>blink</code> always interprets <code>init_EIR</code> as adult EIR
+<code>fleet</code> always interprets <code>init_EIR</code> as adult EIR
 (bites per adult per year)</td>
 </tr>
 </tbody>
@@ -1536,7 +1564,7 @@ total-population EIR to adult EIR before storing it, and
 the adult-mosquito population <code>total_M</code> from the human
 equilibrium under the IBM’s <strong>default exponential age
 structure</strong> (<code>equilibrium_total_M()</code>; custom mortality
-never enters). <code>blink</code> never reads the stored
+never enters). <code>fleet</code> never reads the stored
 <code>parameters$total_M</code>; it re-derives the same quantity itself,
 in one of two ways:</p>
 <ul>
@@ -1544,8 +1572,8 @@ in one of two ways:</p>
 <strong>Default demography.</strong> <code>total_M</code> is chosen
 so that
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>s</mi></msub><msub><mi>a</mi><mi>s</mi></msub><msub><mi>I</mi><mrow><mi>M</mi><mo>,</mo><mi>s</mi></mrow></msub><mo>=</mo><mtext mathvariant="normal">init_EIR</mtext><mi>/</mi><mn>365</mn></mrow><annotation encoding="application/x-tex">\sum_s a_s I_{M,s} = \text{init_EIR}/365</annotation></semantics></math>
-holds exactly under <code>blink</code>’s own seeded human infectivity —
-the IBM’s formula evaluated on <code>blink</code>’s grid, so the two
+holds exactly under <code>fleet</code>’s own seeded human infectivity,
+the IBM’s formula evaluated on <code>fleet</code>’s grid, so the two
 agree up to discretisation and <code>init_EIR</code> is the EIR
 realised.</li>
 <li>
@@ -1554,7 +1582,7 @@ Holding <code>init_EIR</code> here would give the two models different
 mosquito populations, and hence different transmission, from the same
 parameter list: the IBM’s density supports less (or more) transmission
 under the custom age structure and it drifts there. So
-<code>blink</code> reproduces the IBM’s <code>total_M</code> exactly
+<code>fleet</code> reproduces the IBM’s <code>total_M</code> exactly
 (<code>ibm_total_M()</code>, the same <code>human_equilibrium()</code>
 call on the IBM’s 0–99.9 y grid and the same
 <code>equilibrium_total_M()</code> arithmetic) and root-finds the EIR at
@@ -1580,7 +1608,7 @@ but changes nothing.</p>
 <thead><tr class="header">
 <th>Argument</th>
 <th>malariasimulation meaning</th>
-<th><code>blink</code></th>
+<th><code>fleet</code></th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -1612,17 +1640,17 @@ row additionally sets the equilibrium age structure the human seed is
 rescaled onto; the open-ended top model group is looked up one day above
 its lower edge, so it takes the rate of the band it belongs to rather
 than the one below. 🟡 Model ages above the top <code>agegroups</code>
-edge take the top rate here, whereas the IBM removes them — a warning
+edge take the top rate here, whereas the IBM removes them. A warning
 fires; raise <code>default_age_lower(max_age =)</code> or extend
 <code>agegroups</code> to match</td>
 </tr>
 </tbody>
 </table>
 <p>With a custom demography the mosquito population is sized as the IBM
-sizes it (§4.3): <code>blink</code> takes the IBM’s <code>total_M</code>
+sizes it (§4.3): <code>fleet</code> takes the IBM’s <code>total_M</code>
 and seeds at the EIR its own equilibrium under this age structure
 supports, which is generally <em>not</em> <code>init_EIR</code> (an
-older population sustains less transmission from the same mosquitoes —
+older population sustains less transmission from the same mosquitoes;
 the comparison article’s scenario seeds at EIR 13.9 for
 <code>init_EIR = 20</code>, matching the IBM’s realised 13.8).
 <code>parameters$hold_init_EIR = TRUE</code> makes <code>init_EIR</code>
@@ -1640,7 +1668,7 @@ the realised EIR instead.</p>
 <thead><tr class="header">
 <th>Argument</th>
 <th>malariasimulation meaning</th>
-<th><code>blink</code></th>
+<th><code>fleet</code></th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -1689,9 +1717,9 @@ stage in front, uses
 14 / 15). Capped at 20. 🟡 An Erlang chain is not a Weibull, and the
 exponential
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
-stage adds variability the IBM’s parallel clock does not have — for AL
+stage adds variability the IBM’s parallel clock does not have; for AL
 the protection curve is reproduced in its integral, not its shape.
-<code>run_simulation_ode(n_ph =)</code> overrides the count</td>
+<code>ode_tuning(n_ph =)</code> overrides the count</td>
 </tr>
 <tr class="odd">
 <td>  <code>drug_hypnozoite_*</code>
@@ -1716,7 +1744,7 @@ the protection curve is reproduced in its integral, not its shape.
 <thead><tr class="header">
 <th>Argument</th>
 <th>malariasimulation meaning</th>
-<th><code>blink</code></th>
+<th><code>fleet</code></th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -1739,7 +1767,7 @@ and of the drug-mix series</td>
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>f</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mrow><mi mathvariant="normal">min</mi><mo>⁡</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>,</mo><msub><mo>∑</mo><mtext mathvariant="normal">drugs</mtext></msub><msub><mtext mathvariant="normal">cov</mtext><mi>d</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">f_t(t) = \min\left(1, \sum_{\text{drugs}} \text{cov}_d(t)\right)</annotation></semantics></math>.
 <code>set_clinical_treatment()</code> <em>errors</em> if the summed
 coverage exceeds 1 at any timestep, so the <code>min(1, ·)</code>
-<code>blink</code> applies is a defensive floor that never binds on a
+<code>fleet</code> applies is a defensive floor that never binds on a
 valid parameter set. 🟡 The drug-linked quantities
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">eff</mtext><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\text{eff}(t)</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>T</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">c_T(t)</annotation></semantics></math>,
@@ -1764,7 +1792,7 @@ sub-populations</td>
 <thead><tr class="header">
 <th>Argument</th>
 <th>malariasimulation meaning</th>
-<th><code>blink</code></th>
+<th><code>fleet</code></th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -1798,8 +1826,8 @@ model</td>
 <td><code>slow_parasite_clearance_probability</code></td>
 <td>Probability a treated resistant case clears slowly</td>
 <td>✅
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">SPC</mtext><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\text{SPC}(t)</annotation></semantics></math>
-— the split of the treated inflow between
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">SPC</mtext><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\text{SPC}(t)</annotation></semantics></math>,
+the split of the treated inflow between
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
 and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>T</mi><mi>s</mi></msub><annotation encoding="application/x-tex">T_s</annotation></semantics></math>.
@@ -1809,8 +1837,8 @@ Coverage-share-weighted across drugs</td>
 <td><code>early_treatment_failure_probability</code></td>
 <td>Probability treatment fails early</td>
 <td>✅
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">ETF</mtext><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\text{ETF}(t)</annotation></semantics></math>
-— reduces
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">ETF</mtext><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\text{ETF}(t)</annotation></semantics></math>:
+reduces
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>f</mi><mi>t</mi><mtext mathvariant="normal">eff</mtext></msubsup><annotation encoding="application/x-tex">f_t^{\text{eff}}</annotation></semantics></math>,
 diverting those cases to
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>
@@ -1849,8 +1877,8 @@ is not collapsed to zero)</td>
 <h3 id="set_bednets">4.8 <code>set_bednets()</code><a class="anchor" aria-label="anchor" href="#set_bednets"></a>
 </h3>
 <p><code>set_bednets(parameters, timesteps, coverages, dn0, rn, rnm, gamman, retention, logistic_half_life, logistic_k)</code></p>
-<p><strong>Module status: 🟡</strong> — net efficacy is averaged over
-the net-using fraction into per-species
+<p><strong>Module status: 🟡.</strong> Net efficacy is averaged over the
+net-using fraction into per-species
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>a</mi><mi>s</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">a_s(t)</annotation></semantics></math>
 and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>s</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mu_s(t)</annotation></semantics></math>,
@@ -1865,7 +1893,7 @@ that, every argument below is handled exactly.</p>
 <thead><tr class="header">
 <th>Argument</th>
 <th>malariasimulation meaning</th>
-<th><code>blink</code></th>
+<th><code>fleet</code></th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -1944,10 +1972,9 @@ exactly</td>
 <h3 id="set_spraying">4.9 <code>set_spraying()</code><a class="anchor" aria-label="anchor" href="#set_spraying"></a>
 </h3>
 <p><code>set_spraying(parameters, timesteps, coverages, ls_theta, ls_gamma, ks_theta, ks_gamma, ms_theta, ms_gamma)</code></p>
-<p><strong>Module status: 🟡</strong> — as for nets:
-population-averaged, exact within. Sprayed protection never expires in
-the IBM, so the mixture over past rounds carries no retention
-factor.</p>
+<p><strong>Module status: 🟡.</strong> As for nets: population-averaged,
+exact within. Sprayed protection never expires in the IBM, so the
+mixture over past rounds carries no retention factor.</p>
 <table class="table">
 <colgroup>
 <col width="33%">
@@ -1957,7 +1984,7 @@ factor.</p>
 <thead><tr class="header">
 <th>Argument</th>
 <th>malariasimulation meaning</th>
-<th><code>blink</code></th>
+<th><code>fleet</code></th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -2007,7 +2034,7 @@ parameters</td>
 and survival
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>s</mi><mi>s</mi></msub><annotation encoding="application/x-tex">s_s</annotation></semantics></math>
 derived from these are the <strong>same</strong> spray outcome per
-individual, so <code>blink</code> forms the joint mean
+individual, so <code>fleet</code> forms the joint mean
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>r</mi><mi>s</mi></msub><mo stretchy="false" form="postfix">)</mo><msub><mi>s</mi><mi>s</mi></msub></mrow><mo accent="true">¯</mo></mover><annotation encoding="application/x-tex">\overline{(1-r_s)s_s}</annotation></semantics></math>
 rather than multiplying two independent averages. Because the IBM
 recomputes these every timestep,
@@ -2028,7 +2055,7 @@ a step.</p>
 <thead><tr class="header">
 <th>Argument</th>
 <th>malariasimulation meaning</th>
-<th><code>blink</code></th>
+<th><code>fleet</code></th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -2036,7 +2063,10 @@ a step.</p>
 <td>When each scaler row takes effect</td>
 <td>✅ Step change in
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>K</mi><mi>s</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">K_s(t)</annotation></semantics></math>,
-composed multiplicatively with seasonality</td>
+composed multiplicatively with seasonality.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>K</mi><mi>s</mi></msub><annotation encoding="application/x-tex">K_s</annotation></semantics></math>
+is interpolated linearly, so the grid carries a knot the day before each
+change and the step is confined to a single day (§H)</td>
 </tr>
 <tr class="even">
 <td><code>carrying_capacity_scalers</code></td>
@@ -2057,10 +2087,10 @@ approached but not reproduced exactly</td>
 <div class="section level3">
 <h3 id="set_mda-and-set_smc">4.11 <code>set_mda()</code> and <code>set_smc()</code><a class="anchor" aria-label="anchor" href="#set_mda-and-set_smc"></a>
 </h3>
-<p><code>set_mda(parameters, drug, timesteps, coverages, min_ages, max_ages)</code>
-— and <code>set_smc()</code> with the identical signature and identical
+<p><code>set_mda(parameters, drug, timesteps, coverages, min_ages, max_ages)</code>.
+<code>set_smc()</code> has the identical signature and identical
 handling.</p>
-<p><strong>Module status: 🟡</strong> — a mass campaign is applied as a
+<p><strong>Module status: 🟡.</strong> A mass campaign is applied as a
 pulse rather than as per-individual events, and the brief
 treated-infectious phase of cleared cases is omitted (negligible for the
 fast-clearing drugs used).</p>
@@ -2073,7 +2103,7 @@ fast-clearing drugs used).</p>
 <thead><tr class="header">
 <th>Argument</th>
 <th>malariasimulation meaning</th>
-<th><code>blink</code></th>
+<th><code>fleet</code></th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -2113,7 +2143,7 @@ ends</strong>
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>o</mi><mi>i</mi></msub><annotation encoding="application/x-tex">o_i</annotation></semantics></math>,
 so narrow bands are not dropped and coarse groups are not over-treated.
 The absorbing top group is treated as fully covered iff the band reaches
-its lower edge. 🟡 <code>blink</code> treats the band as half-open
+its lower edge. 🟡 <code>fleet</code> treats the band as half-open
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mi>ℓ</mi><mo>,</mo><mi>u</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">[\ell, u)</annotation></semantics></math>,
 one day narrower than the IBM — negligible except for very narrow
 (PMC-style) bands</td>
@@ -2124,7 +2154,7 @@ one day narrower than the IBM — negligible except for very narrow
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mi>c</mi></msub><annotation encoding="application/x-tex">P_c</annotation></semantics></math>
 compartment. Its decay rate is the mean of their drugs’ protection
 durations, weighted by each type’s <strong>total scheduled
-coverage</strong> — the sum over all of its rounds — so a type with more
+coverage</strong> (the sum over all of its rounds), so a type with more
 rounds carries proportionally more weight regardless of its per-round
 coverage.</p>
 </div>
@@ -2140,7 +2170,7 @@ coverage.</p>
 <thead><tr class="header">
 <th>Argument</th>
 <th>malariasimulation meaning</th>
-<th><code>blink</code></th>
+<th><code>fleet</code></th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -2150,7 +2180,7 @@ coverage.</p>
 </tr>
 <tr class="even">
 <td><code>timesteps</code></td>
-<td>Coverage-change schedule (not dose dates — PMC delivery is
+<td>Coverage-change schedule (not dose dates; PMC delivery is
 age-triggered)</td>
 <td>✅ Read as a coverage schedule</td>
 </tr>
@@ -2163,7 +2193,7 @@ age-triggered)</td>
 <td><code>ages</code></td>
 <td>Ages (days) at which doses are given</td>
 <td>🟡 The IBM triggers on an individual reaching each dose age.
-<code>blink</code> approximates this as pulses at a ~30-day cadence over
+<code>fleet</code> approximates this as pulses at a ~30-day cadence over
 a 30-day band starting at each dose age, with per-group overlap
 weighting, keeping the effective dose at approximately coverage ×
 efficacy</td>
@@ -2184,7 +2214,7 @@ efficacy</td>
 <thead><tr class="header">
 <th>Argument</th>
 <th>malariasimulation meaning</th>
-<th><code>blink</code></th>
+<th><code>fleet</code></th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -2229,20 +2259,20 @@ short/long antibody half-lives</td>
 </table>
 <p><code>malariasimulation</code> re-draws all four antibody parameters
 from their profile distributions <strong>at every timestep, for every
-vaccinated individual</strong> — nothing is stored per person.
-Population efficacy is therefore exactly
+vaccinated individual</strong>; nothing is stored per person. Population
+efficacy is therefore exactly
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝔼</mi><mrow><mo stretchy="true" form="prefix">[</mo><mtext mathvariant="normal">Hill</mtext><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">Ab</mtext><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">\mathbb{E}\left[\text{Hill}(\text{Ab})\right]</annotation></semantics></math>,
 not
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Hill</mtext><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">Ab at the median</mtext><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\text{Hill}(\text{Ab at the median})</annotation></semantics></math>:
 the sigmas are large and the Hill function is nonlinear, so the two
 differ materially (evaluating at the median overstated R21 efficacy by
-up to ~4.7 percentage points). <code>blink</code> integrates over the
+up to ~4.7 percentage points). <code>fleet</code> integrates over the
 4-D distribution with a tensor Gauss–Hermite rule
-(<code>options(blink.pev_gq =)</code>, default 7 nodes per axis),
+(<code>options(fleet.pev_gq =)</code>, default 7 nodes per axis),
 validated against a Monte Carlo of the IBM’s own sampler to under
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mo>×</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>4</mn></mrow></msup></mrow><annotation encoding="application/x-tex">5\times10^{-4}</annotation></semantics></math>.
 Because the IBM’s draws are independent between days and between people,
-there is no within-person correlation for the mean field to lose here —
+there is no within-person correlation for the mean field to lose here:
 the quadrature is exact rather than approximate. The resulting
 mean-efficacy curve is cached per profile on a daily grid.</p>
 </div>
@@ -2250,7 +2280,7 @@ mean-efficacy curve is cached per profile on a daily grid.</p>
 <h3 id="set_pev_epi">4.14 <code>set_pev_epi()</code><a class="anchor" aria-label="anchor" href="#set_pev_epi"></a>
 </h3>
 <p><code>set_pev_epi(parameters, profile, coverages, timesteps, age, min_wait, booster_spacing, booster_coverage, booster_profile, seasonal_boosters)</code></p>
-<p><strong>Module status: 🟡</strong> — the routine schedule and full
+<p><strong>Module status: 🟡.</strong> The routine schedule and full
 booster sequence are modelled, but seasonal boosters are approximated
 (warned).</p>
 <table class="table">
@@ -2262,7 +2292,7 @@ booster sequence are modelled, but seasonal boosters are approximated
 <thead><tr class="header">
 <th>Argument</th>
 <th>malariasimulation meaning</th>
-<th><code>blink</code></th>
+<th><code>fleet</code></th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -2280,8 +2310,8 @@ coverage</td>
 <tr class="odd">
 <td><code>timesteps</code></td>
 <td>When each coverage takes effect</td>
-<td>✅ Also gates eligibility — a cohort is protected only once its
-first dose falls inside the programme. Gating follows
+<td>✅ Also gates eligibility: a cohort is protected only once its first
+dose falls inside the programme. Gating follows
 <code>malariasimulation</code>, which keys on
 <code>pev_epi_coverages</code>/<code>pev_epi_timesteps</code> and never
 reads <code>parameters$pev</code>
@@ -2298,8 +2328,8 @@ the final primary dose</td>
 <td>Minimum time since the last vaccination</td>
 <td>➖ For a routine EPI programme this guards re-vaccination and
 seasonal-booster timing, not the primary-plus-booster schedule
-<code>blink</code> models, so it has no effect on the result. (For
-<strong>mass</strong> campaigns it does bite — see §4.15.)</td>
+<code>fleet</code> models, so it has no effect on the result. (For
+<strong>mass</strong> campaigns it does bite; see §4.15.)</td>
 </tr>
 <tr class="even">
 <td><code>booster_spacing</code></td>
@@ -2325,12 +2355,12 @@ distribution as in §4.13</td>
 <tr class="odd">
 <td><code>seasonal_boosters</code></td>
 <td>Time the first booster relative to the <strong>start of the calendar
-year</strong> — <code>booster_spacing[1]</code> becomes a day-of-year.
-It makes no reference to the fitted seasonality; you choose the day
+year</strong>: <code>booster_spacing[1]</code> becomes a day-of-year. It
+makes no reference to the fitted seasonality; you choose the day
 yourself, e.g. via <code>peak_season_offset()</code>
 </td>
 <td>🟡 Approximated as a fixed days-since-primary schedule.
-<code>blink</code> <strong>warns</strong> when this is set</td>
+<code>fleet</code> <strong>warns</strong> when this is set</td>
 </tr>
 </tbody>
 </table>
@@ -2339,7 +2369,7 @@ yourself, e.g. via <code>peak_season_offset()</code>
 <h3 id="set_mass_pev">4.15 <code>set_mass_pev()</code><a class="anchor" aria-label="anchor" href="#set_mass_pev"></a>
 </h3>
 <p><code>set_mass_pev(parameters, profile, timesteps, coverages, min_ages, max_ages, min_wait, booster_spacing, booster_coverage, booster_profile)</code></p>
-<p><strong>Module status: 🟡</strong> — repeated campaigns are the weak
+<p><strong>Module status: 🟡.</strong> Repeated campaigns are the weak
 point: <code>min_wait</code> re-vaccination exclusion is not applied,
 campaigns combine as independent protections rather than
 most-recent-receipt, and the vaccinated cohort does not age out of its
@@ -2353,7 +2383,7 @@ band. A single campaign is modelled faithfully.</p>
 <thead><tr class="header">
 <th>Argument</th>
 <th>malariasimulation meaning</th>
-<th><code>blink</code></th>
+<th><code>fleet</code></th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -2369,9 +2399,9 @@ band. A single campaign is modelled faithfully.</p>
 The IBM instead keeps only the <strong>most recent</strong> vaccination
 per person, so its population protection is a most-recent-receipt
 mixture
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>k</mi></msub><msub><mtext mathvariant="normal">cov</mtext><mi>k</mi></msub><msub><mo>∏</mo><mrow><mi>j</mi><mo>&gt;</mo><mi>k</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mtext mathvariant="normal">cov</mtext><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><msub><mi>e</mi><mi>k</mi></msub></mrow><annotation encoding="application/x-tex">\sum_k \text{cov}_k \prod_{j&gt;k}(1-\text{cov}_j)\,e_k</annotation></semantics></math>
-— the same structure <code>blink</code> already uses for bed nets
-(§4.8). The two agree for a single campaign and diverge when campaigns
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>k</mi></msub><msub><mtext mathvariant="normal">cov</mtext><mi>k</mi></msub><msub><mo>∏</mo><mrow><mi>j</mi><mo>&gt;</mo><mi>k</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mtext mathvariant="normal">cov</mtext><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><msub><mi>e</mi><mi>k</mi></msub></mrow><annotation encoding="application/x-tex">\sum_k \text{cov}_k \prod_{j&gt;k}(1-\text{cov}_j)\,e_k</annotation></semantics></math>,
+the same structure <code>fleet</code> already uses for bed nets (§4.8).
+The two agree for a single campaign and diverge when campaigns
 overlap</td>
 </tr>
 <tr class="odd">
@@ -2385,7 +2415,13 @@ overlap</td>
 </td>
 <td>Target age bands</td>
 <td>✅ <strong>Every</strong> band is applied at <strong>every</strong>
-campaign</td>
+campaign, each mapped onto the model age grid by <strong>fractional
+overlap</strong> as for MDA/SMC (§4.11), so a band narrower than the
+groups it falls between still vaccinates its share instead of nobody.
+The bands of one campaign are one campaign: their weights
+<strong>add</strong> into a single covered fraction per group (capped at
+1) before coverage is applied, and only <em>campaigns</em> combine as
+independent protections. A band overlapping no group warns</td>
 </tr>
 <tr class="odd">
 <td><code>min_wait</code></td>
@@ -2393,7 +2429,7 @@ campaign</td>
 <td>⚠ <strong>Ignored, and it matters here.</strong> In
 <code>malariasimulation</code> each campaign excludes anyone vaccinated
 within <code>min_wait</code> of it, so with repeated campaigns this is
-the primary control on who gets re-vaccinated. <code>blink</code> treats
+the primary control on who gets re-vaccinated. <code>fleet</code> treats
 every campaign as reaching its whole target band independently, so a
 <code>min_wait</code> longer than the campaign spacing will
 over-vaccinate</td>
@@ -2432,7 +2468,7 @@ grid with the cohort.</p>
 <thead><tr class="header">
 <th>Argument</th>
 <th>malariasimulation meaning</th>
-<th><code>blink</code></th>
+<th><code>fleet</code></th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -2453,9 +2489,16 @@ campaign; divergent when campaigns overlap</td>
 <tr class="odd">
 <td><code>ages</code></td>
 <td>Whole years of age targeted</td>
-<td>✅ Exact year set:
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">⌊</mo><msub><mi>a</mi><mi>i</mi></msub><mi>/</mi><mn>365</mn><mo stretchy="false" form="postfix">⌋</mo><mo>∈</mo><mtext mathvariant="normal">ages</mtext></mrow><annotation encoding="application/x-tex">\lfloor a_i/365\rfloor \in \text{ages}</annotation></semantics></math>,
-matching the IBM</td>
+<td>✅ The IBM vaccinates everyone with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">⌊</mo><mi>a</mi><mi>/</mi><mn>365</mn><mo stretchy="false" form="postfix">⌋</mo><mo>∈</mo><mtext mathvariant="normal">ages</mtext></mrow><annotation encoding="application/x-tex">\lfloor a/365\rfloor \in \text{ages}</annotation></semantics></math>.
+<code>fleet</code> gives each model age group the <strong>fraction of
+its own width</strong> that falls in that year set and multiplies
+coverage by it, so a year set aligned with group edges gives weight 1
+and everything else is weighted, not rounded. It has to be fractional,
+because above age 14 the default grid is 5-yearly and only one whole
+year per group could ever be a member: a target of <code>18:20</code>
+sits inside the 15–20 group without being it. A target that overlaps no
+group at all warns rather than silently vaccinating nobody</td>
 </tr>
 </tbody>
 </table>
@@ -2488,7 +2531,7 @@ infectivity. All the <code>tbv_*</code> shape constants
 <thead><tr class="header">
 <th>Argument</th>
 <th>malariasimulation meaning</th>
-<th><code>blink</code></th>
+<th><code>fleet</code></th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -2528,7 +2571,7 @@ families’ bands, as <code>malariasimulation</code> does)</td>
 <code>ivm</code>, <code>id</code>, <code>ib</code>
 </td>
 <td>Bands for mean immunity</td>
-<td>⛔ Not rendered by <code>blink</code>
+<td>⛔ Not rendered by <code>fleet</code>
 </td>
 </tr>
 <tr class="odd">
@@ -2542,7 +2585,7 @@ families’ bands, as <code>malariasimulation</code> does)</td>
 </tr>
 </tbody>
 </table>
-<p>When a family’s band list is empty, <code>blink</code> falls back to
+<p>When a family’s band list is empty, <code>fleet</code> falls back to
 the convenience bands 2–10 y and all-ages for that family only. A bare
 <code>get_parameters()</code> leaves four of the five families empty; it
 defaults the <strong>prevalence</strong> bands to 2–10 y.</p>
@@ -2559,14 +2602,14 @@ defaults the <strong>prevalence</strong> bands to 2–10 y.</p>
 <thead><tr class="header">
 <th>Argument</th>
 <th>malariasimulation meaning</th>
-<th><code>blink</code></th>
+<th><code>fleet</code></th>
 </tr></thead>
 <tbody><tr class="odd">
 <td><code>draw</code></td>
 <td>Index 1–1000 into the fitted posterior draws</td>
 <td>✅ <code>malariasimulation</code> overwrites the immunity/disease
 constants in the parameter list in place; they then flow through
-<code>blink</code>’s back-translation like any other parameter. Must be
+<code>fleet</code>’s back-translation like any other parameter. Must be
 called before <code>set_equilibrium()</code>, as in the IBM</td>
 </tr></tbody>
 </table>
@@ -2583,14 +2626,14 @@ called before <code>set_equilibrium()</code>, as in the IBM</td>
 <thead><tr class="header">
 <th>Function / argument</th>
 <th>malariasimulation meaning</th>
-<th><code>blink</code></th>
+<th><code>fleet</code></th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td><code>peak_season_offset(parameters)</code></td>
 <td>Day of peak seasonal transmission</td>
 <td>✅ Pure helper on <code>g0</code>/<code>g</code>/<code>h</code>,
-which <code>blink</code> reads; useful for timing SMC/booster
+which <code>fleet</code> reads; useful for timing SMC/booster
 schedules</td>
 </tr>
 <tr class="even">
@@ -2602,28 +2645,30 @@ schedules</td>
 <td><code>run_simulation(timesteps, parameters, correlations)</code></td>
 <td>Run the IBM</td>
 <td>✅
-<code>run_simulation_ode(timesteps, parameters, correlations, ...)</code>
-mirrors the first three arguments exactly. A non-<code>NULL</code>
-<code>correlations</code> is <strong>warned and ignored</strong> — the
-ODE assumes independence between interventions</td>
+<code>run_simulation_ode(timesteps, parameters, correlations, tuning)</code>
+mirrors the first three arguments exactly; <code>tuning</code> carries
+the ODE-only settings, so nothing epidemiological sits outside the
+parameter list. A non-<code>NULL</code> <code>correlations</code> is
+<strong>warned and ignored</strong>: the ODE assumes independence
+between interventions</td>
 </tr>
 <tr class="even">
 <td><code>run_simulation_with_repetitions(...)</code></td>
 <td>Repeat stochastic runs</td>
-<td>⛔ Not applicable — <code>blink</code> is deterministic, so one run
+<td>⛔ Not applicable. <code>fleet</code> is deterministic, so one run
 is the ensemble mean</td>
 </tr>
 <tr class="odd">
 <td><code>run_metapop_simulation(timesteps, parameters, ..., export_mixing, import_mixing)</code></td>
 <td>Coupled patches</td>
-<td>⛔ Not supported. <code>blink</code> is a single patch; there is no
+<td>⛔ Not supported. <code>fleet</code> is a single patch; there is no
 guard, so do not pass a metapopulation setup expecting it to be
 honoured</td>
 </tr>
 <tr class="even">
 <td><code>run_resumable_simulation(...)</code></td>
 <td>Resume from saved state</td>
-<td>⛔ Not implemented. <code>blink</code> runs are cheap enough to
+<td>⛔ Not implemented. <code>fleet</code> runs are cheap enough to
 re-run from the seed</td>
 </tr>
 </tbody>
@@ -2631,7 +2676,7 @@ re-run from the seed</td>
 </div>
 </div>
 <div class="section level2">
-<h2 id="using-blink-well-what-to-do-differently">5. Using <code>blink</code> well: what to do differently<a class="anchor" aria-label="anchor" href="#using-blink-well-what-to-do-differently"></a>
+<h2 id="using-fleet-well-what-to-do-differently">5. Using <code>fleet</code> well: what to do differently<a class="anchor" aria-label="anchor" href="#using-fleet-well-what-to-do-differently"></a>
 </h2>
 <div class="section level3">
 <h3 id="things-to-do">Things to do<a class="anchor" aria-label="anchor" href="#things-to-do"></a>
@@ -2643,12 +2688,11 @@ sits a few percent below the aseasonal <code>init_EIR</code> target
 through nonlinear averaging. Discard the transient.</p>
 <p><strong>Match the age grid to your demography.</strong> If the oldest
 model age group runs past the top <code>deathrate_agegroups</code>,
-<code>blink</code> applies the top death rate to those ages while the
-IBM removes them. Fix it either way round — widen the grid, or extend
-the death rates:</p>
+<code>fleet</code> applies the top death rate to those ages while the
+IBM removes them. Fix it either way round (widen the grid, or extend the
+death rates):</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/run_simulation_ode.html">run_simulation_ode</a></span><span class="op">(</span><span class="va">t</span>, <span class="va">p</span>, init_EIR <span class="op">=</span> <span class="fl">20</span>,</span>
-<span>                   age_lower <span class="op">=</span> <span class="fu"><a href="../reference/default_age_lower.html">default_age_lower</a></span><span class="op">(</span>max_age <span class="op">=</span> <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/run_simulation_ode.html">run_simulation_ode</a></span><span class="op">(</span><span class="va">t</span>, <span class="va">p</span>, tuning <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>age_lower <span class="op">=</span> <span class="fu"><a href="../reference/default_age_lower.html">default_age_lower</a></span><span class="op">(</span>max_age <span class="op">=</span> <span class="fl">100</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>A warning fires when they diverge; don’t ignore it, because it
 changes the equilibrium age structure the whole run is seeded on
 (§4.4).</p>
@@ -2663,8 +2707,7 @@ aggregate (§G). Set each family’s own fields:</p>
 equilibrium-preserving defaults are slow and only needed near
 equilibrium:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/run_simulation_ode.html">run_simulation_ode</a></span><span class="op">(</span><span class="va">t</span>, <span class="va">p</span>, init_EIR <span class="op">=</span> <span class="fl">20</span>,</span>
-<span>                   atol <span class="op">=</span> <span class="fl">1e-6</span>, rtol <span class="op">=</span> <span class="fl">1e-6</span>, step_size_max <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/run_simulation_ode.html">run_simulation_ode</a></span><span class="op">(</span><span class="va">t</span>, <span class="va">p</span>, tuning <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>rtol <span class="op">=</span> <span class="fl">1e-6</span>, step_size_max <span class="op">=</span> <span class="fl">10</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Sanity-check conservation.</strong>
 <code>S_count + D_count + A_count + U_count + Tr_count + Ph_count</code>
 should equal <code>human_population</code> to numerical tolerance.</p>
@@ -2683,24 +2726,205 @@ drift off the seed to well under 1% (§B.2).</p>
 sharpens the gamma-shaped lags toward the IBM’s fixed delays at linear
 cost in state size; equilibrium is exact for any value. The prophylaxis
 chains (<code>n_ph</code>, <code>n_phc</code>) are sized from the drug’s
-Weibull by default (§B.4) and capped at 20 — each stage adds
+Weibull by default (§B.4) and capped at 20; each stage adds
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>a</mi></msub><msub><mi>n</mi><mi>z</mi></msub></mrow><annotation encoding="application/x-tex">n_a n_z</annotation></semantics></math>
 states and the solver slows steeply beyond that.</p>
 <p><strong><code>parameterise_total_M()</code> /
 <code>parameterise_mosquito_equilibrium()</code>.</strong> They have no
-effect — <code>blink</code> re-derives <code>total_M</code> itself
-(§4.3: from <code>init_EIR</code> under the default demography, as the
-IBM’s own value under a custom one).</p>
+effect; <code>fleet</code> re-derives <code>total_M</code> itself (§4.3:
+from <code>init_EIR</code> under the default demography, as the IBM’s
+own value under a custom one).</p>
 </div>
 <div class="section level3">
 <h3 id="results-to-treat-with-caution">Results to treat with caution<a class="anchor" aria-label="anchor" href="#results-to-treat-with-caution"></a>
 </h3>
-<p><strong>Severe incidence.</strong> The steep
+<p><strong>Severe incidence.</strong> <code>fleet</code> runs below the
+IBM here, by 6.2% on all ages at EIR 20, 4.0% at EIR 50 and 4.6% at EIR
+120, and by 15–25% in the 5–20 year bands; the DALYs derived from severe
+incidence inherit that. It is the largest open discrepancy between the
+two models (<code><a href="../articles/comparison.html">vignette("comparison")</a></code>), so it is worth being
+exact about the cause, because the obvious explanation is the wrong
+one.</p>
+<p>It is <em>not</em> that
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
-Hill function amplifies small differences in acquired immunity and
-disease-pool composition between the mean field and the IBM, so severe
-incidence — and the DALYs derived from it — can differ by more than
-prevalence or clinical incidence does, largest at low EIR.</p>
+is the steepest of the three acquired-immunity Hill functions. It is the
+shallowest. From <code>get_parameters()</code>:</p>
+<table class="table">
+<thead><tr class="header">
+<th></th>
+<th>exponent</th>
+<th>scale</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math></td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><mi>b</mi></msub><mo>=</mo><mn>2.160</mn></mrow><annotation encoding="application/x-tex">k_b = 2.160</annotation></semantics></math></td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi>B</mi><mn>0</mn></mrow></msub><mo>=</mo><mn>43.9</mn></mrow><annotation encoding="application/x-tex">I_{B0} = 43.9</annotation></semantics></math></td>
+</tr>
+<tr class="even">
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math></td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><mi>c</mi></msub><mo>=</mo><mn>2.369</mn></mrow><annotation encoding="application/x-tex">k_c = 2.369</annotation></semantics></math></td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi>C</mi><mn>0</mn></mrow></msub><mo>=</mo><mn>18.02</mn></mrow><annotation encoding="application/x-tex">I_{C0} = 18.02</annotation></semantics></math></td>
+</tr>
+<tr class="odd">
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math></td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><mi>v</mi></msub><mo>=</mo><mn>2.000</mn></mrow><annotation encoding="application/x-tex">k_v = 2.000</annotation></semantics></math></td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi>V</mi><mn>0</mn></mrow></msub><mo>=</mo><mn>1.096</mn></mrow><annotation encoding="application/x-tex">I_{V0} = 1.096</annotation></semantics></math></td>
+</tr>
+</tbody>
+</table>
+<p>What singles
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
+out is the <strong>scale</strong>, not the exponent. A Hill function is
+flat well below its scale parameter and only approaches its full log-log
+slope well above it, so its local slope is a matter of
+<em>position</em>. Writing
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>=</mo><msub><mi>f</mi><mrow><mi>v</mi><mo>,</mo><mi>i</mi></mrow></msub><msup><mrow><mo stretchy="true" form="prefix">(</mo><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>I</mi><mrow><mi>V</mi><mi>A</mi></mrow></msub><mo>+</mo><mi>δ</mi><mo>+</mo><msub><mi>I</mi><mrow><mi>V</mi><mi>M</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><mi>/</mi><msub><mi>I</mi><mrow><mi>V</mi><mn>0</mn></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><msub><mi>k</mi><mi>v</mi></msub></msup></mrow><annotation encoding="application/x-tex">X =
+f_{v,i}\left(\left(I_{VA}+\delta+I_{VM}\right)/I_{V0}\right)^{k_v}</annotation></semantics></math>
+for the denominator term of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
+(§B),</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mrow><mi>∂</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mi>θ</mi></mrow><mrow><mi>∂</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><msub><mi>I</mi><mrow><mi>V</mi><mi>A</mi></mrow></msub></mrow></mfrac><mo>=</mo><mi>−</mi><mspace width="0.167em"></mspace><mfrac><mrow><msub><mi>k</mi><mi>v</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>θ</mi><mn>1</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow><mi>X</mi></mrow><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>+</mo><mi>X</mi><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>+</mo><msub><mi>θ</mi><mn>1</mn></msub><mi>X</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\frac{\partial\log\theta}{\partial\log I_{VA}} =
+-\,\frac{k_v\left(1-\theta_1\right)X}{\left(1+X\right)\left(1+\theta_1X\right)},
+</annotation></semantics></math></p>
+<p>which is near 0 for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>≪</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">X \ll 1</annotation></semantics></math>,
+reaches
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1.96</mn></mrow><annotation encoding="application/x-tex">-1.96</annotation></semantics></math>
+at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>=</mo><msubsup><mi>θ</mi><mn>1</mn><mrow><mi>−</mi><mn>1</mn><mi>/</mi><mn>2</mn></mrow></msubsup><mo>≈</mo><mn>92</mn></mrow><annotation encoding="application/x-tex">X = \theta_1^{-1/2} \approx
+92</annotation></semantics></math>, and returns toward 0 once
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
+has bottomed out on its
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>θ</mi><mn>0</mn></msub><msub><mi>θ</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">\theta_0\theta_1</annotation></semantics></math>
+floor. The same expression with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>k</mi><mi>c</mi></msub><annotation encoding="application/x-tex">k_c</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ϕ</mi><mn>1</mn></msub><annotation encoding="application/x-tex">\phi_1</annotation></semantics></math>
+governs
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>,
+whose steepest attainable slope,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>2.24</mn></mrow><annotation encoding="application/x-tex">-2.24</annotation></semantics></math>,
+is the steeper of the two.</p>
+<p>Position is what separates them, and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>V</mi><mn>0</mn></mrow></msub><annotation encoding="application/x-tex">I_{V0}</annotation></semantics></math>
+is 16 times smaller than
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>C</mi><mn>0</mn></mrow></msub><annotation encoding="application/x-tex">I_{C0}</annotation></semantics></math>
+while the two acquired immunities take nearly the same values at every
+age. At <code>fleet</code>’s own seed at the reference EIR of 20,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi>V</mi><mi>A</mi></mrow></msub><mo>=</mo><mn>9.0</mn></mrow><annotation encoding="application/x-tex">I_{VA} = 9.0</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi>C</mi><mi>A</mi></mrow></msub><mo>=</mo><mn>9.5</mn></mrow><annotation encoding="application/x-tex">I_{CA} = 9.5</annotation></semantics></math>
+at age 3, and 37.6 against 40.3 at age 10: they differ almost entirely
+in what they are divided by. So
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>V</mi><mi>A</mi></mrow></msub><annotation encoding="application/x-tex">I_{VA}</annotation></semantics></math>
+is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>8</mn><mspace width="0.167em"></mspace><msub><mi>I</mi><mrow><mi>V</mi><mn>0</mn></mrow></msub></mrow><annotation encoding="application/x-tex">8\,I_{V0}</annotation></semantics></math>
+at age 3 and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>34</mn><mspace width="0.167em"></mspace><msub><mi>I</mi><mrow><mi>V</mi><mn>0</mn></mrow></msub></mrow><annotation encoding="application/x-tex">34\,I_{V0}</annotation></semantics></math>
+at age 10, putting
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∂</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mi>θ</mi><mi>/</mi><mi>∂</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><msub><mi>I</mi><mrow><mi>V</mi><mi>A</mi></mrow></msub></mrow><annotation encoding="application/x-tex">\partial\log\theta/\partial\log I_{VA}</annotation></semantics></math>
+at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1.87</mn></mrow><annotation encoding="application/x-tex">-1.87</annotation></semantics></math>
+at age 3 and holding it between
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1.96</mn></mrow><annotation encoding="application/x-tex">-1.96</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1.80</mn></mrow><annotation encoding="application/x-tex">-1.80</annotation></semantics></math>
+from age 4 to age 10, within a few percent of the steepest slope the
+function can have. Over the same ages
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>C</mi><mi>A</mi></mrow></msub><annotation encoding="application/x-tex">I_{CA}</annotation></semantics></math>
+climbs only from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.5</mn><mspace width="0.167em"></mspace><msub><mi>I</mi><mrow><mi>C</mi><mn>0</mn></mrow></msub></mrow><annotation encoding="application/x-tex">0.5\,I_{C0}</annotation></semantics></math>
+to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2.2</mn><mspace width="0.167em"></mspace><msub><mi>I</mi><mrow><mi>C</mi><mn>0</mn></mrow></msub></mrow><annotation encoding="application/x-tex">2.2\,I_{C0}</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>’s
+slope from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>0.42</mn></mrow><annotation encoding="application/x-tex">-0.42</annotation></semantics></math>
+to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>2.05</mn></mrow><annotation encoding="application/x-tex">-2.05</annotation></semantics></math>:
+at age 3,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>
+is still nearly linear, less than a quarter as steep as
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>,
+and it does not overtake
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
+until about age 8.</p>
+<p>Sitting on that tail makes
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math><strong>convex</strong> in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>V</mi><mi>A</mi></mrow></msub><annotation encoding="application/x-tex">I_{VA}</annotation></semantics></math>
+across essentially the whole population, where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>
+is concave in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>C</mi><mi>A</mi></mrow></msub><annotation encoding="application/x-tex">I_{CA}</annotation></semantics></math>
+below age 4 at this EIR and only convex above it. That fixes the sign of
+the mean-field error. <code>fleet</code> evaluates
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
+once per (age group
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>×</mi><annotation encoding="application/x-tex">\times</annotation></semantics></math>
+heterogeneity group) at that stratum’s mean
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>V</mi><mi>A</mi></mrow></msub><annotation encoding="application/x-tex">I_{VA}</annotation></semantics></math>;
+the IBM averages
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
+over individuals whose bite histories differ <em>inside</em> the
+stratum. By Jensen’s inequality
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝔼</mi><mrow><mo stretchy="true" form="prefix">[</mo><mi>θ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>I</mi><mrow><mi>V</mi><mi>A</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">]</mo></mrow><mo>≥</mo><mi>θ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝔼</mi><mo stretchy="false" form="prefix">[</mo><msub><mi>I</mi><mrow><mi>V</mi><mi>A</mi></mrow></msub><mo stretchy="false" form="postfix">]</mo><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathbb{E}\left[\theta(I_{VA})\right] \geq \theta\left(\mathbb{E}[I_{VA}]\right)</annotation></semantics></math>,
+so the mean field returns the smaller number and severe incidence comes
+out low. The magnitude scales with the residual within-stratum variance:
+a coefficient of variation of 0.3 in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>V</mi><mi>A</mi></mrow></msub><annotation encoding="application/x-tex">I_{VA}</annotation></semantics></math>
+inside a stratum puts
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝔼</mi><mo stretchy="false" form="prefix">[</mo><mi>θ</mi><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">\mathbb{E}[\theta]</annotation></semantics></math>
+23% above
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
+at the stratum mean at age 3 and 28% above at age 5, where the same
+calculation on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>
+gives
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>0.7</mn></mrow><annotation encoding="application/x-tex">-0.7</annotation></semantics></math>%
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>4.8</mn></mrow><annotation encoding="application/x-tex">+4.8</annotation></semantics></math>%.
+<code>fleet</code> resolves the log-normal biting strata explicitly
+(§3.1), so only the spread within an (age,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ζ</mi><annotation encoding="application/x-tex">\zeta</annotation></semantics></math>)
+cell is lost and the realised gap is a few percent rather than tens of
+percent, but the direction is the same.</p>
+<p>Two things make severe incidence uniquely exposed to this:</p>
+<ul>
+<li>
+<strong><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
+is a post-hoc multiplier.</strong> <code>n_inc_severe_*</code> is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
+times an infection count the state equations have already determined
+(§G); nothing downstream responds, so the whole averaging error lands in
+the output.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>
+is not like that. It splits the infection inflow between
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>,
+which changes infectivity, treatment and the immunity trajectories
+themselves, so the equilibrium absorbs part of any error in it.</li>
+<li>
+<strong>The bias needs the tail.</strong> At EIR 1,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>V</mi><mi>A</mi></mrow></msub><annotation encoding="application/x-tex">I_{VA}</annotation></semantics></math>
+is only
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.46</mn><mspace width="0.167em"></mspace><msub><mi>I</mi><mrow><mi>V</mi><mn>0</mn></mrow></msub></mrow><annotation encoding="application/x-tex">0.46\,I_{V0}</annotation></semantics></math>
+at age 3,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
+sits near its
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mn>0</mn></msub><annotation encoding="application/x-tex">\theta_0</annotation></semantics></math>
+plateau (log-slope
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>0.09</mn></mrow><annotation encoding="application/x-tex">-0.09</annotation></semantics></math>)
+and there is next to nothing to average badly: all-age severe incidence
+is within 1% of the IBM at EIR 1, 3 and 10. The gap opens over the EIR
+20–120 plateau, where the tail is where the population is.</li>
+</ul>
+<p>None of this is a correction you can apply. It sets the sign and the
+order of magnitude, and it says which comparisons to distrust first:
+severe incidence in narrow age bands, and any scenario difference taken
+on severe incidence.</p>
 <p><strong>Anything through a nets or IRS era.</strong>
 Population-averaged coverage loses the correlation of protection within
 individuals across bites, so the ODE tends to sit above the IBM while
@@ -2715,7 +2939,7 @@ is not applied (§4.15, §4.16). A single campaign is fine.</p>
 </h3>
 <p>Run time scales with
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>a</mi></msub><mo>×</mo><msub><mi>n</mi><mi>z</mi></msub></mrow><annotation encoding="application/x-tex">n_a \times n_z</annotation></semantics></math>
-(the human state), and — importantly — with the <strong>number of
+(the human state), and, importantly, with the <strong>number of
 chemoprevention pulses</strong>, because §E splits the integration at
 every one. A 20-year monthly PMC schedule means ~240 solver restarts;
 prefer coarser cadences when the extra resolution isn’t buying you
@@ -2760,7 +2984,7 @@ fine)</td>
 <tr class="even">
 <td>Population-averaged nets</td>
 <td>4.8</td>
-<td>Any nets era — the largest routine gap</td>
+<td>Any nets era, the largest routine gap</td>
 </tr>
 <tr class="odd">
 <td>Population-averaged IRS</td>
@@ -2824,8 +3048,8 @@ its shape.</p>
 <tbody>
 <tr class="odd">
 <td><strong>EIR</strong></td>
-<td>Entomological inoculation rate — infectious bites per person per
-year. <code>blink</code> reports it per <em>adult</em> per year</td>
+<td>Entomological inoculation rate: infectious bites per person per
+year. <code>fleet</code> reports it per <em>adult</em> per year</td>
 </tr>
 <tr class="even">
 <td>
@@ -2836,21 +3060,21 @@ mosquitoes</td>
 </tr>
 <tr class="odd">
 <td><strong>EIP</strong></td>
-<td>Extrinsic incubation period — the delay in the mosquito between an
+<td>Extrinsic incubation period, the delay in the mosquito between an
 infectious blood meal and becoming infectious</td>
 </tr>
 <tr class="even">
 <td>
 <strong>LM</strong> / <strong>PCR</strong>
 </td>
-<td>Light microscopy / polymerase chain reaction — the two prevalence
-diagnostics reported</td>
+<td>Light microscopy / polymerase chain reaction (the two prevalence
+diagnostics reported)</td>
 </tr>
 <tr class="odd">
 <td>
 <strong>ETF</strong> / <strong>SPC</strong>
 </td>
-<td>Early treatment failure / slow parasite clearance — the two
+<td>Early treatment failure / slow parasite clearance, the two
 antimalarial-resistance arms <code>malariasimulation</code>
 implements</td>
 </tr>
@@ -2876,7 +3100,7 @@ perennial malaria chemoprevention</td>
 </tr>
 <tr class="odd">
 <td><strong>EPI</strong></td>
-<td>The Expanded Programme on Immunization routine schedule — unrelated
+<td>The Expanded Programme on Immunization routine schedule. Unrelated
 to <code>set_epi_outputs()</code>, where “epi” means
 <em>epidemiological</em>
 </td>
@@ -2912,7 +3136,7 @@ value</td>
 <tr class="even">
 <td><strong>seed</strong></td>
 <td>Throughout this article, the <em>initial state vector</em> — never a
-random-number seed. <code>blink</code> has no random component</td>
+random-number seed. <code>fleet</code> has no random component</td>
 </tr>
 </tbody>
 </table>
@@ -3107,7 +3331,7 @@ heterogeneity biting weights:</p>
 </annotation></semantics></math></p>
 <p>The IBM draws the day’s bites from a Poisson and collects the bitten
 in a set, so a person bitten several times in one timestep can be
-infected at most once. <code>blink</code> reproduces that cap; the daily
+infected at most once. <code>fleet</code> reproduces that cap; the daily
 infection <em>probability</em> and the equivalent hazard are</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mi>−</mi><msub><mi>ε</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub></mrow></msup><mo stretchy="true" form="postfix">)</mo></mrow><msub><mi>b</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mspace width="0.167em"></mspace><msub><mi>v</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><msub><mi mathvariant="normal">Λ</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><mi>−</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>p</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">
 p_{ij} = \left(1 - e^{-\varepsilon_{ij}}\right) b_{ij}\, v_i(t),
@@ -3129,8 +3353,15 @@ integer refractory window
 and the at-risk restriction, and the state exit rates keep the whole-day
 form
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mi>−</mi><mn>1</mn><mi>/</mi><mi>d</mi></mrow></msup></mrow><annotation encoding="application/x-tex">1 - e^{-1/d}</annotation></semantics></math>.
-What it does is reduce the residual drift to well under 1%, which is why
-the package’s equilibrium tests use it.</p>
+What it does is roughly halve the residual drift. Measured as the
+largest excursion from the seeded value over an undisturbed 15-year run
+at EIR 20, PfPR(2-10) departs by at most 0.14% with
+<code>bite_dedup = 0</code> against 0.28% at the default. That
+maximum-excursion form is the metric the package’s equilibrium tests
+assert, which is why they set it. Note that the <em>endpoint</em> tells
+the opposite story (the default happens to return close to its seed,
+ending -0.05% off it against +0.14% with <code>0</code>), so the metric
+has to be stated.</p>
 <p><strong>Hazard splitting.</strong> In the IBM each person resolves at
 most one infection outcome per day, so the daily clinical count is
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ϕ</mi><mi>p</mi><mi>N</mi></mrow><annotation encoding="application/x-tex">\phi p N</annotation></semantics></math>
@@ -3142,7 +3373,7 @@ the infection outcome competes with disease progression inside the
 <em>same</em> hazard resolution, which scales their realised infection
 probability by
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mi mathvariant="normal">Λ</mi><mrow><mi mathvariant="normal">Λ</mi><mo>+</mo><mi>r</mi></mrow></mfrac><mo>⋅</mo><mfrac><mrow><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mi>−</mi><mo stretchy="false" form="prefix">(</mo><mi mathvariant="normal">Λ</mi><mo>+</mo><mi>r</mi><mo stretchy="false" form="postfix">)</mo></mrow></msup></mrow><mrow><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mi>−</mi><mi mathvariant="normal">Λ</mi></mrow></msup></mrow></mfrac></mrow><annotation encoding="application/x-tex">\frac{\Lambda}{\Lambda + r}\cdot\frac{1 - e^{-(\Lambda+r)}}{1 - e^{-\Lambda}}</annotation></semantics></math>.
-<code>blink</code>’s ODE reproduces that competition automatically,
+<code>fleet</code>’s ODE reproduces that competition automatically,
 since
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Λ</mi><annotation encoding="application/x-tex">\Lambda</annotation></semantics></math>
 and
@@ -3332,8 +3563,8 @@ throughout
 and matching the variance of the whole
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>+</mo><mi>P</mi></mrow><annotation encoding="application/x-tex">T + P</annotation></semantics></math>
 sojourn gives
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>k</mi><mi>P</mi></msub><annotation encoding="application/x-tex">k_P</annotation></semantics></math>
-— 16 for SP-AQ, 20 for DHA-PQP, and 1 for AL, whose 10-day protection is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>k</mi><mi>P</mi></msub><annotation encoding="application/x-tex">k_P</annotation></semantics></math>:
+16 for SP-AQ, 20 for DHA-PQP, and 1 for AL, whose 10-day protection is
 already less variable than
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
 itself, so no chain length can sharpen it (its output is the same to
@@ -3357,7 +3588,7 @@ so its realised mean dwell is
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mi>−</mi><mn>1</mn><mi>/</mi><mi>d</mi></mrow></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">1/(1-e^{-1/d})</annotation></semantics></math>
 (5.52 d for
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>d</mi><mi>D</mi></msub><mo>=</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">d_D = 5</annotation></semantics></math>,
-not 5). <code>blink</code> uses
+not 5). <code>fleet</code> uses
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mi>X</mi></msub><mo>=</mo><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mi>−</mi><mn>1</mn><mi>/</mi><msub><mi>d</mi><mi>X</mi></msub></mrow></msup></mrow><annotation encoding="application/x-tex">r_X = 1 - e^{-1/d_X}</annotation></semantics></math>
 for
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>∈</mo><mo stretchy="false" form="prefix">{</mo><mi>A</mi><mo>,</mo><mi>D</mi><mo>,</mo><mi>U</mi><mo>,</mo><mi>T</mi><mo>,</mo><msub><mi>T</mi><mtext mathvariant="normal">slow</mtext></msub><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">X \in \{A, D, U, T, T_{\text{slow}}\}</annotation></semantics></math>
@@ -3478,7 +3709,7 @@ delay and applies the incubation survival
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mrow><mi>−</mi><mi>μ</mi><msub><mi>τ</mi><mi>M</mi></msub></mrow></msup><annotation encoding="application/x-tex">e^{-\mu\tau_M}</annotation></semantics></math>
 at the exit, with the current
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>.
-<code>blink</code> substitutes an Erlang chain for the delay, but the
+<code>fleet</code> substitutes an Erlang chain for the delay, but the
 chain must be <strong>loss-free</strong>: putting death in every stage
 would give a through-survival of
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><msub><mi>n</mi><mi>P</mi></msub><mi>/</mi><msub><mi>τ</mi><mi>M</mi></msub></mrow><mrow><msub><mi>n</mi><mi>P</mi></msub><mi>/</mi><msub><mi>τ</mi><mi>M</mi></msub><mo>+</mo><mi>μ</mi></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><msub><mi>n</mi><mi>P</mi></msub></msup><annotation encoding="application/x-tex">\left(\frac{n_P/\tau_M}{n_P/\tau_M + \mu}\right)^{n_P}</annotation></semantics></math>
@@ -3510,7 +3741,7 @@ m_s = X^{(P)}_{s,n_P}\,e^{-\mu_s(t)\tau_M}
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>a</mi><mi>s</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">a_s(t)</annotation></semantics></math>
 and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>s</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mu_s(t)</annotation></semantics></math>.
-For each species and time, <code>blink</code> reuses
+For each species and time, <code>fleet</code> reuses
 <code>malariasimulation</code>’s own net / IRS decay and combination
 algebra, population-averaged over the net-using and sprayed fractions,
 to obtain a mean repellency
@@ -3603,9 +3834,8 @@ dose-age band.</p>
 precedence. Note that <code>set_equilibrium()</code> <em>always</em>
 stores its own back-translation there, even when called with
 <code>eq_params = NULL</code>, so after any
-<code>set_equilibrium()</code> call it is that stored set — not
-<code>R/translate_params.R</code> — supplying every shared
-constant.</li>
+<code>set_equilibrium()</code> call it is that stored set, not
+<code>R/translate_params.R</code>, supplying every shared constant.</li>
 <li>For each heterogeneity node
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>,
 <code><a href="https://rdrr.io/pkg/malariaEquilibrium/man/human_equilibrium_no_het.html" class="external-link">malariaEquilibrium::human_equilibrium_no_het()</a></code> is solved at
@@ -3644,7 +3874,7 @@ actually implemented here, so the model holds flat even under
 treatment.</li>
 <li>The equilibrium age structure is recomputed under
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mu_i(0)</annotation></semantics></math>
-— which may be the custom-demography baseline row — and the
+(which may be the custom-demography baseline row), and the
 constant-hazard seed is rescaled onto it.</li>
 <li>
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>T</mi><mn>0</mn></msub><annotation encoding="application/x-tex">T_0</annotation></semantics></math>
@@ -3681,13 +3911,13 @@ in the larval term).</li>
 boosting on the raw rate with the un-rounded
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>u</mi><annotation encoding="application/x-tex">u</annotation></semantics></math>,
 no at-risk restriction on boosting, and continuous-time state exit rates
-— while <code>blink</code> reproduces the IBM’s per-day semantics, the
-seed is a close <strong>approximation</strong> to <code>blink</code>’s
+— while <code>fleet</code> reproduces the IBM’s per-day semantics, the
+seed is a close <strong>approximation</strong> to <code>fleet</code>’s
 true fixed point rather than the fixed point itself: an undisturbed run
 relaxes by up to ~0.5% over the first years and then holds.
 <code>malariasimulation</code> relaxes off its own
-<code>malariaEquilibrium</code> seed for the same reason — though the
-two seeds are not identical: the IBM passes the <em>raw</em> treated
+<code>malariaEquilibrium</code> seed for the same reason, though the two
+seeds are not identical: the IBM passes the <em>raw</em> treated
 fraction
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>f</mi><mi>t</mi></msub><annotation encoding="application/x-tex">f_t</annotation></semantics></math>
 rather than
@@ -3695,15 +3925,14 @@ rather than
 solves on a fixed 0–99.9 y grid with heterogeneity handled inside
 <code>human_equilibrium()</code>, and does not correct the prophylaxis
 recursion. Set <code>parameters$bite_dedup = 0</code> to reduce the
-drift to well under 1% (no setting makes it exactly zero — see
-§B.2).</p>
+drift to well under 1% (no setting makes it exactly zero; see §B.2).</p>
 </div>
 <div class="section level3">
 <h3 id="g--outputs">G. Outputs<a class="anchor" aria-label="anchor" href="#g--outputs"></a>
 </h3>
 <p>Per age group (aggregated to output bands in R), all as fractions of
 the total human population and multiplied by
-<code>human_population</code> on the way out — except
+<code>human_population</code> on the way out, except
 <code>p_detect_lm_*</code>, which is a proportion (the LM-positive count
 divided by the band population) and is not scaled:</p>
 <table class="table">
@@ -3728,13 +3957,13 @@ divided by the band population) and is not scaled:</p>
 <td><code>p_detect_lm_*</code></td>
 <td>
 <code>n_detect_lm_*</code> / <code>n_age_*</code> for the same band
-— LM prevalence</td>
+(LM prevalence)</td>
 </tr>
 <tr class="even">
 <td><code>n_detect_pcr_*</code></td>
 <td>
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>j</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>D</mi><mo>+</mo><mi>T</mi><mo>+</mo><msub><mi>T</mi><mi>s</mi></msub><mo>+</mo><mi>A</mi><mo>+</mo><mi>U</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\sum_j \left(D + T + T_s + A + U\right)</annotation></semantics></math>
-— the IBM convention, <strong>not</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>j</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>D</mi><mo>+</mo><mi>T</mi><mo>+</mo><msub><mi>T</mi><mi>s</mi></msub><mo>+</mo><mi>A</mi><mo>+</mo><mi>U</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\sum_j \left(D + T + T_s + A + U\right)</annotation></semantics></math>:
+the IBM convention, <strong>not</strong>
 <code>malariaEquilibrium</code>’s sub-patent-weighted
 <code>pos_PCR</code>
 </td>
@@ -3742,8 +3971,8 @@ divided by the band population) and is not scaled:</p>
 <tr class="odd">
 <td><code>n_inc_clinical_*</code></td>
 <td>
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>j</mi></msub><msubsup><mi>h</mi><mrow><mi>i</mi><mi>j</mi></mrow><mi>c</mi></msubsup><msub><mi mathvariant="normal">Σ</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub></mrow><annotation encoding="application/x-tex">\sum_j h^c_{ij}\Sigma_{ij}</annotation></semantics></math>
-— counted with the <em>clinical</em> hazard, so a day’s integral is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>j</mi></msub><msubsup><mi>h</mi><mrow><mi>i</mi><mi>j</mi></mrow><mi>c</mi></msubsup><msub><mi mathvariant="normal">Σ</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub></mrow><annotation encoding="application/x-tex">\sum_j h^c_{ij}\Sigma_{ij}</annotation></semantics></math>,
+counted with the <em>clinical</em> hazard, so a day’s integral is
 exactly the IBM’s
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ϕ</mi><mi>p</mi><mi>N</mi></mrow><annotation encoding="application/x-tex">\phi p N</annotation></semantics></math>
 </td>
@@ -3751,14 +3980,15 @@ exactly the IBM’s
 <tr class="even">
 <td><code>n_inc_severe_*</code></td>
 <td>
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>j</mi></msub><msub><mi>θ</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><msub><mi mathvariant="normal">Λ</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><msub><mi mathvariant="normal">Σ</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub></mrow><annotation encoding="application/x-tex">\sum_j \theta_{ij}\Lambda_{ij}\Sigma_{ij}</annotation></semantics></math>
-— severe is drawn from the same infected set as clinical in the IBM, so
-it keeps the total infection hazard</td>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>j</mi></msub><msub><mi>θ</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mrow><mo stretchy="true" form="prefix">[</mo><msub><mi mathvariant="normal">Λ</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>S</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>+</mo><msub><mi>U</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><msub><mi>p</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><msub><mi>A</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">\sum_j \theta_{ij}\left[\Lambda_{ij}\left(S_{ij}+U_{ij}\right) + p_{ij}A_{ij}\right]</annotation></semantics></math>:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
+times the all-infection count below, because the IBM draws severe from
+the same <em>deduplicated</em> infected set as clinical</td>
 </tr>
 <tr class="odd">
 <td><code>n_inc_*</code></td>
 <td>
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>j</mi></msub><msub><mi mathvariant="normal">Λ</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><msub><mi mathvariant="normal">Σ</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub></mrow><annotation encoding="application/x-tex">\sum_j \Lambda_{ij}\Sigma_{ij}</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>j</mi></msub><mrow><mo stretchy="true" form="prefix">[</mo><msub><mi mathvariant="normal">Λ</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>S</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>+</mo><msub><mi>U</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><msub><mi>p</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><msub><mi>A</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">\sum_j \left[\Lambda_{ij}\left(S_{ij}+U_{ij}\right) + p_{ij}A_{ij}\right]</annotation></semantics></math>
 (all new infections)</td>
 </tr>
 <tr class="even">
@@ -3786,6 +4016,60 @@ and
 </tr>
 </tbody>
 </table>
+<p><strong>How age groups map onto bands.</strong> By <strong>exact
+overlap</strong>: a model age group contributes to a rendering band the
+fraction of its own width that lies inside
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mi>ℓ</mi><mo>,</mo><mi>u</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">[\ell, u)</annotation></semantics></math>,
+the same weighting the chemoprevention pulses use (§E). A group
+straddling a band boundary is split between the two bands rather than
+handed whole to one of them, so over any set of bands that partition a
+span of the age axis the weights sum to exactly 1 per group inside that
+span: no family double-counts, and none loses anyone it renders. The
+absorbing top group is the one case the invariant cannot cover, since it
+is not a finite interval. It is captured whole by any band reaching
+above its lower edge, and <code>fleet</code> reports the population that
+no band captured.</p>
+<p><strong>Why the two infection counts split the pool.</strong> These
+outputs are <em>rates</em>, which R integrates over a day, so the right
+rate depends on how fast each compartment drains.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>
+drain at the full
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Λ</mi><annotation encoding="application/x-tex">\Lambda</annotation></semantics></math>,
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mo>∫</mo><mn>0</mn><mn>1</mn></msubsup><mi mathvariant="normal">Λ</mi><mi>X</mi><msup><mi>e</mi><mrow><mi>−</mi><mi mathvariant="normal">Λ</mi><mi>t</mi></mrow></msup><mspace width="0.167em"></mspace><mi mathvariant="normal">d</mi><mi>t</mi><mo>=</mo><mi>X</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mi>−</mi><mi mathvariant="normal">Λ</mi></mrow></msup><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>X</mi><mi>p</mi></mrow><annotation encoding="application/x-tex">\int_0^1 \Lambda X e^{-\Lambda t}\,\mathrm{d}t = X\left(1 - e^{-\Lambda}\right) = Xp</annotation></semantics></math>
+— the IBM’s deduplicated count, exactly.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+does not: a sub-clinical re-infection of an
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+leaves them in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>,
+so
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+drains only at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>h</mi><mi>c</mi></msup><annotation encoding="application/x-tex">h^c</annotation></semantics></math>
+and stays roughly flat across the day, making
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>∫</mo><mi mathvariant="normal">Λ</mi><mi>A</mi><mspace width="0.167em"></mspace><mi mathvariant="normal">d</mi><mi>t</mi><mo>≈</mo><mi mathvariant="normal">Λ</mi><mi>A</mi></mrow><annotation encoding="application/x-tex">\int \Lambda A\,\mathrm{d}t \approx \Lambda A</annotation></semantics></math>
+and over-counting by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Λ</mi><mi>/</mi><mi>p</mi><mo>=</mo><mi>−</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mi>p</mi></mrow><annotation encoding="application/x-tex">\Lambda/p = -\log(1-p)/p</annotation></semantics></math>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+therefore takes
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>p</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">p_{ij}</annotation></semantics></math>
+directly. Before this correction all-age <code>n_inc_*</code> ran 2.6%
+(EIR 20) to 4.2% (EIR 50) above the IBM median, outside its replicate
+spread at both; after, 0.6% and 0.4%. The bias sat in adults, where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+is a large share of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Σ</mi><annotation encoding="application/x-tex">\Sigma</annotation></semantics></math>
+— which is what identified it as an
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>-only
+defect rather than a whole-pool one. Clinical incidence is unaffected:
+it is counted with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>h</mi><mi>c</mi></msup><annotation encoding="application/x-tex">h^c</annotation></semantics></math>,
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>∫</mo><msup><mi>h</mi><mi>c</mi></msup><mi>A</mi><mspace width="0.167em"></mspace><mi mathvariant="normal">d</mi><mi>t</mi><mo>=</mo><mi>A</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mi>−</mi><msup><mi>h</mi><mi>c</mi></msup></mrow></msup><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>A</mi><mi>ϕ</mi><mi>p</mi></mrow><annotation encoding="application/x-tex">\int h^c A\,\mathrm{d}t = A\left(1-e^{-h^c}\right) = A\phi p</annotation></semantics></math>
+already.</p>
 <p><strong>Six state columns for eight compartments.</strong>
 <code>Tr_count</code> sums
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>+</mo><msub><mi>T</mi><mi>s</mi></msub></mrow><annotation encoding="application/x-tex">T + T_s</annotation></semantics></math>
@@ -3814,11 +4098,15 @@ solver. Defaults <code>atol = rtol = 1e-8</code> and
 <code>step_size_max = 1</code> preserve the flat equilibrium exactly.
 The step cap binds only near equilibrium: there the solution is nearly
 flat, so the adaptive stepper proposes a very long step and can jump
-clean over an interpolation knot — the day an intervention changes —
+clean over an interpolation knot (the day an intervention changes),
 missing it entirely. For long dynamic projections,
-<code>atol = rtol = 1e-6</code> with <code>step_size_max = 10</code>
-runs several times faster with negligible effect on aggregate
-outputs.</p>
+<code>rtol = 1e-6</code> with <code>step_size_max = 10</code> runs about
+1.4–1.7x faster on seasonal projections, and barely faster on aseasonal
+ones (there the daily output grid, not the tolerance, sets the step
+count), with negligible effect on aggregate outputs. Keep
+<code>atol</code> at <code>1e-8</code>: the individual prophylaxis chain
+stages hold occupancies of order <code>1e-6</code>, which a looser
+absolute tolerance lets dip below zero.</p>
 <p>The PEV, TBV, carrying-capacity and (constant-demography) mortality
 grids are built to extend a year past <code>timesteps</code> so the
 stepper never extrapolates them; the vector-control grid ends exactly at
@@ -3827,6 +4115,23 @@ stepper never extrapolates them; the vector-control grid ends exactly at
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">t = 0</annotation></semantics></math>,
 so the equilibrium seed is preserved and interventions act only from
 their scheduled timesteps.</p>
+<p>That last property is a property of the <strong>knots</strong>, not
+of the series’ values. The vector-control, carrying-capacity, PEV and
+TBV series are interpolated linearly, which is right for the
+within-round decay each of them carries but means a value that changes
+on a scheduled day ramps in from whatever knot precedes it. Each of
+these grids therefore carries a knot at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>t</mi><mi>k</mi></msub><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">t_k - 1</annotation></semantics></math>
+as well as at every scheduled day
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mi>k</mi></msub><annotation encoding="application/x-tex">t_k</annotation></semantics></math>,
+pinning the pre-deployment value one day out and confining the ramp to
+the single step onto the scheduled day. Without it a deployment inherits
+the spacing of the background grid: nets scheduled for day 100 had
+reached 66% of their effect on EIR by day 99 off the 10-day
+vector-control grid, and a mass PEV campaign a third of its effect five
+days before anyone was protected. A round now takes effect within a day
+of its schedule, the same resolution the chemoprevention pulses (§E)
+already have.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
