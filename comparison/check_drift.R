@@ -100,6 +100,32 @@ if (!file.exists(ref_f)) {
     fail <- c(fail, sprintf("the scenario definitions have changed since the IBM rows were made (digest %s -> %s), so the agreement below compares fleet on the new scenarios against the IBM on the old ones. Re-run comparison/run_replicates.R.",
                             ref$scenario_digest, now))
     cat("  scenario digest    CHANGED\n")
+    ## Name the culprit. An aggregate mismatch on its own is not actionable: it
+    ## says something moved across eighteen scenarios and fifty-odd parameters
+    ## each. The committed per-scenario map turns that into a short list, and for
+    ## the offenders the per-key digests say which parameter. Added after an
+    ## aggregate mismatch in CI took several runs to localise.
+    if (!is.null(ref$scenario_digests)) {
+      mine <- scenario_digests_each()
+      shared <- intersect(names(ref$scenario_digests), names(mine))
+      bad <- shared[vapply(shared, function(n)
+        !identical(unlist(ref$scenario_digests[[n]]), unname(mine[[n]])), logical(1))]
+      gone <- setdiff(names(ref$scenario_digests), names(mine))
+      new_s <- setdiff(names(mine), names(ref$scenario_digests))
+      if (length(gone))  cat("    removed since the reference:", paste(gone, collapse = ", "), "\n")
+      if (length(new_s)) cat("    added since the reference:  ", paste(new_s, collapse = ", "), "\n")
+      if (length(bad)) {
+        cat("    differing scenarios:", paste(bad, collapse = ", "), "\n")
+        for (n in head(bad, 2L)) {
+          cat(sprintf("    [%s] per-key digests:\n", n))
+          kd <- scenario_key_digests(scenarios[[n]])
+          for (k in names(kd)) cat(sprintf("      %-42s %s\n", k, kd[[k]]))
+        }
+      } else if (!length(gone) && !length(new_s)) {
+        cat("    every scenario matches individually, so the difference is in the\n",
+            "   aggregate ordering rather than any one scenario.\n", sep = "")
+      }
+    }
   } else {
     cat(sprintf("  scenario digest    %s (unchanged)\n", now))
   }

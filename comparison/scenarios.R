@@ -231,30 +231,68 @@ tag_parts <- function(r, nm, model, rep)
 ## of the scenarios: it matched only on the machine that stamped the reference, so
 ## the check could never pass in CI (R 4.6.1 there against 4.5.2 here was enough).
 ## deparse() of the declared values is stable across both.
-scenario_digest <- function(scen = SCENARIOS_ALL) {
-  base <- get_parameters()
+## Canonical text for ONE scenario: every parameter that differs from a bare
+## get_parameters(), plus the EIR and horizon, as "key=value" lines.
+.scen_lines <- function(s, base) {
+  ## Round doubles before hashing. Every scenario is built through
+  ## set_equilibrium(), which stores the output of a NUMERICAL equilibrium solve:
+  ## total_M is 118499.32693250103 and init_foim 0.0078964152242594334 for eir_20,
+  ## seventeen significant digits of it. Cross-platform floating point is not
+  ## bit-identical, so those last digits differ between this machine and a Linux
+  ## runner and the hash moved with them, reporting "the scenario definitions have
+  ## changed" when nothing had. 12 significant digits is far tighter than any
+  ## change worth catching and far looser than the noise. Recursive, because the
+  ## values are nested (eq_params is a list of 56).
+  rnd <- function(x) {
+    if (is.list(x)) return(lapply(x, rnd))
+    if (is.double(x)) return(signif(x, 12))
+    x
+  }
   ## explicit width.cutoff and control so a future change to deparse()'s defaults
   ## cannot silently move the hash
-  dep <- function(x) paste(deparse(x, width.cutoff = 500L,
+  dep <- function(x) paste(deparse(rnd(x), width.cutoff = 500L,
                                    control = c("keepNA", "keepInteger",
                                                "niceNames", "showAttributes")),
                            collapse = " ")
-  canon <- function(s) {
-    changed <- Filter(function(k) !identical(s$p[[k]], base[[k]]), names(s$p))
-    c(paste0("eir=", dep(s$eir)), paste0("years=", dep(s$years)),
-      vapply(sort(changed), function(k) paste0(k, "=", dep(s$p[[k]])), character(1)))
-  }
-  nm <- sort(names(scen))
-  txt <- unlist(lapply(nm, function(n) c(paste0("[", n, "]"), canon(scen[[n]]))))
-  digest::digest(paste(txt, collapse = "\n"), algo = "xxhash64", serialize = FALSE)
+  changed <- Filter(function(k) !identical(s$p[[k]], base[[k]]), names(s$p))
+  c(paste0("eir=", dep(s$eir)), paste0("years=", dep(s$years)),
+    vapply(sort(changed), function(k) paste0(k, "=", dep(s$p[[k]])), character(1)))
 }
+
+.txt_digest <- function(x) digest::digest(paste(x, collapse = "\n"),
+                                          algo = "xxhash64", serialize = FALSE)
+
+scenario_digest <- function(scen = SCENARIOS_ALL) {
+  base <- get_parameters()
+  nm <- sort(names(scen))
+  .txt_digest(unlist(lapply(nm, function(n) c(paste0("[", n, "]"),
+                                              .scen_lines(scen[[n]], base)))))
+}
+
+## Per-scenario and per-key digests. Committed alongside the aggregate so that a
+## mismatch says WHICH scenario, and then which parameter, rather than only that
+## something moved. That matters because the aggregate is the thing CI compares,
+## and an aggregate mismatch with no breakdown is not actionable.
+scenario_digests_each <- function(scen = SCENARIOS_ALL) {
+  base <- get_parameters()
+  nm <- sort(names(scen))
+  stats::setNames(vapply(nm, function(n) .txt_digest(.scen_lines(scen[[n]], base)),
+                         character(1)), nm)
+}
+
+scenario_key_digests <- function(s, base = get_parameters()) {
+  ln <- .scen_lines(s, base)
+  stats::setNames(vapply(ln, .txt_digest, character(1)), sub("=.*$", "", ln))
+}
+
 
 ibm_reference <- function() list(
   generated = format(Sys.time(), "%Y-%m-%dT%H:%M:%S%z"),
   malariasimulation = as.character(utils::packageVersion("malariasimulation")),
   R = paste0(R.version$major, ".", R.version$minor),
   n_rep = N_REP, population = POP, burn_in_years = BURN_Y,
-  scenarios = sort(names(SCENARIOS_ALL)), scenario_digest = scenario_digest())
+  scenarios = sort(names(SCENARIOS_ALL)), scenario_digest = scenario_digest(),
+  scenario_digests = as.list(scenario_digests_each()))
 
 ## ---- running fleet -------------------------------------------------------------
 ## Shared so a drift check cannot accidentally run fleet differently from the way
