@@ -537,39 +537,89 @@ apply_chemoprevention_pulse <- function(sys, uidx, meta, event) {
 # nonlinear, so the two differ materially. Integrate with a tensor Gauss-Hermite
 # rule over the four independent normal variates -- the same quadrature idiom
 # fleet already uses for biting heterogeneity.
-pev_efficacy_curve <- function(profile, t, n_gq = getOption("fleet.pev_gq", 7L)) {
+pev_efficacy_curve <- function(profile, t, n_gq = getOption("fleet.pev_gq", 7L),
+                               nodes = .pev_gq_nodes(profile, n_gq)) {
+  # .pev_eff_one() is pure arithmetic, so it is already vectorised over the NODES:
+  # one call returns all n_gq^4 per-realisation efficacies at a single t, and the
+  # quadrature is their weighted sum. Summing over nodes -- rather than walking the
+  # nodes in an R loop, accumulating a length(t) vector -- is what makes a
+  # single-t evaluation cheap (~60 us against the ~5.5 ms an n_gq^4-iteration R
+  # loop costs), and that is what lets .pev_eff_fun() below evaluate this at the
+  # handful of t it actually needs instead of tabulating a grid.
+  vapply(t, function(ti) sum(nodes$wt * .pev_eff_one(
+    nodes$cs, nodes$rho, nodes$ds, nodes$dl,
+    profile$vmax, profile$alpha, profile$beta, ti)), numeric(1))
+}
+
+# The n_gq^4 tensor nodes for one profile: weighted draws of (cs, rho, ds, dl)
+# from the IBM's per-individual antibody distributions. Split out of
+# pev_efficacy_curve() only so a caller evaluating the same profile at many t,
+# one t at a time, can build them ONCE and hand them back in; the quadrature
+# itself still has exactly one definition, above.
+.pev_gq_nodes <- function(profile, n_gq = getOption("fleet.pev_gq", 7L)) {
   g <- malariaEquilibrium::gq_normal(n_gq)          # standard-normal nodes/weights
   z <- g$nodes; w <- g$weights / sum(g$weights)
   sig <- function(f) if (length(profile[[f]]) > 1L) profile[[f]][2] else 0
   grd <- expand.grid(a = seq_len(n_gq), b = seq_len(n_gq),
                      c = seq_len(n_gq), d = seq_len(n_gq))
-  wt <- w[grd$a] * w[grd$b] * w[grd$c] * w[grd$d]
-  cs  <- exp(profile$cs[1]  + sig("cs")  * z[grd$a])
-  rho <- .invlogit(profile$rho[1] + sig("rho") * z[grd$b])
-  ds  <- exp(profile$ds[1]  + sig("ds")  * z[grd$c])
-  dl  <- exp(profile$dl[1]  + sig("dl")  * z[grd$d])
-  out <- numeric(length(t))
-  for (k in seq_along(wt)) {
-    out <- out + wt[k] * .pev_eff_one(cs[k], rho[k], ds[k], dl[k],
-                                      profile$vmax, profile$alpha, profile$beta, t)
-  }
-  out
+  list(wt  = w[grd$a] * w[grd$b] * w[grd$c] * w[grd$d],
+       cs  = exp(profile$cs[1]  + sig("cs")  * z[grd$a]),
+       rho = .invlogit(profile$rho[1] + sig("rho") * z[grd$b]),
+       ds  = exp(profile$ds[1]  + sig("ds")  * z[grd$c]),
+       dl  = exp(profile$dl[1]  + sig("dl")  * z[grd$d]))
 }
 
-# The quadrature above is ~n_gq^4 evaluations, so memoise the resulting mean-efficacy
-# curve per profile on a daily grid and interpolate: pev_series() calls it thousands
-# of times (per age x time x booster stratum).
+# Mean-efficacy function for one profile: the quadrature above, evaluated on
+# demand and memoised per distinct t.
+#
+# WHY NOT A GRID. This used to pre-tabulate pev_efficacy_curve() on a DAILY grid,
+# seq(0, max(tmax, 1) + 365), and interpolate it with approxfun(). That grid is
+# 11,316 points on a 30-year run, and the read set is tiny and known: instrumenting
+# the closure over a 30-year build gives 81 distinct t for an EPI programme (across
+# 22,183 calls) and ~2,000 for a three-round mass campaign. So between 82% and 99%
+# of the grid was built and never looked at, and building it was most of what a PEV
+# build_inputs() cost -- around 1.3 s of it.
+#
+# The grid was also an APPROXIMATION laid on top of the quadrature. The t asked for
+# are cohort age offsets, not whole days, so the answer came back linearly
+# interpolated between two daily nodes; evaluating the quadrature AT the t asked for
+# removes that error. Measured against the old grid closure the values here move by
+# at most 1.1e-6, and they move in the direction of the exact quadrature: these are
+# the more accurate values, not merely the cheaper ones.
+#
+# Two things make this cheaper than the grid rather than far dearer. `nodes` is
+# built ONCE here and captured -- rebuilding the n_gq^4 tensor per call would cost
+# more than the grid it replaces -- and the memo below keys on the clamped t by
+# exact double match(), so the enormous call-to-distinct-t ratio of the EPI path
+# (22,183 calls, 81 distinct t) costs one quadrature per distinct t and a lookup
+# for the rest.
+#
+# THE CLAMP IS LOAD-BEARING, and is now the subtle part of this function. Its
+# callers evaluate AGES, not times: pev_protection() is asked for the efficacy at
+# tsince = age_mid[i] - vax_complete for every age group, so the oldest groups
+# reach tsince ~ 29,000 days (the 80-year absorbing group) on any horizon. The old
+# approxfun(rule = 2) silently clamped those to the LAST grid value, and that
+# clamped value -- not the true efficacy 80 years after a dose, which is ~0 -- is
+# what the model has always used. pmin(pmax(t, 0), hi), with the SAME
+# hi = max(tmax, 1) + 365, reproduces it exactly. Evaluating at the raw t instead
+# moves old-age efficacy by up to 2.5e-1 on a 400-day horizon (verified: with the
+# clamp this closure reproduces the old one to 1.1e-6; without it, to 2.5e-1). It
+# is not a detail that can be dropped along with the grid.
 .pev_eff_fun <- function(profile, tmax) {
-  grid <- seq(0, max(tmax, 1) + 365, by = 1)
-  vals <- pev_efficacy_curve(profile, grid)
-  # approxfun(), not approx(): approx() re-runs regularize.values() -- a sortedness
-  # check plus a copy of the whole grid -- on EVERY scalar call, which is thousands
-  # of times per build. approxfun() does that once here and the returned closure
-  # drops into the same C kernel, so the values are identical (the grid is strictly
-  # increasing, so there is no ties handling to differ).
-  hi <- max(grid)
-  f <- stats::approxfun(grid, vals, rule = 2)
-  function(t) f(pmin(pmax(t, 0), hi))
+  hi <- max(tmax, 1) + 365
+  nodes <- .pev_gq_nodes(profile)
+  seen <- numeric(0); val <- numeric(0)     # memo: distinct clamped t -> efficacy
+  function(t) {
+    tc <- pmin(pmax(t, 0), hi)
+    i <- match(tc, seen)
+    if (anyNA(i)) {                          # vector-safe: batch every new t at once
+      new <- unique(tc[is.na(i)])
+      val <<- c(val, pev_efficacy_curve(profile, new, nodes = nodes))
+      seen <<- c(seen, new)
+      i <- match(tc, seen)
+    }
+    val[i]
+  }
 }
 
 .combine <- function(a, b) 1 - (1 - a) * (1 - b)
@@ -650,7 +700,12 @@ pev_series <- function(p, age_mid, timesteps) {
   red <- matrix(0, n_age, ng)
 
   # --- EPI (age-based) primary + boosters ---
-  if (!is.null(p$pev_epi_coverages)) {
+  # Gated on has_epi, not merely on the coverages being present: a control arm
+  # built with set_pev_epi(coverages = 0) beside a live mass campaign clears the
+  # early return above, and then paid for two .pev_eff_fun() builds and the whole
+  # n_age x ng loop to fold in a coverage of exactly 0. Inert as well as free:
+  # `red` is still all-zero when this block runs, and .combine(0, 0) is exactly 0.
+  if (has_epi) {
     prof <- .pev_eff_fun(p$pev_profiles[[p$pev_epi_profile_indices[1]]], timesteps)
     bidx <- p$pev_epi_profile_indices[-1]
     bprofs <- if (length(bidx)) lapply(bidx, function(ix) .pev_eff_fun(p$pev_profiles[[ix]], timesteps)) else list(prof)
@@ -689,7 +744,13 @@ pev_series <- function(p, age_mid, timesteps) {
   }
 
   # --- Mass campaigns: primary + boosters, over ALL age bands x ALL campaigns ---
-  if (!is.null(p$mass_pev_timesteps)) {
+  # has_mass, for the same reason as has_epi above. Note this one is inert rather
+  # than exactly so: with an EPI arm live and every mass coverage 0 the old code
+  # folded .combine(red, 0) = 1 - (1 - red) over the EPI values, which is not
+  # bit-identical to `red` for every double (1 - (1 - 0.1) != 0.1). Skipping it
+  # returns the EPI value itself, which is the quantity the fold was meant to
+  # leave behind.
+  if (has_mass) {
     prof <- .pev_eff_fun(p$pev_profiles[[p$mass_pev_profile_indices[1]]], timesteps)
     bidx <- p$mass_pev_profile_indices[-1]
     bprofs <- if (length(bidx)) lapply(bidx, function(ix) .pev_eff_fun(p$pev_profiles[[ix]], timesteps)) else list(prof)
@@ -837,16 +898,27 @@ carrying_capacity_series <- function(p, K0, timesteps) {
   ng <- length(grid)
   R_bar <- if (seasonal) mean(.rainfall(1:365, p$g0, p$g, p$h, p$rainfall_floor)) else 1
   vals <- matrix(0, n_spp, ng)
+  # .rainfall() is a cosine/sine sum plus pmax: already fully vectorised over t,
+  # and elementwise identical to calling it per point (each element runs the same
+  # scalar double ops in the same order). Under seasonality the grid is DAILY, so
+  # the old per-point call re-entered it 11,316 times on a 30-year run for no
+  # arithmetic that the single vector call does not do. Evaluated once here.
+  seas <- if (seasonal) .rainfall(grid, p$g0, p$g, p$h, p$rainfall_floor) / R_bar
+          else rep(1, ng)
   for (gi in seq_len(ng)) {
-    t <- grid[gi]
-    seas <- if (seasonal) .rainfall(t, p$g0, p$g, p$h, p$rainfall_floor) / R_bar else 1
+    # the scaler ROW is species-independent, so look it up once per grid point
+    # rather than once per species. Deliberately still a `which()`/`max()` per
+    # point rather than findInterval(): carrying_capacity_timesteps is not
+    # guaranteed sorted here, and max(which(ts <= t)) and findInterval() agree
+    # only when it is.
+    mi <- 0L
+    if (flexcc) {
+      idx <- which(p$carrying_capacity_timesteps <= grid[gi])
+      if (length(idx)) mi <- max(idx)
+    }
     for (s in seq_len(n_spp)) {
-      scal <- 1
-      if (flexcc) {
-        idx <- which(p$carrying_capacity_timesteps <= t)
-        if (length(idx)) scal <- p$carrying_capacity_scalers[max(idx), s]
-      }
-      vals[s, gi] <- max(K0[s] * scal * seas, K0[s] * 1e-4)  # keep > 0
+      scal <- if (mi > 0L) p$carrying_capacity_scalers[mi, s] else 1
+      vals[s, gi] <- max(K0[s] * scal * seas[gi], K0[s] * 1e-4)  # keep > 0
     }
   }
   list(times = grid, vals = vals)

@@ -331,7 +331,6 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
     zeta <- 1
     het_wt <- 1
     n_het <- 1
-    gq <- list(nodes = 0, weights = 1)
   } else {
     # A Gauss-Hermite rule needs enough nodes to be a quadrature at all. Below 3 it
     # is not one: at n = 1 the single node sits at zeta = exp(-s2/2) = 0.434, so
@@ -446,7 +445,6 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
   n_spp <- length(species_prop)
   hp <- p$human_population
   dem <- p$dem
-  reip <- n_eip / dem
   mum_v <- a_spp <- beta_eff <- g_s <- numeric(n_spp)
   for (s in seq_len(n_spp)) {
     fmr <- p$blood_meal_rates[[s]]
@@ -547,11 +545,13 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
   total_M <- if (sub_threshold) total_M_ibm else hs$total_M
   Xe0 <- eir_seed / 365   # equilibrium adult EIR per day
 
-  ## equilibrium FOIM (het-integrated) at the seed, for reference
-  eq_full <- malariaEquilibrium::human_equilibrium(
-    EIR = eir_seed, ft = ft_seed, p = eqp, age = age_lower, h = gq
-  )
-  init_foim <- eq_full$FOIM
+  ## NOTE: there is deliberately no het-integrated malariaEquilibrium solve here.
+  ## One used to run on every build (a full n_het x n_age human_equilibrium at the
+  ## seed) purely to populate two reference fields in `meta`, and nothing ever read
+  ## either of them. The FOIM the model actually uses is `foim0`, computed above
+  ## from THIS model's own seeded human infectivity (`Xf0`), which is the
+  ## self-consistent one; the malariaEquilibrium value was never the seed. If you
+  ## want it back for a diagnostic, compute it in the diagnostic, not on the hot path.
 
   ME0 <- ML0 <- MP0 <- Sm0 <- Im0 <- Em_inc0 <- K0 <- numeric(n_spp)
   Xi0 <- matrix(0, n_spp, n_eip)
@@ -643,12 +643,15 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
 
   list(
     pars = pars,
+    # `meta` carries only what render_output() and apply_chemoprevention_pulse()
+    # read, plus the seeding scalars the tests assert on. Nothing here is kept
+    # "for reference": a field nobody reads is a solve nobody needed.
     meta = list(
-      n_age = n_age, n_het = n_het, n_spp = n_spp, age_lower = age_lower,
+      n_age = n_age, n_het = n_het,
       age_mid = age_mid, age_lo = age_days, age_hi = age_days + width,
-      prop = prop, init_EIR = init_EIR, eir_seed = eir_seed, init_foim = init_foim,
-      total_M = total_M, total_M_ibm = total_M_ibm, ft = ft, eq_full = eq_full,
-      human_population = hp, parameters = p, eqp = eqp, n_eip = n_eip,
+      prop = prop, init_EIR = init_EIR, eir_seed = eir_seed,
+      total_M = total_M, total_M_ibm = total_M_ibm, ft = ft,
+      human_population = hp, parameters = p, eqp = eqp,
       n_ph = n_ph, n_phc = n_phc
     )
   )
