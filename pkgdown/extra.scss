@@ -249,8 +249,14 @@ main img {
 /* The generated figures are opaque-white PNGs with black linework, so in dark
    mode they land as a bright slab on a dark page. Making them transparent is
    the wrong fix (every arrow and label is black and would vanish); instead,
-   frame them so the white reads as deliberate paper. */
-[data-bs-theme="dark"] main img:not([src$=".svg"]) {
+   frame them so the white reads as deliberate paper.
+
+   Scoped to LOCAL images. Without the [src^="http"] exclusion this also caught
+   every remote badge, wrapping the shields.io ones in a white slab while the
+   GitHub Actions ones escaped purely because their URLs happen to end in
+   ".svg" -- three badges in a white box beside three without, which is what it
+   looked like. Badges bring their own background and want no framing. */
+[data-bs-theme="dark"] main img:not([src$=".svg"]):not([src^="http"]) {
   background: #fff;
   padding: .75rem;
   border-radius: .6rem;

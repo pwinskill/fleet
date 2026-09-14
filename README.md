@@ -1,11 +1,10 @@
 # fleet
 
-[![Status: work in progress](https://img.shields.io/badge/status-work%20in%20progress-orange?style=for-the-badge)](#not-ready-for-real-use)
-[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange?style=for-the-badge)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
-[![Not for production use](https://img.shields.io/badge/not%20for-production%20use-red?style=for-the-badge)](#not-ready-for-real-use)
-
 [![R-CMD-check](https://github.com/pwinskill/fleet/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/pwinskill/fleet/actions/workflows/R-CMD-check.yaml)
 [![pkgdown](https://github.com/pwinskill/fleet/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/pwinskill/fleet/actions/workflows/pkgdown.yaml)
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![Status: work in progress](https://img.shields.io/badge/status-work%20in%20progress-orange.svg)](#not-ready-for-real-use)
+[![Not for production use](https://img.shields.io/badge/not%20for-production%20use-red.svg)](#not-ready-for-real-use)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/pwinskill/fleet/blob/main/LICENSE.md)
 
 > ## Not ready for real use
@@ -33,19 +32,6 @@
 > [malariasimulation](https://github.com/mrc-ide/malariasimulation).
 
 > A fast, deterministic **mean-field (ODE) twin** of the [malariasimulation](https://github.com/mrc-ide/malariasimulation) individual-based model of *Plasmodium falciparum* malaria: same inputs, seconds per run, population-independent.
-
-![The fleet model](man/figures/model_flow.png)
-
-*The model at a glance: humans above, mosquitoes below, the transmission cycle
-running counter-clockwise. Solid black = a flow of individuals, a rate in the ODE.
-Dashed indigo = a scalar coupling, where nobody moves. Dashed red = a discrete state
-jump. Dotted grey = a grouping, never a compartment: the infectious pool and the
-adult females. Offset layers = the array dimensions, and only those: the deck behind
-the human panel is the age × biting-heterogeneity grid, the deck behind the mosquito
-panel is species. Not drawn, to keep the figure readable: P, P~c~ and the EIP are
-Erlang chains rather than single compartments (stage counts vary by drug); immunity
-is algebraic rather than a state, so it is named on the hazard instead of boxed; and
-T splits under antimalarial resistance. All three are in `vignette("model")`.*
 
 ## What it is
 
