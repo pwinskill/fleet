@@ -182,8 +182,10 @@ run_simulation_ode <- function(timesteps, parameters = NULL, correlations = NULL
   # `timesteps` so the stepper never extrapolates them. step_size_max caps the step;
   # at the default 1 it binds only in the near-equilibrium regime (derivatives ~ 0,
   # where the adaptive stepper would otherwise propose a huge step past an interpolate
-  # knot). For long dynamic projections a larger cap + looser atol/rtol trade a little
-  # accuracy for speed; the equilibrium-preserving defaults (1, 1e-8) are unchanged.
+  # knot). That is ALL it does: measured on 30-year runs, seasonal and aseasonal,
+  # the step count and the outputs are unchanged at 1, 5, 10, 30 and Inf. For long
+  # dynamic projections it is atol/rtol that trade accuracy for speed, not the cap;
+  # the equilibrium-preserving defaults (1, 1e-8) are unchanged.
   ctrl <- dust2::dust_ode_control(max_steps = max(1e5, 100 * timesteps),
                                   atol = tn$atol, rtol = tn$rtol,
                                   step_size_max = tn$step_size_max)

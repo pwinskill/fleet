@@ -41,13 +41,27 @@ at the seed's drug mix: a first-line switch moves the chain's mean, not its
 shape.}
 
 \item{atol, rtol, step_size_max}{dust2 ODE-solver controls. The defaults
-(\code{1e-8}, \code{1e-8}, \code{1}) preserve the flat equilibrium exactly; for long dynamic
-projections \code{rtol = 1e-6} with \code{step_size_max = 10} runs about 1.4–1.7x
-faster on seasonal projections, and barely faster on aseasonal ones (there
-the daily output grid, not the tolerance, sets the step count), with
-negligible effect on aggregate outputs. Keep \code{atol} at \code{1e-8}: the individual
-prophylaxis chain stages hold occupancies of order \code{1e-6}, which a looser
-absolute tolerance lets dip below zero.}
+(\code{1e-8}, \code{1e-8}, \code{1}) preserve the flat equilibrium exactly. For long dynamic
+projections \code{rtol = 1e-6} runs about 1.4–1.7x faster on seasonal ones with
+negligible effect on aggregate outputs, and barely faster on aseasonal ones
+(there the daily output grid, not the tolerance, sets the step count).
+
+\strong{\code{step_size_max} is a safety rail, not a speed control}, despite travelling
+with \code{rtol} in the preset above. On a 30-year seasonal run the solver takes
+the same 4.65 steps per output day at \code{1}, \code{5}, \code{10}, \code{30} and \code{Inf}, and the
+outputs are bit-identical across all of them; the tolerance is what moves the
+step count (to 2.24 per day at \code{rtol = 1e-6}, with 1,438 rejected trial steps
+instead of 10,768). What the cap does is stop a trial step overshooting the
+end of an interpolation grid. The intervention series are interpolated on
+grids that extend just past \code{timesteps}, and near equilibrium the stepper will
+propose a step of tens of days. Uncapped, such a step can land beyond the end
+of a coarse grid and abort the run ("Tried to interpolate at time = ..., which
+is ... after the last time"). Leave it at \code{1} unless you have a specific
+reason.
+
+Keep \code{atol} at \code{1e-8}: the individual prophylaxis chain stages hold
+occupancies of order \code{1e-6}, which a looser absolute tolerance lets dip
+below zero.}
 
 \item{odin_file}{optional path to an odin source to compile instead of the
 generator built into the package (development use; needs 'odin2' and a C++
@@ -64,8 +78,8 @@ change; anything left out keeps its default.
 }
 \examples{
 ode_tuning()$atol
-# a faster long projection
-ode_tuning(rtol = 1e-6, step_size_max = 10)$step_size_max
+# a faster long projection: the tolerance is the lever, not the step cap
+ode_tuning(rtol = 1e-6)$rtol
 }
 \seealso{
 \code{\link[=run_simulation_ode]{run_simulation_ode()}}
