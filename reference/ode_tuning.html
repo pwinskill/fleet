@@ -108,13 +108,25 @@ shape.</p></dd>
 
 <dt id="arg-atol-rtol-step-size-max">atol, rtol, step_size_max<a class="anchor" aria-label="anchor" href="#arg-atol-rtol-step-size-max"></a></dt>
 <dd><p>dust2 ODE-solver controls. The defaults
-(<code>1e-8</code>, <code>1e-8</code>, <code>1</code>) preserve the flat equilibrium exactly; for long dynamic
-projections <code>rtol = 1e-6</code> with <code>step_size_max = 10</code> runs about 1.4–1.7x
-faster on seasonal projections, and barely faster on aseasonal ones (there
-the daily output grid, not the tolerance, sets the step count), with
-negligible effect on aggregate outputs. Keep <code>atol</code> at <code>1e-8</code>: the individual
-prophylaxis chain stages hold occupancies of order <code>1e-6</code>, which a looser
-absolute tolerance lets dip below zero.</p></dd>
+(<code>1e-8</code>, <code>1e-8</code>, <code>1</code>) preserve the flat equilibrium exactly. For long dynamic
+projections <code>rtol = 1e-6</code> runs about 1.4–1.7x faster on seasonal ones with
+negligible effect on aggregate outputs, and barely faster on aseasonal ones
+(there the daily output grid, not the tolerance, sets the step count).</p>
+<p><strong><code>step_size_max</code> is a safety rail, not a speed control</strong>, despite travelling
+with <code>rtol</code> in the preset above. On a 30-year seasonal run the solver takes
+the same 4.65 steps per output day at <code>1</code>, <code>5</code>, <code>10</code>, <code>30</code> and <code>Inf</code>, and the
+outputs are bit-identical across all of them; the tolerance is what moves the
+step count (to 2.24 per day at <code>rtol = 1e-6</code>, with 1,438 rejected trial steps
+instead of 10,768). What the cap does is stop a trial step overshooting the
+end of an interpolation grid. The intervention series are interpolated on
+grids that extend just past <code>timesteps</code>, and near equilibrium the stepper will
+propose a step of tens of days. Uncapped, such a step can land beyond the end
+of a coarse grid and abort the run ("Tried to interpolate at time = ..., which
+is ... after the last time"). Leave it at <code>1</code> unless you have a specific
+reason.</p>
+<p>Keep <code>atol</code> at <code>1e-8</code>: the individual prophylaxis chain stages hold
+occupancies of order <code>1e-6</code>, which a looser absolute tolerance lets dip
+below zero.</p></dd>
 
 
 <dt id="arg-odin-file">odin_file<a class="anchor" aria-label="anchor" href="#arg-odin-file"></a></dt>
@@ -136,9 +148,9 @@ toolchain).</p></dd>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">ode_tuning</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">atol</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e-08</span>
-<span class="r-in"><span><span class="co"># a faster long projection</span></span></span>
-<span class="r-in"><span><span class="fu">ode_tuning</span><span class="op">(</span>rtol <span class="op">=</span> <span class="fl">1e-6</span>, step_size_max <span class="op">=</span> <span class="fl">10</span><span class="op">)</span><span class="op">$</span><span class="va">step_size_max</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 10</span>
+<span class="r-in"><span><span class="co"># a faster long projection: the tolerance is the lever, not the step cap</span></span></span>
+<span class="r-in"><span><span class="fu">ode_tuning</span><span class="op">(</span>rtol <span class="op">=</span> <span class="fl">1e-6</span><span class="op">)</span><span class="op">$</span><span class="va">rtol</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e-06</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

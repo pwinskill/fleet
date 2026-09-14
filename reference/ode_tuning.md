@@ -58,13 +58,29 @@ ode_tuning(
 - atol, rtol, step_size_max:
 
   dust2 ODE-solver controls. The defaults (`1e-8`, `1e-8`, `1`) preserve
-  the flat equilibrium exactly; for long dynamic projections
-  `rtol = 1e-6` with `step_size_max = 10` runs about 1.4–1.7x faster on
-  seasonal projections, and barely faster on aseasonal ones (there the
-  daily output grid, not the tolerance, sets the step count), with
-  negligible effect on aggregate outputs. Keep `atol` at `1e-8`: the
-  individual prophylaxis chain stages hold occupancies of order `1e-6`,
-  which a looser absolute tolerance lets dip below zero.
+  the flat equilibrium exactly. For long dynamic projections
+  `rtol = 1e-6` runs about 1.4–1.7x faster on seasonal ones with
+  negligible effect on aggregate outputs, and barely faster on aseasonal
+  ones (there the daily output grid, not the tolerance, sets the step
+  count).
+
+  **`step_size_max` is a safety rail, not a speed control**, despite
+  travelling with `rtol` in the preset above. On a 30-year seasonal run
+  the solver takes the same 4.65 steps per output day at `1`, `5`, `10`,
+  `30` and `Inf`, and the outputs are bit-identical across all of them;
+  the tolerance is what moves the step count (to 2.24 per day at
+  `rtol = 1e-6`, with 1,438 rejected trial steps instead of 10,768).
+  What the cap does is stop a trial step overshooting the end of an
+  interpolation grid. The intervention series are interpolated on grids
+  that extend just past `timesteps`, and near equilibrium the stepper
+  will propose a step of tens of days. Uncapped, such a step can land
+  beyond the end of a coarse grid and abort the run ("Tried to
+  interpolate at time = ..., which is ... after the last time"). Leave
+  it at `1` unless you have a specific reason.
+
+  Keep `atol` at `1e-8`: the individual prophylaxis chain stages hold
+  occupancies of order `1e-6`, which a looser absolute tolerance lets
+  dip below zero.
 
 - odin_file:
 
@@ -85,7 +101,7 @@ a `fleet_ode_tuning` list.
 ``` r
 ode_tuning()$atol
 #> [1] 1e-08
-# a faster long projection
-ode_tuning(rtol = 1e-6, step_size_max = 10)$step_size_max
-#> [1] 10
+# a faster long projection: the tolerance is the lever, not the step cap
+ode_tuning(rtol = 1e-6)$rtol
+#> [1] 1e-06
 ```

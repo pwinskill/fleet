@@ -317,9 +317,11 @@ validated choice, so leaving `tuning` alone is almost always right.
 
 The exception is a long projection like the 20-year run above, where the
 solver, rather than the daily output grid, sets the step count.
-Loosening the relative tolerance and letting the step grow runs about
-1.4-1.7x faster on a seasonal projection, and moves the aggregate
-outputs far less than anything you would report:
+Loosening the relative tolerance runs about 1.4-1.7x faster on a
+seasonal projection, and moves the aggregate outputs far less than
+anything you would report. It is `rtol` that buys this: `step_size_max`
+is a safety rail against a trial step overshooting an interpolation
+grid, and raising it changes neither the step count nor the outputs.
 
 ``` r
 

@@ -370,9 +370,12 @@ every default is the validated choice, so leaving <code>tuning</code>
 alone is almost always right.</p>
 <p>The exception is a long projection like the 20-year run above, where
 the solver, rather than the daily output grid, sets the step count.
-Loosening the relative tolerance and letting the step grow runs about
-1.4-1.7x faster on a seasonal projection, and moves the aggregate
-outputs far less than anything you would report:</p>
+Loosening the relative tolerance runs about 1.4-1.7x faster on a
+seasonal projection, and moves the aggregate outputs far less than
+anything you would report. It is <code>rtol</code> that buys this:
+<code>step_size_max</code> is a safety rail against a trial step
+overshooting an interpolation grid, and raising it changes neither the
+step count nor the outputs.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">seas_fast</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_simulation_ode.html">run_simulation_ode</a></span><span class="op">(</span></span>
 <span>  <span class="fl">20</span> <span class="op">*</span> <span class="fl">365</span>, <span class="fu">malariasimulation</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/malariasimulation/man/set_equilibrium.html" class="external-link">set_equilibrium</a></span><span class="op">(</span><span class="va">p_seas</span>, init_EIR <span class="op">=</span> <span class="fl">20</span><span class="op">)</span>,</span>
