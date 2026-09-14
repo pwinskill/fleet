@@ -17,7 +17,7 @@
 ## when it is absent.
 if (!exists("ROOT") || !file.exists(file.path(ROOT, "DESCRIPTION")))
   stop("source this from a comparison/ script, which sets ROOT to the fleet checkout.")
-VDIR <- Sys.getenv("FLEET_VALIDATE", file.path(dirname(ROOT), "blink2_validate"))
+VDIR <- Sys.getenv("FLEET_VALIDATE", file.path(dirname(ROOT), "fleet_validate"))
 
 ## ---- shared scenario constants (must match run_replicates.R) ----------------
 BURN_Y   <- 30L                 # IBM burn-in years before observation / intervention

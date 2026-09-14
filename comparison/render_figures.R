@@ -8,7 +8,7 @@
 #   core_eir       four equilibrium relationships vs EIR (2x2)
 #   core_age       age profiles at EIR 20: prevalence, clinical, severe
 #   core_seasonal  the settled annual cycle: prevalence and clinical incidence
-#   core_sites     63-country monthly comparison (from blink2_validate results)
+#   core_sites     63-country monthly comparison (from fleet_validate results)
 #   int_timeseries five interventions x {prevalence, clinical}, time series
 #   programme_ts   five long-horizon programmes x four outcomes, 15 years
 #   int_impact     % reduction per intervention, IBM (replicate range) vs fleet

@@ -90,7 +90,7 @@ Rscript comparison/summary_tables.R     # seconds
 Two optional environment variables: `FLEET_LIB` is prepended to the library path
 (the libraries already on it are kept), for installations that do not pick up
 `R_LIBS_USER`; `FLEET_VALIDATE` points at the site-file validation results, which
-default to `../blink2_validate` and are skipped when absent. `N_WORKERS` is set
+default to `../fleet_validate` and are skipped when absent. `N_WORKERS` is set
 in `run_replicates.R`.)
 
 ## Design notes

@@ -1,12 +1,20 @@
-# Generate the fleet model flow diagram used by the README and vignette("model").
+# Generate the fleet model flow diagram.
+#
+# THIS SCRIPT'S OUTPUT IS NOT CURRENTLY USED ANYWHERE. The diagram was judged
+# not good enough to ship: it has been removed from the README and from
+# vignette("model"), and the committed PNGs have been deleted. Nothing in the
+# package, the vignettes or the built site reads it today. The generator is
+# kept, and kept working, so the figure can be redrawn later -- if you restore
+# it, you must re-add the image links too.
 #
 #   Rscript pkgdown/diagrams/make_model_flow.R
 #
 # Needs flodia (GitHub only, deliberately NOT a package dependency):
 #   remotes::install_github("mrc-ide/flodia")
 #
-# Outputs vignettes/model_flow.png and man/figures/model_flow.png, both
-# committed, so neither the vignette nor the README needs flodia at build time.
+# Writes vignettes/model_flow.png and man/figures/model_flow.png. While the
+# figure was in use both were committed, so that neither the vignette nor the
+# README needed flodia at build time.
 # Set FLEET_DIAGRAM_OUT to write elsewhere, plus a 700-px proof (development).
 #
 # ---------------------------------------------------------------------------
@@ -14,7 +22,9 @@
 #
 # SCOPE  Antimalarial resistance is out of scope, so the treated state is a
 #        single T. The model splits it into T/T_slow when resistance is on;
-#        vignette appendix B.4 documents that and section 2 discloses it.
+#        vignette appendix B.4 documents that. The vignette section that used
+#        to disclose it went with the figure, so if the figure is restored its
+#        surrounding text must disclose it again.
 #
 # FIDELITY
 #   The infection hazard acts on S + A + U. A's ONLY infection outflow is the

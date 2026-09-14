@@ -264,9 +264,9 @@ fig("core_sites")
 > this page is redrawn from committed per-replicate summaries whenever the
 > harness runs, and a drift check re-runs `fleet` against them on demand. This
 > comparison cannot work that way: it is a roughly seven-hour run against the
-> malariaverse site files, driven by a separate harness called `blink2_validate`
+> malariaverse site files, driven by a separate harness called `fleet_validate`
 > that is **not part of this repository and is not public**. There is no
-> `blink2_validate` repository you can clone, so nobody outside the project can
+> `fleet_validate` repository you can clone, so nobody outside the project can
 > obtain or re-run it. What you can inspect is
 > `comparison/data/site_snapshot.json`, the committed summary that carries the
 > statistics quoted below; the figure above is the committed PNG from the same
@@ -572,7 +572,7 @@ the figures can be re-styled, and the numbers rechecked, without re-running the
 models. `comparison/check_drift.R` re-runs `fleet` alone against those committed
 rows in about two minutes and fails on drift.
 
-The country-site comparison is the exception. It comes from `blink2_validate`, a
+The country-site comparison is the exception. It comes from `fleet_validate`, a
 separate harness that is not part of this repository and is not public: there is
 no repository to clone and no way for a reader to run it. Its results reach this
 page only through the committed snapshot `comparison/data/site_snapshot.json`,

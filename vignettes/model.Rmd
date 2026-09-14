@@ -11,7 +11,7 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
-# This article is prose, equations and tables only. The R shown in section 5 is
+# This article is prose, equations and tables only. The R shown in section 4 is
 # illustrative and deliberately not evaluated, so the vignette builds with no
 # dependencies and in no time.
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
@@ -37,10 +37,10 @@ builders in `R/build_inputs.R` / `R/interventions.R`.
 
 For a task-oriented introduction with runnable code, see
 [Getting started with `fleet`](fleet.html). **This article is the canonical
-description of the model and of what it approximates:** §3 says what the state
-space does and does not carry, §4 covers every `malariasimulation` argument one
-by one, and §5 lists what to do differently because this is an ODE and not the
-IBM. If you read only one section, read §5.
+description of the model and of what it approximates:** §2 says what the state
+space does and does not carry, §3 covers every `malariasimulation` argument one
+by one, and §4 lists what to do differently because this is an ODE and not the
+IBM. If you read only one section, read §4.
 
 Everything below describes `malariasimulation` **v3.0.0**.
 
@@ -52,8 +52,8 @@ Everything below describes `malariasimulation` **v3.0.0**.
 *Mean field* means the model tracks the **distribution of the population over
 states** rather than the people themselves. Any quantity that depends on two
 attributes belonging to the *same* person — owning a net *and* being vaccinated,
-say — is therefore unavailable by construction. Almost everything in §3.2 and
-§3.4 follows from that one fact.
+say — is therefore unavailable by construction. Almost everything in §2.2 and
+§2.4 follows from that one fact.
 
 `fleet` targets the IBM's *code*, not the published equations.
 `malariasimulation`'s implementation departs from the analytic Griffin-style
@@ -70,105 +70,11 @@ boosted. A mean-field model cannot afford a state dimension for each. `fleet`
 therefore keeps only two human structuring dimensions (age and biting
 heterogeneity) and represents everything else either as a **time-varying
 coefficient** in the ODE, or as a **discrete state jump** between integration
-segments. §3.1–3.4 set out exactly which is which.
+segments. §2.1–2.4 set out exactly which is which.
 
-## 2. The model at a glance
+## 2. State space
 
-![Flow diagram of the fleet model, in two panels, each sitting on a deck of offset
-copies that stands for the array the panel is replicated over. The upper panel
-holds the human compartments: susceptible; untreated clinical disease; treated;
-asymptomatic and sub-patent infection; and two prophylaxis compartments, one
-post-treatment and one for chemoprevention. Its deck carries one array dimension on
-each visible edge, age one to fifty-two and biting heterogeneity one to five, and a
-note records that people age along the age dimension, die from every box, and are
-born into susceptible. A dotted region encloses the four states infectious to
-mosquitoes. The treated state is drawn once; the
-model splits it in two when antimalarial resistance is switched on. The infection
-hazard leaves a vertical spine and splits three ways, into treated, untreated and
-asymptomatic, and is labelled as acting on the susceptible, asymptomatic and
-sub-patent states; recovery returns everyone to susceptible. A dashed red path marks the
-chemoprevention pulse, a discrete jump rather than a rate, drawn leaving both the
-susceptible state and the infectious pool. The lower panel holds the mosquito
-compartments, running right to left: early and late larvae and pupae, then
-susceptible, exposed and infectious adults, with a death outflow from each and a
-return flow in which all adult females lay eggs back into the first larval stage. A
-second dotted region encloses the adult females, and the panel's deck is labelled
-for the species dimension. Two dashed indigo paths couple the panels: the
-entomological inoculation rate driving human infection, and human infectivity
-driving the mosquito force of infection, both lagged. A key at the right names each
-line style.](model_flow.png)
-
-The figure uses four grammars, not two:
-
-- **Solid black**: a flow of individuals, i.e. a term in the ODE.
-- **Dashed indigo**: a *scalar coupling*. It sets a rate in the other panel, and
-  nobody moves along it.
-- **Dashed red**: people *do* move, but instantaneously, as a state jump between
-  integration segments rather than at a rate.
-- **Dotted grey**: a grouping, never a compartment, and always labelled. There are
-  two: the infectious pool and the adult mosquitoes. That $\Lambda$ acts on $S$, $A$
-  and $U$ is stated in words beside the hazard rather than drawn, because a line from
-  $A$ back to the spine would read as a flow $A \to A$, which the model does not have
-  (§B.4). And a whole grammar element for one fact was not paying for itself.
-- **Offset layers**: the array dimensions, and only those. The deck behind the human
-  panel carries one dimension on each visible edge (age $i = 1 \dots 52$, biting
-  heterogeneity $j = 1 \dots 5$); the deck behind the mosquito panel is species.
-
-Three things the figure deliberately does not draw, because showing them cost more
-legibility than they bought. $P$, $P_c$ and the EIP are **Erlang chains**, not single
-compartments; they were once drawn with a stacked outline of their own, which made
-the same layered idiom mean two unrelated things (§B.4 gives the stage counts, which
-vary by drug). **Immunity** is algebraic rather than a state, so it is named on the
-hazard rather than boxed. And $T$ splits under antimalarial resistance (§B.4).
-
-The transmission cycle runs counter-clockwise (humans left to right, mosquitoes
-right to left), so the two couplings never cross. Where the EIR coupling must cross
-a return lane it hops it, as in a circuit diagram.
-
-Reading it:
-
-- **Humans, above.** The infection hazard $\Lambda$ acts on the whole at-risk pool
-  $S + A + U$. Asymptomatic and sub-patent people can be re-infected, and at
-  moderate transmission that is where most clinical episodes come from. It splits
-  three ways: untreated clinical disease $D$, treatment $T$, or a non-clinical
-  infection landing in $A$. Recovery runs $D \to A \to U$, and everyone returns to
-  $S$, from $U$ directly, from $T$ via prophylaxis $P$, and from chemoprevention
-  prophylaxis $P_c$.
-- **The dotted region** is the infectious pool: the states contributing to onward
-  infectivity, weighted by $c_D$, $c_A$, $c_U$ and $c_T$. $S$, $P$ and $P_c$
-  contribute nothing and sit outside it (§C).
-- **Mosquitoes, below.** Early larvae $E$ → late larvae $L$ → pupae $P_L$ →
-  susceptible adults $S_M$, which become exposed $E_M$ and then infectious $I_M$ on
-  surviving the extrinsic incubation period. Only $I_M$ transmits. Every stage has
-  a death outflow, and larval death *rises with* $n_L/K_s(t)$ — an affine
-  relationship, not a proportional one — which is how seasonality and larval source
-  management enter the model. Oviposition is by *all* adults, into $E$, and is
-  untouched by vector control; nets and IRS act on $\mu_s(t)$ and $a_s(t)$.
-- **The two dashed couplings** are what make this one model rather than two.
-  Infectious mosquitoes drive the human hazard through the EIR; infectious humans
-  drive the mosquito force of infection $\Lambda^M_s$. Both are lagged (§B.2, §C).
-
-**What the figure leaves out.** It is an overview. The four immunity arrays $I_B$,
-$I_{CA}$, $I_D$, $I_{VA}$ appear as one box coupled into the hazard, but which
-function each drives is not drawn: $b$ and $\phi$ set arrows that *are* shown,
-while $q$ and $\theta$ act on the infectivity coupling and the severe-incidence
-output. Not drawn at all: the two Erlang lag chains behind the couplings ($n_E$,
-$n_F$ stages; the couplings are marked "lagged", and the EIP chain *is* drawn);
-the individual layers of each deck, so ageing between age groups, human death and
-the births that replenish $S$ are noted on the panel rather than drawn as arrows
-(unlike the mosquito deaths, which are drawn because $\mu_s$ is where nets and IRS
-act); and the split of $T$ into fast and slow parasite clearance, which exists only
-once antimalarial resistance is switched on. Most are the subject of §3; the $T$
-split is §B.4.
-
-Nor does the figure mark where interventions act. With the single exception of
-chemoprevention — the one intervention that adds a compartment — they modify
-coefficients on arrows already drawn (§3.2). Bed nets and IRS, in particular, act
-almost entirely through the mosquito death outflows and the biting rate $a_s$.
-
-## 3. State space
-
-### 3.1 What has a state dimension
+### 2.1 What has a state dimension
 
 Every human compartment is a two-dimensional array over age group $i$ and
 biting-heterogeneity node $j$; every mosquito compartment is indexed by species
@@ -227,7 +133,7 @@ $$
 Every extra prophylaxis stage adds $n_a n_z = 260$ states: an SP-AQ SMC scenario
 ($k_{P_c} = 14$) has 6546.
 
-### 3.2 What is captured *without* a dimension
+### 2.2 What is captured *without* a dimension
 
 These are the mechanisms the IBM carries as per-individual attributes and
 `fleet` carries as **time-varying (and sometimes age-varying) coefficients**.
@@ -241,7 +147,7 @@ Each row is a dimension that was *not* added.
 | **Early treatment failure** | Per-person draw diverting a treated case back to clinical | Folded into $f_t^{\text{eff}}(t) = f_t\cdot\text{eff}\cdot(1-\text{ETF}(t))$ | None |
 | **Bed net ownership, net age, retention, repeat rounds** | Per-person net-receipt timestep; efficacy decays from that date; nets lost stochastically | Two scalars per species, $a_s(t)$ and $\mu_s(t)$, computed from the full mean-field mixture over *all past distributions* (each weighted by most-recent-receipt probability $\times$ retention survival, each decaying its own $d_{n0}$ / $r_n$) | Protection is population-averaged rather than correlated within individuals across bites, so nets tend to **under**-suppress transmission relative to the IBM |
 | **IRS spray status and spray age** | Per-person house-spray timestep | Folded into the same $a_s(t)$, $\mu_s(t)$; mixture over all past rounds weighted by most-recent-spray probability, with no retention factor (sprayed protection never expires in the IBM) | As above |
-| **Vaccination status, dose count, booster stratum, antibody titre** | Per-person dose history and last-vaccination date. Antibody parameters are *not* stored: the IBM re-draws all four from their profile distributions every timestep, for every vaccinated person | One $[n_a \times n_t]$ multiplier $v_i(t)$ on the infection hazard. The vaccinated are partitioned analytically by the most recent booster each has reached; each stratum's efficacy is the **average of the Hill efficacy over the IBM's own 4-D antibody distribution** (§4.13) | The antibody average is exact, since the IBM's draws are independent. What is lost is the dose *history*: vaccinated status is uncorrelated with anything else (nets, treatment), `min_wait` re-vaccination exclusion is not applied (§4.15), and seasonal boosters become a fixed days-since-primary schedule (warned) |
+| **Vaccination status, dose count, booster stratum, antibody titre** | Per-person dose history and last-vaccination date. Antibody parameters are *not* stored: the IBM re-draws all four from their profile distributions every timestep, for every vaccinated person | One $[n_a \times n_t]$ multiplier $v_i(t)$ on the infection hazard. The vaccinated are partitioned analytically by the most recent booster each has reached; each stratum's efficacy is the **average of the Hill efficacy over the IBM's own 4-D antibody distribution** (§3.13) | The antibody average is exact, since the IBM's draws are independent. What is lost is the dose *history*: vaccinated status is uncorrelated with anything else (nets, treatment), `min_wait` re-vaccination exclusion is not applied (§3.15), and seasonal boosters become a fixed days-since-primary schedule (warned) |
 | **TBV antibody titre** | Per-person, mapped to transmission-reducing activity | Four $[n_a \times n_t]$ infectivity multipliers, one per infectious state ($U$, $A$, $D$, $T$), because the IBM maps transmission-reducing activity (an antibody-level quantity) to transmission-blocking activity (the per-state reduction in infectivity) with a state-specific transform | Mean-field only |
 | **Immunity boosting refractory clock** | Per-person `last_boosted` timestep; a boost fires only if $\ge u$ days have passed | An analytic renewal rate $q/(q\,u_{\text{eff}} + 1)$ with $u_{\text{eff}} = \lceil u\rceil - 1$ and $q$ the *deduplicated per-day* event probability | Exact for the mean inter-boost interval |
 | **Age-specific mortality / demographic transition** | Per-person death hazard by age band and year | $\mu_i(t)$, a constant-interpolated $[n_a \times n_t]$ series; the $t = 0$ row also sets the equilibrium age structure of the seed | Ages above the top `deathrate_agegroups` take the top rate (the IBM removes them); a warning fires |
@@ -249,7 +155,7 @@ Each row is a dimension that was *not* added.
 | **Seasonality** | Daily rainfall drives larval carrying capacity | $K_s(t)$, linearly interpolated on a daily grid, from the same truncated Fourier series | None (identical functional form) |
 | **Repeated bites in one day** | Bitten individuals are collected in a set, so a person bitten several times counts once and can be infected at most once per day | Saturating hazard $-\log(1-(1-e^{-\varepsilon})b)$ instead of the linear $b\varepsilon$ | None at the daily-flow level; it is the *linear* form that would be wrong |
 
-### 3.3 What is captured as a discrete event
+### 2.3 What is captured as a discrete event
 
 Mass drug administration cannot be written as a smooth rate: it is a short,
 near-instantaneous clearance of a target age band. `fleet` splits the
@@ -257,7 +163,7 @@ integration at every scheduled MDA/SMC/PMC timestep and applies a **state jump**
 (§E), then resumes. This keeps chemoprevention out of the ODE right-hand side
 entirely.
 
-### 3.4 What is not captured at all
+### 2.4 What is not captured at all
 
 | Feature | Why | Behaviour |
 | --- | --- | --- |
@@ -267,7 +173,7 @@ entirely.
 | Per-individual stochastic variation | Deterministic model | By construction |
 | Partner-drug resistance, late clinical / parasitological failure, reinfection during prophylaxis | `malariasimulation` itself rejects non-zero values for these upstream in `set_antimalarial_resistance()` | Cannot reach the model |
 
-## 4. Parameter support, function by function
+## 3. Parameter support, function by function
 
 This section covers every user-facing `malariasimulation` parameterisation
 function, argument by argument, as of **`malariasimulation` v3.0.0**.
@@ -291,27 +197,27 @@ Where a row carries two marks, the second is a caveat on the first.
 
 | Function | § | Status |
 | --- | --- | --- |
-| `get_parameters()` | 4.1 | ✅ |
-| `set_species()` | 4.2 | ✅ |
-| `set_equilibrium()` | 4.3 | ✅ |
-| `set_demography()` | 4.4 | ✅ |
-| `set_drugs()` | 4.5 | 🟡 |
-| `set_clinical_treatment()` | 4.6 | 🟡 |
-| `set_antimalarial_resistance()` | 4.7 | 🟡 |
-| `set_bednets()` | 4.8 | 🟡 |
-| `set_spraying()` | 4.9 | 🟡 |
-| `set_carrying_capacity()` | 4.10 | 🟡 |
-| `set_mda()`, `set_smc()` | 4.11 | 🟡 |
-| `set_pmc()` | 4.12 | 🟡 |
-| `create_pev_profile()` | 4.13 | ✅ |
-| `set_pev_epi()` | 4.14 | 🟡 |
-| `set_mass_pev()` | 4.15 | 🟡 |
-| `set_tbv()` | 4.16 | 🟡 |
-| `set_epi_outputs()` | 4.17 | ✅ |
-| `set_parameter_draw()` | 4.18 | ✅ |
-| Helpers and run functions | 4.19 | mixed |
+| `get_parameters()` | 3.1 | ✅ |
+| `set_species()` | 3.2 | ✅ |
+| `set_equilibrium()` | 3.3 | ✅ |
+| `set_demography()` | 3.4 | ✅ |
+| `set_drugs()` | 3.5 | 🟡 |
+| `set_clinical_treatment()` | 3.6 | 🟡 |
+| `set_antimalarial_resistance()` | 3.7 | 🟡 |
+| `set_bednets()` | 3.8 | 🟡 |
+| `set_spraying()` | 3.9 | 🟡 |
+| `set_carrying_capacity()` | 3.10 | 🟡 |
+| `set_mda()`, `set_smc()` | 3.11 | 🟡 |
+| `set_pmc()` | 3.12 | 🟡 |
+| `create_pev_profile()` | 3.13 | ✅ |
+| `set_pev_epi()` | 3.14 | 🟡 |
+| `set_mass_pev()` | 3.15 | 🟡 |
+| `set_tbv()` | 3.16 | 🟡 |
+| `set_epi_outputs()` | 3.17 | ✅ |
+| `set_parameter_draw()` | 3.18 | ✅ |
+| Helpers and run functions | 3.19 | mixed |
 
-### 4.1 `get_parameters(overrides, parasite)`
+### 3.1 `get_parameters(overrides, parasite)`
 
 | Argument | malariasimulation meaning | `fleet` |
 | --- | --- | --- |
@@ -322,21 +228,21 @@ Where a row carries two marks, the second is a caveat on the first.
 
 | Group | Parameters | `fleet` |
 | --- | --- | --- |
-| Initial state proportions | `s_proportion`, `d_proportion`, `a_proportion`, `u_proportion`, `t_proportion` | ⛔ Ignored. `fleet` seeds at the `malariaEquilibrium` fixed point for `init_EIR` (or, under a custom demography, for the EIR the IBM's mosquito sizing supports, §4.3), not at user-supplied proportions |
+| Initial state proportions | `s_proportion`, `d_proportion`, `a_proportion`, `u_proportion`, `t_proportion` | ⛔ Ignored. `fleet` seeds at the `malariaEquilibrium` fixed point for `init_EIR` (or, under a custom demography, for the EIR the IBM's mosquito sizing supports, §3.3), not at user-supplied proportions |
 | Initial immunity | `init_ib`, `init_ica`, `init_iva`, `init_icm`, `init_ivm`, `init_id` | ⛔ Ignored, same reason |
 | Population size | `human_population` | ✅ Scales output counts only; the ODE is per-capita, so run time is independent of it |
 | | `human_population_timesteps` | ⛔ Ignored. Population is conserved; no dynamic population size |
 | Baseline demography | `average_age` | ✅ → $\eta = 1/\text{average_age}$: the constant death hazard and the equilibrium age structure when `custom_demography = FALSE` |
-| | `custom_demography` | ✅ Switches to the `set_demography()` path (§4.4) |
+| | `custom_demography` | ✅ Switches to the `set_demography()` path (§3.4) |
 | Biting heterogeneity | `a0`, `rho` | ✅ $\psi_i = 1 - \rho e^{-a_i/a_0}$ |
 | | `sigma_squared` | ✅ Log-normal variance of $\zeta$ |
 | | `n_heterogeneity_groups` | ✅ Number of Gauss–Hermite nodes $n_z$. Must be a whole number $\geq 3$: fewer nodes than that are not a quadrature on the log-normal at all, they just move every human off it |
 | | `enable_heterogeneity` | ✅ `FALSE` collapses to a single node with $\zeta = 1$ |
 | Aquatic mosquito | `del`, `dl`, `dpl`, `me`, `ml`, `mup`, `gamma` | ✅ Used verbatim in the $E$/$L$/$P_L$ equations |
-| Adult mosquito | `mum`, `beta`, `total_M`, `blood_meal_rates`, `Q0`, `foraging_time`, `species`, `species_proportions` | ✅ Per-species; `total_M` is re-derived: from `init_EIR` under the default demography, as the IBM's own value under a custom one (§4.3) |
+| Adult mosquito | `mum`, `beta`, `total_M`, `blood_meal_rates`, `Q0`, `foraging_time`, `species`, `species_proportions` | ✅ Per-species; `total_M` is re-derived: from `init_EIR` under the default demography, as the IBM's own value under a custom one (§3.3) |
 | | `init_foim` | ⛔ Ignored: `fleet` recomputes FOIM from its own seeded human infectivity, which must be self-consistent with its seed |
 | Seasonality | `model_seasonality`, `g0`, `g`, `h`, `rainfall_floor` | ✅ Truncated Fourier rainfall drives $K_s(t) = K_{0,s}\,\text{scaler}(t)\,\text{rainfall}(t)/\bar{R}$, on a daily grid |
-| Flexible carrying capacity | `carrying_capacity`, `carrying_capacity_timesteps` | ✅ See §4.10. (`carrying_capacity_scalers` is *not* a `get_parameters()` default and cannot be passed in `overrides`; it is created only by `set_carrying_capacity()`.) |
+| Flexible carrying capacity | `carrying_capacity`, `carrying_capacity_timesteps` | ✅ See §3.10. (`carrying_capacity_scalers` is *not* a `get_parameters()` default and cannot be passed in `overrides`; it is created only by `set_carrying_capacity()`.) |
 | | `carrying_capacity_values` | ⛔ Not read (nor by `malariasimulation`; only the `_scalers` form is used) |
 | Human disease & immunity constants | `dd`, `dt`, `da`, `du` | ✅ Back-translated to $r_D, r_T, r_A, r_U$, then converted to the IBM's per-day exit probability $1-e^{-1/d}$ so the realised dwell matches |
 | | `rb`, `rc`, `rva`, `rid`, `rm`, `rvm` | ✅ Immunity decay time constants $d_{I_B}, d_{I_{CA}}, d_{I_{VA}}, d_{I_D}$ and the maternal decay $d_m, d_{vm}$ |
@@ -351,7 +257,7 @@ Where a row carries two marks, the second is a caveat on the first.
 | Vector-control shape | `phi_bednets`, `phi_indoors`, `k0` | ✅ Per species, in the $a(t)$/$\mu(t)$ algebra |
 | Output bands | `age_group_rendering_*`, `incidence_rendering_*`, `clinical_incidence_rendering_*`, `severe_incidence_rendering_*`, `prevalence_rendering_*` | ✅ Each drives its own output family, exactly as in `malariasimulation` (§G) |
 | | `ib_`/`id_`/`ica_`/`iva_`/`idm_`/`icm_`/`ivm_rendering_*` | ⛔ `fleet` does not render mean immunity by band |
-| Metapopulation test-and-treat | `rdt_intercept`, `rdt_coeff` | ⛔ Ignored. They parameterise the PCR→RDT conversion used by `run_metapop_simulation()`'s mixing, which `fleet` does not support (§4.19) |
+| Metapopulation test-and-treat | `rdt_intercept`, `rdt_coeff` | ⛔ Ignored. They parameterise the PCR→RDT conversion used by `run_metapop_simulation()`'s mixing, which `fleet` does not support (§3.19) |
 | Engine / solver | `mosquito_limit`, `individual_mosquitoes`, `r_tol`, `a_tol`, `ode_max_steps`, `progress_bar` | ⛔ Ignored: `fleet` is always compartmental and exposes its own `atol`/`rtol`/`step_size_max` through `ode_tuning()` |
 | Vivax-only | All hypnozoite parameters, `drug_hypnozoite_*`, `n_with_hypnozoites_rendering_*` | ⛔ Not applicable |
 
@@ -365,18 +271,18 @@ both default to the validated choice.
 | `bite_dedup` | `1` | `1` reproduces the IBM's per-timestep bite deduplication (saturating hazard, §B.2). `0` uses the linear $b\varepsilon$ that `malariaEquilibrium` assumes, cutting the residual drift off the seed to well under 1% — but not to zero, since it gates only the hazard and not the boosting or sojourn forms. It is a switch: anything but 0 or 1 (`TRUE`/`FALSE` accepted) is an error |
 | `acquired_immunity_offset` | `0` | $\delta$ in the $b$/$\phi$/$\theta$ Hill functions. `0.5` reproduces the IBM's literal per-individual offset; `0` is the better mean-field match against the IBM ensemble mean. Must lie in $[0, 1]$ |
 
-### 4.2 `set_species(species, proportions)`
+### 3.2 `set_species(species, proportions)`
 
 | Argument | malariasimulation meaning | `fleet` |
 | --- | --- | --- |
 | `species` | List of species parameter lists (`gamb_params`, `arab_params`, `fun_params`, `kol_params`, `steph_params`, or custom) | ✅ Each entry's `blood_meal_rates`, `foraging_time`, `Q0`, `phi_bednets`, `phi_indoors` and `mum` become per-species vectors driving an independent mosquito sub-model, coupled only through the shared human population |
 | `proportions` | Relative abundance, summing to 1 | ✅ Splits `total_M` and hence each species' baseline carrying capacity. A species at proportion 0 stays inert; its $K_0$ is floored to a negligible positive value so the larval term does not evaluate $0/0$ |
 
-### 4.3 `set_equilibrium(init_EIR, eq_params, EIR_population_input)`
+### 3.3 `set_equilibrium(init_EIR, eq_params, EIR_population_input)`
 
 | Argument | malariasimulation meaning | `fleet` |
 | --- | --- | --- |
-| `init_EIR` | Target EIR to seed from | ✅ Stored as `parameters$init_EIR`, which is where `run_simulation_ode()` reads it from; it has no `init_EIR` argument of its own. It means the same thing in both models: under the default demography it is the EIR `fleet` realises; under `set_demography()` it sizes the mosquito population exactly as the IBM's does and `fleet` seeds at the EIR that density supports (§4.4) |
+| `init_EIR` | Target EIR to seed from | ✅ Stored as `parameters$init_EIR`, which is where `run_simulation_ode()` reads it from; it has no `init_EIR` argument of its own. It means the same thing in both models: under the default demography it is the EIR `fleet` realises; under `set_demography()` it sizes the mosquito population exactly as the IBM's does and `fleet` seeds at the EIR that density supports (§3.4) |
 | `eq_params` | Custom `malariaEquilibrium` parameter set | ✅ Merged over `fleet`'s own back-translation and takes precedence. Note `set_equilibrium()` writes this field **even when passed `NULL`** (storing its own back-translation), so after any call to it, that stored set, not `R/translate_params.R`, supplies every shared constant (§F) |
 | `EIR_population_input` | `"adult"` (default) or `"total"` | ✅ Handled upstream: `malariasimulation` converts a total-population EIR to adult EIR before storing it, and `fleet` always interprets `init_EIR` as adult EIR (bites per adult per year) |
 
@@ -404,7 +310,7 @@ custom mortality never enters). `fleet` never reads the stored
 Calling `parameterise_total_M()` or `parameterise_mosquito_equilibrium()`
 directly is harmless but changes nothing.
 
-### 4.4 `set_demography(agegroups, timesteps, deathrates)`
+### 3.4 `set_demography(agegroups, timesteps, deathrates)`
 
 | Argument | malariasimulation meaning | `fleet` |
 | --- | --- | --- |
@@ -413,14 +319,14 @@ directly is harmless but changes nothing.
 | `deathrates` | `[length(timesteps) × length(agegroups)]` daily death rates | ✅ Used directly as $\mu_i(t)$. The $t = 0$ row additionally sets the equilibrium age structure the human seed is rescaled onto; the open-ended top model group is looked up one day above its lower edge, so it takes the rate of the band it belongs to rather than the one below. 🟡 Model ages above the top `agegroups` edge take the top rate here, whereas the IBM removes them. A warning fires; raise `default_age_lower(max_age =)` or extend `agegroups` to match |
 
 With a custom demography the mosquito population is sized as the IBM sizes it
-(§4.3): `fleet` takes the IBM's `total_M` and seeds at the EIR its own equilibrium
+(§3.3): `fleet` takes the IBM's `total_M` and seeds at the EIR its own equilibrium
 under this age structure supports, which is generally *not* `init_EIR` (an older
 population sustains less transmission from the same mosquitoes; the comparison
 article's scenario seeds at EIR 13.9 for `init_EIR = 20`, matching the IBM's
 realised 13.8). `parameters$hold_init_EIR = TRUE` makes `init_EIR` the realised
 EIR instead.
 
-### 4.5 `set_drugs(drugs)`
+### 3.5 `set_drugs(drugs)`
 
 | Argument | malariasimulation meaning | `fleet` |
 | --- | --- | --- |
@@ -430,7 +336,7 @@ EIR instead.
 | &nbsp;&nbsp;`drug_prophylaxis_shape`, `drug_prophylaxis_scale` | Weibull prophylaxis survival | ✅ Both moments used. The chain mean is $\bar{d}_W - \int e^{-r_T t}W\,dt$, the protection left after the $T$ sojourn (§B.4), and its length $k_P$ matches the variance of the whole $T + P$ sojourn: 16 stages for SP-AQ, 20 for DHA-PQP, 1 for AL (the chemoprevention chain, with no $T$ stage in front, uses $1/\text{CV}_W^2$: 14 / 15). Capped at 20. 🟡 An Erlang chain is not a Weibull, and the exponential $T$ stage adds variability the IBM's parallel clock does not have; for AL the protection curve is reproduced in its integral, not its shape. `ode_tuning(n_ph =)` overrides the count |
 | &nbsp;&nbsp;`drug_hypnozoite_*` | *P. vivax* only | ⛔ Not applicable |
 
-### 4.6 `set_clinical_treatment(drug, timesteps, coverages)`
+### 3.6 `set_clinical_treatment(drug, timesteps, coverages)`
 
 | Argument | malariasimulation meaning | `fleet` |
 | --- | --- | --- |
@@ -438,7 +344,7 @@ EIR instead.
 | `timesteps` | When coverage changes | ✅ Knots of the step-interpolated $f_t(t)$, and of the drug-mix series |
 | `coverages` | Fraction of clinical cases treated with this drug | ✅ $f_t(t) = \min\left(1, \sum_{\text{drugs}} \text{cov}_d(t)\right)$. `set_clinical_treatment()` *errors* if the summed coverage exceeds 1 at any timestep, so the `min(1, ·)` `fleet` applies is a defensive floor that never binds on a valid parameter set. 🟡 The drug-linked quantities $\text{eff}(t)$, $c_T(t)$, $r_P(t)$ are blended by each drug's *instantaneous* coverage share, so a first-line **switch** is modelled; a genuinely mixed first line is represented by its blend rather than as parallel sub-populations |
 
-### 4.7 `set_antimalarial_resistance(...)`
+### 3.7 `set_antimalarial_resistance(...)`
 
 | Argument | malariasimulation meaning | `fleet` |
 | --- | --- | --- |
@@ -453,7 +359,7 @@ EIR instead.
 | `reinfection_during_prophylaxis_probability` | Reinfection while prophylactic | ⛔ `malariasimulation` requires 0 |
 | `slow_parasite_clearance_time` | Mean duration of slow clearance | 🟡 $r_T^{\text{slow}} = 1 - e^{-1/\text{dt_slow}}$, a **single scalar** carrying the same whole-day conversion as the other sojourns (§B.4). With one resistant drug the blend is exact; with several it is the coverage-weighted blend evaluated at *peak* resistance (peak, not final, so a rise-then-fall schedule is not collapsed to zero) |
 
-### 4.8 `set_bednets()`
+### 3.8 `set_bednets()`
 
 `set_bednets(parameters, timesteps, coverages, dn0, rn, rnm, gamman, retention, logistic_half_life, logistic_k)`
 
@@ -472,7 +378,7 @@ individuals across bites. Within that, every argument below is handled exactly.
 | `retention` | Mean net-retention time (log-uniform model) | ✅ Exponential usage survival $e^{-s_n/\text{retention}}$ |
 | `logistic_half_life`, `logistic_k` | Alternative logistic retention | ✅ Exact survival of the IBM's logistic retention time: $S(s_n) = \exp\!\left(-k\frac{r^2}{1-r^2}\right)$ for $r = s_n/l < 1$ (else 0), with $l = \text{half_life}/\sqrt{1 - k/(k-\log 0.5)}$. Verified $S(\text{half_life}) = 0.5$ exactly |
 
-### 4.9 `set_spraying()`
+### 3.9 `set_spraying()`
 
 `set_spraying(parameters, timesteps, coverages, ls_theta, ls_gamma, ks_theta, ks_gamma, ms_theta, ms_gamma)`
 
@@ -494,14 +400,14 @@ $\overline{(1-r_s)s_s}$ rather than multiplying two independent averages.
 Because the IBM recomputes these every timestep, $a_s(t)$/$\mu_s(t)$ are
 linearly interpolated so within-round logistic decay is a ramp, not a step.
 
-### 4.10 `set_carrying_capacity(timesteps, carrying_capacity_scalers)`
+### 3.10 `set_carrying_capacity(timesteps, carrying_capacity_scalers)`
 
 | Argument | malariasimulation meaning | `fleet` |
 | --- | --- | --- |
 | `timesteps` | When each scaler row takes effect | ✅ Step change in $K_s(t)$, composed multiplicatively with seasonality. $K_s$ is interpolated linearly, so the grid carries a knot the day before each change and the step is confined to a single day (§H) |
 | `carrying_capacity_scalers` | `[n_timesteps × n_species]` multipliers on baseline $K_0$ | ✅ Multiplies baseline $K_0$ per species. 🟡 A scaler of exactly 0 is floored at $K_0 \times 10^{-4}$ to keep the larval term finite, so complete vector elimination is approached but not reproduced exactly |
 
-### 4.11 `set_mda()` and `set_smc()`
+### 3.11 `set_mda()` and `set_smc()`
 
 `set_mda(parameters, drug, timesteps, coverages, min_ages, max_ages)`.
 `set_smc()` has the identical signature and identical handling.
@@ -523,7 +429,7 @@ weighted by each type's **total scheduled coverage** (the sum over all of its
 rounds), so a type with more rounds carries proportionally more weight
 regardless of its per-round coverage.
 
-### 4.12 `set_pmc(drug, timesteps, coverages, ages)`
+### 3.12 `set_pmc(drug, timesteps, coverages, ages)`
 
 | Argument | malariasimulation meaning | `fleet` |
 | --- | --- | --- |
@@ -532,7 +438,7 @@ regardless of its per-round coverage.
 | `coverages` | Fraction of infants receiving each dose | ✅ The coverage in force at each pulse time is used |
 | `ages` | Ages (days) at which doses are given | 🟡 The IBM triggers on an individual reaching each dose age. `fleet` approximates this as pulses at a ~30-day cadence over a 30-day band starting at each dose age, with per-group overlap weighting, keeping the effective dose at approximately coverage × efficacy |
 
-### 4.13 `create_pev_profile(vmax, alpha, beta, cs, rho, ds, dl)`
+### 3.13 `create_pev_profile(vmax, alpha, beta, cs, rho, ds, dl)`
 
 | Argument | malariasimulation meaning | `fleet` |
 | --- | --- | --- |
@@ -557,7 +463,7 @@ correlation for the mean field to lose here: the quadrature is exact rather
 than approximate. The resulting mean-efficacy curve is cached per profile on a
 daily grid.
 
-### 4.14 `set_pev_epi()`
+### 3.14 `set_pev_epi()`
 
 `set_pev_epi(parameters, profile, coverages, timesteps, age, min_wait, booster_spacing, booster_coverage, booster_profile, seasonal_boosters)`
 
@@ -570,13 +476,13 @@ modelled, but seasonal boosters are approximated (warned).
 | `coverages` | Coverage of the routine programme over time | ✅ **Time-varying**: each cohort is protected at the coverage in force on *its own first-dose date*, not at a single coverage |
 | `timesteps` | When each coverage takes effect | ✅ Also gates eligibility: a cohort is protected only once its first dose falls inside the programme. Gating follows `malariasimulation`, which keys on `pev_epi_coverages`/`pev_epi_timesteps` and never reads `parameters$pev` |
 | `age` | Age (days) at the first dose | ✅ Efficacy starts at `age + max(pev_doses)`, i.e. after the final primary dose |
-| `min_wait` | Minimum time since the last vaccination | ➖ For a routine EPI programme this guards re-vaccination and seasonal-booster timing, not the primary-plus-booster schedule `fleet` models, so it has no effect on the result. (For **mass** campaigns it does bite; see §4.15.) |
+| `min_wait` | Minimum time since the last vaccination | ➖ For a routine EPI programme this guards re-vaccination and seasonal-booster timing, not the primary-plus-booster schedule `fleet` models, so it has no effect on the result. (For **mass** campaigns it does bite; see §3.15.) |
 | `booster_spacing` | Days from the final primary dose to each booster | ✅ The **full** booster sequence is modelled: the vaccinated are partitioned by the most recent booster each has reached, and each stratum carries its own decayed efficacy |
 | `booster_coverage` | Matrix of conditional booster coverages | ✅ Each booster's coverage is read at *its own* administration date (matching `coverage[match_timestep(timesteps, admin_time), booster]`), reducing to the single-row lookup in the usual case |
-| `booster_profile` | Per-booster profiles | ✅ Each booster uses its own profile, integrated over the antibody distribution as in §4.13 |
+| `booster_profile` | Per-booster profiles | ✅ Each booster uses its own profile, integrated over the antibody distribution as in §3.13 |
 | `seasonal_boosters` | Time the first booster relative to the **start of the calendar year**: `booster_spacing[1]` becomes a day-of-year. It makes no reference to the fitted seasonality; you choose the day yourself, e.g. via `peak_season_offset()` | 🟡 Approximated as a fixed days-since-primary schedule. `fleet` **warns** when this is set |
 
-### 4.15 `set_mass_pev()`
+### 3.15 `set_mass_pev()`
 
 `set_mass_pev(parameters, profile, timesteps, coverages, min_ages, max_ages, min_wait, booster_spacing, booster_coverage, booster_profile)`
 
@@ -588,11 +494,11 @@ age out of its band. A single campaign is modelled faithfully.
 | Argument | malariasimulation meaning | `fleet` |
 | --- | --- | --- |
 | `profile` | Primary-series profile | ✅ |
-| `timesteps` | Campaign dates | 🟡 Every campaign contributes, combined as $1-\prod_k(1-e_k)$. The IBM instead keeps only the **most recent** vaccination per person, so its population protection is a most-recent-receipt mixture $\sum_k \text{cov}_k \prod_{j>k}(1-\text{cov}_j)\,e_k$, the same structure `fleet` already uses for bed nets (§4.8). The two agree for a single campaign and diverge when campaigns overlap |
+| `timesteps` | Campaign dates | 🟡 Every campaign contributes, combined as $1-\prod_k(1-e_k)$. The IBM instead keeps only the **most recent** vaccination per person, so its population protection is a most-recent-receipt mixture $\sum_k \text{cov}_k \prod_{j>k}(1-\text{cov}_j)\,e_k$, the same structure `fleet` already uses for bed nets (§3.8). The two agree for a single campaign and diverge when campaigns overlap |
 | `coverages` | Coverage per campaign (recycled if length 1) | ✅ |
-| `min_ages`, `max_ages` | Target age bands | ✅ **Every** band is applied at **every** campaign, each mapped onto the model age grid by **fractional overlap** as for MDA/SMC (§4.11), so a band narrower than the groups it falls between still vaccinates its share instead of nobody. The bands of one campaign are one campaign: their weights **add** into a single covered fraction per group (capped at 1) before coverage is applied, and only *campaigns* combine as independent protections. A band overlapping no group warns |
+| `min_ages`, `max_ages` | Target age bands | ✅ **Every** band is applied at **every** campaign, each mapped onto the model age grid by **fractional overlap** as for MDA/SMC (§3.11), so a band narrower than the groups it falls between still vaccinates its share instead of nobody. The bands of one campaign are one campaign: their weights **add** into a single covered fraction per group (capped at 1) before coverage is applied, and only *campaigns* combine as independent protections. A band overlapping no group warns |
 | `min_wait` | Minimum time since the last vaccination | ⚠ **Ignored, and it matters here.** In `malariasimulation` each campaign excludes anyone vaccinated within `min_wait` of it, so with repeated campaigns this is the primary control on who gets re-vaccinated. `fleet` treats every campaign as reaching its whole target band independently, so a `min_wait` longer than the campaign spacing will over-vaccinate |
-| `booster_spacing` | Days from the final primary dose to each booster | ✅ Full sequence, as in §4.14 |
+| `booster_spacing` | Days from the final primary dose to each booster | ✅ Full sequence, as in §3.14 |
 | `booster_coverage` | Conditional booster coverage matrix | ✅ Read at each booster's administration date |
 | `booster_profile` | Per-booster profiles | ✅ |
 
@@ -600,7 +506,7 @@ age out of its band. A single campaign is modelled faithfully.
 place with time since vaccination, but the protected fraction stays attached to
 the age band rather than moving up the age grid with the cohort.
 
-### 4.16 `set_tbv(timesteps, coverages, ages)`
+### 3.16 `set_tbv(timesteps, coverages, ages)`
 
 | Argument | malariasimulation meaning | `fleet` |
 | --- | --- | --- |
@@ -616,7 +522,7 @@ giving four independent per-age multipliers on $U$, $A$, $D$ and $T$
 infectivity. All the `tbv_*` shape constants (`tbv_tau`, `tbv_rho`, `tbv_ds`,
 `tbv_dl`, `tbv_tra_mu`, `tbv_gamma1`, `tbv_gamma2`, `tbv_k`) are used verbatim.
 
-### 4.17 `set_epi_outputs(...)`
+### 3.17 `set_epi_outputs(...)`
 
 | Argument | malariasimulation meaning | `fleet` |
 | --- | --- | --- |
@@ -632,13 +538,13 @@ When a family's band list is empty, `fleet` falls back to the convenience bands
 2–10 y and all-ages for that family only. A bare `get_parameters()` leaves four
 of the five families empty; it defaults the **prevalence** bands to 2–10 y.
 
-### 4.18 `set_parameter_draw(draw)`
+### 3.18 `set_parameter_draw(draw)`
 
 | Argument | malariasimulation meaning | `fleet` |
 | --- | --- | --- |
 | `draw` | Index 1–1000 into the fitted posterior draws | ✅ `malariasimulation` overwrites the immunity/disease constants in the parameter list in place; they then flow through `fleet`'s back-translation like any other parameter. Must be called before `set_equilibrium()`, as in the IBM |
 
-### 4.19 Helpers and run functions
+### 3.19 Helpers and run functions
 
 | Function / argument | malariasimulation meaning | `fleet` |
 | --- | --- | --- |
@@ -649,7 +555,7 @@ of the five families empty; it defaults the **prevalence** bands to 2–10 y.
 | `run_metapop_simulation(timesteps, parameters, ..., export_mixing, import_mixing)` | Coupled patches | ⛔ Not supported. `fleet` is a single patch; there is no guard, so do not pass a metapopulation setup expecting it to be honoured |
 | `run_resumable_simulation(...)` | Resume from saved state | ⛔ Not implemented. `fleet` runs are cheap enough to re-run from the seed |
 
-## 5. Using `fleet` well: what to do differently
+## 4. Using `fleet` well: what to do differently
 
 ### Things to do
 
@@ -668,7 +574,7 @@ run_simulation_ode(t, p, tuning = list(age_lower = default_age_lower(max_age = 1
 ```
 
 A warning fires when they diverge; don't ignore it, because it changes the
-equilibrium age structure the whole run is seeded on (§4.4).
+equilibrium age structure the whole run is seeded on (§3.4).
 
 **Make your output bands a partition.** `postie` treats every column as an
 independent age stratum, so overlapping bands are double-counted by any
@@ -706,7 +612,7 @@ capped at 20; each stage adds $n_a n_z$ states and the solver slows steeply beyo
 that.
 
 **`parameterise_total_M()` / `parameterise_mosquito_equilibrium()`.** They have
-no effect; `fleet` re-derives `total_M` itself (§4.3: from `init_EIR` under the
+no effect; `fleet` re-derives `total_M` itself (§3.3: from `init_EIR` under the
 default demography, as the IBM's own value under a custom one).
 
 ### Results to treat with caution
@@ -768,7 +674,7 @@ variation of 0.3 in $I_{VA}$ inside a stratum puts $\mathbb{E}[\theta]$ 23%
 above $\theta$ at the stratum mean at age 3 and 28% above at age 5, where the
 same calculation on $\phi$ gives $-0.7$% and $+4.8$%. `fleet` resolves the
 log-normal biting
-strata explicitly (§3.1), so only the spread within an (age, $\zeta$) cell is
+strata explicitly (§2.1), so only the spread within an (age, $\zeta$) cell is
 lost and the realised gap is a few percent rather than tens of percent, but the
 direction is the same.
 
@@ -792,11 +698,11 @@ narrow age bands, and any scenario difference taken on severe incidence.
 
 **Anything through a nets or IRS era.** Population-averaged coverage loses the
 correlation of protection within individuals across bites, so the ODE tends to
-sit above the IBM while vector control is active (§3.2).
+sit above the IBM while vector control is active (§2.2).
 
 **Repeated mass PEV or TBV campaigns.** Overlapping campaigns combine as
 independent protections rather than most-recent-receipt, and `min_wait`
-re-vaccination exclusion is not applied (§4.15, §4.16). A single campaign is
+re-vaccination exclusion is not applied (§3.15, §3.16). A single campaign is
 fine.
 
 ### Cost model
@@ -808,21 +714,21 @@ coarser cadences when the extra resolution isn't buying you anything.
 
 ### Index of approximations
 
-Every 🟡 in §4, and when it matters:
+Every 🟡 in §3, and when it matters:
 
 | Mechanism | § | Matters when |
 | --- | --- | --- |
-| Weibull prophylaxis → Erlang chain (moment-matched) | 4.5, B.4 | The far tail of chemoprevention protection; for post-treatment protection the exponential $T$ stage in front of the chain spreads AL's sharp 10-day protection, reproducing its integral rather than its shape |
-| Multi-drug blend rather than parallel sub-populations | 4.6 | A genuinely mixed first line (a *switch* is modelled fine) |
-| Single scalar slow-clearance rate blended across drugs | 4.7, B.4 | High artemisinin resistance with several treatment drugs |
-| Population-averaged nets | 4.8 | Any nets era, the largest routine gap |
-| Population-averaged IRS | 4.9 | Any IRS era |
-| Carrying-capacity floor at $K_0\times10^{-4}$ | 4.10 | Modelling complete vector elimination |
-| Chemoprevention as pulses; half-open age bands | 4.11, E | Very narrow target bands |
-| PMC age trigger → monthly pulses | 4.12 | PMC dose timing specifically |
-| Seasonal PEV boosters → fixed delay | 4.14 | Seasonally-timed booster campaigns (warned) |
-| Repeated campaigns: no `min_wait`, independent combination, no ageing out of band | 4.15 | Repeated mass PEV |
-| TBV campaign combination | 4.16 | Repeated TBV campaigns |
+| Weibull prophylaxis → Erlang chain (moment-matched) | 3.5, B.4 | The far tail of chemoprevention protection; for post-treatment protection the exponential $T$ stage in front of the chain spreads AL's sharp 10-day protection, reproducing its integral rather than its shape |
+| Multi-drug blend rather than parallel sub-populations | 3.6 | A genuinely mixed first line (a *switch* is modelled fine) |
+| Single scalar slow-clearance rate blended across drugs | 3.7, B.4 | High artemisinin resistance with several treatment drugs |
+| Population-averaged nets | 3.8 | Any nets era, the largest routine gap |
+| Population-averaged IRS | 3.9 | Any IRS era |
+| Carrying-capacity floor at $K_0\times10^{-4}$ | 3.10 | Modelling complete vector elimination |
+| Chemoprevention as pulses; half-open age bands | 3.11, E | Very narrow target bands |
+| PMC age trigger → monthly pulses | 3.12 | PMC dose timing specifically |
+| Seasonal PEV boosters → fixed delay | 3.14 | Seasonally-timed booster campaigns (warned) |
+| Repeated campaigns: no `min_wait`, independent combination, no ageing out of band | 3.15 | Repeated mass PEV |
+| TBV campaign combination | 3.16 | Repeated TBV campaigns |
 ## Appendix: the equations
 
 The rest of this article is reference material: the full system as implemented,
@@ -1026,7 +932,7 @@ and $\kappa^V_i$ the same with $d_{vm}$.
 #### B.4 Disease-state equations
 
 Writing $\Sigma_{ij} = S_{ij}+A_{ij}+U_{ij}$ for the at-risk pool, $\text{SPC}(t)$
-for the slow-parasite-clearance fraction of the treated (§4.7), and
+for the slow-parasite-clearance fraction of the treated (§3.7), and
 $f_t^{\text{eff}}(t) = f_t(t)\,\text{eff}(t)\,(1-\text{ETF}(t))$ for the
 effective treated fraction:
 
@@ -1305,7 +1211,7 @@ trigger, is approximated as ~monthly pulses over each dose-age band.
    implied by the seeded human infectivity, with `total_M` chosen so that
    $\sum_s a_s I_{M,s} = \text{EIR}_{\text{seed}}/365$ exactly. Under the default
    demography $\text{EIR}_{\text{seed}} = \text{init_EIR}$; under a custom
-   demography `total_M` is fixed to the IBM's (`ibm_total_M()`, §4.3) and
+   demography `total_M` is fixed to the IBM's (`ibm_total_M()`, §3.3) and
    $\text{EIR}_{\text{seed}}$ is the root of `total_M(EIR) = total_M_IBM`, found
    by `uniroot()` on $\log \text{EIR}$ (steps 2–4 are re-solved at each trial
    EIR). Lag chains are seeded at
