@@ -6,11 +6,6 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>fleet • a fast ODE twin of malariasimulation • fleet</title>
-<!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
-<link rel="icon" type="”image/svg+xml”" href="favicon.svg">
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-<link rel="icon" sizes="any" href="favicon.ico">
-<link rel="manifest" href="site.webmanifest">
 <script src="lightswitch.js"></script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/Nunito_Sans-0.4.10/font.css" rel="stylesheet">
@@ -23,7 +18,6 @@
 ">
 <meta property="og:description" content="A fast, deterministic mean-field (ODE) counterpart to the malariasimulation individual-based model of Plasmodium falciparum malaria, built on odin2 / dust2.
 ">
-<meta property="og:image" content="https://pwinskill.github.io/fleet/logo.svg">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -74,12 +68,9 @@
 </nav><div class="container template-home">
 <div class="row">
   <main id="main" class="col-md-9"><div class="section level1">
-<div class="page-header">
-<img src="logo.svg" class="logo" alt=""><h1 id="fleet">fleet<a class="anchor" aria-label="anchor" href="#fleet"></a>
-</h1>
-</div>
-<p><a href="#not-ready-for-real-use"><img src="https://img.shields.io/badge/status-work%20in%20progress-orange?style=for-the-badge" alt="Status: work in progress"></a> <a href="https://lifecycle.r-lib.org/articles/stages.html#experimental" class="external-link"><img src="https://img.shields.io/badge/lifecycle-experimental-orange?style=for-the-badge" alt="Lifecycle: experimental"></a> <a href="#not-ready-for-real-use"><img src="https://img.shields.io/badge/not%20for-production%20use-red?style=for-the-badge" alt="Not for production use"></a></p>
-<p><a href="https://github.com/pwinskill/fleet/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/pwinskill/fleet/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a> <a href="https://github.com/pwinskill/fleet/actions/workflows/pkgdown.yaml" class="external-link"><img src="https://github.com/pwinskill/fleet/actions/workflows/pkgdown.yaml/badge.svg" alt="pkgdown"></a> <a href="https://github.com/pwinskill/fleet/blob/main/LICENSE.md" class="external-link"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a></p>
+<div class="page-header"><h1 id="fleet">fleet<a class="anchor" aria-label="anchor" href="#fleet"></a>
+</h1></div>
+<p><a href="https://github.com/pwinskill/fleet/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/pwinskill/fleet/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a> <a href="https://github.com/pwinskill/fleet/actions/workflows/pkgdown.yaml" class="external-link"><img src="https://github.com/pwinskill/fleet/actions/workflows/pkgdown.yaml/badge.svg" alt="pkgdown"></a> <a href="https://lifecycle.r-lib.org/articles/stages.html#experimental" class="external-link"><img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle: experimental"></a> <a href="#not-ready-for-real-use"><img src="https://img.shields.io/badge/status-work%20in%20progress-orange.svg" alt="Status: work in progress"></a> <a href="#not-ready-for-real-use"><img src="https://img.shields.io/badge/not%20for-production%20use-red.svg" alt="Not for production use"></a> <a href="https://github.com/pwinskill/fleet/blob/main/LICENSE.md" class="external-link"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a></p>
 <blockquote>
 <h2 id="not-ready-for-real-use">Not ready for real use</h2>
 <p>⚠️ <strong><code>fleet</code> is a work in progress and is not validated for research, policy or operational use.</strong> It is published early so the approach and the comparison against <code>malariasimulation</code> can be looked at and argued with, not so that anyone can rely on its numbers.</p>
@@ -97,10 +88,6 @@
 <blockquote>
 <p>A fast, deterministic <strong>mean-field (ODE) twin</strong> of the <a href="https://github.com/mrc-ide/malariasimulation" class="external-link">malariasimulation</a> individual-based model of <em>Plasmodium falciparum</em> malaria: same inputs, seconds per run, population-independent.</p>
 </blockquote>
-<div class="float">
-<img src="reference/figures/model_flow.png" alt="The fleet model"><div class="figcaption">The fleet model</div>
-</div>
-<p><em>The model at a glance: humans above, mosquitoes below, the transmission cycle running counter-clockwise. Solid black = a flow of individuals, a rate in the ODE. Dashed indigo = a scalar coupling, where nobody moves. Dashed red = a discrete state jump. Dotted grey = a grouping, never a compartment: the infectious pool and the adult females. Offset layers = the array dimensions, and only those: the deck behind the human panel is the age × biting-heterogeneity grid, the deck behind the mosquito panel is species. Not drawn, to keep the figure readable: P, P<sub>c</sub> and the EIP are Erlang chains rather than single compartments (stage counts vary by drug); immunity is algebraic rather than a state, so it is named on the hazard instead of boxed; and T splits under antimalarial resistance. All three are in <code><a href="articles/model.html">vignette("model")</a></code>.</em></p>
 <div class="section level2">
 <h2 id="what-it-is">What it is<a class="anchor" aria-label="anchor" href="#what-it-is"></a>
 </h2>
