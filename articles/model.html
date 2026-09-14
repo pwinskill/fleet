@@ -99,10 +99,10 @@ source in <code>inst/odin/malaria_ode.R</code> and the input builders in
 <code>R/build_inputs.R</code> / <code>R/interventions.R</code>.</p>
 <p>For a task-oriented introduction with runnable code, see <a href="fleet.html">Getting started with <code>fleet</code></a>.
 <strong>This article is the canonical description of the model and of
-what it approximates:</strong> §3 says what the state space does and
-does not carry, §4 covers every <code>malariasimulation</code> argument
-one by one, and §5 lists what to do differently because this is an ODE
-and not the IBM. If you read only one section, read §5.</p>
+what it approximates:</strong> §2 says what the state space does and
+does not carry, §3 covers every <code>malariasimulation</code> argument
+one by one, and §4 lists what to do differently because this is an ODE
+and not the IBM. If you read only one section, read §4.</p>
 <p>Everything below describes <code>malariasimulation</code>
 <strong>v3.0.0</strong>.</p>
 <div class="section level2">
@@ -115,8 +115,8 @@ the <code>malariasimulation</code> individual-based model (IBM) of
 of the population over states</strong> rather than the people
 themselves. Any quantity that depends on two attributes belonging to the
 <em>same</em> person — owning a net <em>and</em> being vaccinated, say —
-is therefore unavailable by construction. Almost everything in §3.2 and
-§3.4 follows from that one fact.</p>
+is therefore unavailable by construction. Almost everything in §2.2 and
+§2.4 follows from that one fact.</p>
 <p><code>fleet</code> targets the IBM’s <em>code</em>, not the published
 equations. <code>malariasimulation</code>’s implementation departs from
 the analytic Griffin-style model in four places: it deduplicates bites
@@ -134,209 +134,13 @@ mean-field model cannot afford a state dimension for each.
 (age and biting heterogeneity) and represents everything else either as
 a <strong>time-varying coefficient</strong> in the ODE, or as a
 <strong>discrete state jump</strong> between integration segments.
-§3.1–3.4 set out exactly which is which.</p>
+§2.1–2.4 set out exactly which is which.</p>
 </div>
 <div class="section level2">
-<h2 id="the-model-at-a-glance">2. The model at a glance<a class="anchor" aria-label="anchor" href="#the-model-at-a-glance"></a>
-</h2>
-<div class="float">
-<img src="model_flow.png" alt="Flow diagram of the fleet model, in two panels, each sitting on a deck of offset copies that stands for the array the panel is replicated over. The upper panel holds the human compartments: susceptible; untreated clinical disease; treated; asymptomatic and sub-patent infection; and two prophylaxis compartments, one post-treatment and one for chemoprevention. Its deck carries one array dimension on each visible edge, age one to fifty-two and biting heterogeneity one to five, and a note records that people age along the age dimension, die from every box, and are born into susceptible. A dotted region encloses the four states infectious to mosquitoes. The treated state is drawn once; the model splits it in two when antimalarial resistance is switched on. The infection hazard leaves a vertical spine and splits three ways, into treated, untreated and asymptomatic, and is labelled as acting on the susceptible, asymptomatic and sub-patent states; recovery returns everyone to susceptible. A dashed red path marks the chemoprevention pulse, a discrete jump rather than a rate, drawn leaving both the susceptible state and the infectious pool. The lower panel holds the mosquito compartments, running right to left: early and late larvae and pupae, then susceptible, exposed and infectious adults, with a death outflow from each and a return flow in which all adult females lay eggs back into the first larval stage. A second dotted region encloses the adult females, and the panel’s deck is labelled for the species dimension. Two dashed indigo paths couple the panels: the entomological inoculation rate driving human infection, and human infectivity driving the mosquito force of infection, both lagged. A key at the right names each line style."><div class="figcaption">Flow diagram of the fleet model, in two panels,
-each sitting on a deck of offset copies that stands for the array the
-panel is replicated over. The upper panel holds the human compartments:
-susceptible; untreated clinical disease; treated; asymptomatic and
-sub-patent infection; and two prophylaxis compartments, one
-post-treatment and one for chemoprevention. Its deck carries one array
-dimension on each visible edge, age one to fifty-two and biting
-heterogeneity one to five, and a note records that people age along the
-age dimension, die from every box, and are born into susceptible. A
-dotted region encloses the four states infectious to mosquitoes. The
-treated state is drawn once; the model splits it in two when
-antimalarial resistance is switched on. The infection hazard leaves a
-vertical spine and splits three ways, into treated, untreated and
-asymptomatic, and is labelled as acting on the susceptible, asymptomatic
-and sub-patent states; recovery returns everyone to susceptible. A
-dashed red path marks the chemoprevention pulse, a discrete jump rather
-than a rate, drawn leaving both the susceptible state and the infectious
-pool. The lower panel holds the mosquito compartments, running right to
-left: early and late larvae and pupae, then susceptible, exposed and
-infectious adults, with a death outflow from each and a return flow in
-which all adult females lay eggs back into the first larval stage. A
-second dotted region encloses the adult females, and the panel’s deck is
-labelled for the species dimension. Two dashed indigo paths couple the
-panels: the entomological inoculation rate driving human infection, and
-human infectivity driving the mosquito force of infection, both lagged.
-A key at the right names each line style.</div>
-</div>
-<p>The figure uses four grammars, not two:</p>
-<ul>
-<li>
-<strong>Solid black</strong>: a flow of individuals, i.e. a term in
-the ODE.</li>
-<li>
-<strong>Dashed indigo</strong>: a <em>scalar coupling</em>. It sets
-a rate in the other panel, and nobody moves along it.</li>
-<li>
-<strong>Dashed red</strong>: people <em>do</em> move, but
-instantaneously, as a state jump between integration segments rather
-than at a rate.</li>
-<li>
-<strong>Dotted grey</strong>: a grouping, never a compartment, and
-always labelled. There are two: the infectious pool and the adult
-mosquitoes. That
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Λ</mi><annotation encoding="application/x-tex">\Lambda</annotation></semantics></math>
-acts on
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>
-is stated in words beside the hazard rather than drawn, because a line
-from
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
-back to the spine would read as a flow
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>→</mo><mi>A</mi></mrow><annotation encoding="application/x-tex">A \to A</annotation></semantics></math>,
-which the model does not have (§B.4). And a whole grammar element for
-one fact was not paying for itself.</li>
-<li>
-<strong>Offset layers</strong>: the array dimensions, and only
-those. The deck behind the human panel carries one dimension on each
-visible edge (age
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi><mo>=</mo><mn>1</mn><mi>…</mi><mn>52</mn></mrow><annotation encoding="application/x-tex">i = 1 \dots 52</annotation></semantics></math>,
-biting heterogeneity
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi><mo>=</mo><mn>1</mn><mi>…</mi><mn>5</mn></mrow><annotation encoding="application/x-tex">j = 1 \dots 5</annotation></semantics></math>);
-the deck behind the mosquito panel is species.</li>
-</ul>
-<p>Three things the figure deliberately does not draw, because showing
-them cost more legibility than they bought.
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mi>c</mi></msub><annotation encoding="application/x-tex">P_c</annotation></semantics></math>
-and the EIP are <strong>Erlang chains</strong>, not single compartments;
-they were once drawn with a stacked outline of their own, which made the
-same layered idiom mean two unrelated things (§B.4 gives the stage
-counts, which vary by drug). <strong>Immunity</strong> is algebraic
-rather than a state, so it is named on the hazard rather than boxed. And
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
-splits under antimalarial resistance (§B.4).</p>
-<p>The transmission cycle runs counter-clockwise (humans left to right,
-mosquitoes right to left), so the two couplings never cross. Where the
-EIR coupling must cross a return lane it hops it, as in a circuit
-diagram.</p>
-<p>Reading it:</p>
-<ul>
-<li>
-<strong>Humans, above.</strong> The infection hazard
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Λ</mi><annotation encoding="application/x-tex">\Lambda</annotation></semantics></math>
-acts on the whole at-risk pool
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>+</mo><mi>A</mi><mo>+</mo><mi>U</mi></mrow><annotation encoding="application/x-tex">S + A + U</annotation></semantics></math>.
-Asymptomatic and sub-patent people can be re-infected, and at moderate
-transmission that is where most clinical episodes come from. It splits
-three ways: untreated clinical disease
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>,
-treatment
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>,
-or a non-clinical infection landing in
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>.
-Recovery runs
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mo>→</mo><mi>A</mi><mo>→</mo><mi>U</mi></mrow><annotation encoding="application/x-tex">D \to A \to U</annotation></semantics></math>,
-and everyone returns to
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>,
-from
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>
-directly, from
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
-via prophylaxis
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>,
-and from chemoprevention prophylaxis
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mi>c</mi></msub><annotation encoding="application/x-tex">P_c</annotation></semantics></math>.</li>
-<li>
-<strong>The dotted region</strong> is the infectious pool: the
-states contributing to onward infectivity, weighted by
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>D</mi></msub><annotation encoding="application/x-tex">c_D</annotation></semantics></math>,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>A</mi></msub><annotation encoding="application/x-tex">c_A</annotation></semantics></math>,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>U</mi></msub><annotation encoding="application/x-tex">c_U</annotation></semantics></math>
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>T</mi></msub><annotation encoding="application/x-tex">c_T</annotation></semantics></math>.
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mi>c</mi></msub><annotation encoding="application/x-tex">P_c</annotation></semantics></math>
-contribute nothing and sit outside it (§C).</li>
-<li>
-<strong>Mosquitoes, below.</strong> Early larvae
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>E</mi><annotation encoding="application/x-tex">E</annotation></semantics></math>
-→ late larvae
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>L</mi><annotation encoding="application/x-tex">L</annotation></semantics></math>
-→ pupae
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mi>L</mi></msub><annotation encoding="application/x-tex">P_L</annotation></semantics></math>
-→ susceptible adults
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mi>M</mi></msub><annotation encoding="application/x-tex">S_M</annotation></semantics></math>,
-which become exposed
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>E</mi><mi>M</mi></msub><annotation encoding="application/x-tex">E_M</annotation></semantics></math>
-and then infectious
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mi>M</mi></msub><annotation encoding="application/x-tex">I_M</annotation></semantics></math>
-on surviving the extrinsic incubation period. Only
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mi>M</mi></msub><annotation encoding="application/x-tex">I_M</annotation></semantics></math>
-transmits. Every stage has a death outflow, and larval death <em>rises
-with</em>
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>L</mi></msub><mi>/</mi><msub><mi>K</mi><mi>s</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">n_L/K_s(t)</annotation></semantics></math>
-— an affine relationship, not a proportional one — which is how
-seasonality and larval source management enter the model. Oviposition is
-by <em>all</em> adults, into
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>E</mi><annotation encoding="application/x-tex">E</annotation></semantics></math>,
-and is untouched by vector control; nets and IRS act on
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>s</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mu_s(t)</annotation></semantics></math>
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>a</mi><mi>s</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">a_s(t)</annotation></semantics></math>.</li>
-<li>
-<strong>The two dashed couplings</strong> are what make this one
-model rather than two. Infectious mosquitoes drive the human hazard
-through the EIR; infectious humans drive the mosquito force of infection
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi mathvariant="normal">Λ</mi><mi>s</mi><mi>M</mi></msubsup><annotation encoding="application/x-tex">\Lambda^M_s</annotation></semantics></math>.
-Both are lagged (§B.2, §C).</li>
-</ul>
-<p><strong>What the figure leaves out.</strong> It is an overview. The
-four immunity arrays
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mi>B</mi></msub><annotation encoding="application/x-tex">I_B</annotation></semantics></math>,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>C</mi><mi>A</mi></mrow></msub><annotation encoding="application/x-tex">I_{CA}</annotation></semantics></math>,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mi>D</mi></msub><annotation encoding="application/x-tex">I_D</annotation></semantics></math>,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>V</mi><mi>A</mi></mrow></msub><annotation encoding="application/x-tex">I_{VA}</annotation></semantics></math>
-appear as one box coupled into the hazard, but which function each
-drives is not drawn:
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>
-set arrows that <em>are</em> shown, while
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math>
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
-act on the infectivity coupling and the severe-incidence output. Not
-drawn at all: the two Erlang lag chains behind the couplings
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mi>E</mi></msub><annotation encoding="application/x-tex">n_E</annotation></semantics></math>,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mi>F</mi></msub><annotation encoding="application/x-tex">n_F</annotation></semantics></math>
-stages; the couplings are marked “lagged”, and the EIP chain <em>is</em>
-drawn); the individual layers of each deck, so ageing between age
-groups, human death and the births that replenish
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>
-are noted on the panel rather than drawn as arrows (unlike the mosquito
-deaths, which are drawn because
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>s</mi></msub><annotation encoding="application/x-tex">\mu_s</annotation></semantics></math>
-is where nets and IRS act); and the split of
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
-into fast and slow parasite clearance, which exists only once
-antimalarial resistance is switched on. Most are the subject of §3; the
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
-split is §B.4.</p>
-<p>Nor does the figure mark where interventions act. With the single
-exception of chemoprevention — the one intervention that adds a
-compartment — they modify coefficients on arrows already drawn (§3.2).
-Bed nets and IRS, in particular, act almost entirely through the
-mosquito death outflows and the biting rate
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>a</mi><mi>s</mi></msub><annotation encoding="application/x-tex">a_s</annotation></semantics></math>.</p>
-</div>
-<div class="section level2">
-<h2 id="state-space">3. State space<a class="anchor" aria-label="anchor" href="#state-space"></a>
+<h2 id="state-space">2. State space<a class="anchor" aria-label="anchor" href="#state-space"></a>
 </h2>
 <div class="section level3">
-<h3 id="what-has-a-state-dimension">3.1 What has a state dimension<a class="anchor" aria-label="anchor" href="#what-has-a-state-dimension"></a>
+<h3 id="what-has-a-state-dimension">2.1 What has a state dimension<a class="anchor" aria-label="anchor" href="#what-has-a-state-dimension"></a>
 </h3>
 <p>Every human compartment is a two-dimensional array over age group
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>
@@ -614,7 +418,7 @@ states: an SP-AQ SMC scenario
 has 6546.</p>
 </div>
 <div class="section level3">
-<h3 id="what-is-captured-without-a-dimension">3.2 What is captured <em>without</em> a dimension<a class="anchor" aria-label="anchor" href="#what-is-captured-without-a-dimension"></a>
+<h3 id="what-is-captured-without-a-dimension">2.2 What is captured <em>without</em> a dimension<a class="anchor" aria-label="anchor" href="#what-is-captured-without-a-dimension"></a>
 </h3>
 <p>These are the mechanisms the IBM carries as per-individual attributes
 and <code>fleet</code> carries as <strong>time-varying (and sometimes
@@ -744,11 +548,11 @@ multiplier
 on the infection hazard. The vaccinated are partitioned analytically by
 the most recent booster each has reached; each stratum’s efficacy is the
 <strong>average of the Hill efficacy over the IBM’s own 4-D antibody
-distribution</strong> (§4.13)</td>
+distribution</strong> (§3.13)</td>
 <td>The antibody average is exact, since the IBM’s draws are
 independent. What is lost is the dose <em>history</em>: vaccinated
 status is uncorrelated with anything else (nets, treatment),
-<code>min_wait</code> re-vaccination exclusion is not applied (§4.15),
+<code>min_wait</code> re-vaccination exclusion is not applied (§3.15),
 and seasonal boosters become a fixed days-since-primary schedule
 (warned)</td>
 </tr>
@@ -833,7 +637,7 @@ would be wrong</td>
 </table>
 </div>
 <div class="section level3">
-<h3 id="what-is-captured-as-a-discrete-event">3.3 What is captured as a discrete event<a class="anchor" aria-label="anchor" href="#what-is-captured-as-a-discrete-event"></a>
+<h3 id="what-is-captured-as-a-discrete-event">2.3 What is captured as a discrete event<a class="anchor" aria-label="anchor" href="#what-is-captured-as-a-discrete-event"></a>
 </h3>
 <p>Mass drug administration cannot be written as a smooth rate: it is a
 short, near-instantaneous clearance of a target age band.
@@ -842,7 +646,7 @@ timestep and applies a <strong>state jump</strong> (§E), then resumes.
 This keeps chemoprevention out of the ODE right-hand side entirely.</p>
 </div>
 <div class="section level3">
-<h3 id="what-is-not-captured-at-all">3.4 What is not captured at all<a class="anchor" aria-label="anchor" href="#what-is-not-captured-at-all"></a>
+<h3 id="what-is-not-captured-at-all">2.4 What is not captured at all<a class="anchor" aria-label="anchor" href="#what-is-not-captured-at-all"></a>
 </h3>
 <table class="table">
 <colgroup>
@@ -894,7 +698,7 @@ these upstream in <code>set_antimalarial_resistance()</code>
 </div>
 </div>
 <div class="section level2">
-<h2 id="parameter-support-function-by-function">4. Parameter support, function by function<a class="anchor" aria-label="anchor" href="#parameter-support-function-by-function"></a>
+<h2 id="parameter-support-function-by-function">3. Parameter support, function by function<a class="anchor" aria-label="anchor" href="#parameter-support-function-by-function"></a>
 </h2>
 <p>This section covers every user-facing <code>malariasimulation</code>
 parameterisation function, argument by argument, as of
@@ -969,106 +773,106 @@ first.</p>
 <tbody>
 <tr class="odd">
 <td><code>get_parameters()</code></td>
-<td>4.1</td>
+<td>3.1</td>
 <td>✅</td>
 </tr>
 <tr class="even">
 <td><code>set_species()</code></td>
-<td>4.2</td>
+<td>3.2</td>
 <td>✅</td>
 </tr>
 <tr class="odd">
 <td><code>set_equilibrium()</code></td>
-<td>4.3</td>
+<td>3.3</td>
 <td>✅</td>
 </tr>
 <tr class="even">
 <td><code>set_demography()</code></td>
-<td>4.4</td>
+<td>3.4</td>
 <td>✅</td>
 </tr>
 <tr class="odd">
 <td><code>set_drugs()</code></td>
-<td>4.5</td>
+<td>3.5</td>
 <td>🟡</td>
 </tr>
 <tr class="even">
 <td><code>set_clinical_treatment()</code></td>
-<td>4.6</td>
+<td>3.6</td>
 <td>🟡</td>
 </tr>
 <tr class="odd">
 <td><code>set_antimalarial_resistance()</code></td>
-<td>4.7</td>
+<td>3.7</td>
 <td>🟡</td>
 </tr>
 <tr class="even">
 <td><code>set_bednets()</code></td>
-<td>4.8</td>
+<td>3.8</td>
 <td>🟡</td>
 </tr>
 <tr class="odd">
 <td><code>set_spraying()</code></td>
-<td>4.9</td>
+<td>3.9</td>
 <td>🟡</td>
 </tr>
 <tr class="even">
 <td><code>set_carrying_capacity()</code></td>
-<td>4.10</td>
+<td>3.10</td>
 <td>🟡</td>
 </tr>
 <tr class="odd">
 <td>
 <code>set_mda()</code>, <code>set_smc()</code>
 </td>
-<td>4.11</td>
+<td>3.11</td>
 <td>🟡</td>
 </tr>
 <tr class="even">
 <td><code>set_pmc()</code></td>
-<td>4.12</td>
+<td>3.12</td>
 <td>🟡</td>
 </tr>
 <tr class="odd">
 <td><code>create_pev_profile()</code></td>
-<td>4.13</td>
+<td>3.13</td>
 <td>✅</td>
 </tr>
 <tr class="even">
 <td><code>set_pev_epi()</code></td>
-<td>4.14</td>
+<td>3.14</td>
 <td>🟡</td>
 </tr>
 <tr class="odd">
 <td><code>set_mass_pev()</code></td>
-<td>4.15</td>
+<td>3.15</td>
 <td>🟡</td>
 </tr>
 <tr class="even">
 <td><code>set_tbv()</code></td>
-<td>4.16</td>
+<td>3.16</td>
 <td>🟡</td>
 </tr>
 <tr class="odd">
 <td><code>set_epi_outputs()</code></td>
-<td>4.17</td>
+<td>3.17</td>
 <td>✅</td>
 </tr>
 <tr class="even">
 <td><code>set_parameter_draw()</code></td>
-<td>4.18</td>
+<td>3.18</td>
 <td>✅</td>
 </tr>
 <tr class="odd">
 <td>Helpers and run functions</td>
-<td>4.19</td>
+<td>3.19</td>
 <td>mixed</td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="section level3">
-<h3 id="get_parametersoverrides-parasite">4.1 <code>get_parameters(overrides, parasite)</code><a class="anchor" aria-label="anchor" href="#get_parametersoverrides-parasite"></a>
+<h3 id="get_parametersoverrides-parasite">3.1 <code>get_parameters(overrides, parasite)</code><a class="anchor" aria-label="anchor" href="#get_parametersoverrides-parasite"></a>
 </h3>
 <table class="table">
 <colgroup>
@@ -1123,7 +927,7 @@ error</td>
 <td>⛔ Ignored. <code>fleet</code> seeds at the
 <code>malariaEquilibrium</code> fixed point for <code>init_EIR</code>
 (or, under a custom demography, for the EIR the IBM’s mosquito sizing
-supports, §4.3), not at user-supplied proportions</td>
+supports, §3.3), not at user-supplied proportions</td>
 </tr>
 <tr class="even">
 <td>Initial immunity</td>
@@ -1156,7 +960,7 @@ the constant death hazard and the equilibrium age structure when
 <tr class="even">
 <td></td>
 <td><code>custom_demography</code></td>
-<td>✅ Switches to the <code>set_demography()</code> path (§4.4)</td>
+<td>✅ Switches to the <code>set_demography()</code> path (§3.4)</td>
 </tr>
 <tr class="odd">
 <td>Biting heterogeneity</td>
@@ -1212,7 +1016,7 @@ equations</td>
 </td>
 <td>✅ Per-species; <code>total_M</code> is re-derived: from
 <code>init_EIR</code> under the default demography, as the IBM’s own
-value under a custom one (§4.3)</td>
+value under a custom one (§3.3)</td>
 </tr>
 <tr class="odd">
 <td></td>
@@ -1236,7 +1040,7 @@ on a daily grid</td>
 <code>carrying_capacity</code>,
 <code>carrying_capacity_timesteps</code>
 </td>
-<td>✅ See §4.10. (<code>carrying_capacity_scalers</code> is
+<td>✅ See §3.10. (<code>carrying_capacity_scalers</code> is
 <em>not</em> a <code>get_parameters()</code> default and cannot be
 passed in <code>overrides</code>; it is created only by
 <code>set_carrying_capacity()</code>.)</td>
@@ -1394,7 +1198,7 @@ algebra</td>
 </td>
 <td>⛔ Ignored. They parameterise the PCR→RDT conversion used by
 <code>run_metapop_simulation()</code>’s mixing, which <code>fleet</code>
-does not support (§4.19)</td>
+does not support (§3.19)</td>
 </tr>
 <tr class="odd">
 <td>Engine / solver</td>
@@ -1467,7 +1271,7 @@ against the IBM ensemble mean. Must lie in
 </div>
 </div>
 <div class="section level3">
-<h3 id="set_speciesspecies-proportions">4.2 <code>set_species(species, proportions)</code><a class="anchor" aria-label="anchor" href="#set_speciesspecies-proportions"></a>
+<h3 id="set_speciesspecies-proportions">3.2 <code>set_species(species, proportions)</code><a class="anchor" aria-label="anchor" href="#set_speciesspecies-proportions"></a>
 </h3>
 <table class="table">
 <colgroup>
@@ -1507,7 +1311,7 @@ evaluate
 </table>
 </div>
 <div class="section level3">
-<h3 id="set_equilibriuminit_eir-eq_params-eir_population_input">4.3
+<h3 id="set_equilibriuminit_eir-eq_params-eir_population_input">3.3
 <code>set_equilibrium(init_EIR, eq_params, EIR_population_input)</code><a class="anchor" aria-label="anchor" href="#set_equilibriuminit_eir-eq_params-eir_population_input"></a>
 </h3>
 <table class="table">
@@ -1531,7 +1335,7 @@ evaluate
 both models: under the default demography it is the EIR
 <code>fleet</code> realises; under <code>set_demography()</code> it
 sizes the mosquito population exactly as the IBM’s does and
-<code>fleet</code> seeds at the EIR that density supports (§4.4)</td>
+<code>fleet</code> seeds at the EIR that density supports (§3.4)</td>
 </tr>
 <tr class="even">
 <td><code>eq_params</code></td>
@@ -1592,7 +1396,7 @@ previous behaviour (<code>init_EIR</code> as the realised EIR).</li>
 but changes nothing.</p>
 </div>
 <div class="section level3">
-<h3 id="set_demographyagegroups-timesteps-deathrates">4.4
+<h3 id="set_demographyagegroups-timesteps-deathrates">3.4
 <code>set_demography(agegroups, timesteps, deathrates)</code><a class="anchor" aria-label="anchor" href="#set_demographyagegroups-timesteps-deathrates"></a>
 </h3>
 <table class="table">
@@ -1643,7 +1447,7 @@ fires; raise <code>default_age_lower(max_age =)</code> or extend
 </tbody>
 </table>
 <p>With a custom demography the mosquito population is sized as the IBM
-sizes it (§4.3): <code>fleet</code> takes the IBM’s <code>total_M</code>
+sizes it (§3.3): <code>fleet</code> takes the IBM’s <code>total_M</code>
 and seeds at the EIR its own equilibrium under this age structure
 supports, which is generally <em>not</em> <code>init_EIR</code> (an
 older population sustains less transmission from the same mosquitoes;
@@ -1653,7 +1457,7 @@ the comparison article’s scenario seeds at EIR 13.9 for
 the realised EIR instead.</p>
 </div>
 <div class="section level3">
-<h3 id="set_drugsdrugs">4.5 <code>set_drugs(drugs)</code><a class="anchor" aria-label="anchor" href="#set_drugsdrugs"></a>
+<h3 id="set_drugsdrugs">3.5 <code>set_drugs(drugs)</code><a class="anchor" aria-label="anchor" href="#set_drugsdrugs"></a>
 </h3>
 <table class="table">
 <colgroup>
@@ -1728,7 +1532,7 @@ the protection curve is reproduced in its integral, not its shape.
 </table>
 </div>
 <div class="section level3">
-<h3 id="set_clinical_treatmentdrug-timesteps-coverages">4.6
+<h3 id="set_clinical_treatmentdrug-timesteps-coverages">3.6
 <code>set_clinical_treatment(drug, timesteps, coverages)</code><a class="anchor" aria-label="anchor" href="#set_clinical_treatmentdrug-timesteps-coverages"></a>
 </h3>
 <table class="table">
@@ -1777,7 +1581,7 @@ sub-populations</td>
 </table>
 </div>
 <div class="section level3">
-<h3 id="set_antimalarial_resistance---">4.7 <code>set_antimalarial_resistance(...)</code><a class="anchor" aria-label="anchor" href="#set_antimalarial_resistance---"></a>
+<h3 id="set_antimalarial_resistance---">3.7 <code>set_antimalarial_resistance(...)</code><a class="anchor" aria-label="anchor" href="#set_antimalarial_resistance---"></a>
 </h3>
 <table class="table">
 <colgroup>
@@ -1870,7 +1674,7 @@ is not collapsed to zero)</td>
 </table>
 </div>
 <div class="section level3">
-<h3 id="set_bednets">4.8 <code>set_bednets()</code><a class="anchor" aria-label="anchor" href="#set_bednets"></a>
+<h3 id="set_bednets">3.8 <code>set_bednets()</code><a class="anchor" aria-label="anchor" href="#set_bednets"></a>
 </h3>
 <p><code>set_bednets(parameters, timesteps, coverages, dn0, rn, rnm, gamman, retention, logistic_half_life, logistic_k)</code></p>
 <p><strong>Module status: 🟡.</strong> Net efficacy is averaged over the
@@ -1965,7 +1769,7 @@ exactly</td>
 </table>
 </div>
 <div class="section level3">
-<h3 id="set_spraying">4.9 <code>set_spraying()</code><a class="anchor" aria-label="anchor" href="#set_spraying"></a>
+<h3 id="set_spraying">3.9 <code>set_spraying()</code><a class="anchor" aria-label="anchor" href="#set_spraying"></a>
 </h3>
 <p><code>set_spraying(parameters, timesteps, coverages, ls_theta, ls_gamma, ks_theta, ks_gamma, ms_theta, ms_gamma)</code></p>
 <p><strong>Module status: 🟡.</strong> As for nets: population-averaged,
@@ -2039,7 +1843,7 @@ are linearly interpolated so within-round logistic decay is a ramp, not
 a step.</p>
 </div>
 <div class="section level3">
-<h3 id="set_carrying_capacitytimesteps-carrying_capacity_scalers">4.10
+<h3 id="set_carrying_capacitytimesteps-carrying_capacity_scalers">3.10
 <code>set_carrying_capacity(timesteps, carrying_capacity_scalers)</code><a class="anchor" aria-label="anchor" href="#set_carrying_capacitytimesteps-carrying_capacity_scalers"></a>
 </h3>
 <table class="table">
@@ -2081,7 +1885,7 @@ approached but not reproduced exactly</td>
 </table>
 </div>
 <div class="section level3">
-<h3 id="set_mda-and-set_smc">4.11 <code>set_mda()</code> and <code>set_smc()</code><a class="anchor" aria-label="anchor" href="#set_mda-and-set_smc"></a>
+<h3 id="set_mda-and-set_smc">3.11 <code>set_mda()</code> and <code>set_smc()</code><a class="anchor" aria-label="anchor" href="#set_mda-and-set_smc"></a>
 </h3>
 <p><code>set_mda(parameters, drug, timesteps, coverages, min_ages, max_ages)</code>.
 <code>set_smc()</code> has the identical signature and identical
@@ -2155,7 +1959,7 @@ rounds carries proportionally more weight regardless of its per-round
 coverage.</p>
 </div>
 <div class="section level3">
-<h3 id="set_pmcdrug-timesteps-coverages-ages">4.12 <code>set_pmc(drug, timesteps, coverages, ages)</code><a class="anchor" aria-label="anchor" href="#set_pmcdrug-timesteps-coverages-ages"></a>
+<h3 id="set_pmcdrug-timesteps-coverages-ages">3.12 <code>set_pmc(drug, timesteps, coverages, ages)</code><a class="anchor" aria-label="anchor" href="#set_pmcdrug-timesteps-coverages-ages"></a>
 </h3>
 <table class="table">
 <colgroup>
@@ -2198,7 +2002,7 @@ efficacy</td>
 </table>
 </div>
 <div class="section level3">
-<h3 id="create_pev_profilevmax-alpha-beta-cs-rho-ds-dl">4.13
+<h3 id="create_pev_profilevmax-alpha-beta-cs-rho-ds-dl">3.13
 <code>create_pev_profile(vmax, alpha, beta, cs, rho, ds, dl)</code><a class="anchor" aria-label="anchor" href="#create_pev_profilevmax-alpha-beta-cs-rho-ds-dl"></a>
 </h3>
 <table class="table">
@@ -2273,7 +2077,7 @@ the quadrature is exact rather than approximate. The resulting
 mean-efficacy curve is cached per profile on a daily grid.</p>
 </div>
 <div class="section level3">
-<h3 id="set_pev_epi">4.14 <code>set_pev_epi()</code><a class="anchor" aria-label="anchor" href="#set_pev_epi"></a>
+<h3 id="set_pev_epi">3.14 <code>set_pev_epi()</code><a class="anchor" aria-label="anchor" href="#set_pev_epi"></a>
 </h3>
 <p><code>set_pev_epi(parameters, profile, coverages, timesteps, age, min_wait, booster_spacing, booster_coverage, booster_profile, seasonal_boosters)</code></p>
 <p><strong>Module status: 🟡.</strong> The routine schedule and full
@@ -2325,7 +2129,7 @@ the final primary dose</td>
 <td>➖ For a routine EPI programme this guards re-vaccination and
 seasonal-booster timing, not the primary-plus-booster schedule
 <code>fleet</code> models, so it has no effect on the result. (For
-<strong>mass</strong> campaigns it does bite; see §4.15.)</td>
+<strong>mass</strong> campaigns it does bite; see §3.15.)</td>
 </tr>
 <tr class="even">
 <td><code>booster_spacing</code></td>
@@ -2346,7 +2150,7 @@ reducing to the single-row lookup in the usual case</td>
 <td><code>booster_profile</code></td>
 <td>Per-booster profiles</td>
 <td>✅ Each booster uses its own profile, integrated over the antibody
-distribution as in §4.13</td>
+distribution as in §3.13</td>
 </tr>
 <tr class="odd">
 <td><code>seasonal_boosters</code></td>
@@ -2362,7 +2166,7 @@ yourself, e.g. via <code>peak_season_offset()</code>
 </table>
 </div>
 <div class="section level3">
-<h3 id="set_mass_pev">4.15 <code>set_mass_pev()</code><a class="anchor" aria-label="anchor" href="#set_mass_pev"></a>
+<h3 id="set_mass_pev">3.15 <code>set_mass_pev()</code><a class="anchor" aria-label="anchor" href="#set_mass_pev"></a>
 </h3>
 <p><code>set_mass_pev(parameters, profile, timesteps, coverages, min_ages, max_ages, min_wait, booster_spacing, booster_coverage, booster_profile)</code></p>
 <p><strong>Module status: 🟡.</strong> Repeated campaigns are the weak
@@ -2396,7 +2200,7 @@ The IBM instead keeps only the <strong>most recent</strong> vaccination
 per person, so its population protection is a most-recent-receipt
 mixture
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>k</mi></msub><msub><mtext mathvariant="normal">cov</mtext><mi>k</mi></msub><msub><mo>∏</mo><mrow><mi>j</mi><mo>&gt;</mo><mi>k</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mtext mathvariant="normal">cov</mtext><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><msub><mi>e</mi><mi>k</mi></msub></mrow><annotation encoding="application/x-tex">\sum_k \text{cov}_k \prod_{j&gt;k}(1-\text{cov}_j)\,e_k</annotation></semantics></math>,
-the same structure <code>fleet</code> already uses for bed nets (§4.8).
+the same structure <code>fleet</code> already uses for bed nets (§3.8).
 The two agree for a single campaign and diverge when campaigns
 overlap</td>
 </tr>
@@ -2412,7 +2216,7 @@ overlap</td>
 <td>Target age bands</td>
 <td>✅ <strong>Every</strong> band is applied at <strong>every</strong>
 campaign, each mapped onto the model age grid by <strong>fractional
-overlap</strong> as for MDA/SMC (§4.11), so a band narrower than the
+overlap</strong> as for MDA/SMC (§3.11), so a band narrower than the
 groups it falls between still vaccinates its share instead of nobody.
 The bands of one campaign are one campaign: their weights
 <strong>add</strong> into a single covered fraction per group (capped at
@@ -2433,7 +2237,7 @@ over-vaccinate</td>
 <tr class="even">
 <td><code>booster_spacing</code></td>
 <td>Days from the final primary dose to each booster</td>
-<td>✅ Full sequence, as in §4.14</td>
+<td>✅ Full sequence, as in §3.14</td>
 </tr>
 <tr class="odd">
 <td><code>booster_coverage</code></td>
@@ -2453,7 +2257,7 @@ fraction stays attached to the age band rather than moving up the age
 grid with the cohort.</p>
 </div>
 <div class="section level3">
-<h3 id="set_tbvtimesteps-coverages-ages">4.16 <code>set_tbv(timesteps, coverages, ages)</code><a class="anchor" aria-label="anchor" href="#set_tbvtimesteps-coverages-ages"></a>
+<h3 id="set_tbvtimesteps-coverages-ages">3.16 <code>set_tbv(timesteps, coverages, ages)</code><a class="anchor" aria-label="anchor" href="#set_tbvtimesteps-coverages-ages"></a>
 </h3>
 <table class="table">
 <colgroup>
@@ -2516,7 +2320,7 @@ infectivity. All the <code>tbv_*</code> shape constants
 <code>tbv_gamma2</code>, <code>tbv_k</code>) are used verbatim.</p>
 </div>
 <div class="section level3">
-<h3 id="set_epi_outputs---">4.17 <code>set_epi_outputs(...)</code><a class="anchor" aria-label="anchor" href="#set_epi_outputs---"></a>
+<h3 id="set_epi_outputs---">3.17 <code>set_epi_outputs(...)</code><a class="anchor" aria-label="anchor" href="#set_epi_outputs---"></a>
 </h3>
 <table class="table">
 <colgroup>
@@ -2587,7 +2391,7 @@ the convenience bands 2–10 y and all-ages for that family only. A bare
 defaults the <strong>prevalence</strong> bands to 2–10 y.</p>
 </div>
 <div class="section level3">
-<h3 id="set_parameter_drawdraw">4.18 <code>set_parameter_draw(draw)</code><a class="anchor" aria-label="anchor" href="#set_parameter_drawdraw"></a>
+<h3 id="set_parameter_drawdraw">3.18 <code>set_parameter_draw(draw)</code><a class="anchor" aria-label="anchor" href="#set_parameter_drawdraw"></a>
 </h3>
 <table class="table">
 <colgroup>
@@ -2611,7 +2415,7 @@ called before <code>set_equilibrium()</code>, as in the IBM</td>
 </table>
 </div>
 <div class="section level3">
-<h3 id="helpers-and-run-functions">4.19 Helpers and run functions<a class="anchor" aria-label="anchor" href="#helpers-and-run-functions"></a>
+<h3 id="helpers-and-run-functions">3.19 Helpers and run functions<a class="anchor" aria-label="anchor" href="#helpers-and-run-functions"></a>
 </h3>
 <table class="table">
 <colgroup>
@@ -2672,7 +2476,7 @@ re-run from the seed</td>
 </div>
 </div>
 <div class="section level2">
-<h2 id="using-fleet-well-what-to-do-differently">5. Using <code>fleet</code> well: what to do differently<a class="anchor" aria-label="anchor" href="#using-fleet-well-what-to-do-differently"></a>
+<h2 id="using-fleet-well-what-to-do-differently">4. Using <code>fleet</code> well: what to do differently<a class="anchor" aria-label="anchor" href="#using-fleet-well-what-to-do-differently"></a>
 </h2>
 <div class="section level3">
 <h3 id="things-to-do">Things to do<a class="anchor" aria-label="anchor" href="#things-to-do"></a>
@@ -2691,7 +2495,7 @@ death rates):</p>
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/run_simulation_ode.html">run_simulation_ode</a></span><span class="op">(</span><span class="va">t</span>, <span class="va">p</span>, tuning <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>age_lower <span class="op">=</span> <span class="fu"><a href="../reference/default_age_lower.html">default_age_lower</a></span><span class="op">(</span>max_age <span class="op">=</span> <span class="fl">100</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>A warning fires when they diverge; don’t ignore it, because it
 changes the equilibrium age structure the whole run is seeded on
-(§4.4).</p>
+(§3.4).</p>
 <p><strong>Make your output bands a partition.</strong>
 <code>postie</code> treats every column as an independent age stratum,
 so overlapping bands are double-counted by any person-day-weighted
@@ -2727,7 +2531,7 @@ Weibull by default (§B.4) and capped at 20; each stage adds
 states and the solver slows steeply beyond that.</p>
 <p><strong><code>parameterise_total_M()</code> /
 <code>parameterise_mosquito_equilibrium()</code>.</strong> They have no
-effect; <code>fleet</code> re-derives <code>total_M</code> itself (§4.3:
+effect; <code>fleet</code> re-derives <code>total_M</code> itself (§3.3:
 from <code>init_EIR</code> under the default demography, as the IBM’s
 own value under a custom one).</p>
 </div>
@@ -2882,7 +2686,7 @@ gives
 and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>4.8</mn></mrow><annotation encoding="application/x-tex">+4.8</annotation></semantics></math>%.
 <code>fleet</code> resolves the log-normal biting strata explicitly
-(§3.1), so only the spread within an (age,
+(§2.1), so only the spread within an (age,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ζ</mi><annotation encoding="application/x-tex">\zeta</annotation></semantics></math>)
 cell is lost and the realised gap is a few percent rather than tens of
 percent, but the direction is the same.</p>
@@ -2924,11 +2728,11 @@ on severe incidence.</p>
 <p><strong>Anything through a nets or IRS era.</strong>
 Population-averaged coverage loses the correlation of protection within
 individuals across bites, so the ODE tends to sit above the IBM while
-vector control is active (§3.2).</p>
+vector control is active (§2.2).</p>
 <p><strong>Repeated mass PEV or TBV campaigns.</strong> Overlapping
 campaigns combine as independent protections rather than
 most-recent-receipt, and <code>min_wait</code> re-vaccination exclusion
-is not applied (§4.15, §4.16). A single campaign is fine.</p>
+is not applied (§3.15, §3.16). A single campaign is fine.</p>
 </div>
 <div class="section level3">
 <h3 id="cost-model">Cost model<a class="anchor" aria-label="anchor" href="#cost-model"></a>
@@ -2944,7 +2748,7 @@ anything.</p>
 <div class="section level3">
 <h3 id="index-of-approximations">Index of approximations<a class="anchor" aria-label="anchor" href="#index-of-approximations"></a>
 </h3>
-<p>Every 🟡 in §4, and when it matters:</p>
+<p>Every 🟡 in §3, and when it matters:</p>
 <table class="table">
 <colgroup>
 <col width="33%">
@@ -2959,7 +2763,7 @@ anything.</p>
 <tbody>
 <tr class="odd">
 <td>Weibull prophylaxis → Erlang chain (moment-matched)</td>
-<td>4.5, B.4</td>
+<td>3.5, B.4</td>
 <td>The far tail of chemoprevention protection; for post-treatment
 protection the exponential
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
@@ -2968,56 +2772,56 @@ reproducing its integral rather than its shape</td>
 </tr>
 <tr class="even">
 <td>Multi-drug blend rather than parallel sub-populations</td>
-<td>4.6</td>
+<td>3.6</td>
 <td>A genuinely mixed first line (a <em>switch</em> is modelled
 fine)</td>
 </tr>
 <tr class="odd">
 <td>Single scalar slow-clearance rate blended across drugs</td>
-<td>4.7, B.4</td>
+<td>3.7, B.4</td>
 <td>High artemisinin resistance with several treatment drugs</td>
 </tr>
 <tr class="even">
 <td>Population-averaged nets</td>
-<td>4.8</td>
+<td>3.8</td>
 <td>Any nets era, the largest routine gap</td>
 </tr>
 <tr class="odd">
 <td>Population-averaged IRS</td>
-<td>4.9</td>
+<td>3.9</td>
 <td>Any IRS era</td>
 </tr>
 <tr class="even">
 <td>Carrying-capacity floor at
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>K</mi><mn>0</mn></msub><mo>×</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>4</mn></mrow></msup></mrow><annotation encoding="application/x-tex">K_0\times10^{-4}</annotation></semantics></math>
 </td>
-<td>4.10</td>
+<td>3.10</td>
 <td>Modelling complete vector elimination</td>
 </tr>
 <tr class="odd">
 <td>Chemoprevention as pulses; half-open age bands</td>
-<td>4.11, E</td>
+<td>3.11, E</td>
 <td>Very narrow target bands</td>
 </tr>
 <tr class="even">
 <td>PMC age trigger → monthly pulses</td>
-<td>4.12</td>
+<td>3.12</td>
 <td>PMC dose timing specifically</td>
 </tr>
 <tr class="odd">
 <td>Seasonal PEV boosters → fixed delay</td>
-<td>4.14</td>
+<td>3.14</td>
 <td>Seasonally-timed booster campaigns (warned)</td>
 </tr>
 <tr class="even">
 <td>Repeated campaigns: no <code>min_wait</code>, independent
 combination, no ageing out of band</td>
-<td>4.15</td>
+<td>3.15</td>
 <td>Repeated mass PEV</td>
 </tr>
 <tr class="odd">
 <td>TBV campaign combination</td>
-<td>4.16</td>
+<td>3.16</td>
 <td>Repeated TBV campaigns</td>
 </tr>
 </tbody>
@@ -3470,7 +3274,7 @@ the same with
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="normal">Σ</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><msub><mi>S</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>+</mo><msub><mi>A</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>+</mo><msub><mi>U</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub></mrow><annotation encoding="application/x-tex">\Sigma_{ij} = S_{ij}+A_{ij}+U_{ij}</annotation></semantics></math>
 for the at-risk pool,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">SPC</mtext><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\text{SPC}(t)</annotation></semantics></math>
-for the slow-parasite-clearance fraction of the treated (§4.7), and
+for the slow-parasite-clearance fraction of the treated (§3.7), and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>f</mi><mi>t</mi><mtext mathvariant="normal">eff</mtext></msubsup><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>f</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mtext mathvariant="normal">eff</mtext><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mtext mathvariant="normal">ETF</mtext><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">f_t^{\text{eff}}(t) = f_t(t)\,\text{eff}(t)\,(1-\text{ETF}(t))</annotation></semantics></math>
 for the effective treated fraction:</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>S</mi><mo accent="true">̇</mo></mover><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><msub><mi>r</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn></mrow></msub><msub><mi>S</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn><mo>,</mo><mi>j</mi></mrow></msub><mo>+</mo><msub><mi>r</mi><mi>U</mi></msub><msub><mi>U</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>+</mo><msub><mi>k</mi><mi>P</mi></msub><msub><mi>r</mi><mi>P</mi></msub><msub><mi>P</mi><mrow><msub><mi>k</mi><mi>P</mi></msub><mo>,</mo><mi>i</mi><mi>j</mi></mrow></msub><mo>+</mo><msub><mi>k</mi><msub><mi>P</mi><mi>c</mi></msub></msub><msub><mi>r</mi><msub><mi>P</mi><mi>c</mi></msub></msub><msub><mi>P</mi><mrow><mi>c</mi><mo>,</mo><msub><mi>k</mi><msub><mi>P</mi><mi>c</mi></msub></msub><mo>,</mo><mi>i</mi><mi>j</mi></mrow></msub><mo>−</mo><msub><mi mathvariant="normal">Λ</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><msub><mi>S</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>−</mo><msub><mi>ρ</mi><mi>i</mi></msub><msub><mi>S</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub></mrow><annotation encoding="application/x-tex">
@@ -3888,7 +3692,7 @@ human infectivity, with <code>total_M</code> chosen so that
 exactly. Under the default demography
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mtext mathvariant="normal">EIR</mtext><mtext mathvariant="normal">seed</mtext></msub><mo>=</mo><mtext mathvariant="normal">init_EIR</mtext></mrow><annotation encoding="application/x-tex">\text{EIR}_{\text{seed}} = \text{init_EIR}</annotation></semantics></math>;
 under a custom demography <code>total_M</code> is fixed to the IBM’s
-(<code>ibm_total_M()</code>, §4.3) and
+(<code>ibm_total_M()</code>, §3.3) and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mtext mathvariant="normal">EIR</mtext><mtext mathvariant="normal">seed</mtext></msub><annotation encoding="application/x-tex">\text{EIR}_{\text{seed}}</annotation></semantics></math>
 is the root of <code>total_M(EIR) = total_M_IBM</code>, found by
 <code><a href="https://rdrr.io/r/stats/uniroot.html" class="external-link">uniroot()</a></code> on
