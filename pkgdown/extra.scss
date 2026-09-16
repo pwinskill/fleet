@@ -165,6 +165,22 @@ main h2::after {
   font-size: 1.12rem;
 }
 
+/* ---- Home page logo ---------------------------------------------------- */
+/* The README gives the logo `width="30%"`, roughly 270px against GitHub's
+   content column. pkgdown renders that same README with the logo fixed at
+   120px, so the front page of the site showed it at under half the size of the
+   front page of the repository. Matched here, near enough.
+
+   Home page only: elsewhere `img.logo` is a marker beside the page title, and
+   200px of hexagon next to every article heading would be shouting. The
+   percentage cap is for narrow windows, where pkgdown's own rules would have
+   dropped it to 80px but do not, because `.template-home img.logo` outranks
+   them -- without it the logo eats half the width of a phone. */
+.template-home img.logo {
+  width: 200px;
+  max-width: 35%;
+}
+
 /* ---- Page headers (reference / articles) ------------------------------- */
 .page-header {
   border-bottom: 2px solid transparent;
