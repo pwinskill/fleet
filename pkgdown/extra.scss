@@ -166,19 +166,24 @@ main h2::after {
 }
 
 /* ---- Home page logo ---------------------------------------------------- */
-/* The README gives the logo `width="30%"`, roughly 270px against GitHub's
-   content column. pkgdown renders that same README with the logo fixed at
-   120px, so the front page of the site showed it at under half the size of the
-   front page of the repository. Matched here, near enough.
+/* The README gives the logo `width="30%"`, which GitHub draws at about 270px
+   against its content column. pkgdown renders that same README with the logo
+   fixed at 120px, so the front page of the site was showing it at under half
+   the size of the front page of the repository. Matched here: 270px against
+   the 800px content column is the same 34% of the width, so the two front
+   pages now agree.
 
    Home page only: elsewhere `img.logo` is a marker beside the page title, and
-   200px of hexagon next to every article heading would be shouting. The
-   percentage cap is for narrow windows, where pkgdown's own rules would have
-   dropped it to 80px but do not, because `.template-home img.logo` outranks
-   them -- without it the logo eats half the width of a phone. */
+   270px of hexagon next to every article heading would be shouting. The
+   percentage cap is for narrow windows, where pkgdown's own rule would have
+   dropped it to 80px but does not, because `.template-home img.logo` outranks
+   it -- without the cap the logo eats most of the width of a phone. It is 36%
+   rather than 34% so that it stays a cap: percentages resolve against the
+   content box of main, 776px rather than 800px, and 34% of that is 264px,
+   which quietly beat the 270px it was meant to be defending. */
 .template-home img.logo {
-  width: 200px;
-  max-width: 35%;
+  width: 270px;
+  max-width: 36%;
 }
 
 /* ---- Page headers (reference / articles) ------------------------------- */
