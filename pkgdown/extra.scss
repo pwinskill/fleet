@@ -67,6 +67,55 @@ body {
   background-attachment: fixed;
 }
 
+/* ---- Page layout: a leaner table of contents --------------------------- */
+/* pkgdown caps the content column at 50rem but sizes the right-hand column as
+   a flat `col-md-3` -- a quarter of whatever the container happens to be. The
+   two do not agree above 1200px, and the wider the window the further apart
+   they drift. In a 1440px window: a 1320px container holding 800px of text, an
+   80px gutter, a 330px contents list, and 110px of space that nothing claims.
+   520px of right-hand side against 800px of content, which is the "menu takes
+   a third of the page" this fixes.
+
+   Both halves are the same bug -- a container sized independently of what goes
+   in it -- so the fix is to size it from its contents: 50rem of text, a 5rem
+   gutter, 15rem of contents list, 70rem in total. Then nothing is left over.
+   Capping the container rather than centring the row inside it is what keeps
+   the text aligned with the navbar brand on the left and the contents list
+   aligned with the navbar links on the right; centring the row balances the
+   page but pulls both away from the navbar above them.
+
+   Three details, each the reason a simpler version of this breaks:
+
+   * the contents list is capped with `max-width`, not given a width, so
+     Bootstrap's 25% still governs at md and lg, where the container is 720 or
+     960px and there is no slack to hand back. A flat 15rem at md would overrun
+     the row and wrap the sidebar underneath the text.
+   * `.row > main` becomes shrinkable. The three widths add up to the container
+     exactly, and an exact fit in a wrapping flex row is a cliff: one stray
+     pixel -- a scrollbar, a rounding difference -- and the sidebar drops below
+     the article. Letting main give the pixel back instead turns the cliff into
+     a slope.
+   * the gutter is moved down to xl. pkgdown adds it at xxl only, where it was
+     compensating for a container that was already too wide. Here it is part of
+     the arithmetic, so it has to hold wherever the cap does. */
+@include media-breakpoint-up(md) {
+  .row > aside {
+    max-width: 15rem;
+  }
+}
+
+@include media-breakpoint-up(xl) {
+  .container {
+    max-width: 70rem;
+  }
+  .row > main {
+    flex: 1 1 auto;
+  }
+  .row > aside {
+    margin-left: 5rem;
+  }
+}
+
 /* ---- Links ------------------------------------------------------------- */
 main a {
   color: var(--mo-link);
@@ -255,8 +304,12 @@ main img {
    every remote badge, wrapping the shields.io ones in a white slab while the
    GitHub Actions ones escaped purely because their URLs happen to end in
    ".svg" -- three badges in a white box beside three without, which is what it
-   looked like. Badges bring their own background and want no framing. */
-[data-bs-theme="dark"] main img:not([src$=".svg"]):not([src^="http"]) {
+   looked like. Badges bring their own background and want no framing.
+
+   The hex logo is excluded for the same reason as the badges: it is a local PNG
+   with transparent corners, so framing it puts a white rounded rectangle behind
+   a shape whose whole point is not to be rectangular. */
+[data-bs-theme="dark"] main img:not([src$=".svg"]):not([src^="http"]):not([src$="logo.png"]) {
   background: #fff;
   padding: .75rem;
   border-radius: .6rem;

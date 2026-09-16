@@ -1,4 +1,4 @@
-# fleet
+# fleet <img src="man/figures/logo.png" align="right" height="139" alt="fleet hex logo: a mosquito trailing light over a network of connected points" />
 
 [![R-CMD-check](https://github.com/pwinskill/fleet/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/pwinskill/fleet/actions/workflows/R-CMD-check.yaml)
 [![pkgdown](https://github.com/pwinskill/fleet/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/pwinskill/fleet/actions/workflows/pkgdown.yaml)
