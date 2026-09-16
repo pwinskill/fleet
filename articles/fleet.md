@@ -28,8 +28,7 @@ stochastic IBM would be too slow. It is not ready for those jobs yet
 package works rather than a recommendation to use it.
 
 Reach for the IBM (not this) when you need stochastic variation,
-individual heterogeneity beyond the mean field, or *P. vivax*; see
-**Scope** at the end.
+individual heterogeneity beyond the mean field, or *P. vivax*.
 
 ## Install and load
 
@@ -341,54 +340,35 @@ looser absolute tolerance lets dip below zero.
 [`?ode_tuning`](https://pwinskill.github.io/fleet/reference/ode_tuning.md)
 documents every field.
 
-## How far it has been checked
+## Where to go next
 
-None of what follows is completed validation; it is the evidence that
-exists so far. `fleet` is checked two ways. **First, self-consistency:**
-with no interventions it stays on the `malariaEquilibrium` seed to
-within a few tenths of a percent and then holds, as described under *A
-basic run* above (and it behaves the same way with treatment, `ft > 0`,
-thanks to a corrected prophylaxis-aging recursion). **Second, agreement
-with the IBM:** the same parameter list is passed to both models,
-`malariasimulation` burned in 30 years at a population of 10,000 and
-this model seeded at equilibrium, across eighteen scenarios
-(`comparison/`). Representative agreement:
+This has been a tour of the interface. Three things are worth reading
+before you trust a number that comes out of it.
 
-- Equilibrium PfPR(2-10) vs EIR tracks the IBM closely (at EIR 20 the
-  IBM median is 0.5479 against fleet’s 0.5483; at EIR 120, 0.7857
-  against 0.7855).
-- The age-prevalence profile at EIR 20 agrees to
-  `max |IBM - fleet| = 0.005` (mean 0.002) across twelve bands from
-  infancy to 85y.
-- Custom demography reproduces the IBM’s under-5 population fraction
-  (IBM 0.088 vs fleet 0.088).
+**How well it matches the IBM.** Every claim about agreement, with the
+figures and the numbers behind them, is in
+[`vignette("comparison")`](https://pwinskill.github.io/fleet/articles/comparison.md):
+the same parameter list through both models across eighteen scenarios,
+plus a 63-country site-file comparison. None of it is completed
+validation; it is the evidence that exists so far, and the open
+discrepancies are named rather than buried.
 
-The other scenarios cover bed nets, IRS, seasonality, SMC, RTS,S,
-treatment scale-up and fifteen-year multi-intervention programmes, with
-clinical and severe incidence time series throughout;
-[`vignette("comparison")`](https://pwinskill.github.io/fleet/articles/comparison.md)
-has the figures and the numbers behind each of them. Across the EIR
-1-120 grid LM prevalence matches the IBM median to within 1.6% and
-clinical incidence to within 2.6%. **Severe incidence** (and DALYs
-derived from it) is more sensitive to the immunity model and can differ
-by ~5-20%, largest at EIR 20 and above and in the 5-20 year age bands;
-treat it as indicative.
+**Where the mean field departs, and what to do about it.**
+[`vignette("using")`](https://pwinskill.github.io/fleet/articles/using.md)
+is the practical companion to this one: burn-in, age grids, output
+bands, which settings to leave alone, which results to treat with
+caution, and what a run costs.
 
-## Scope and approximations
+**The formal specification.**
+[`vignette("model")`](https://pwinskill.github.io/fleet/articles/model.md)
+has the ODE system, what each state dimension carries (and what is
+captured *without* one), and an argument-by-argument table of every
+`malariasimulation` `set_*()` function.
 
-- **P. falciparum only.** *P. vivax* is rejected; the model is always
-  compartmental (the individual-mosquito code path does not apply).
-- **Mean-field caveats.** Vector control is population-averaged
-  (slightly under-suppresses at deep troughs vs the IBM); drug
-  prophylaxis is an Erlang chain matched to the drug’s Weibull
-  protection (its mean and variance, not the Weibull itself). PCR
-  prevalence follows the IBM convention (all D/Tr/A/U).
-- **Full detail.**
-  [`vignette("model")`](https://pwinskill.github.io/fleet/articles/model.md)
-  is the canonical specification: the ODE system, what each state
-  dimension carries (and what is captured *without* a dimension), and an
-  argument-by-argument table of every `malariasimulation` `set_*`
-  function.
+One scope note that belongs here rather than there: `fleet` is **P.
+falciparum only**. *P. vivax* parameter lists are rejected at input, and
+the model is always compartmental, so the individual-mosquito code path
+does not apply.
 
 ``` r
 

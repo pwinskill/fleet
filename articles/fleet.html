@@ -37,11 +37,13 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/model.html">The fleet model: formal specification</a></li>
+<li><a class="dropdown-item" href="../articles/using.html">Using fleet well: approximations and what to do differently</a></li>
+    <li><a class="dropdown-item" href="../articles/model.html">The fleet model: formal specification</a></li>
     <li><a class="dropdown-item" href="../articles/comparison.html">Comparison with malariasimulation</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
+<li class="nav-item"><a class="nav-link" href="../CONTRIBUTING.html">Contributing</a></li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -104,8 +106,8 @@ stochastic IBM would be too slow. It is not ready for those jobs yet
 (see the note above), so read what follows as a description of how the
 package works rather than a recommendation to use it.</p>
 <p>Reach for the IBM (not this) when you need stochastic variation,
-individual heterogeneity beyond the mean field, or <em>P. vivax</em>;
-see <strong>Scope</strong> at the end.</p>
+individual heterogeneity beyond the mean field, or <em>P.
+vivax</em>.</p>
 <div class="section level2">
 <h2 id="install-and-load">Install and load<a class="anchor" aria-label="anchor" href="#install-and-load"></a>
 </h2>
@@ -392,60 +394,31 @@ zero. <code><a href="../reference/ode_tuning.html">?ode_tuning</a></code> docume
 </div>
 </div>
 <div class="section level2">
-<h2 id="how-far-it-has-been-checked">How far it has been checked<a class="anchor" aria-label="anchor" href="#how-far-it-has-been-checked"></a>
+<h2 id="where-to-go-next">Where to go next<a class="anchor" aria-label="anchor" href="#where-to-go-next"></a>
 </h2>
-<p>None of what follows is completed validation; it is the evidence that
-exists so far. <code>fleet</code> is checked two ways. <strong>First,
-self-consistency:</strong> with no interventions it stays on the
-<code>malariaEquilibrium</code> seed to within a few tenths of a percent
-and then holds, as described under <em>A basic run</em> above (and it
-behaves the same way with treatment, <code>ft &gt; 0</code>, thanks to a
-corrected prophylaxis-aging recursion). <strong>Second, agreement with
-the IBM:</strong> the same parameter list is passed to both models,
-<code>malariasimulation</code> burned in 30 years at a population of
-10,000 and this model seeded at equilibrium, across eighteen scenarios
-(<code>comparison/</code>). Representative agreement:</p>
-<ul>
-<li>Equilibrium PfPR(2-10) vs EIR tracks the IBM closely (at EIR 20 the
-IBM median is 0.5479 against fleet’s 0.5483; at EIR 120, 0.7857 against
-0.7855).</li>
-<li>The age-prevalence profile at EIR 20 agrees to
-<code>max |IBM - fleet| = 0.005</code> (mean 0.002) across twelve bands
-from infancy to 85y.</li>
-<li>Custom demography reproduces the IBM’s under-5 population fraction
-(IBM 0.088 vs fleet 0.088).</li>
-</ul>
-<p>The other scenarios cover bed nets, IRS, seasonality, SMC, RTS,S,
-treatment scale-up and fifteen-year multi-intervention programmes, with
-clinical and severe incidence time series throughout;
-<code><a href="../articles/comparison.html">vignette("comparison")</a></code> has the figures and the numbers
-behind each of them. Across the EIR 1-120 grid LM prevalence matches the
-IBM median to within 1.6% and clinical incidence to within 2.6%.
-<strong>Severe incidence</strong> (and DALYs derived from it) is more
-sensitive to the immunity model and can differ by ~5-20%, largest at EIR
-20 and above and in the 5-20 year age bands; treat it as indicative.</p>
-</div>
-<div class="section level2">
-<h2 id="scope-and-approximations">Scope and approximations<a class="anchor" aria-label="anchor" href="#scope-and-approximations"></a>
-</h2>
-<ul>
-<li>
-<strong>P. falciparum only.</strong> <em>P. vivax</em> is rejected;
-the model is always compartmental (the individual-mosquito code path
-does not apply).</li>
-<li>
-<strong>Mean-field caveats.</strong> Vector control is
-population-averaged (slightly under-suppresses at deep troughs vs the
-IBM); drug prophylaxis is an Erlang chain matched to the drug’s Weibull
-protection (its mean and variance, not the Weibull itself). PCR
-prevalence follows the IBM convention (all D/Tr/A/U).</li>
-<li>
-<strong>Full detail.</strong> <code><a href="../articles/model.html">vignette("model")</a></code> is the
-canonical specification: the ODE system, what each state dimension
-carries (and what is captured <em>without</em> a dimension), and an
+<p>This has been a tour of the interface. Three things are worth reading
+before you trust a number that comes out of it.</p>
+<p><strong>How well it matches the IBM.</strong> Every claim about
+agreement, with the figures and the numbers behind them, is in
+<code><a href="../articles/comparison.html">vignette("comparison")</a></code>: the same parameter list through
+both models across eighteen scenarios, plus a 63-country site-file
+comparison. None of it is completed validation; it is the evidence that
+exists so far, and the open discrepancies are named rather than
+buried.</p>
+<p><strong>Where the mean field departs, and what to do about
+it.</strong> <code><a href="../articles/using.html">vignette("using")</a></code> is the practical companion
+to this one: burn-in, age grids, output bands, which settings to leave
+alone, which results to treat with caution, and what a run costs.</p>
+<p><strong>The formal specification.</strong>
+<code><a href="../articles/model.html">vignette("model")</a></code> has the ODE system, what each state
+dimension carries (and what is captured <em>without</em> one), and an
 argument-by-argument table of every <code>malariasimulation</code>
-<code>set_*</code> function.</li>
-</ul>
+<code>set_*()</code> function.</p>
+<p>One scope note that belongs here rather than there:
+<code>fleet</code> is <strong>P. falciparum only</strong>. <em>P.
+vivax</em> parameter lists are rejected at input, and the model is
+always compartmental, so the individual-mosquito code path does not
+apply.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>

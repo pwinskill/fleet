@@ -136,8 +136,9 @@ grid, in a run with no interventions, is unchanged.
   trigger, so any of them can also be run on demand. The Monday run is
   the one with no substitute: it is the only thing that catches
   `malariasimulation` moving underneath the comparison, the one
-  staleness cause that never shows up in a commit here. `.github/CI.md`
-  is now a description of what runs, not a go-live checklist.
+  staleness cause that never shows up in a commit here.
+  `.github/workflows/CI.md` is now a description of what runs, not a
+  go-live checklist.
 
 - **`R-CMD-check.yaml` gains a job that fails when the compiled model is
   stale.** `inst/odin/malaria_ode.R` is the model’s source of truth, but
@@ -465,8 +466,9 @@ grid, in a run with no interventions, is unchanged.
   themselves. Both workflows landed here carrying only a
   `workflow_dispatch` trigger, with their real triggers staged directly
   above as comments, and `0.0.0.9001` switched them on: all four
-  workflows are live now, as `.github/CI.md` describes. Read that file
-  for what each one runs on and why each piece is shaped the way it is.
+  workflows are live now, as `.github/workflows/CI.md` describes. Read
+  that file for what each one runs on and why each piece is shaped the
+  way it is.
 
   The design choices that matter for keeping it low-maintenance.
   `paths-ignore` rather than `paths` wherever the question is “could
@@ -792,78 +794,6 @@ First development release: a deterministic mean-field (ODE) twin of the
 `malariasimulation` individual-based model of *P. falciparum* malaria,
 built on odin2/dust2.
 
-### Model
-
-- Age- and biting-heterogeneity-structured human model
-  (`S`/`D`/`A`/`U`/`Tr` plus treatment (`Ph`) and chemoprevention
-  (`Ph_c`) prophylaxis compartments) with the full immunity system
-  (`IB`/`ICA`/`ICM`/`ID`/`IVA`/`IVM`), coupled to the compartmental
-  mosquito model (`E`/`L`/`P`/`Sm`/EIP-chain/`Im`) per species.
-- Seeded at the `malariaEquilibrium` analytic solution. That solution
-  encodes simplified forms, so it is a close approximation to `fleet`’s
-  own fixed point rather than the fixed point itself: an undisturbed run
-  relaxes by up to ~0.5% over the first years and then holds, exactly as
-  malariasimulation does off the same seed. The four departures are bite
-  deduplication, the integer refractory window on immunity boosting, the
-  fixed-delay EIP with `exp(-mu*dem)` survival, and whole-day state
-  sojourns; see *Seeding* in the README. Burn in before calibrating. A
-  corrected prophylaxis-aging recursion keeps the seed as good under
-  clinical treatment (`ft > 0`) as without it, where the upstream
-  `malariaEquilibrium` recursion has an artifact.
-- Lags (human EIR/FOIM, mosquito EIP) implemented as tunable Erlang
-  chains, exact at equilibrium for any stage count.
-- Infection hazard reproduces the IBM’s **per-timestep bite
-  deduplication**: the IBM collects the day’s bitten individuals in a
-  bitset, so a person bitten repeatedly in one timestep is infected at
-  most once. The daily infection probability is therefore
-  `(1 - exp(-EPS)) * b`, converted to a hazard with `-log(1 - p)`. This
-  saturates, where the unbounded `b * EPS` over-predicts infection as
-  exposure approaches one bite/person/day, i.e. at seasonal peaks and in
-  high-`zeta` strata. Across five countries (36,936 sub-site-months) it
-  moves the monthly clinical regression slope vs the IBM from 1.14 to
-  1.10, with the effect correctly gated by exposure: largest in the
-  highest-EIR setting (BFA slope 1.10 -\> 1.04) and nil at low
-  transmission (MMR unchanged). `parameters$bite_dedup = 0` restores the
-  linear form. That removes the largest single reason the
-  `malariaEquilibrium` seed is not `fleet`’s own fixed point, but it
-  does not make the seed exact, because the other three departures
-  remain. It does roughly halve the largest excursion from the seed:
-  over an undisturbed 15-year run at EIR 20, PfPR(2-10) departs from its
-  seeded value by at most 0.14% with `0`, against 0.28% at the default.
-  That is the metric the equilibrium tests assert, which is why they set
-  it.
-- `parameters$acquired_immunity_offset` exposes the IBM’s `+0.5`
-  acquired-immunity offset in the `b`/`phi`/`theta` Hill functions.
-  Default `0`: an A/B against a live malariasimulation 3.0.0 ensemble
-  mean showed `0` matches clinical (~2.4x closer) and severe (~9x
-  closer) incidence better than `0.5`, because the offset is a
-  per-individual detail that does not carry over to a stratum mean.
-
-### Interventions
-
-- Clinical treatment (time-varying coverage) and antimalarial resistance
-  (early-treatment-failure and slow-parasite-clearance arms,
-  coverage-weighted across drugs).
-- Bed nets and indoor residual spraying (mean-field vector control).
-- Chemoprevention: MDA, SMC and PMC, applied as pulsed mass drug
-  administration.
-- Vaccines: pre-erythrocytic (RTS,S / R21; EPI and mass, with boosters
-  and time-varying EPI coverage) and transmission-blocking (TBV).
-- Seasonality (Fourier rainfall driving larval carrying capacity) and
-  flexible carrying capacity.
-- Custom demography (`set_demography`): **time-varying** age-specific
-  mortality (`mu_age(t)` interpolated over `deathrate_timesteps`) and
-  the resulting equilibrium age structure.
-- Bed nets support both exponential (log-uniform) and **logistic** net
-  retention, and accumulate repeated distributions as the full
-  mean-field usage mixture (most-recent-receipt x retention survival,
-  per-distribution net-age decay) — needed to run real
-  `site::site_parameters()` inputs.
-- The dust2 solver controls (`atol`, `rtol`, `step_size_max`) are
-  exposed through
-  [`ode_tuning()`](https://pwinskill.github.io/fleet/reference/ode_tuning.md)
-  for faster long dynamic projections.
-
 ### Parameter-ingestion completeness
 
 A systematic audit of every user-facing `malariasimulation` config
@@ -895,39 +825,19 @@ uses the full parameter flexibility they expose:
   first-line switch; seasonal PEV boosters) are **warned**, not silently
   applied.
 
-### Interface
+### What the package is, rather than what changed
 
-- [`run_simulation_ode()`](https://pwinskill.github.io/fleet/reference/run_simulation_ode.md)
-  accepts an unmodified `malariasimulation` parameter list and returns a
-  wide, `malariasimulation`-style daily count table.
-- [`ode_tuning()`](https://pwinskill.github.io/fleet/reference/ode_tuning.md)
-  carries the solver and discretisation settings, as the fourth argument
-  `tuning`; every default is the validated choice.
-- [`default_age_lower()`](https://pwinskill.github.io/fleet/reference/default_age_lower.md)
-  provides the default graded age grid.
+Earlier revisions of this file carried a full feature inventory here:
+the model structure, the intervention modules, the interface, the
+validation summary and the scope limits. That is a description of the
+package, not a changelog, and keeping a second copy of it here is how it
+went stale. It lives where it is maintained:
 
-Those three are the whole export list. Post-processing is `postie`’s
-job, not `fleet`’s: pass the returned table to
-[`postie::get_rates()`](https://rdrr.io/pkg/postie/man/get_rates.html) /
-[`postie::get_prevalence()`](https://rdrr.io/pkg/postie/man/get_prevalence.html)
-exactly as you would an IBM run.
-
-### Validation
-
-- Compared against `malariasimulation` across PfPR–EIR, age-prevalence
-  profile, bed nets, seasonality, SMC and custom demography, plus
-  clinical & severe incidence time series (see `comparison/`). Across
-  the EIR 1-120 equilibrium grid, LM prevalence in 2-10 year olds agrees
-  with the IBM median to within 1.6% and under-5 clinical incidence to
-  within 2.6%: prevalence inside the IBM’s 10-90% replicate band at all
-  six EIRs, clinical at five of the six.
-
-### Scope
-
-- *P. falciparum* only; *P. vivax* and the individual-mosquito code path
-  are intentionally not supported. Severe incidence (and derived DALYs)
-  are indicative. All-age severe agrees with the IBM to under 1% at EIR
-  1, 3 and 10 and then runs low over the plateau the relationship turns
-  over on, by 6.2% at EIR 20, 4.0% at EIR 50 and 4.6% at EIR 120; by age
-  band it is 15-25% low over 5-20 years. The gap opens with transmission
-  rather than closing with it.
+- **What is modelled, argument by argument** –
+  [`vignette("model")`](https://pwinskill.github.io/fleet/articles/model.md).
+- **Where the mean field departs, and what to do about it** –
+  [`vignette("using")`](https://pwinskill.github.io/fleet/articles/using.md).
+- **How well it agrees with the IBM** –
+  [`vignette("comparison")`](https://pwinskill.github.io/fleet/articles/comparison.md).
+- **Scope, and the open discrepancies** – the warning at the top of the
+  README.
