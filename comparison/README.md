@@ -66,7 +66,7 @@ stale comparison rows make `check_drift.R` report movement that was reviewed and
 accepted weeks ago, and a stale CSV turns the test suite red for the same reason
 — which is the pressure that gets a reference regenerated to make a red test
 green. Read both diffs; between them they are the record of what the change did.
-`.github/CI.md` has the same note from the CI side.
+`.github/workflows/CI.md` has the same note from the CI side.
 
 ### When the IBM *does* need re-running
 

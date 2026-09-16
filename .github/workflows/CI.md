@@ -1,7 +1,16 @@
-<!-- NOT named README.md on purpose. GitHub resolves a repository's front page
-     in the order .github/README.md, README.md, docs/README.md -- so a file at
-     .github/README.md silently REPLACES the package README on the repo home
-     page. It did, briefly. Keep this as CI.md. -->
+<!-- Two things about where this file lives, both learned the hard way.
+
+     NOT named README.md: GitHub resolves a repository's front page in the order
+     .github/README.md, README.md, docs/README.md, so a file at .github/README.md
+     silently REPLACES the package README on the repo home page. It did, briefly.
+
+     NOT in .github/ directly, but one level down in .github/workflows/: pkgdown's
+     package_mds() globs every *.md in the package root AND in .github/, with only
+     a hardcoded skip-list, and renders each one as a site page. This file was
+     being published at /CI.html -- linked from nothing, but in the sitemap and
+     the site search. There is no config key to exclude it. The glob is not
+     recursive, so a subdirectory is out of reach, and next to the workflows it
+     documents is where it belonged anyway. -->  
 
 # CI: what runs, and why it is built this way
 

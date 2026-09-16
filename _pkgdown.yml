@@ -31,7 +31,7 @@ template:
 
 navbar:
   structure:
-    left:  [intro, reference, articles, news]
+    left:  [intro, reference, articles, news, contributing]
     right: [search, lightswitch, github]
   components:
     intro:
@@ -41,6 +41,9 @@ navbar:
       icon: fab fa-github
       href: https://github.com/pwinskill/fleet
       aria-label: GitHub repository
+    contributing:
+      text: Contributing
+      href: CONTRIBUTING.html
 
 home:
   title: fleet • a fast ODE twin of malariasimulation
@@ -60,7 +63,10 @@ articles:
 - title: Articles
   navbar: ~
   contents:
+  # Ordered as a reader meets them, not alphabetically: learn the interface, then
+  # what to watch out for, then the formal system, then the evidence.
   - fleet
+  - using
   - model
   - comparison
 
