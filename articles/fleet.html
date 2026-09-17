@@ -43,8 +43,9 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/using.html">Using fleet well: approximations and what to do differently</a></li>
-    <li><a class="dropdown-item" href="../articles/model.html">The fleet model: formal specification</a></li>
     <li><a class="dropdown-item" href="../articles/comparison.html">Comparison with malariasimulation</a></li>
+    <li><a class="dropdown-item" href="../articles/model.html">The fleet model: formal specification</a></li>
+    <li><a class="dropdown-item" href="../articles/parameters.html">fleet parameter reference</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -104,11 +105,10 @@ reproduces the same age- and biting-heterogeneity-structured human model
 and compartmental mosquito model, takes the <strong>same parameter
 list</strong> as the IBM, and is seeded at the <a href="https://github.com/mrc-ide/malariaEquilibrium" class="external-link">malariaEquilibrium</a>
 fixed point. A multi-decade run finishes in a couple of seconds,
-independent of population size. That speed is the whole point of it: the
-intended uses are calibration, sweeps and quick scenario work, where a
-stochastic IBM would be too slow. It is not ready for those jobs yet
-(see the note above), so read what follows as a description of how the
-package works rather than a recommendation to use it.</p>
+independent of population size. That speed is the point: the intended
+uses are calibration, sweeps and quick scenario work, where a stochastic
+IBM would be too slow. It is not ready for those jobs yet (see the note
+above).</p>
 <p>Reach for the IBM (not this) when you need stochastic variation,
 individual heterogeneity beyond the mean field, or <em>P.
 vivax</em>.</p>
@@ -164,17 +164,14 @@ still:</p>
 0.5485 (the seed, at day 0) and 0.5470 (its low point near the end of
 the first year), a spread of 0.28%, and is flat to 0.02% over the last
 five years. EIR stays within 0.5% of its target throughout.</p>
-<p>That relaxation is expected, and it is not a numerical error. The
-seed is the <a href="https://github.com/mrc-ide/malariaEquilibrium" class="external-link">malariaEquilibrium</a>
-analytic fixed point, and that solution encodes <em>simplified</em>
-forms (a linear force of infection, refractory immunity boosting on the
-raw rate, exponential incubation survival), whereas <code>fleet</code>
-reproduces <code>malariasimulation</code>’s own per-day semantics. The
-seed is therefore a close <strong>approximation</strong> to
-<code>fleet</code>’s true fixed point rather than the fixed point
-itself. <code>malariasimulation</code> is seeded from the same solution
-and drifts off it the same way. Burn in before calibrating, and read a
-settled window rather than day 0.</p>
+<p>That relaxation is expected, not a numerical error. The <a href="https://github.com/mrc-ide/malariaEquilibrium" class="external-link">malariaEquilibrium</a>
+seed solves a <em>simplified</em> form of the model, so it is a close
+<strong>approximation</strong> to <code>fleet</code>’s true fixed point
+rather than the fixed point itself; <code>malariasimulation</code> is
+seeded from the same solution and drifts off it the same way.
+<code><a href="../articles/model.html">vignette("model")</a></code> lists the four simplifications.
+<strong>Burn in before calibrating, and read a settled window rather
+than day 0.</strong></p>
 </div>
 <div class="section level2">
 <h2 id="reading-outputs-with-postie">Reading outputs with postie<a class="anchor" aria-label="anchor" href="#reading-outputs-with-postie"></a>
@@ -312,9 +309,10 @@ campaigns, and time-varying EPI coverage are all modelled.
 Transmission-blocking vaccines are available via
 <code>set_tbv()</code>.</p>
 </div>
-<div class="section level3">
-<h3 id="custom-demography">Custom demography<a class="anchor" aria-label="anchor" href="#custom-demography"></a>
-</h3>
+</div>
+<div class="section level2">
+<h2 id="demography">Demography<a class="anchor" aria-label="anchor" href="#demography"></a>
+</h2>
 <p><code>set_demography()</code> supplies age-specific mortality, which
 reshapes the equilibrium age structure the model is seeded at:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
@@ -340,7 +338,6 @@ additionally seeds the equilibrium age structure. Match
 <code>deathrate_agegroups</code>; a warning fires if the model age grid
 runs past them.</p>
 </div>
-</div>
 <div class="section level2">
 <h2 id="seasonality-and-burn-in">Seasonality and burn-in<a class="anchor" aria-label="anchor" href="#seasonality-and-burn-in"></a>
 </h2>
@@ -362,26 +359,21 @@ the seasonal annual-mean EIR sits a few percent below the aseasonal
 <span><span class="co">#&gt; [1]  0.04953752 58.12753634</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">final_year</span><span class="op">$</span><span class="va">EIR</span><span class="op">)</span>    <span class="co"># a few % below the aseasonal target of 20</span></span>
 <span><span class="co">#&gt; [1] 18.65741</span></span></code></pre></div>
-<div class="section level3">
-<h3 id="solver-settings">Solver settings<a class="anchor" aria-label="anchor" href="#solver-settings"></a>
-</h3>
-<p>Every run above uses the default numerics. They live in
-<code><a href="../reference/run_simulation_ode.html">run_simulation_ode()</a></code>’s fourth argument,
-<code>tuning</code>: the solver tolerances and maximum step, the age
-grid, and the lengths of the Erlang lag and prophylaxis chains. Pass an
-<code><a href="../reference/ode_tuning.html">ode_tuning()</a></code> object or a plain named list of just the
-fields you want to change. Nothing epidemiological sits there (model
-parameters, the target EIR included, stay on the parameter list), and
-every default is the validated choice, so leaving <code>tuning</code>
-alone is almost always right.</p>
-<p>The exception is a long projection like the 20-year run above, where
-the solver, rather than the daily output grid, sets the step count.
-Loosening the relative tolerance runs about 1.4-1.7x faster on a
-seasonal projection, and moves the aggregate outputs far less than
-anything you would report. It is <code>rtol</code> that buys this:
-<code>step_size_max</code> is a safety rail against a trial step
-overshooting an interpolation grid, and raising it changes neither the
-step count nor the outputs.</p>
+</div>
+<div class="section level2">
+<h2 id="solver-settings">Solver settings<a class="anchor" aria-label="anchor" href="#solver-settings"></a>
+</h2>
+<p>Every run above uses the default numerics, which live in
+<code><a href="../reference/run_simulation_ode.html">run_simulation_ode()</a></code>’s fourth argument, <code>tuning</code>
+— an <code><a href="../reference/ode_tuning.html">ode_tuning()</a></code> object, or a plain named list of just the
+fields you want to change. Nothing epidemiological sits there: model
+parameters, the target EIR included, stay on the parameter list. Every
+default is the validated choice, so leave <code>tuning</code> alone
+except on a long projection like the 20-year run above, where the solver
+rather than the daily output grid sets the step count. There, loosening
+the relative tolerance runs about 1.4–1.7x faster on a seasonal
+projection and moves the aggregate outputs far less than anything you
+would report.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">seas_fast</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_simulation_ode.html">run_simulation_ode</a></span><span class="op">(</span></span>
 <span>  <span class="fl">20</span> <span class="op">*</span> <span class="fl">365</span>, <span class="fu">malariasimulation</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/malariasimulation/man/set_equilibrium.html" class="external-link">set_equilibrium</a></span><span class="op">(</span><span class="va">p_seas</span>, init_EIR <span class="op">=</span> <span class="fl">20</span><span class="op">)</span>,</span>
@@ -391,37 +383,49 @@ step count nor the outputs.</p>
 <span>  faster  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">seas_fast</span><span class="op">$</span><span class="va">EIR</span><span class="op">[</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">seas_fast</span><span class="op">)</span> <span class="op">-</span> <span class="fl">365</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">seas_fast</span><span class="op">)</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  default   faster </span></span>
 <span><span class="co">#&gt; 18.65741 18.65741</span></span></code></pre></div>
-<p>Leave <code>atol</code> at its <code>1e-8</code> default whatever
-else you change: the prophylaxis chain stages hold occupancies of order
-<code>1e-6</code>, which a looser absolute tolerance lets dip below
-zero. <code><a href="../reference/ode_tuning.html">?ode_tuning</a></code> documents every field.</p>
-</div>
+<p><code><a href="../reference/ode_tuning.html">?ode_tuning</a></code> documents every field, including why
+<code>atol</code> should stay at <code>1e-8</code> whatever else you
+change, and why <code>step_size_max</code> is a safety rail rather than
+a speed control.</p>
 </div>
 <div class="section level2">
 <h2 id="where-to-go-next">Where to go next<a class="anchor" aria-label="anchor" href="#where-to-go-next"></a>
 </h2>
-<p>This has been a tour of the interface. Three things are worth reading
-before you trust a number that comes out of it.</p>
-<p><strong>How well it matches the IBM.</strong> Every claim about
-agreement, with the figures and the numbers behind them, is in
-<code><a href="../articles/comparison.html">vignette("comparison")</a></code>: the same parameter list through
-both models across eighteen scenarios, plus a 63-country site-file
-comparison. None of it is completed validation; it is the evidence that
-exists so far, and the open discrepancies are named rather than
-buried.</p>
-<p><strong>Where the mean field departs, and what to do about
-it.</strong> <code><a href="../articles/using.html">vignette("using")</a></code> is the practical companion
-to this one: burn-in, age grids, output bands, which settings to leave
-alone, which results to treat with caution, and what a run costs.</p>
-<p><strong>The formal specification.</strong>
-<code><a href="../articles/model.html">vignette("model")</a></code> has the ODE system, what each state
-dimension carries (and what is captured <em>without</em> one), and an
-argument-by-argument table of every <code>malariasimulation</code>
-<code>set_*()</code> function.</p>
-<p>One scope note that belongs here rather than there:
-<code>fleet</code> is <strong>P. falciparum only</strong>. <em>P.
-vivax</em> parameter lists are rejected at input, and the model is
-always compartmental, so the individual-mosquito code path does not
+<p>Four things to read before you trust a number from this model.</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<tbody>
+<tr class="odd">
+<td><strong><code><a href="../articles/using.html">vignette("using")</a></code></strong></td>
+<td>Where the mean field departs and what to do about it: burn-in, age
+grids, output bands, which settings to leave alone, which results to
+treat with caution, and what a run costs.</td>
+</tr>
+<tr class="even">
+<td><strong><code><a href="../articles/comparison.html">vignette("comparison")</a></code></strong></td>
+<td>How well it matches the IBM: the same parameter list through both
+models across eighteen scenarios, plus a 63-country site-file
+comparison. Not completed validation — the evidence that exists so far,
+with the open discrepancies named.</td>
+</tr>
+<tr class="odd">
+<td><strong><code><a href="../articles/model.html">vignette("model")</a></code></strong></td>
+<td>The formal specification: the ODE system, and what each state
+dimension carries as against what is captured <em>without</em> one.</td>
+</tr>
+<tr class="even">
+<td><strong><code><a href="../articles/parameters.html">vignette("parameters")</a></code></strong></td>
+<td>Every <code>malariasimulation</code> <code>set_*()</code> function,
+argument by argument.</td>
+</tr>
+</tbody>
+</table>
+<p>Scope: <code>fleet</code> is <strong>P. falciparum only</strong>.
+<em>P. vivax</em> parameter lists are rejected at input, and the model
+is always compartmental, so the individual-mosquito code path does not
 apply.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
@@ -458,7 +462,7 @@ apply.</p>
 <span><span class="co">#&gt; [19] MASS_7.3-65              tibble_3.3.1             desc_1.4.3              </span></span>
 <span><span class="co">#&gt; [22] monty_0.4.14             bslib_0.12.0             pillar_1.11.1           </span></span>
 <span><span class="co">#&gt; [25] rlang_1.3.0              stringi_1.8.9            cachem_1.1.0            </span></span>
-<span><span class="co">#&gt; [28] malariasimulation_3.0.0  dust2_0.3.28             xfun_0.60               </span></span>
+<span><span class="co">#&gt; [28] malariasimulation_3.0.0  dust2_0.3.28             xfun_0.61               </span></span>
 <span><span class="co">#&gt; [31] fs_2.1.0                 sass_0.4.10              otel_0.2.0              </span></span>
 <span><span class="co">#&gt; [34] cli_3.6.6                withr_3.0.3              pkgdown_2.2.1           </span></span>
 <span><span class="co">#&gt; [37] magrittr_2.0.5           digest_0.6.39            lifecycle_1.0.5         </span></span>

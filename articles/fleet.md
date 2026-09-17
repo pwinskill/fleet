@@ -21,11 +21,10 @@ compartmental mosquito model, takes the **same parameter list** as the
 IBM, and is seeded at the
 [malariaEquilibrium](https://github.com/mrc-ide/malariaEquilibrium)
 fixed point. A multi-decade run finishes in a couple of seconds,
-independent of population size. That speed is the whole point of it: the
-intended uses are calibration, sweeps and quick scenario work, where a
-stochastic IBM would be too slow. It is not ready for those jobs yet
-(see the note above), so read what follows as a description of how the
-package works rather than a recommendation to use it.
+independent of population size. That speed is the point: the intended
+uses are calibration, sweeps and quick scenario work, where a stochastic
+IBM would be too slow. It is not ready for those jobs yet (see the note
+above).
 
 Reach for the IBM (not this) when you need stochastic variation,
 individual heterogeneity beyond the mean field, or *P. vivax*.
@@ -93,17 +92,15 @@ Over these fifteen years LM prevalence in 2-10 year olds runs between
 the first year), a spread of 0.28%, and is flat to 0.02% over the last
 five years. EIR stays within 0.5% of its target throughout.
 
-That relaxation is expected, and it is not a numerical error. The seed
-is the
-[malariaEquilibrium](https://github.com/mrc-ide/malariaEquilibrium)
-analytic fixed point, and that solution encodes *simplified* forms (a
-linear force of infection, refractory immunity boosting on the raw rate,
-exponential incubation survival), whereas `fleet` reproduces
-`malariasimulation`’s own per-day semantics. The seed is therefore a
-close **approximation** to `fleet`’s true fixed point rather than the
-fixed point itself. `malariasimulation` is seeded from the same solution
-and drifts off it the same way. Burn in before calibrating, and read a
-settled window rather than day 0.
+That relaxation is expected, not a numerical error. The
+[malariaEquilibrium](https://github.com/mrc-ide/malariaEquilibrium) seed
+solves a *simplified* form of the model, so it is a close
+**approximation** to `fleet`’s true fixed point rather than the fixed
+point itself; `malariasimulation` is seeded from the same solution and
+drifts off it the same way.
+[`vignette("model")`](https://pwinskill.github.io/fleet/articles/model.md)
+lists the four simplifications. **Burn in before calibrating, and read a
+settled window rather than day 0.**
 
 ## Reading outputs with postie
 
@@ -248,7 +245,7 @@ evaluated at the profile median; primary and booster doses, EPI and mass
 campaigns, and time-varying EPI coverage are all modelled.
 Transmission-blocking vaccines are available via `set_tbv()`.
 
-### Custom demography
+## Demography
 
 `set_demography()` supplies age-specific mortality, which reshapes the
 equilibrium age structure the model is seeded at:
@@ -301,26 +298,20 @@ mean(final_year$EIR)    # a few % below the aseasonal target of 20
 #> [1] 18.65741
 ```
 
-### Solver settings
+## Solver settings
 
-Every run above uses the default numerics. They live in
+Every run above uses the default numerics, which live in
 [`run_simulation_ode()`](https://pwinskill.github.io/fleet/reference/run_simulation_ode.md)’s
-fourth argument, `tuning`: the solver tolerances and maximum step, the
-age grid, and the lengths of the Erlang lag and prophylaxis chains. Pass
-an
+fourth argument, `tuning` — an
 [`ode_tuning()`](https://pwinskill.github.io/fleet/reference/ode_tuning.md)
-object or a plain named list of just the fields you want to change.
-Nothing epidemiological sits there (model parameters, the target EIR
-included, stay on the parameter list), and every default is the
-validated choice, so leaving `tuning` alone is almost always right.
-
-The exception is a long projection like the 20-year run above, where the
-solver, rather than the daily output grid, sets the step count.
-Loosening the relative tolerance runs about 1.4-1.7x faster on a
-seasonal projection, and moves the aggregate outputs far less than
-anything you would report. It is `rtol` that buys this: `step_size_max`
-is a safety rail against a trial step overshooting an interpolation
-grid, and raising it changes neither the step count nor the outputs.
+object, or a plain named list of just the fields you want to change.
+Nothing epidemiological sits there: model parameters, the target EIR
+included, stay on the parameter list. Every default is the validated
+choice, so leave `tuning` alone except on a long projection like the
+20-year run above, where the solver rather than the daily output grid
+sets the step count. There, loosening the relative tolerance runs about
+1.4–1.7x faster on a seasonal projection and moves the aggregate outputs
+far less than anything you would report.
 
 ``` r
 
@@ -334,41 +325,25 @@ c(default = mean(final_year$EIR),
 #> 18.65741 18.65741
 ```
 
-Leave `atol` at its `1e-8` default whatever else you change: the
-prophylaxis chain stages hold occupancies of order `1e-6`, which a
-looser absolute tolerance lets dip below zero.
 [`?ode_tuning`](https://pwinskill.github.io/fleet/reference/ode_tuning.md)
-documents every field.
+documents every field, including why `atol` should stay at `1e-8`
+whatever else you change, and why `step_size_max` is a safety rail
+rather than a speed control.
 
 ## Where to go next
 
-This has been a tour of the interface. Three things are worth reading
-before you trust a number that comes out of it.
+Four things to read before you trust a number from this model.
 
-**How well it matches the IBM.** Every claim about agreement, with the
-figures and the numbers behind them, is in
-[`vignette("comparison")`](https://pwinskill.github.io/fleet/articles/comparison.md):
-the same parameter list through both models across eighteen scenarios,
-plus a 63-country site-file comparison. None of it is completed
-validation; it is the evidence that exists so far, and the open
-discrepancies are named rather than buried.
+|  |  |
+|----|----|
+| **[`vignette("using")`](https://pwinskill.github.io/fleet/articles/using.md)** | Where the mean field departs and what to do about it: burn-in, age grids, output bands, which settings to leave alone, which results to treat with caution, and what a run costs. |
+| **[`vignette("comparison")`](https://pwinskill.github.io/fleet/articles/comparison.md)** | How well it matches the IBM: the same parameter list through both models across eighteen scenarios, plus a 63-country site-file comparison. Not completed validation — the evidence that exists so far, with the open discrepancies named. |
+| **[`vignette("model")`](https://pwinskill.github.io/fleet/articles/model.md)** | The formal specification: the ODE system, and what each state dimension carries as against what is captured *without* one. |
+| **[`vignette("parameters")`](https://pwinskill.github.io/fleet/articles/parameters.md)** | Every `malariasimulation` `set_*()` function, argument by argument. |
 
-**Where the mean field departs, and what to do about it.**
-[`vignette("using")`](https://pwinskill.github.io/fleet/articles/using.md)
-is the practical companion to this one: burn-in, age grids, output
-bands, which settings to leave alone, which results to treat with
-caution, and what a run costs.
-
-**The formal specification.**
-[`vignette("model")`](https://pwinskill.github.io/fleet/articles/model.md)
-has the ODE system, what each state dimension carries (and what is
-captured *without* one), and an argument-by-argument table of every
-`malariasimulation` `set_*()` function.
-
-One scope note that belongs here rather than there: `fleet` is **P.
-falciparum only**. *P. vivax* parameter lists are rejected at input, and
-the model is always compartmental, so the individual-mosquito code path
-does not apply.
+Scope: `fleet` is **P. falciparum only**. *P. vivax* parameter lists are
+rejected at input, and the model is always compartmental, so the
+individual-mosquito code path does not apply.
 
 ``` r
 
@@ -406,7 +381,7 @@ sessionInfo()
 #> [19] MASS_7.3-65              tibble_3.3.1             desc_1.4.3              
 #> [22] monty_0.4.14             bslib_0.12.0             pillar_1.11.1           
 #> [25] rlang_1.3.0              stringi_1.8.9            cachem_1.1.0            
-#> [28] malariasimulation_3.0.0  dust2_0.3.28             xfun_0.60               
+#> [28] malariasimulation_3.0.0  dust2_0.3.28             xfun_0.61               
 #> [31] fs_2.1.0                 sass_0.4.10              otel_0.2.0              
 #> [34] cli_3.6.6                withr_3.0.3              pkgdown_2.2.1           
 #> [37] magrittr_2.0.5           digest_0.6.39            lifecycle_1.0.5         

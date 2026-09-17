@@ -38,8 +38,9 @@ multi-decade run completes in seconds, independent of population size."><meta pr
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/using.html">Using fleet well: approximations and what to do differently</a></li>
-    <li><a class="dropdown-item" href="../articles/model.html">The fleet model: formal specification</a></li>
     <li><a class="dropdown-item" href="../articles/comparison.html">Comparison with malariasimulation</a></li>
+    <li><a class="dropdown-item" href="../articles/model.html">The fleet model: formal specification</a></li>
+    <li><a class="dropdown-item" href="../articles/parameters.html">fleet parameter reference</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
 <li class="nav-item"><a class="nav-link" href="../CONTRIBUTING.html">Contributing</a></li>
@@ -90,8 +91,9 @@ table (P. falciparum only).</p></li>
 </ul><p>The count table is malariasimulation-shaped, so post-process it with
 <span class="pkg">postie</span> exactly as you would an IBM run: <code>postie::get_rates(out)</code> and
 <code>postie::get_prevalence(out, diagnostic = "lm")</code>.
-See <code><a href="../articles/fleet.html">vignette("fleet")</a></code> for a worked tour, and the README's <em>Mean-field
-approximations</em> section for where and how much the ODE departs from the IBM.</p>
+See <code><a href="../articles/fleet.html">vignette("fleet")</a></code> for a worked tour, <code><a href="../articles/using.html">vignette("using")</a></code> for where and
+how much the ODE departs from the IBM and what to do about it, and
+<code><a href="../articles/comparison.html">vignette("comparison")</a></code> for the measured agreement behind those claims.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

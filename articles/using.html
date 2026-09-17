@@ -43,8 +43,9 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/using.html">Using fleet well: approximations and what to do differently</a></li>
-    <li><a class="dropdown-item" href="../articles/model.html">The fleet model: formal specification</a></li>
     <li><a class="dropdown-item" href="../articles/comparison.html">Comparison with malariasimulation</a></li>
+    <li><a class="dropdown-item" href="../articles/model.html">The fleet model: formal specification</a></li>
+    <li><a class="dropdown-item" href="../articles/parameters.html">fleet parameter reference</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -100,21 +101,29 @@ page</a>; if you need results you can defend today, use <a href="https://github.
 <p><code>fleet</code> is a mean field. It carries the same mechanisms as
 the individual-based model and, for most outcomes, lands inside its
 replicate spread, but a stratum mean is not a population of individuals
-and some things do not survive the averaging. This article is the
-practical consequence of that: where <code>fleet</code> departs from
-<code>malariasimulation</code>, what to do about it, and which results
-to treat with caution.</p>
-<p>It assumes you can already run the model. If not, start with
-<code><a href="../articles/fleet.html">vignette("fleet")</a></code>. For the formal system, the state space
-and an argument-by-argument account of every <code>set_*()</code>
-function, see <code><a href="../articles/model.html">vignette("model")</a></code>; for the measured agreement
-behind the claims here, see <code><a href="../articles/comparison.html">vignette("comparison")</a></code>.</p>
-<p>Section references below of the form §B.4 or §3.15 are to that
-specification article, <code><a href="../articles/model.html">vignette("model")</a></code>, not to this
-one.</p>
+and some things do not survive the averaging. What follows is where that
+bites: what to do, what to leave alone, and which results to treat with
+caution.</p>
+<p>It assumes you can already run the model; if not, start with
+<code><a href="../articles/fleet.html">vignette("fleet")</a></code>. Section references of the form §B.4 are
+to <code><a href="../articles/model.html">vignette("model")</a></code>, which carries the formal system;
+function names link into <code><a href="../articles/parameters.html">vignette("parameters")</a></code>; the
+measurements behind the claims here are in
+<code><a href="../articles/comparison.html">vignette("comparison")</a></code>.</p>
 <div class="section level2">
 <h2 id="things-to-do">Things to do<a class="anchor" aria-label="anchor" href="#things-to-do"></a>
 </h2>
+<p><strong>Call <code>set_equilibrium()</code> last.</strong> It freezes
+all 56 translated biological parameters at the values they held when it
+ran, and <code>fleet</code> merges that stored set over the live list.
+An edit made <em>after</em> it — another <code>set_*()</code> builder,
+or <code>parameters$du &lt;- 10</code> by hand — is a silent no-op, and
+the run comes out bit-identical to one without the edit. The IBM reads
+those fields directly and would honour the edit, so this is a real
+difference between the two models, not a quirk of this one.
+<code>fleet</code> warns when a live value disagrees with the stored
+one. If a calibration loop varies any of them, re-call
+<code>set_equilibrium()</code> each iteration.</p>
 <p><strong>Burn in before calibrating.</strong> The seed is a close
 approximation, not the exact fixed point (§F), and a seasonal run needs
 ~10 years to settle onto its limit cycle. The seasonal annual-mean EIR
@@ -128,8 +137,7 @@ death rates):</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/run_simulation_ode.html">run_simulation_ode</a></span><span class="op">(</span><span class="va">t</span>, <span class="va">p</span>, tuning <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>age_lower <span class="op">=</span> <span class="fu"><a href="../reference/default_age_lower.html">default_age_lower</a></span><span class="op">(</span>max_age <span class="op">=</span> <span class="fl">100</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>A warning fires when they diverge; don’t ignore it, because it
-changes the equilibrium age structure the whole run is seeded on
-(§3.4).</p>
+changes the equilibrium age structure the whole run is seeded on (<a href="parameters.html#set_demography"><code>set_demography()</code></a>).</p>
 <p><strong>Make your output bands a partition.</strong>
 <code>postie</code> treats every column as an independent age stratum,
 so overlapping bands are double-counted by any person-day-weighted
@@ -142,6 +150,10 @@ equilibrium-preserving defaults are slow and only needed near
 equilibrium:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/run_simulation_ode.html">run_simulation_ode</a></span><span class="op">(</span><span class="va">t</span>, <span class="va">p</span>, tuning <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>rtol <span class="op">=</span> <span class="fl">1e-6</span>, step_size_max <span class="op">=</span> <span class="fl">10</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Convert EIR before comparing it.</strong> <code>fleet</code>
+reports <code>EIR</code> per adult per year. The IBM reports a
+per-species daily total, so the like-for-like comparison is
+<code>EIR_&lt;species&gt; / human_population * 365</code>.</p>
 <p><strong>Sanity-check conservation.</strong>
 <code>S_count + D_count + A_count + U_count + Tr_count + Ph_count</code>
 should equal <code>human_population</code> to numerical tolerance.</p>
@@ -165,208 +177,82 @@ Weibull by default (§B.4) and capped at 20; each stage adds
 states and the solver slows steeply beyond that.</p>
 <p><strong><code>parameterise_total_M()</code> /
 <code>parameterise_mosquito_equilibrium()</code>.</strong> They have no
-effect; <code>fleet</code> re-derives <code>total_M</code> itself (§3.3:
+effect; <code>fleet</code> re-derives <code>total_M</code> itself (<a href="parameters.html#set_equilibrium"><code>set_equilibrium()</code></a>:
 from <code>init_EIR</code> under the default demography, as the IBM’s
 own value under a custom one).</p>
 </div>
 <div class="section level2">
 <h2 id="results-to-treat-with-caution">Results to treat with caution<a class="anchor" aria-label="anchor" href="#results-to-treat-with-caution"></a>
 </h2>
-<p><strong>Severe incidence.</strong> <code>fleet</code> runs below the
-IBM here, by 6.2% on all ages at EIR 20, 4.0% at EIR 50 and 4.6% at EIR
-120, and by 15–25% in the 5–20 year bands; the DALYs derived from severe
-incidence inherit that. It is the largest open discrepancy between the
-two models (<code><a href="../articles/comparison.html">vignette("comparison")</a></code>), so it is worth being
-exact about the cause, because the obvious explanation is the wrong
-one.</p>
-<p>It is <em>not</em> that
+<div class="section level3">
+<h3 id="severe-incidence">Severe incidence<a class="anchor" aria-label="anchor" href="#severe-incidence"></a>
+</h3>
+<p><code>fleet</code> runs below the IBM here, by 6.2% on all ages at
+EIR 20, 4.0% at EIR 50 and 4.6% at EIR 120, and by 15–25% in the 5–20
+year bands; DALYs derived from it inherit that. It is the largest open
+discrepancy between the two models
+(<code><a href="../articles/comparison.html">vignette("comparison")</a></code>).</p>
+<p>The obvious explanation is the wrong one:
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
-is the steepest of the three acquired-immunity Hill functions. It is the
-shallowest. From <code>get_parameters()</code>:</p>
-<table class="table">
-<thead><tr class="header">
-<th></th>
-<th>exponent</th>
-<th>scale</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math></td>
-<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><mi>b</mi></msub><mo>=</mo><mn>2.160</mn></mrow><annotation encoding="application/x-tex">k_b = 2.160</annotation></semantics></math></td>
-<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi>B</mi><mn>0</mn></mrow></msub><mo>=</mo><mn>43.9</mn></mrow><annotation encoding="application/x-tex">I_{B0} = 43.9</annotation></semantics></math></td>
-</tr>
-<tr class="even">
-<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math></td>
-<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><mi>c</mi></msub><mo>=</mo><mn>2.369</mn></mrow><annotation encoding="application/x-tex">k_c = 2.369</annotation></semantics></math></td>
-<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi>C</mi><mn>0</mn></mrow></msub><mo>=</mo><mn>18.02</mn></mrow><annotation encoding="application/x-tex">I_{C0} = 18.02</annotation></semantics></math></td>
-</tr>
-<tr class="odd">
-<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math></td>
-<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><mi>v</mi></msub><mo>=</mo><mn>2.000</mn></mrow><annotation encoding="application/x-tex">k_v = 2.000</annotation></semantics></math></td>
-<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi>V</mi><mn>0</mn></mrow></msub><mo>=</mo><mn>1.096</mn></mrow><annotation encoding="application/x-tex">I_{V0} = 1.096</annotation></semantics></math></td>
-</tr>
-</tbody>
-</table>
-<p>What singles
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
-out is the <strong>scale</strong>, not the exponent. A Hill function is
-flat well below its scale parameter and only approaches its full log-log
-slope well above it, so its local slope is a matter of
-<em>position</em>. Writing
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>=</mo><msub><mi>f</mi><mrow><mi>v</mi><mo>,</mo><mi>i</mi></mrow></msub><msup><mrow><mo stretchy="true" form="prefix">(</mo><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>I</mi><mrow><mi>V</mi><mi>A</mi></mrow></msub><mo>+</mo><mi>δ</mi><mo>+</mo><msub><mi>I</mi><mrow><mi>V</mi><mi>M</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><mi>/</mi><msub><mi>I</mi><mrow><mi>V</mi><mn>0</mn></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><msub><mi>k</mi><mi>v</mi></msub></msup></mrow><annotation encoding="application/x-tex">X =
-f_{v,i}\left(\left(I_{VA}+\delta+I_{VM}\right)/I_{V0}\right)^{k_v}</annotation></semantics></math>
-for the denominator term of
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
-(§B),</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mrow><mi>∂</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mi>θ</mi></mrow><mrow><mi>∂</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><msub><mi>I</mi><mrow><mi>V</mi><mi>A</mi></mrow></msub></mrow></mfrac><mo>=</mo><mi>−</mi><mspace width="0.167em"></mspace><mfrac><mrow><msub><mi>k</mi><mi>v</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>θ</mi><mn>1</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow><mi>X</mi></mrow><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>+</mo><mi>X</mi><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>+</mo><msub><mi>θ</mi><mn>1</mn></msub><mi>X</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">
-\frac{\partial\log\theta}{\partial\log I_{VA}} =
--\,\frac{k_v\left(1-\theta_1\right)X}{\left(1+X\right)\left(1+\theta_1X\right)},
-</annotation></semantics></math></p>
-<p>which is near 0 for
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>≪</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">X \ll 1</annotation></semantics></math>,
-reaches
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1.96</mn></mrow><annotation encoding="application/x-tex">-1.96</annotation></semantics></math>
-at
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>=</mo><msubsup><mi>θ</mi><mn>1</mn><mrow><mi>−</mi><mn>1</mn><mi>/</mi><mn>2</mn></mrow></msubsup><mo>≈</mo><mn>92</mn></mrow><annotation encoding="application/x-tex">X = \theta_1^{-1/2} \approx
-92</annotation></semantics></math>, and returns toward 0 once
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
-has bottomed out on its
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>θ</mi><mn>0</mn></msub><msub><mi>θ</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">\theta_0\theta_1</annotation></semantics></math>
-floor. The same expression with
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>k</mi><mi>c</mi></msub><annotation encoding="application/x-tex">k_c</annotation></semantics></math>
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ϕ</mi><mn>1</mn></msub><annotation encoding="application/x-tex">\phi_1</annotation></semantics></math>
-governs
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>,
-whose steepest attainable slope,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>2.24</mn></mrow><annotation encoding="application/x-tex">-2.24</annotation></semantics></math>,
-is the steeper of the two.</p>
-<p>Position is what separates them, and
+is the <em>shallowest</em> of the three acquired-immunity Hill
+functions, not the steepest. What singles it out is position.
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>V</mi><mn>0</mn></mrow></msub><annotation encoding="application/x-tex">I_{V0}</annotation></semantics></math>
-is 16 times smaller than
+is sixteen times smaller than
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>C</mi><mn>0</mn></mrow></msub><annotation encoding="application/x-tex">I_{C0}</annotation></semantics></math>
 while the two acquired immunities take nearly the same values at every
-age. At <code>fleet</code>’s own seed at the reference EIR of 20,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi>V</mi><mi>A</mi></mrow></msub><mo>=</mo><mn>9.0</mn></mrow><annotation encoding="application/x-tex">I_{VA} = 9.0</annotation></semantics></math>
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi>C</mi><mi>A</mi></mrow></msub><mo>=</mo><mn>9.5</mn></mrow><annotation encoding="application/x-tex">I_{CA} = 9.5</annotation></semantics></math>
-at age 3, and 37.6 against 40.3 at age 10: they differ almost entirely
-in what they are divided by. So
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>V</mi><mi>A</mi></mrow></msub><annotation encoding="application/x-tex">I_{VA}</annotation></semantics></math>
-is
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>8</mn><mspace width="0.167em"></mspace><msub><mi>I</mi><mrow><mi>V</mi><mn>0</mn></mrow></msub></mrow><annotation encoding="application/x-tex">8\,I_{V0}</annotation></semantics></math>
-at age 3 and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>34</mn><mspace width="0.167em"></mspace><msub><mi>I</mi><mrow><mi>V</mi><mn>0</mn></mrow></msub></mrow><annotation encoding="application/x-tex">34\,I_{V0}</annotation></semantics></math>
-at age 10, putting
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∂</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mi>θ</mi><mi>/</mi><mi>∂</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><msub><mi>I</mi><mrow><mi>V</mi><mi>A</mi></mrow></msub></mrow><annotation encoding="application/x-tex">\partial\log\theta/\partial\log I_{VA}</annotation></semantics></math>
-at
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1.87</mn></mrow><annotation encoding="application/x-tex">-1.87</annotation></semantics></math>
-at age 3 and holding it between
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1.96</mn></mrow><annotation encoding="application/x-tex">-1.96</annotation></semantics></math>
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1.80</mn></mrow><annotation encoding="application/x-tex">-1.80</annotation></semantics></math>
-from age 4 to age 10, within a few percent of the steepest slope the
-function can have. Over the same ages
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>C</mi><mi>A</mi></mrow></msub><annotation encoding="application/x-tex">I_{CA}</annotation></semantics></math>
-climbs only from
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.5</mn><mspace width="0.167em"></mspace><msub><mi>I</mi><mrow><mi>C</mi><mn>0</mn></mrow></msub></mrow><annotation encoding="application/x-tex">0.5\,I_{C0}</annotation></semantics></math>
-to
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2.2</mn><mspace width="0.167em"></mspace><msub><mi>I</mi><mrow><mi>C</mi><mn>0</mn></mrow></msub></mrow><annotation encoding="application/x-tex">2.2\,I_{C0}</annotation></semantics></math>
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>’s
-slope from
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>0.42</mn></mrow><annotation encoding="application/x-tex">-0.42</annotation></semantics></math>
-to
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>2.05</mn></mrow><annotation encoding="application/x-tex">-2.05</annotation></semantics></math>:
-at age 3,
+age, so by age 3
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
+is already out on its convex tail while
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>
-is still nearly linear, less than a quarter as steep as
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>,
-and it does not overtake
+is still nearly linear. <code>fleet</code> evaluates
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
-until about age 8.</p>
-<p>Sitting on that tail makes
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math><strong>convex</strong> in
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>V</mi><mi>A</mi></mrow></msub><annotation encoding="application/x-tex">I_{VA}</annotation></semantics></math>
-across essentially the whole population, where
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>
-is concave in
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>C</mi><mi>A</mi></mrow></msub><annotation encoding="application/x-tex">I_{CA}</annotation></semantics></math>
-below age 4 at this EIR and only convex above it. That fixes the sign of
-the mean-field error. <code>fleet</code> evaluates
+once per stratum, at that stratum’s mean immunity; the IBM averages it
+over individuals whose bite histories differ <em>within</em> the
+stratum. Averaging a convex function the second way gives the larger
+answer, so the mean field returns the smaller one and severe incidence
+comes out low. §B.3 derives this and gives the numbers.</p>
+<p>Two things make severe incidence uniquely exposed.
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
-once per (age group
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>×</mi><annotation encoding="application/x-tex">\times</annotation></semantics></math>
-heterogeneity group) at that stratum’s mean
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>V</mi><mi>A</mi></mrow></msub><annotation encoding="application/x-tex">I_{VA}</annotation></semantics></math>;
-the IBM averages
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
-over individuals whose bite histories differ <em>inside</em> the
-stratum. By Jensen’s inequality
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝔼</mi><mrow><mo stretchy="true" form="prefix">[</mo><mi>θ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>I</mi><mrow><mi>V</mi><mi>A</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">]</mo></mrow><mo>≥</mo><mi>θ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝔼</mi><mo stretchy="false" form="prefix">[</mo><msub><mi>I</mi><mrow><mi>V</mi><mi>A</mi></mrow></msub><mo stretchy="false" form="postfix">]</mo><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathbb{E}\left[\theta(I_{VA})\right] \geq \theta\left(\mathbb{E}[I_{VA}]\right)</annotation></semantics></math>,
-so the mean field returns the smaller number and severe incidence comes
-out low. The magnitude scales with the residual within-stratum variance:
-a coefficient of variation of 0.3 in
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>V</mi><mi>A</mi></mrow></msub><annotation encoding="application/x-tex">I_{VA}</annotation></semantics></math>
-inside a stratum puts
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝔼</mi><mo stretchy="false" form="prefix">[</mo><mi>θ</mi><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">\mathbb{E}[\theta]</annotation></semantics></math>
-23% above
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
-at the stratum mean at age 3 and 28% above at age 5, where the same
-calculation on
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>
-gives
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>0.7</mn></mrow><annotation encoding="application/x-tex">-0.7</annotation></semantics></math>%
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>4.8</mn></mrow><annotation encoding="application/x-tex">+4.8</annotation></semantics></math>%.
-<code>fleet</code> resolves the log-normal biting strata explicitly
-(§2.1), so only the spread within an (age,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ζ</mi><annotation encoding="application/x-tex">\zeta</annotation></semantics></math>)
-cell is lost and the realised gap is a few percent rather than tens of
-percent, but the direction is the same.</p>
-<p>Two things make severe incidence uniquely exposed to this:</p>
-<ul>
-<li>
-<strong><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
-is a post-hoc multiplier.</strong> <code>n_inc_severe_*</code> is
+is a <strong>post-hoc multiplier</strong> — severe counts are
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
 times an infection count the state equations have already determined
-(§G); nothing downstream responds, so the whole averaging error lands in
-the output.
+(§G), so nothing downstream absorbs the error, where
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>
-is not like that. It splits the infection inflow between
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>,
-which changes infectivity, treatment and the immunity trajectories
-themselves, so the equilibrium absorbs part of any error in it.</li>
-<li>
-<strong>The bias needs the tail.</strong> At EIR 1,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>V</mi><mi>A</mi></mrow></msub><annotation encoding="application/x-tex">I_{VA}</annotation></semantics></math>
-is only
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.46</mn><mspace width="0.167em"></mspace><msub><mi>I</mi><mrow><mi>V</mi><mn>0</mn></mrow></msub></mrow><annotation encoding="application/x-tex">0.46\,I_{V0}</annotation></semantics></math>
-at age 3,
+splits the infection inflow and feeds back through infectivity,
+treatment and immunity. And <strong>the bias needs the tail</strong>: at
+EIR 1
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
-sits near its
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mn>0</mn></msub><annotation encoding="application/x-tex">\theta_0</annotation></semantics></math>
-plateau (log-slope
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>0.09</mn></mrow><annotation encoding="application/x-tex">-0.09</annotation></semantics></math>)
-and there is next to nothing to average badly: all-age severe incidence
-is within 1% of the IBM at EIR 1, 3 and 10. The gap opens over the EIR
-20–120 plateau, where the tail is where the population is.</li>
-</ul>
+sits near its plateau and all-age severe incidence is within 1% of the
+IBM, the gap opening only over the EIR 20–120 range where the tail is
+where the population is.</p>
 <p>None of this is a correction you can apply. It sets the sign and the
 order of magnitude, and it says which comparisons to distrust first:
 severe incidence in narrow age bands, and any scenario difference taken
 on severe incidence.</p>
-<p><strong>Anything through a nets or IRS era.</strong>
-Population-averaged coverage loses the correlation of protection within
-individuals across bites, so the ODE tends to sit above the IBM while
-vector control is active (§2.2).</p>
-<p><strong>Repeated mass PEV or TBV campaigns.</strong> Overlapping
-campaigns combine as independent protections rather than
-most-recent-receipt, and <code>min_wait</code> re-vaccination exclusion
-is not applied (§3.15, §3.16). A single campaign is fine.</p>
+</div>
+<div class="section level3">
+<h3 id="vector-control-eras">Vector-control eras<a class="anchor" aria-label="anchor" href="#vector-control-eras"></a>
+</h3>
+<p>Population-averaged coverage loses the correlation of protection
+within individuals across bites, so <code>fleet</code> tends to sit
+above the IBM while nets or IRS are active (§2.2).</p>
+</div>
+<div class="section level3">
+<h3 id="repeated-mass-campaigns">Repeated mass campaigns<a class="anchor" aria-label="anchor" href="#repeated-mass-campaigns"></a>
+</h3>
+<p>Overlapping mass PEV or TBV campaigns combine as independent
+protections rather than most-recent-receipt, and <code>min_wait</code>
+re-vaccination exclusion is not applied (<a href="parameters.html#set_mass_pev"><code>set_mass_pev()</code></a>, <a href="parameters.html#set_tbv"><code>set_tbv()</code></a>). A single
+campaign is fine.</p>
+</div>
+<div class="section level3">
+<h3 id="stochastic-scatter">Stochastic scatter<a class="anchor" aria-label="anchor" href="#stochastic-scatter"></a>
+</h3>
+<p><code>fleet</code> returns the ensemble mean, so it has no replicate
+spread of its own. A single IBM replicate is not a fair yardstick for
+it: compare against the IBM’s replicate median and read its 10–90% band
+as the noise <code>fleet</code> is not carrying.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="cost-model">Cost model<a class="anchor" aria-label="anchor" href="#cost-model"></a>
@@ -480,7 +366,9 @@ with the IBM’s cost, see <code><a href="../articles/comparison.html">vignette(
 <div class="section level2">
 <h2 id="index-of-approximations">Index of approximations<a class="anchor" aria-label="anchor" href="#index-of-approximations"></a>
 </h2>
-<p>Every 🟡 in §3, and when it matters:</p>
+<p>Every 🟡 in <code><a href="../articles/parameters.html">vignette("parameters")</a></code>, and when it matters.
+The first column links to the argument-by-argument account; § refers to
+<code><a href="../articles/model.html">vignette("model")</a></code>.</p>
 <table class="table">
 <colgroup>
 <col width="33%">
@@ -489,71 +377,84 @@ with the IBM’s cost, see <code><a href="../articles/comparison.html">vignette(
 </colgroup>
 <thead><tr class="header">
 <th>Mechanism</th>
-<th>§</th>
+<th>Where</th>
 <th>Matters when</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
+<td>Ages above the top <code>deathrate_agegroups</code> take the top
+death rate</td>
+<td><a href="parameters.html#set_demography"><code>set_demography()</code></a></td>
+<td>A custom demography whose age grid stops short of the model’s oldest
+group; the IBM removes those people instead. Warned</td>
+</tr>
+<tr class="even">
 <td>Weibull prophylaxis → Erlang chain (moment-matched)</td>
-<td>3.5, B.4</td>
+<td>
+<a href="parameters.html#set_drugs"><code>set_drugs()</code></a>,
+§B.4</td>
 <td>The far tail of chemoprevention protection; for post-treatment
 protection the exponential
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
 stage in front of the chain spreads AL’s sharp 10-day protection,
 reproducing its integral rather than its shape</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Multi-drug blend rather than parallel sub-populations</td>
-<td>3.6</td>
+<td><a href="parameters.html#set_clinical_treatment"><code>set_clinical_treatment()</code></a></td>
 <td>A genuinely mixed first line (a <em>switch</em> is modelled
 fine)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Single scalar slow-clearance rate blended across drugs</td>
-<td>3.7, B.4</td>
+<td>
+<a href="parameters.html#set_antimalarial_resistance"><code>set_antimalarial_resistance()</code></a>,
+§B.4</td>
 <td>High artemisinin resistance with several treatment drugs</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Population-averaged nets</td>
-<td>3.8</td>
+<td><a href="parameters.html#set_bednets"><code>set_bednets()</code></a></td>
 <td>Any nets era, the largest routine gap</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Population-averaged IRS</td>
-<td>3.9</td>
+<td><a href="parameters.html#set_spraying"><code>set_spraying()</code></a></td>
 <td>Any IRS era</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Carrying-capacity floor at
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>K</mi><mn>0</mn></msub><mo>×</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>4</mn></mrow></msup></mrow><annotation encoding="application/x-tex">K_0\times10^{-4}</annotation></semantics></math>
 </td>
-<td>3.10</td>
+<td><a href="parameters.html#set_carrying_capacity"><code>set_carrying_capacity()</code></a></td>
 <td>Modelling complete vector elimination</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Chemoprevention as pulses; half-open age bands</td>
-<td>3.11, E</td>
+<td>
+<a href="parameters.html#set_mda"><code>set_mda()</code>,
+<code>set_smc()</code></a>, §E</td>
 <td>Very narrow target bands</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>PMC age trigger → monthly pulses</td>
-<td>3.12</td>
+<td><a href="parameters.html#set_pmc"><code>set_pmc()</code></a></td>
 <td>PMC dose timing specifically</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Seasonal PEV boosters → fixed delay</td>
-<td>3.14</td>
+<td><a href="parameters.html#set_pev_epi"><code>set_pev_epi()</code></a></td>
 <td>Seasonally-timed booster campaigns (warned)</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Repeated campaigns: no <code>min_wait</code>, independent
 combination, no ageing out of band</td>
-<td>3.15</td>
+<td><a href="parameters.html#set_mass_pev"><code>set_mass_pev()</code></a></td>
 <td>Repeated mass PEV</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TBV campaign combination</td>
-<td>3.16</td>
+<td><a href="parameters.html#set_tbv"><code>set_tbv()</code></a></td>
 <td>Repeated TBV campaigns</td>
 </tr>
 </tbody>

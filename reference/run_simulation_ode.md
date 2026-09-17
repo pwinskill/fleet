@@ -31,8 +31,9 @@ run_simulation_ode(
   flexible carrying capacity, and custom demography (`set_demography`:
   age-specific mortality and the resulting equilibrium age
   structure). P. vivax is rejected; the model is always compartmental
-  (the individual-mosquito path does not apply). See the README for the
-  mean-field approximations used by each module.
+  (the individual-mosquito path does not apply).
+  [`vignette("using")`](https://pwinskill.github.io/fleet/articles/using.md)
+  indexes the mean-field approximations and when each one matters.
 
   **The target EIR is read from this list**, as `parameters$init_EIR`,
   which is where `malariasimulation` puts it and reads it from too. Seed
@@ -40,6 +41,17 @@ run_simulation_ode(
   `parameters <- malariasimulation::set_equilibrium(parameters, init_EIR = 20)`.
   That call also stores `eq_params`, which `fleet` honours if present.
   Setting `parameters$init_EIR` by hand works but skips that.
+
+  **Call `set_equilibrium()` last.** It freezes all 56 translated
+  biological parameters at the values they held when it ran, and `fleet`
+  merges that stored set over the live list. So an edit made *after* it
+  – another `set_*()` builder, or `parameters$du <- 10` by hand – is a
+  silent no-op for anything in that set, and the run is bit-identical to
+  one without the edit. The IBM reads those fields directly and would
+  honour the edit, so this is a real difference between the two models
+  rather than a detail of this one. `fleet` warns when a live value
+  disagrees with the stored one. If a calibration loop varies any of
+  them, re-call `set_equilibrium()` each iteration.
 
   Three further optional fields tune how faithfully the mean field
   mirrors the IBM. The first two are per-individual arithmetic, the
@@ -56,13 +68,14 @@ run_simulation_ode(
     bite/person/day (seasonal peaks, high-`zeta` strata). It does
     **not** make the `malariaEquilibrium` seed an exact fixed point, and
     it does not make a run flat: deduplication is only the largest of
-    four departures from that solution (the README lists all four). What
-    it does do is roughly halve the largest excursion from the seed:
-    over an undisturbed 15-year run at EIR 20, PfPR(2-10) departs from
-    its seeded value by at most 0.14% with `0`, against 0.28% at the
-    default. That is the metric the package's own equilibrium tests
-    assert, which is why they set it. Leave it at `1` for any scientific
-    run.
+    four departures from that solution, which
+    [`vignette("model")`](https://pwinskill.github.io/fleet/articles/model.md)
+    lists in its initial-conditions section. What it does do is roughly
+    halve the largest excursion from the seed: over an undisturbed
+    15-year run at EIR 20, PfPR(2-10) departs from its seeded value by
+    at most 0.14% with `0`, against 0.28% at the default. That is the
+    metric the package's own equilibrium tests assert, which is why they
+    set it. Leave it at `1` for any scientific run.
 
   - `acquired_immunity_offset` (default `0`): the IBM adds `+0.5` to
     positive acquired immunity inside the `b`/`phi`/`theta` Hill

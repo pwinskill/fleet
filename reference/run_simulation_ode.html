@@ -20,8 +20,9 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/using.html">Using fleet well: approximations and what to do differently</a></li>
-    <li><a class="dropdown-item" href="../articles/model.html">The fleet model: formal specification</a></li>
     <li><a class="dropdown-item" href="../articles/comparison.html">Comparison with malariasimulation</a></li>
+    <li><a class="dropdown-item" href="../articles/model.html">The fleet model: formal specification</a></li>
+    <li><a class="dropdown-item" href="../articles/parameters.html">fleet parameter reference</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
 <li class="nav-item"><a class="nav-link" href="../CONTRIBUTING.html">Contributing</a></li>
@@ -79,13 +80,24 @@ MDA/SMC/PMC, PEV (EPI + mass) and TBV vaccines, seasonality and flexible
 carrying capacity, and custom demography (<code>set_demography</code>: age-specific
 mortality and the resulting equilibrium age structure). P. vivax is rejected;
 the model is always compartmental (the individual-mosquito path does not
-apply). See the README for the mean-field approximations used by each module.</p>
+apply). <code><a href="../articles/using.html">vignette("using")</a></code> indexes the mean-field approximations and when
+each one matters.</p>
 <p><strong>The target EIR is read from this list</strong>, as <code>parameters$init_EIR</code>, which is
 where <code>malariasimulation</code> puts it and reads it from too. Seed it the same way
 you would for the IBM, before calling this function:
 <code>parameters &lt;- malariasimulation::set_equilibrium(parameters, init_EIR = 20)</code>.
 That call also stores <code>eq_params</code>, which <code>fleet</code> honours if present. Setting
 <code>parameters$init_EIR</code> by hand works but skips that.</p>
+<p><strong>Call <code>set_equilibrium()</code> last.</strong> It freezes all 56 translated biological
+parameters at the values they held when it ran, and <code>fleet</code> merges that
+stored set over the live list. So an edit made <em>after</em> it – another
+<code>set_*()</code> builder, or <code>parameters$du &lt;- 10</code> by hand – is a silent no-op for
+anything in that set, and the run is bit-identical to one without the edit.
+The IBM reads those fields directly and would honour the edit, so this is a
+real difference between the two models rather than a detail of this one.
+<code>fleet</code> warns when a live value disagrees with the stored one. If a
+calibration loop varies any of them, re-call <code>set_equilibrium()</code> each
+iteration.</p>
 <p>Three further optional fields tune how faithfully the mean field mirrors the
 IBM. The first two are per-individual arithmetic, the third is a seeding
 convention; all three default to the validated choice, so you normally leave
@@ -98,7 +110,8 @@ form <code>malariaEquilibrium</code> assumes, which over-predicts infection wher
 exposure approaches one bite/person/day (seasonal peaks, high-<code>zeta</code>
 strata). It does <strong>not</strong> make the <code>malariaEquilibrium</code> seed an exact fixed
 point, and it does not make a run flat: deduplication is only the largest
-of four departures from that solution (the README lists all four). What it
+of four departures from that solution, which <code><a href="../articles/model.html">vignette("model")</a></code> lists in
+its initial-conditions section. What it
 does do is roughly halve the largest excursion from the seed: over an
 undisturbed 15-year run at EIR 20, PfPR(2-10) departs from its seeded value
 by at most 0.14% with <code>0</code>, against 0.28% at the default. That is the metric

@@ -27,8 +27,12 @@ The count table is malariasimulation-shaped, so post-process it with
 postie exactly as you would an IBM run: `postie::get_rates(out)` and
 `postie::get_prevalence(out, diagnostic = "lm")`. See
 [`vignette("fleet")`](https://pwinskill.github.io/fleet/articles/fleet.md)
-for a worked tour, and the README's *Mean-field approximations* section
-for where and how much the ODE departs from the IBM.
+for a worked tour,
+[`vignette("using")`](https://pwinskill.github.io/fleet/articles/using.md)
+for where and how much the ODE departs from the IBM and what to do about
+it, and
+[`vignette("comparison")`](https://pwinskill.github.io/fleet/articles/comparison.md)
+for the measured agreement behind those claims.
 
 ## See also
 
