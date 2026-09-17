@@ -186,45 +186,29 @@ main {
   line-height: 1.7;
 }
 
-/* Measure. The content column is 800px wide because that is what figures and
-   the wider tables need, but 800px of 17px Inter is 102 characters a line,
-   half as long again as anything anyone wants to read. Capping the prose at
-   38rem brings it to about 79 while leaving tables, figures and code blocks
-   the full width -- the disparity is the point, and it is what separates a
-   documentation page from a wall of text.
+/* Measure. Below 1600px the prose fills the content column and is NOT capped.
+   An earlier revision held it at 38rem, about 68 characters, on the strength of
+   a measurement of 102 characters a line -- but that had been taken in Nunito
+   Sans at 16px, before the type changed. Inter at 17px sets about 24% wider per
+   character, so the same 776px column is 87 characters, not 102. The type
+   change had already fixed most of it, and the cap was correcting a number that
+   no longer described the page: it just made the column narrow and left a band
+   of dead space beside every paragraph.
 
-   Scoped away from `.nav` so it cannot touch the contents rail or the navbar,
-   and away from `dl` in the reference pages, whose argument descriptions sit
-   in a table-like grid that a max-width would tear apart. */
-main p,
-main > ul > li,
-main > ol > li,
-main .section > ul > li,
-main .section > ol > li,
-main blockquote,
-main .alert {
-  max-width: 38rem;
-}
+   87 is the upper end of comfortable rather than the middle of it, but it is
+   what pkgdown ships and what R users read on every other package site, and it
+   is a page carrying code, tables and equations rather than continuous prose. */
 
-/* knitr wraps every figure in a bare <p>, with no class to tell it apart from
-   a paragraph of prose, so the cap above caught the comparison figures too and
-   drew them at 608px instead of 776. `:has()` is the only thing that can make
-   the distinction. Where it is unsupported the figures simply stay narrow,
-   which is why it is safe to lean on. */
-main p:has(> img),
-main p:has(> a > img) {
-  max-width: none;
-}
+/* Above 1600px the column widens to 64rem so the multi-panel comparison figures
+   and the wide parameter tables get 1000px rather than 776. Prose does not want
+   all of that -- 64rem of Inter is about 112 characters -- so it alone is held
+   at 50rem, roughly 89 characters, which is the measure it already has on a
+   laptop rather than a wider one. Figures and tables keep the full column.
 
-/* Above 1600px the container widens (see the layout section), and the prose
-   takes a share of that: 42rem, about 75 characters against 68. Still inside the
-   comfortable band, and without it the text would sit in a 608px column with
-   nearly 400px of nothing beside it -- the whitespace moved from the margins
-   into the middle rather than gone.
-
-   This has to live here rather than in the layout block above, with the rest of
-   the wide-screen rules: it has the same specificity as the 38rem cap, so the
-   one that wins is the one that comes later in the file. */
+   knitr wraps every figure in a bare <p> with no class to tell it from a
+   paragraph, so the cap would otherwise catch the figures too; `:has()` is the
+   only thing that can make the distinction, and where it is unsupported the
+   figures merely stay at prose width. */
 @media (min-width: 1600px) {
   main p,
   main > ul > li,
@@ -233,7 +217,7 @@ main p:has(> a > img) {
   main .section > ol > li,
   main blockquote,
   main .alert {
-    max-width: 42rem;
+    max-width: 50rem;
   }
   main p:has(> img),
   main p:has(> a > img) {
