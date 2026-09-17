@@ -33,14 +33,39 @@ template:
     #     in dark mode ---
     navbar-bg: "#FFFFFF"
 
+# The three guides sit at the top level and the lookup material is grouped
+# behind one menu. pkgdown's default does the opposite: the function reference
+# gets a top-level slot of its own and all four non-intro articles go into an
+# "Articles" dropdown, labelled with their full titles. That buries the two
+# articles a reader most needs -- what to watch out for, and whether the numbers
+# can be trusted -- behind a menu, under headings too long to scan, while
+# promoting a four-topic function index above them.
 navbar:
   structure:
-    left:  [intro, reference, articles, news, contributing]
+    left:  [intro, using, comparison, lookup, news, contributing]
     right: [search, lightswitch, github]
   components:
     intro:
       text: Get started
       href: articles/fleet.html
+    using:
+      text: Using fleet well
+      href: articles/using.html
+    comparison:
+      text: Comparison
+      href: articles/comparison.html
+    lookup:
+      text: Reference
+      menu:
+      - text: Model specification
+        href: articles/model.html
+      - text: Parameter reference
+        href: articles/parameters.html
+      - text: -------
+      - text: Function index
+        href: reference/index.html
+      - text: All articles
+        href: articles/index.html
     github:
       icon: fab fa-github
       href: https://github.com/pwinskill/fleet

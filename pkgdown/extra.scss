@@ -298,6 +298,10 @@ main a:focus {
   position: relative;
   font-weight: 500;
   transition: color .15s ease;
+  /* Two-word items ("Get started", "Using fleet well") wrap mid-label when the
+     search box squeezes the row, which doubles the height of the bar and reads
+     as a mistake. Below lg the whole thing collapses to the toggler anyway. */
+  white-space: nowrap;
 }
 .navbar .nav-link:hover,
 .navbar .nav-link:focus { color: var(--fl-nav-hover); }
