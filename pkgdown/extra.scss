@@ -186,44 +186,24 @@ main {
   line-height: 1.7;
 }
 
-/* Measure. Below 1600px the prose fills the content column and is NOT capped.
-   An earlier revision held it at 38rem, about 68 characters, on the strength of
-   a measurement of 102 characters a line -- but that had been taken in Nunito
-   Sans at 16px, before the type changed. Inter at 17px sets about 24% wider per
-   character, so the same 776px column is 87 characters, not 102. The type
-   change had already fixed most of it, and the cap was correcting a number that
-   no longer described the page: it just made the column narrow and left a band
-   of dead space beside every paragraph.
+/* Measure: there isn't one. Prose, figures, tables and code all take the full
+   content column, so the page has a single left and right edge the whole way
+   down rather than a text column inset inside a wider one.
 
-   87 is the upper end of comfortable rather than the middle of it, but it is
-   what pkgdown ships and what R users read on every other package site, and it
-   is a page carrying code, tables and equations rather than continuous prose. */
+   That is a deliberate choice against the usual typographic advice. The column
+   is 87 characters a line at 1440px and about 112 above 1600px, where 65-75 is
+   the conventional target for continuous prose. The judgement -- the author's,
+   made looking at the rendered pages -- is that a ragged inner edge, with
+   paragraphs stopping well short of the tables beside them, cost more here than
+   the long line does: this is reference material that is scanned and searched
+   more often than it is read start to finish.
 
-/* Above 1600px the column widens to 64rem so the multi-panel comparison figures
-   and the wide parameter tables get 1000px rather than 776. Prose does not want
-   all of that -- 64rem of Inter is about 112 characters -- so it alone is held
-   at 50rem, roughly 89 characters, which is the measure it already has on a
-   laptop rather than a wider one. Figures and tables keep the full column.
-
-   knitr wraps every figure in a bare <p> with no class to tell it from a
-   paragraph, so the cap would otherwise catch the figures too; `:has()` is the
-   only thing that can make the distinction, and where it is unsupported the
-   figures merely stay at prose width. */
-@media (min-width: 1600px) {
-  main p,
-  main > ul > li,
-  main > ol > li,
-  main .section > ul > li,
-  main .section > ol > li,
-  main blockquote,
-  main .alert {
-    max-width: 50rem;
-  }
-  main p:has(> img),
-  main p:has(> a > img) {
-    max-width: none;
-  }
-}
+   Two earlier revisions capped it, at 38rem and then 50rem. The first was worse
+   than useless: it was set from a reading of 102 characters taken in Nunito Sans
+   at 16px, before the type changed in the same pass. Inter at 17px sets about
+   24% wider per character, so the column had already come down to 87 on its own
+   and the cap was correcting a number that no longer described the page. If
+   anyone reinstates a cap, measure the current font first. */
 main h1, main h2, main h3, main h4 {
   color: var(--fl-heading);
   font-weight: 600;
