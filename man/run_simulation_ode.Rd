@@ -24,7 +24,8 @@ MDA/SMC/PMC, PEV (EPI + mass) and TBV vaccines, seasonality and flexible
 carrying capacity, and custom demography (\code{set_demography}: age-specific
 mortality and the resulting equilibrium age structure). P. vivax is rejected;
 the model is always compartmental (the individual-mosquito path does not
-apply). See the README for the mean-field approximations used by each module.
+apply). \code{vignette("using")} indexes the mean-field approximations and when
+each one matters.
 
 \strong{The target EIR is read from this list}, as \code{parameters$init_EIR}, which is
 where \code{malariasimulation} puts it and reads it from too. Seed it the same way
@@ -32,6 +33,17 @@ you would for the IBM, before calling this function:
 \code{parameters <- malariasimulation::set_equilibrium(parameters, init_EIR = 20)}.
 That call also stores \code{eq_params}, which \code{fleet} honours if present. Setting
 \code{parameters$init_EIR} by hand works but skips that.
+
+\strong{Call \code{set_equilibrium()} last.} It freezes all 56 translated biological
+parameters at the values they held when it ran, and \code{fleet} merges that
+stored set over the live list. So an edit made \emph{after} it -- another
+\verb{set_*()} builder, or \code{parameters$du <- 10} by hand -- is a silent no-op for
+anything in that set, and the run is bit-identical to one without the edit.
+The IBM reads those fields directly and would honour the edit, so this is a
+real difference between the two models rather than a detail of this one.
+\code{fleet} warns when a live value disagrees with the stored one. If a
+calibration loop varies any of them, re-call \code{set_equilibrium()} each
+iteration.
 
 Three further optional fields tune how faithfully the mean field mirrors the
 IBM. The first two are per-individual arithmetic, the third is a seeding
@@ -47,7 +59,8 @@ form \code{malariaEquilibrium} assumes, which over-predicts infection where
 exposure approaches one bite/person/day (seasonal peaks, high-\code{zeta}
 strata). It does \strong{not} make the \code{malariaEquilibrium} seed an exact fixed
 point, and it does not make a run flat: deduplication is only the largest
-of four departures from that solution (the README lists all four). What it
+of four departures from that solution, which \code{vignette("model")} lists in
+its initial-conditions section. What it
 does do is roughly halve the largest excursion from the seed: over an
 undisturbed 15-year run at EIR 20, PfPR(2-10) departs from its seeded value
 by at most 0.14\% with \code{0}, against 0.28\% at the default. That is the metric

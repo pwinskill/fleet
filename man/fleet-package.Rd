@@ -29,8 +29,9 @@ table (P. falciparum only).
 The count table is malariasimulation-shaped, so post-process it with
 \pkg{postie} exactly as you would an IBM run: \code{postie::get_rates(out)} and
 \code{postie::get_prevalence(out, diagnostic = "lm")}.
-See \code{vignette("fleet")} for a worked tour, and the README's \emph{Mean-field
-approximations} section for where and how much the ODE departs from the IBM.
+See \code{vignette("fleet")} for a worked tour, \code{vignette("using")} for where and
+how much the ODE departs from the IBM and what to do about it, and
+\code{vignette("comparison")} for the measured agreement behind those claims.
 }
 
 \seealso{

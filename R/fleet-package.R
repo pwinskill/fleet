@@ -22,8 +22,9 @@
 #' The count table is malariasimulation-shaped, so post-process it with
 #' \pkg{postie} exactly as you would an IBM run: `postie::get_rates(out)` and
 #' `postie::get_prevalence(out, diagnostic = "lm")`.
-#' See `vignette("fleet")` for a worked tour, and the README's *Mean-field
-#' approximations* section for where and how much the ODE departs from the IBM.
+#' See `vignette("fleet")` for a worked tour, `vignette("using")` for where and
+#' how much the ODE departs from the IBM and what to do about it, and
+#' `vignette("comparison")` for the measured agreement behind those claims.
 #'
 #' @keywords internal
 #' @useDynLib fleet, .registration = TRUE

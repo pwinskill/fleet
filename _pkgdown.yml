@@ -67,12 +67,15 @@ articles:
 - title: Articles
   navbar: ~
   contents:
-  # Ordered as a reader meets them, not alphabetically: learn the interface, then
-  # what to watch out for, then the formal system, then the evidence.
+  # Ordered as a reader meets them, not alphabetically. Learn the interface, then
+  # what to watch out for, then the evidence that licenses it -- "can I trust
+  # this?" comes before "what exactly is the ODE?" -- then the formal system,
+  # with its argument-by-argument lookup table behind it.
   - fleet
   - using
-  - model
   - comparison
+  - model
+  - parameters
 
 reference:
 - title: Run the model
