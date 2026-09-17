@@ -153,6 +153,31 @@ html {
   }
 }
 
+/* Above 1600px that 70rem cap stops reading as a measured column and starts
+   reading as one stranded in the middle of the screen: on a 1900px display it
+   leaves 400px of nothing down each side, 42% of the glass. Bootstrap stops at
+   xxl (1400px), so this is a raw query rather than a breakpoint mixin.
+
+   The extra goes to main, and main alone. Prose stays capped at its measure, so
+   what actually grows is the material that was genuinely cramped: the
+   multi-panel comparison figures and the wide parameter tables, from 776px to
+   about 1000. Widening the prose instead would push it past 80 characters a
+   line, which is the thing the cap exists to prevent.
+
+   64 + 6 + 18 = 88, so again nothing is left over. */
+@media (min-width: 1600px) {
+  .container {
+    max-width: 88rem;
+  }
+  .row > main {
+    max-width: 64rem;
+  }
+  .row > aside {
+    max-width: 18rem;
+    margin-left: 6rem;
+  }
+}
+
 /* ---- Type -------------------------------------------------------------- */
 /* Tight tracking on display sizes and looser tracking on small caps is most
    of what separates a considered page from a default one. */
@@ -189,6 +214,31 @@ main .alert {
 main p:has(> img),
 main p:has(> a > img) {
   max-width: none;
+}
+
+/* Above 1600px the container widens (see the layout section), and the prose
+   takes a share of that: 42rem, about 75 characters against 68. Still inside the
+   comfortable band, and without it the text would sit in a 608px column with
+   nearly 400px of nothing beside it -- the whitespace moved from the margins
+   into the middle rather than gone.
+
+   This has to live here rather than in the layout block above, with the rest of
+   the wide-screen rules: it has the same specificity as the 38rem cap, so the
+   one that wins is the one that comes later in the file. */
+@media (min-width: 1600px) {
+  main p,
+  main > ul > li,
+  main > ol > li,
+  main .section > ul > li,
+  main .section > ol > li,
+  main blockquote,
+  main .alert {
+    max-width: 42rem;
+  }
+  main p:has(> img),
+  main p:has(> a > img) {
+    max-width: none;
+  }
 }
 main h1, main h2, main h3, main h4 {
   color: var(--fl-heading);
