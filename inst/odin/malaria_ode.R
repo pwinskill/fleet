@@ -321,6 +321,15 @@ bst_c[, ] <- at_risk[i, j] * q_f[i, j] / (q_f[i, j] * uc_eff + 1)
 bst_d[, ] <- at_risk[i, j] * q_f[i, j] / (q_f[i, j] * ud_eff + 1)
 bst_v[, ] <- at_risk[i, j] * q_f[i, j] / (q_f[i, j] * uv_eff + 1)
 dim(q_b, q_f, at_risk, bst_b, bst_c, bst_d, bst_v) <- c(n_age, n_het)
+# IB/ICA/ID/IVA hold the MEAN immunity of the people in a cell, not a stock, so
+# ageing is a difference re[i]*(I[i-1] - I[i]) rather than a flux -- do not
+# "fix" it to r_age[i-1]*I[i-1] by analogy with the disease compartments.
+# Writing J = N*I for the extensive total,
+#     dI_i/dt = (r_age[i-1] N_{i-1} / N_i) (I_{i-1} - I_i) + boost - decay,
+# and at a stationary age structure r_age[i-1] N_{i-1} = (r_age[i] + mu_age[i]) N_i,
+# so that coefficient IS re[i]. Verified against the seeded age structure to
+# 6e-16 across all 52 bands. mu_age belongs in it for that reason, not because
+# the dead are transferred onwards.
 deriv(IB[1, ]) <- bst_b[1, j] - IB[1, j] / d_ib - re[1] * IB[1, j]
 deriv(IB[2:n_age, ]) <- bst_b[i, j] - IB[i, j] / d_ib +
   re[i] * (IB[i - 1, j] - IB[i, j])
@@ -345,6 +354,10 @@ deriv(ML[]) <- ME[i] / del - ML[i] / dl - ML[i] * ml * (1 + mosq_gamma * nL[i] /
 deriv(MP[]) <- ML[i] / dl - MP[i] / dpl - MP[i] * mup
 dim(ME, ML, MP) <- n_spp
 
+# The 0.5 is the SEX RATIO, not a loss: emerging pupae are half female, and only
+# females are modelled from here on (as in malariasimulation). MP therefore
+# empties at MP/dpl while Sm gains half of it; the males are intentionally
+# untracked, not leaked.
 deriv(Sm[]) <- 0.5 * MP[i] / dpl - Sm[i] * foim[i] - Sm[i] * mum[i]
 # EIP. malariasimulation uses a FIXED dem-day delay and applies the incubation
 # survival exp(-mu*dem) at the exit, with the CURRENT mu
@@ -364,6 +377,16 @@ eip_surv[] <- exp(-mum[i] * dem)
 dim(eip_surv) <- n_spp
 matured[] <- Xi[i, n_eip] * eip_surv[i]        # survived the incubation period
 dim(matured) <- n_spp
+# Xi and Em_inc are not two tallies of the same thing: Xi carries the infection
+# RATE through the delay, Em_inc is the STOCK of mosquitoes currently incubating.
+# Losing `matured` (proportional to Xi, not to Em_inc) is correct, because for a
+# fixed delay with continuous mortality the exact stock is
+#     E(t) = int_0^dem F(t-a) e^{-mum a} da,
+# and differentiating that gives exactly
+#     dE/dt = F(t) - F(t-dem) e^{-mum dem} - mum E(t),
+# which is this line, with Xi[n_eip] standing in for F(t-dem). At steady state it
+# yields E = (F/mum)(1 - e^{-mum dem}); the seeded value matches that to 2e-16.
+# The only approximation is the n_eip-stage Erlang standing in for a fixed delay.
 deriv(Em_inc[]) <- Sm[i] * foim[i] - matured[i] - mum[i] * Em_inc[i]
 deriv(Im[]) <- matured[i] - mum[i] * Im[i]
 dim(Sm, Im) <- n_spp

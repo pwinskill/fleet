@@ -133,7 +133,7 @@ Mosquito compartments, all $[n_v]$ except the EIP chain:
 
 | Compartment | Meaning |
 | --- | --- |
-| $E$, $L$, $P_L$ | Aquatic early larval, late larval, pupal (odin names `ME`, `ML`, `MP`) |
+| $E$, $L$, $P_L$ | Aquatic early larval, late larval, pupal (odin names `ME`, `ML`, `MP`). Pupae emerge at $P_L/d_{P_L}$, of which the **half that are female** enter $S_M$; males are not modelled, so the factor of $\tfrac12$ on emergence is a sex ratio and not a loss |
 | $S_M$ | Susceptible adult females |
 | $X^{(P)}_{s,1..n_P}$ | EIP delay chain (odin `Xi`): a pure delay line, carries no mortality |
 | $E_M$ | Incubating (exposed) adults (odin `Em_inc`) |
