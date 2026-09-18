@@ -1,5 +1,23 @@
 # Comparison harness: fleet vs malariasimulation
 
+> ## Frozen. Work on this happens in `fleetcheck`.
+>
+> This directory has been ported to the **fleetcheck** repository, which holds
+> the comparison against `malariasimulation` as a standalone artefact: a claims
+> register with a criterion and a verdict per claim, a unit-tested metrics layer,
+> and provenance stamped onto every result.
+>
+> It is kept here, unchanged, only so that `comparison.yaml` keeps catching
+> `malariasimulation` moving underneath us while fleetcheck grows its own CI.
+> **Treat it as read-only**: do not edit these scripts and do not regenerate this
+> data. Two live copies of the same evidence is precisely how numbers drift apart,
+> which is the failure this whole exercise exists to stop.
+>
+> It is removed from `fleet` when fleetcheck reproduces the committed numbers
+> from a clean checkout and its own CI is green. At that point `fleet` keeps only
+> its own regression guard, `tests/testthat/reference-values.csv`, which tests
+> fleet against itself and needs none of this.
+
 Scripts that run every comparison scenario through **both** models on the *same*
 parameter list and render the figures used in `vignette("comparison")` and the
 package README. The IBM (`malariasimulation`) is run as `N_REP` stochastic
