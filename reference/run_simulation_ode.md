@@ -125,7 +125,9 @@ run_simulation_ode(
 ## Value
 
 a wide, malariasimulation-style daily count table, one row per output
-day. Columns:
+day. The column names do not change with the parameter set, so runs with
+and without interventions are directly comparable and `rbind`-able.
+Columns:
 
 - `timestep`: output day (0..timesteps), the row key.
 

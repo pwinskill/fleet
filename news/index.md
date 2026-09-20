@@ -39,6 +39,42 @@ grid, in a run with no interventions, is unchanged.
 
 ### Bug fixes
 
+- **Two coefficients in the model were frozen at the seed’s age
+  structure and are now taken from the live population.** Immunity
+  ageing used `re[i] = r_age[i] + mu_age[i]` as the per-capita inflow
+  into an age cell, and the FOIM normalisation used the seed’s mean
+  `psi`. Both are exact only while the age structure is stationary.
+  Under `set_demography()` with time-varying death rates – which every
+  malariaverse site file supplies, yearly from 2000 – the structure
+  drifts for decades, and `re[i]` was built from the new death rate
+  while the population still had the old shape. The inflow is now
+  `r_age[i-1] * N[i-1, j] / N[i, j]` (newborns at `i = 1`), which the
+  intensive-variable derivation gives directly, and the FOIM denominator
+  is the current `sum(psi * N) / sum(N)`, which is what
+  malariasimulation’s `human_pi` computes on the live population. Both
+  equal the old forms to machine precision at the seed, so **nothing
+  changes while death rates are constant**: every committed comparison
+  row reproduces to 1e-6, and a synthetic run is identical to 6e-15
+  until the day its death rates change.
+
+  Where they do change it is material, and measured against the IBM
+  rather than argued from direction. Afghanistan’s site-file mortality
+  series, 2000-2029, no interventions, against 20 `malariasimulation`
+  replicates: over the last ten years the bias against the IBM median
+  goes from +3.6% to -0.3% on EIR, +0.9% to -0.3% on PfPR(2-10), +2.8%
+  to +1.4% on all-age clinical incidence, +7.6% to +5.3% on under-5
+  clinical incidence, and +1.7% to +0.9% on under-5 severe. Years inside
+  the IBM’s 10-90% replicate band go from 21 to 27 of 30 on EIR, 28 to
+  30 on PfPR and 17 to 24 on under-5 clinical incidence; nothing moves
+  out of the band. All-age severe is the one outcome that goes slightly
+  the other way, -1.3% to -1.9%, inside a replicate band 30% wide and 29
+  of 30 years inside it either way. A synthetic mortality step gives the
+  same picture with every outcome closer. The human age structure is
+  untouched, as it should be: the population total is conserved to 1e-15
+  and its age split moves 2e-6, which is solver tolerance over 30 years.
+
+  `mean_psi` is no longer a model parameter.
+
 - **Output age bands are rendered by exact overlap, not by age-group
   midpoint.** A model age group used to contribute its whole population
   to a rendering band if its midpoint fell inside the band, and nothing
@@ -139,6 +175,53 @@ grid, in a run with no interventions, is unchanged.
   equilibrium alias. A value that took a different arithmetic route to
   the same number cannot trigger it, and a deliberate custom `eq_params`
   is called out as expected.
+
+### Numerics and performance
+
+- **One [`exp()`](https://rdrr.io/r/base/Log.html) per cell where there
+  were two.** `p_inf` now reuses `q_b`, which is the same
+  `1 - exp(-EPS)`; odin2 does no common-subexpression elimination, so
+  the two spellings cost two evaluations per cell per derivative call.
+  The right-hand side is bound by its ~2,600 transcendentals per
+  evaluation and this was one in ten of them by count – but `exp` is
+  cheap next to the five non-integer `pow` calls per cell, so the
+  measured saving is 3-5% of the derivative cost (22.5 to 21.2
+  microseconds per evaluation on an aseasonal run) and 2-6% of wall
+  time. Output is bit-identical (the same operation, evaluated once):
+  the solver takes exactly the same steps, and every committed
+  comparison row reproduces to 1e-6.
+
+- **Where the solver’s time goes, measured rather than asserted.** On an
+  equilibrium run every accepted step is 0.62 days, and that does not
+  move with `atol`, `rtol`, `step_size_max`, the output grid or the
+  delay-chain lengths below 4 per day. It is an explicit-stepper
+  stability limit: the stiffest eigenvalue is the late-larval
+  density-dependent mortality `ml * gamma * (E + 2L) / K`, 5.3 per day
+  at the seed, and 3.3 / 5.31 = 0.621 days. That is intrinsic to
+  malariasimulation’s larval model, so the ~1.6 steps per day it forces
+  is the floor for this solver class, and the daily output grid adds
+  ~2,700 rejected trial steps over 30 years on top. On seasonal runs the
+  tolerance does bind: `rtol = 1e-6` is 1.44x faster with a maximum
+  deviation of 4e-7 in daily clinical incidence. The
+  [`ode_tuning()`](https://pwinskill.github.io/fleet/reference/ode_tuning.md)
+  documentation now says this; it previously said the cap and the daily
+  grid set the aseasonal step count, which was a reasonable guess that
+  measurement did not support.
+
+- **The default age grid is not converged for severe disease or for
+  adult clinical incidence.** Against 20 IBM replicates at EIR 20,
+  all-age severe incidence goes from -2.8% below the IBM median on the
+  default grid to +0.2% on a grid with quarterly bands to 15 y and
+  yearly bands to 40 y (110 groups, 2.1x the run time), and adult
+  clinical incidence in the 30-60 y bands from +14-16% to +6%;
+  prevalence and under-5 clinical incidence do not move. Both are Jensen
+  error from averaging steep age dependence over wide bands. The default
+  is unchanged, because every published comparison is stated on it, but
+  the `age_lower` documentation now says which results need a finer
+  grid, and the two claims in the fleetcheck register that rest on
+  severe incidence by age (`severe-allage-bias`, `age-structure`) carry
+  a discretisation component of the same size as the discrepancy they
+  report.
 
 ### Continuous integration
 
