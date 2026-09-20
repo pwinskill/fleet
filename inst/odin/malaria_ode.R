@@ -27,7 +27,7 @@ n_phc <- parameter(constant = TRUE)   # chemoprevention prophylaxis chain stages
 ## ---- grid / demography (data) ---------------------------------------------
 r_age <- parameter(); psi <- parameter()
 age_mid <- parameter(); mask20 <- parameter()
-icm_factor <- parameter(); ivm_factor <- parameter(); mean_psi <- parameter()
+icm_factor <- parameter(); ivm_factor <- parameter()
 dim(r_age, psi, age_mid, mask20, icm_factor, ivm_factor) <- n_age
 # age-specific mortality, time-varying for custom demography (constant otherwise):
 # supplied as [n_age, n_mut] with time as the LAST dimension, like pev_vals.
@@ -199,7 +199,12 @@ EPS[, ] <- eir_lag * zeta[j] * psi[i]              # expected infectious bites/p
 # clinical incidence "peaks too high" bias; severe is spared because young children
 # have small psi). bite_dedup = 0 restores the linear form, which is what
 # malariaEquilibrium assumes, which halves the drift off the seed without
-p_inf[, ] <- (1 - exp(-EPS[i, j])) * b[i, j] * pev_factor[i]
+# q_b, defined with the immunity boosting below, is this same 1 - exp(-EPS):
+# the probability of at least one bite in the day. It is reused here rather than
+# written out again because odin2 does no common-subexpression elimination, so
+# the two spellings cost two exp() per cell per evaluation. The RHS is bound by
+# its ~2,600 transcendentals, and this was one in ten of them.
+p_inf[, ] <- q_b[i, j] * b[i, j] * pev_factor[i]
 FOI[, ] <- bite_dedup * (-log(1 - p_inf[i, j])) +
   (1 - bite_dedup) * (b[i, j] * EPS[i, j] * pev_factor[i])
 # Split FOI into the CLINICAL and NON-CLINICAL hazards separately. In the IBM each
@@ -221,7 +226,19 @@ inf[, ] <- cD * D[i, j] * tbv_fD[i] + cA[i, j] * A[i, j] * tbv_fA[i] +
   cU * U[i, j] * tbv_fU[i] + cT * (Tr[i, j] + Tr_slow[i, j]) * tbv_fT[i]
 infw[, ] <- zeta[j] * psi[i] * inf[i, j]
 dim(inf, infw) <- c(n_age, n_het)
-inf_sum <- sum(infw) / mean_psi
+# malariasimulation normalises by sum(zeta*psi) over the LIVE population
+# (biting_process.R, human_pi), which is the population mean of psi: zeta has
+# mean 1 in every age band, because births are spread by het_wt and mortality
+# is age-only. That mean moves whenever the age structure does -- under
+# set_demography() with time-varying death rates it drifts for decades -- so it
+# is taken from the current Npop rather than frozen at the seed's stationary
+# structure, as it was. At the seed the two agree to the last bit. Weighted by
+# psi alone, not zeta*psi: the Gauss-Hermite nodes carry a mean zeta of 0.9997,
+# and folding that in would move the seed by 0.03% for no reason the IBM has.
+psi_n[] <- psi[i] * n_g[i]
+dim(psi_n) <- n_age
+mpsi <- sum(psi_n) / sum(n_g)
+inf_sum <- sum(infw) / mpsi
 deriv(Xf[1]) <- rfoim * (inf_sum - Xf[1])
 deriv(Xf[2:n_foim]) <- rfoim * (Xf[i - 1] - Xf[i])
 dim(Xf) <- n_foim
@@ -322,26 +339,36 @@ bst_d[, ] <- at_risk[i, j] * q_f[i, j] / (q_f[i, j] * ud_eff + 1)
 bst_v[, ] <- at_risk[i, j] * q_f[i, j] / (q_f[i, j] * uv_eff + 1)
 dim(q_b, q_f, at_risk, bst_b, bst_c, bst_d, bst_v) <- c(n_age, n_het)
 # IB/ICA/ID/IVA hold the MEAN immunity of the people in a cell, not a stock, so
-# ageing is a difference re[i]*(I[i-1] - I[i]) rather than a flux -- do not
+# ageing is a difference ain*(I[i-1] - I[i]) rather than a flux -- do not
 # "fix" it to r_age[i-1]*I[i-1] by analogy with the disease compartments.
-# Writing J = N*I for the extensive total,
-#     dI_i/dt = (r_age[i-1] N_{i-1} / N_i) (I_{i-1} - I_i) + boost - decay,
-# and at a stationary age structure r_age[i-1] N_{i-1} = (r_age[i] + mu_age[i]) N_i,
-# so that coefficient IS re[i]. Verified against the seeded age structure to
-# 6e-16 across all 52 bands. mu_age belongs in it for that reason, not because
-# the dead are transferred onwards.
-deriv(IB[1, ]) <- bst_b[1, j] - IB[1, j] / d_ib - re[1] * IB[1, j]
+# Writing J = N*I for the extensive total and differentiating I = J/N,
+#     dI_i/dt = (r_age[i-1] N_{i-1,j} / N_{i,j}) (I_{i-1} - I_i) + boost - decay,
+# and mu_age cancels out of it entirely: the dead carry the cell mean, so death
+# leaves the mean alone. At i = 1 the inflow is the newborns, births*het_wt[j],
+# arriving with I = 0. That coefficient, ain, is the per-capita inflow into the
+# cell, and it is taken from the live Npop.
+# An earlier version used re[i] = r_age[i] + mu_age[i] instead. The two are
+# equal at a stationary age structure, where r_age[i-1] N_{i-1} = re[i] N_i,
+# and agree to 2e-17 at the seed -- but under set_demography() with
+# time-varying death rates the structure drifts for decades, and re[i], built
+# from the NEW death rate while N still had the OLD shape, was the wrong
+# coefficient for the whole transient. The site files carry exactly such
+# series (yearly rates, 2000 onward).
+ain[1, ] <- births * het_wt[j] / Npop[1, j]
+ain[2:n_age, ] <- r_age[i - 1] * Npop[i - 1, j] / Npop[i, j]
+dim(ain) <- c(n_age, n_het)
+deriv(IB[1, ]) <- bst_b[1, j] - IB[1, j] / d_ib - ain[1, j] * IB[1, j]
 deriv(IB[2:n_age, ]) <- bst_b[i, j] - IB[i, j] / d_ib +
-  re[i] * (IB[i - 1, j] - IB[i, j])
-deriv(ICA[1, ]) <- bst_c[1, j] - ICA[1, j] / d_ica - re[1] * ICA[1, j]
+  ain[i, j] * (IB[i - 1, j] - IB[i, j])
+deriv(ICA[1, ]) <- bst_c[1, j] - ICA[1, j] / d_ica - ain[1, j] * ICA[1, j]
 deriv(ICA[2:n_age, ]) <- bst_c[i, j] - ICA[i, j] / d_ica +
-  re[i] * (ICA[i - 1, j] - ICA[i, j])
-deriv(ID[1, ]) <- bst_d[1, j] - ID[1, j] / d_id - re[1] * ID[1, j]
+  ain[i, j] * (ICA[i - 1, j] - ICA[i, j])
+deriv(ID[1, ]) <- bst_d[1, j] - ID[1, j] / d_id - ain[1, j] * ID[1, j]
 deriv(ID[2:n_age, ]) <- bst_d[i, j] - ID[i, j] / d_id +
-  re[i] * (ID[i - 1, j] - ID[i, j])
-deriv(IVA[1, ]) <- bst_v[1, j] - IVA[1, j] / d_iva - re[1] * IVA[1, j]
+  ain[i, j] * (ID[i - 1, j] - ID[i, j])
+deriv(IVA[1, ]) <- bst_v[1, j] - IVA[1, j] / d_iva - ain[1, j] * IVA[1, j]
 deriv(IVA[2:n_age, ]) <- bst_v[i, j] - IVA[i, j] / d_iva +
-  re[i] * (IVA[i - 1, j] - IVA[i, j])
+  ain[i, j] * (IVA[i - 1, j] - IVA[i, j])
 
 ## ---- mosquito ODEs (per species) ------------------------------------------
 Mtot[] <- Sm[i] + Em_tot[i] + Im[i]

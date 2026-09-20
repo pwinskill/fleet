@@ -101,7 +101,8 @@ reported with the call that replaces them.}
 }
 \value{
 a wide, malariasimulation-style daily count table, one row per output
-day. Columns:
+day. The column names do not change with the parameter set, so runs with and
+without interventions are directly comparable and \code{rbind}-able. Columns:
 \itemize{
 \item \code{timestep}: output day (0..timesteps), the row key.
 \item per age band (tags in \strong{days}, \verb{<lo>_<hi>}): \verb{n_age_*} (population),

@@ -60,3 +60,64 @@ test_that("time-varying demography: mu_age series varies over time and runs", {
   o <- run_simulation_ode(15 * 365, eqm(p, 20))
   expect_true(all(is.finite(o$p_detect_lm_730_3650)))
 })
+
+test_that("the live ageing and FOIM coefficients equal the frozen ones at the seed", {
+  skip_if_not_installed("malariasimulation")
+  # Immunity ageing uses the per-capita inflow into an age cell,
+  # ain = r_age[i-1] * N[i-1,j] / N[i,j], read off the LIVE population, and the
+  # FOIM denominator is the live sum(psi*N)/sum(N). Both were once frozen at the
+  # seed as re[i] = r_age[i] + mu_age[i] and a `mean_psi` parameter, which is
+  # exact only while the age structure is stationary.
+  #
+  # This is the compatibility half of that change: at the seed the two forms
+  # must agree to machine precision, or every validated result moves. It is
+  # what lets the fix be a no-op under constant death rates.
+  inp <- build_inputs(eqm(malariasimulation::get_parameters(
+    list(human_population = 10000)), 20), 20)
+  pr <- inp$pars
+  N <- pr$S0 + pr$D0 + pr$A0 + pr$U0 + pr$Tr0 +
+    apply(pr$Ph0, c(1, 2), sum) + apply(pr$Phc0, c(1, 2), sum)
+
+  mu0 <- pr$mu_age_z[, 1]
+  re <- pr$r_age + mu0
+  ain <- rbind(sum(mu0 * rowSums(N)) * pr$het_wt / N[1, ],       # births at i = 1
+               pr$r_age[-pr$n_age] * N[-pr$n_age, ] / N[-1, ])
+  expect_equal(ain, matrix(re, pr$n_age, pr$n_het), tolerance = 1e-12,
+               ignore_attr = TRUE)
+
+  # and the FOIM normalisation, which is the population mean of psi. Weighted by
+  # psi alone: zeta averages 1 within every age band, so it cancels.
+  expect_equal(sum(pr$psi * rowSums(N)) / sum(N),
+               sum(inp$meta$prop * pr$psi), tolerance = 1e-12)
+
+  # `mean_psi` is no longer a parameter; the model computes it from Npop
+  expect_false("mean_psi" %in% names(pr))
+})
+
+test_that("time-varying mortality drives the immunity ageing coefficient", {
+  skip_if_not_installed("malariasimulation")
+  # The test above pins the two forms AGREEING at the seed, which is a property
+  # of a stationary age structure and would still hold if the coefficient were
+  # reverted to the frozen re[i]. This one pins the difference: the same
+  # mortality step as the test above, run past it, where the structure is still
+  # moving and the two forms genuinely disagree.
+  #
+  # Reverting the coefficient to the frozen re[i] = r_age[i] + mu_age[i], and
+  # recompiling, gives a final prevalence of 0.6443813 and a final EIR of
+  # 36.57542 instead of the values below -- 2.5e-4 and 7.6e-4 relative, which
+  # is small but is thousands of times the tolerance asserted here. Measured by
+  # actually reverting, not assumed: restoring the coefficient returns these
+  # numbers bit for bit. The gap is modest on this two-band fixture; on a real
+  # site-file mortality series it reaches several per cent.
+  dr <- matrix(c(1e-4, 1e-3, 5e-5, 5e-4), nrow = 2, byrow = TRUE)
+  p <- malariasimulation::set_demography(malariasimulation::get_parameters(),
+    agegroups = c(1825, 36500), timesteps = c(0, 10 * 365), deathrates = dr)
+  o <- run_simulation_ode(15 * 365, eqm(p, 20))
+  n <- nrow(o)
+
+  # the step really does move the age structure, or the test proves nothing
+  expect_gt(abs(o$EIR[n] / o$EIR[1] - 1), 0.05)
+  expect_equal(o$p_detect_lm_730_3650[1], 0.6476852095, tolerance = 1e-7)
+  expect_equal(o$p_detect_lm_730_3650[n], 0.6442193184, tolerance = 1e-7)
+  expect_equal(o$EIR[n], 36.60322457, tolerance = 1e-7)
+})

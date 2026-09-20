@@ -18,6 +18,20 @@
 #'   monthly to 1 year, quarterly to 5, yearly to 15, then 5-yearly to an
 #'   absorbing top group). Must start at 0, increase strictly, and stay in years:
 #'   a top edge above 1000 is rejected as a grid supplied in days.
+#'
+#'   The default grid is converged for prevalence and for clinical incidence
+#'   under 5 -- neither moves by more than 0.2 points against the IBM on any
+#'   finer grid tried -- but **not for severe disease or for adult clinical
+#'   incidence**. Against 20 IBM replicates at EIR 20, all-age severe incidence
+#'   goes from -2.8% on the default 52 groups to -2.3% (quarterly bands to 10 y,
+#'   71 groups), -0.9% (79 groups) and +0.2% (quarterly to 15 y and yearly to
+#'   40 y, 110 groups, 2.1x the run time), and adult clinical incidence in the
+#'   30-60 y bands from +14-16% to +6%. Both are Jensen error from averaging
+#'   the steep age dependence of `theta` and of adult immunity over yearly and
+#'   5-yearly bands, not model discrepancy, so a result that rests on severe
+#'   incidence or on adults should be checked on a finer grid than this. The
+#'   default is left as it is because every published comparison is stated on
+#'   it; changing it moves every number.
 #' @param n_eir,n_foim,n_eip Erlang-chain stage counts for the EIR lag, FOIM lag
 #'   and mosquito EIP. Larger values sharpen the (otherwise gamma-shaped) lags
 #'   toward the IBM's fixed delays; equilibrium is exact for any value.
@@ -35,22 +49,38 @@
 #'   shape.
 #' @param atol,rtol,step_size_max dust2 ODE-solver controls. The defaults
 #'   (`1e-8`, `1e-8`, `1`) preserve the flat equilibrium exactly. For long dynamic
-#'   projections `rtol = 1e-6` runs about 1.4–1.7x faster on seasonal ones with
-#'   negligible effect on aggregate outputs, and barely faster on aseasonal ones
-#'   (there the daily output grid, not the tolerance, sets the step count).
+#'   projections `rtol = 1e-6` runs about 1.4x faster on seasonal ones (7.2 s to
+#'   5.0 s over 30 years) with a maximum deviation of 4e-7 in daily clinical
+#'   incidence -- five orders of magnitude inside the IBM's replicate band -- and
+#'   not at all faster on aseasonal ones.
+#'
+#'   That last point is a hard floor, and it is worth knowing where it comes from.
+#'   On an equilibrium run every accepted step is 0.62 days, and that step does
+#'   not move with `atol`, `rtol`, `step_size_max`, the output grid, or the
+#'   delay-chain lengths below 4 per day. A step that ignores both tolerances is a
+#'   stability limit, not an accuracy one: the stiffest eigenvalue in the system
+#'   is the late-larval density-dependent mortality, `ml * gamma * (E + 2L) / K`,
+#'   which at the seed is 5.3 per day (gamma is 13.25 and the early-larval stock
+#'   sits at about ten times K), and Dormand-Prince's stability boundary of ~3.3
+#'   on that mode gives 3.3 / 5.31 = 0.621 days. It is intrinsic to
+#'   malariasimulation's larval model at its default parameters, so the 1.6
+#'   steps per day it forces is what an explicit stepper costs here, and only an
+#'   implicit one (dust2 has none) could take longer steps at equilibrium. The
+#'   daily output grid adds about 2,700 rejected trial steps on top over 30
+#'   years -- the controller re-grows the step after each forced stop -- which is
+#'   why output every 30 days is ~25% faster on aseasonal runs and no more.
 #'
 #'   **`step_size_max` is a safety rail, not a speed control**, despite travelling
-#'   with `rtol` in the preset above. On a 30-year seasonal run the solver takes
-#'   the same 4.65 steps per output day at `1`, `5`, `10`, `30` and `Inf`, and the
-#'   outputs are bit-identical across all of them; the tolerance is what moves the
-#'   step count (to 2.24 per day at `rtol = 1e-6`, with 1,438 rejected trial steps
-#'   instead of 10,768). What the cap does is stop a trial step overshooting the
-#'   end of an interpolation grid. The intervention series are interpolated on
-#'   grids that extend just past `timesteps`, and near equilibrium the stepper will
-#'   propose a step of tens of days. Uncapped, such a step can land beyond the end
-#'   of a coarse grid and abort the run ("Tried to interpolate at time = ..., which
-#'   is ... after the last time"). Leave it at `1` unless you have a specific
-#'   reason.
+#'   with `rtol` in the preset above. On 30-year runs, seasonal and not, the
+#'   solver takes the same number of steps at `1`, `5`, `30` and `Inf` to within
+#'   four in nineteen thousand, and the outputs agree to 1e-10. What the cap is
+#'   for is stopping a trial step overshooting the end of an interpolation grid.
+#'   The intervention series are interpolated on grids that extend just past
+#'   `timesteps`, and near equilibrium the stepper will propose a step of tens of
+#'   days; uncapped, such a step could land beyond the end of a coarse grid and
+#'   abort the run ("Tried to interpolate at time = ..., which is ... after the
+#'   last time"). None of the runs measured here did, but the cap costs nothing
+#'   measurable, so leave it at `1` unless you have a specific reason.
 #'
 #'   Keep `atol` at `1e-8`: the individual prophylaxis chain stages hold
 #'   occupancies of order `1e-6`, which a looser absolute tolerance lets dip
