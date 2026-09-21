@@ -4,29 +4,51 @@
 \alias{default_age_lower}
 \title{Default (graded) age grid}
 \usage{
-default_age_lower(max_age = 80)
+default_age_lower(max_age = 80, n_group = 53L)
 }
 \arguments{
-\item{max_age}{oldest age-group lower edge, in \strong{years} (absorbing top
-group). Must be a single finite number \verb{>= 20}: the grid is graded up to a
-5-yearly section starting at 15, so there is no room for an absorbing top
-group below 20.}
+\item{max_age}{oldest age-group lower edge, in \strong{years} (the absorbing top
+group). Must be a single finite number \verb{>= 20}: below that the grid has too
+few anchors left to resolve the ages over which immunity develops.}
+
+\item{n_group}{total number of age groups, the absorbing top group included.
+The default, 53, is one more than the 52 the old grid used, and is what the
+error figures above were measured at. Raising it refines the whole grid
+while keeping its shape, which is what a grid-convergence check wants.}
 }
 \value{
 numeric vector of age-group lower edges in years.
 }
 \description{
-Lower edges (in years) of the age groups. Fine in infancy, where immunity and
-maternal dynamics move fast, and coarse in adulthood. Band aggregation in the
-outputs weights each age group by the exact fraction of its own width that
-falls inside the band, so a band edge landing inside a group (as it can on a
-coarse custom grid) apportions that group between the two bands instead of
-handing it whole to one of them; the default grid places edges at 2, 5, 10 and
-15 years, so the usual rendering bands fall on group boundaries exactly and
-every weight is 0 or 1.
+Lower edges (in years) of the age groups: fine in infancy, where immunity and
+maternal dynamics move fast, and coarse in adulthood. Group edges are pinned
+at the conventional reporting boundaries (\verb{r paste(AGE_ANCHORS, collapse = ", ")} years), and the groups between two anchors are of equal width, with
+the budget of groups spread across the anchors in proportion to \strong{log} width.
+}
+\details{
+Log width rather than width, because what the grid has to resolve is the rise
+of immunity with age, and that is far closer to a function of log age than of
+age. An equal-width grid spends most of its groups above 20, where nothing
+moves, and is the worst of the options measured: against the same model run
+to grid convergence it is twice as far off as this one at the same cost.
+
+This replaced a grid of fixed monthly / quarterly / yearly / 5-yearly
+sections. At the same number of groups the new one halves the discretisation
+error -- the largest departure from the grid-converged solution falls from
+12.0\% to 6.7\%, and the rms across age bands from 4.8\% to 3.0\% -- for a few per
+cent of extra runtime. The old grid over-resolved infancy (12 of its 52 groups
+in the first year, against 7 here) and under-resolved everything above 15.
+
+Band aggregation weights each age group by the exact fraction of its own width
+that falls inside the band, so a band edge landing inside a group (as one
+can, away from the anchors) apportions that group between the two bands
+instead of handing it whole to one of them. The same is true of intervention
+age targeting. Neither is snapped to the grid.
 }
 \examples{
 default_age_lower()
 # coarser top of the grid
 default_age_lower(max_age = 60)
+# twice the resolution everywhere, same shape
+length(default_age_lower(n_group = 105))
 }

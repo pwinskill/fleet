@@ -42,6 +42,10 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4.8.0
         with:
-          clean: false
+          # true, so a page deleted from the site is deleted from the branch.
+          # With clean: false the comparison article stayed live at its old URL
+          # after being removed, still serving its numbers. Everything on
+          # gh-pages is generated into docs/, so nothing is lost by replacing it.
+          clean: true
           branch: gh-pages
           folder: docs

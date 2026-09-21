@@ -78,7 +78,7 @@ jobs:
   # above compiles is the committed, generated src/malaria_ode.cpp (with
   # R/dust.R, R/cpp11.R, src/cpp11.cpp and inst/dust). Edit the odin model,
   # forget to regenerate, and all five runners compile the OLD model and pass;
-  # so do the tests; and comparison/check_drift.R passes loudest of all,
+  # so do the tests; and fleetcheck's drift check passes loudest of all,
   # printing "nothing moved" -- which reads as "my change was numerically inert"
   # rather than "my change was never compiled".
   #

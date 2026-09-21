@@ -64,10 +64,13 @@ refreshing **both**, and reading both diffs.
 | baseline | what it pins | regenerate with |
 |---|---|---|
 | `tests/testthat/reference-values.csv`<br>`tests/testthat/reference-interventions.csv` | absolute output levels, to 1e-6 | `FLEET_REGENERATE_REFERENCE=1 Rscript -e 'devtools::test(filter = "reference")'` |
-| `comparison/data/rep_*.csv` | agreement with the IBM | `CMP_FLEET_ONLY=1 Rscript comparison/run_replicates.R` |
-
-The IBM rows do not need re-running: nothing in `fleet` can affect them. See
-[comparison/README.md](https://github.com/pwinskill/fleet/blob/main/comparison/README.md).
+Agreement with the IBM is a separate repository,
+[fleetcheck](https://github.com/pwinskill/fleetcheck). A change that moves model
+output moves its numbers too, so refresh it in the same change: clone it beside
+this one and run `CMP_FLEET_ONLY=1 Rscript validations/02-scenarios/run.R`,
+then `validations/02-scenarios/render.R`. The IBM rows do not need re-running —
+nothing in `fleet` can affect them — which is why that takes minutes rather than
+the twenty-five a full sweep costs.
 
 **Never regenerate a baseline to make a red test green.** The diff *is* the record of
 what your change did to the model. Read it, and put it in the pull request.

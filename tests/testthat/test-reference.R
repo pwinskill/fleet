@@ -11,7 +11,7 @@
 # levels -- one quantity from every output family, at low, medium and high
 # transmission -- to 1e-6, so any change that moves a number announces itself
 # here instead of passing silently. It asserts nothing about whether the numbers
-# are *right*; validation against the IBM lives in comparison/. Its only job is
+# are *right*; agreement with the IBM is fleetcheck's job. Its only job is
 # to make a change visible.
 #
 # HOW to regenerate, when a model change is intended and the new numbers are the

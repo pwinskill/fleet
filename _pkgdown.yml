@@ -5,17 +5,16 @@ url: https://pwinskill.github.io/fleet
 development:
   mode: unreleased
 
-# Bootstrap's defaults plus pkgdown/extra.scss, which is fleetcheck's theme in
-# fleet's colour. There was a bslib block here setting three Google faces, six
-# Bootstrap colour roles, two radii and a navbar background; nearly all of it
-# was either restating what extra.scss already sets or adding weight the pages
-# did not need, and the display face and tinted panels were most of what made
-# this site read as louder than its sibling.
+# Bootstrap's defaults plus pkgdown/extra.scss, which is fleetcheck's theme.
+# There was a bslib block here setting three Google faces, six Bootstrap colour
+# roles, two radii and a navbar background; nearly all of it either restated
+# what extra.scss already sets or added weight the pages did not need, and the
+# display face and tinted panels were most of what made this site read as louder
+# than its sibling. `navbar-bg` is the one that has to stay: Bootstrap picks the
+# light or dark hamburger icon from it at compile time, and a stylesheet cannot
+# reach that decision.
 #
-# `navbar-bg` is the one that has to stay: Bootstrap picks the light or dark
-# hamburger icon from it at compile time, and extra.scss cannot reach that
-# decision -- it swaps the icon back by hand for dark mode.
-# No light-switch, so the site is light only, the same as fleetcheck's. The
+# No light-switch, so the site is light only, as fleetcheck's is. The
 # `[data-bs-theme="dark"]` rules in extra.scss are kept rather than deleted:
 # they cost nothing while they never fire, and they are what a light-switch
 # would need if one is ever wanted back.
@@ -33,8 +32,8 @@ template:
 # promoting a four-topic function index above them.
 navbar:
   structure:
-    left:  [intro, using, comparison, lookup, news, contributing]
-    right: [search, lightswitch, github]
+    left:  [intro, using, evidence, lookup, news, contributing]
+    right: [search, github]
   components:
     intro:
       text: Get started
@@ -42,9 +41,9 @@ navbar:
     using:
       text: Using fleet well
       href: articles/using.html
-    comparison:
-      text: Comparison
-      href: articles/comparison.html
+    evidence:
+      text: Evidence
+      href: https://pwinskill.github.io/fleetcheck/
     lookup:
       text: Reference
       menu:
@@ -84,12 +83,11 @@ articles:
   navbar: ~
   contents:
   # Ordered as a reader meets them, not alphabetically. Learn the interface, then
-  # what to watch out for, then the evidence that licenses it -- "can I trust
-  # this?" comes before "what exactly is the ODE?" -- then the formal system,
-  # with its argument-by-argument lookup table behind it.
+  # what to watch out for, then the formal system, with its argument-by-argument
+  # lookup table behind it. The evidence that licenses any of it is a separate
+  # project, fleetcheck, and is linked from the navbar rather than duplicated here.
   - fleet
   - using
-  - comparison
   - model
   - parameters
 

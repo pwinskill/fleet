@@ -22,9 +22,10 @@
 #' The count table is malariasimulation-shaped, so post-process it with
 #' \pkg{postie} exactly as you would an IBM run: `postie::get_rates(out)` and
 #' `postie::get_prevalence(out, diagnostic = "lm")`.
-#' See `vignette("fleet")` for a worked tour, `vignette("using")` for where and
-#' how much the ODE departs from the IBM and what to do about it, and
-#' `vignette("comparison")` for the measured agreement behind those claims.
+#' See `vignette("fleet")` for a worked tour and `vignette("using")` for where
+#' and how much the ODE departs from the IBM and what to do about it. The
+#' measured agreement behind those claims is a separate project,
+#' [fleetcheck](https://pwinskill.github.io/fleetcheck/).
 #'
 #' @keywords internal
 #' @useDynLib fleet, .registration = TRUE

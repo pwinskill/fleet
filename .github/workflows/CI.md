@@ -22,8 +22,6 @@ workflow*) without waiting for a matching push.
 | --- | --- | --- |
 | `R-CMD-check.yaml` | every push and PR, except docs-only commits; superseded runs cancelled | a 5-runner matrix, plus one Ubuntu job checking the generated model code is current |
 | `pkgdown.yaml` | every push, PR and release | builds and deploys the site to `gh-pages` |
-| `comparison.yaml` | every push and PR touching the model, plus Mondays 06:00 UTC | re-runs fleet alone against the frozen IBM rows and checks the match still holds |
-| `figures.yaml` | pushes and PRs touching the comparison data or renderers | re-renders from the committed CSVs and fails if the tree comes out dirty |
 
 `dependabot.yml` is active and needs no switch.
 
@@ -104,43 +102,12 @@ two vignettes are `eval = FALSE` throughout. The test suite is the only part of
 **`paths-ignore`, not `paths`, wherever the question is "could this break the
 model".** A deny-list of things that provably cannot (markdown, PNGs, the pkgdown
 site) stays correct when the package grows a new source directory. An allow-list
-would quietly stop checking it, and nothing would say so. `figures.yaml` is the
-exception and uses `paths`, because there the question is the narrow one of
-whether a specific set of inputs changed. The cost of that is that the list has
-to name every input: `site_snapshot.json` is one, because `summary_tables.R`
-reads it and writes its numbers into `tables.md`, and it was missing.
-
-**The drift check does not re-run the IBM.** The IBM does not depend on fleet, so
-its committed rows stay valid for any fleet-side change. `check_drift.R` re-runs
-fleet alone against that frozen reference: about two minutes, against
-twenty-five for a full IBM sweep. That is the whole reason this can run on every
-push.
-
-**Its dependency list is deliberately short.** `check_drift.R` sources
-`comparison/constants.R` rather than `theme.R`, so it needs no plotting stack:
-fleet, malariasimulation, digest, jsonlite. Every package in that list is one
-more thing that can break the check for a reason unrelated to the model.
-
-**The weekly run is the only thing that catches malariasimulation moving.** It is
-the one staleness cause that never appears in our own commits. `check_drift.R`
-compares the installed version and a digest of the scenario definitions against
-`comparison/data/ibm_reference.json`, and fails when the scenarios have changed —
-because at that point it would be comparing fleet on the new scenarios against
-the IBM on the old ones, which is not an answer to the question no matter what it
-prints. GitHub emails the repo owner when a scheduled run fails.
+would quietly stop checking it, and nothing would say so.
 
 **Dependabot handles Actions deprecations.** Runner images and actions are retired
 on GitHub's schedule, not ours; the failure mode without it is a red build one
 morning for a reason that has nothing to do with the package. Monthly and grouped
 into a single PR, because a PR that gets ignored is worse than one that gets read.
-
-**`figures.yaml` fails on the text outputs, warns on the images.** A PNG can differ
-byte-for-byte between machines from font hinting alone, so failing on images would
-produce noise that trains you to ignore it. There are two text outputs and both are
-checked strictly: `tables.md` from `summary_tables.R` and
-`comparison/data/int_impact_summary.csv` from `render_figures.R`. Both are plain
-text computed from the same CSVs, so a genuinely stale figure almost always shows
-up in one of them too.
 
 **It is hard dependencies only as well.** The two render scripts read committed
 CSVs and JSON and draw pictures. Neither loads `malariasimulation` or `postie`,
@@ -157,19 +124,6 @@ change moves **both**.
 | Baseline | Pinned in | Checked by | Regenerate with |
 | --- | --- | --- | --- |
 | Unit-test reference | `tests/testthat/reference-values.csv` | `tests/testthat/test-reference.R`, in every check run | `FLEET_REGENERATE_REFERENCE=1 Rscript -e 'devtools::test(filter = "reference")'` |
-| Comparison rows | the `model == "fleet"` rows of `comparison/data/rep_*.csv` (the drift check reads `rep_eq.csv`) | `comparison/check_drift.R`, in `comparison.yaml` | `CMP_FLEET_ONLY=1 Rscript comparison/run_replicates.R` |
-
-They answer different questions — the CSV pins absolute output levels at three
-EIRs to 1e-6 so that *any* movement is visible, the comparison rows exist to be
-measured against the frozen IBM medians — but they are both snapshots of the same
-model, so they go stale together. Refresh both in the commit that makes the
-change, and read both diffs: they are the record of what the change did.
-
-Regenerate only one and the other decays into noise. Leave the CSV behind and the
-next check run is red for a change already accepted, which is the pressure that
-gets a reference regenerated to make a red test green. Leave the comparison rows
-behind and `check_drift.R` keeps reporting movement that was reviewed weeks ago,
-which is how real drift arrives in a report you have stopped reading.
 
 ## Environment variables
 
@@ -178,11 +132,7 @@ The two the test suite reads. Neither should ever be set in CI.
 | Variable | Read by | What it does |
 | --- | --- | --- |
 | `FLEET_ALLOW_SKIP` | `tests/testthat/setup.R` | Any non-empty value restores the old behaviour: a missing `malariasimulation` skips the suite instead of erroring. For a deliberate local run on a machine where the IBM genuinely cannot be built, where you want the handful of dependency-free tests. Setting it in CI re-opens exactly the hole the `stop()` closes. |
-| `FLEET_REGENERATE_REFERENCE` | `tests/testthat/test-reference.R` | Any non-empty value rewrites `tests/testthat/reference-values.csv` from the current model, then passes trivially. Only for a model change that was intended and reviewed — and see the section above, because the comparison rows need refreshing in the same commit. Never to turn a red test green. |
-
-`comparison/`'s own variables (`CMP_ONLY`, `CMP_STRICT`, `CMP_SMOKE`,
-`CMP_FLEET_ONLY`, `CMP_REFRESH_SITES`, `FLEET_LIB`, `FLEET_VALIDATE`) are
-documented in `comparison/README.md`.
+| `FLEET_REGENERATE_REFERENCE` | `tests/testthat/test-reference.R` | Any non-empty value rewrites `tests/testthat/reference-values.csv` and `reference-interventions.csv` from the current model, then passes trivially. Only for a model change that was intended and reviewed: read the diff, it is the record of what the change did. Never to turn a red test green. |
 
 ## A note on Actions minutes
 
