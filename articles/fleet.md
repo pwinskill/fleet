@@ -63,9 +63,9 @@ out <- run_simulation_ode(timesteps = 15 * 365, parameters = malariasimulation::
 out[1:3, c("timestep", "n_age_730_3650", "n_detect_lm_730_3650",
            "p_detect_lm_730_3650", "EIR", "ft")]
 #>   timestep n_age_730_3650 n_detect_lm_730_3650 p_detect_lm_730_3650 EIR ft
-#> 1        0       284.2213             155.9074            0.5485424  20  0
-#> 2        1       284.2213             155.8974            0.5485073  20  0
-#> 3        2       284.2213             155.8880            0.5484741  20  0
+#> 1        0       288.0659             158.0637            0.5487066  20  0
+#> 2        1       288.0659             158.0537            0.5486719  20  0
+#> 3        2       288.0659             158.0442            0.5486392  20  0
 ```
 
 The return value is a wide, `malariasimulation`-style daily count table.
@@ -82,9 +82,9 @@ still:
 ``` r
 
 range(out$EIR)                    # ~20 throughout
-#> [1] 19.93161 20.02801
+#> [1] 19.92960 20.00146
 range(out$p_detect_lm_730_3650)   # a ~0.3% relaxation over the first years
-#> [1] 0.5469938 0.5485424
+#> [1] 0.5471223 0.5487066
 ```
 
 Over these fifteen years LM prevalence in 2-10 year olds runs between
@@ -114,9 +114,9 @@ would make on an IBM run, with no fleet-specific wrapper in between.
 prevalence <- postie::get_prevalence(out, diagnostic = "lm")
 utils::tail(prevalence["lm_prevalence_2_10"], 3)
 #>      lm_prevalence_2_10
-#> 5474          0.5482791
-#> 5475          0.5482791
-#> 5476          0.5482791
+#> 5474          0.5480217
+#> 5475          0.5480217
+#> 5476          0.5480218
 
 # rates: clinical / severe incidence, mortality and DALYs by age band
 rates <- postie::get_rates(out)
@@ -127,12 +127,12 @@ utils::head(rates[, c("time", "age_lower", "age_upper",
 #> # A tibble: 6 × 6
 #>    time age_lower age_upper clinical    severe    dalys
 #>   <dbl>     <dbl>     <dbl>    <dbl>     <dbl>    <dbl>
-#> 1 2000.         2        10  0.00337 0.0000443 0.000408
-#> 2 2000.         0       100  0.00180 0.0000313 0.000167
-#> 3 2000          2        10  0.00337 0.0000443 0.000411
-#> 4 2000          0       100  0.00180 0.0000313 0.000168
-#> 5 2000.         2        10  0.00337 0.0000443 0.000411
-#> 6 2000.         0       100  0.00180 0.0000313 0.000168
+#> 1 2000.         2        10  0.00336 0.0000440 0.000406
+#> 2 2000.         0       100  0.00183 0.0000315 0.000168
+#> 3 2000          2        10  0.00336 0.0000440 0.000409
+#> 4 2000          0       100  0.00183 0.0000315 0.000169
+#> 5 2000.         2        10  0.00336 0.0000440 0.000409
+#> 6 2000.         0       100  0.00183 0.0000315 0.000169
 ```
 
 Use `diagnostic = "pcr"` for PCR prevalence, and postie’s own arguments
@@ -183,7 +183,7 @@ nets <- run_simulation_ode(12 * 365, malariasimulation::set_equilibrium(p_nets, 
 c(baseline = nets$p_detect_lm_730_3650[1],
   trough   = min(nets$p_detect_lm_730_3650))
 #>  baseline    trough 
-#> 0.5485424 0.1810313
+#> 0.5487066 0.1808182
 ```
 
 Prevalence falls after deployment and then relaxes as the nets decay.
@@ -211,7 +211,7 @@ smc <- run_simulation_ode(3 * 365, malariasimulation::set_equilibrium(p_smc, ini
 band <- "p_detect_lm_91_1825"        # the 0.25-5y target band, tag in days
 c(baseline = smc[[band]][1], trough = min(smc[[band]]))
 #>    baseline      trough 
-#> 0.470535601 0.009585896
+#> 0.470604288 0.009587284
 ```
 
 SMC/MDA/PMC are applied as pulsed mass drug administration between
@@ -235,7 +235,7 @@ pev <- run_simulation_ode(12 * 365, malariasimulation::set_equilibrium(p_pev, in
 c(baseline = pev$p_detect_lm_730_3650[1],
   year12   = pev$p_detect_lm_730_3650[nrow(pev)])
 #>  baseline    year12 
-#> 0.5485424 0.5113764
+#> 0.5487066 0.5112615
 ```
 
 PEV reduces the infection hazard by a per-age, per-time factor. Efficacy
@@ -264,7 +264,7 @@ p_dem$prevalence_rendering_max_ages <- c(5, 100) * 365
 dem <- run_simulation_ode(8 * 365, malariasimulation::set_equilibrium(p_dem, init_EIR = 20))
 under5_fraction <- dem$n_age_0_1825[nrow(dem)] / dem$n_age_0_36500[nrow(dem)]
 under5_fraction     # ~0.09 here, vs ~0.21 under the default constant hazard
-#> [1] 0.08787847
+#> [1] 0.08659583
 ```
 
 Custom demography is **time-varying**: `mu_age(t)` is interpolated over
@@ -293,9 +293,9 @@ p_seas <- malariasimulation::get_parameters(list(
 seas <- run_simulation_ode(20 * 365, malariasimulation::set_equilibrium(p_seas, init_EIR = 20))
 final_year <- seas[(nrow(seas) - 365 + 1):nrow(seas), ]
 range(final_year$EIR)   # seasonal swing in the settled cycle
-#> [1]  0.04953752 58.12753634
+#> [1]  0.04946306 58.05004696
 mean(final_year$EIR)    # a few % below the aseasonal target of 20
-#> [1] 18.65741
+#> [1] 18.62956
 ```
 
 ## Solver settings
@@ -322,7 +322,7 @@ seas_fast <- run_simulation_ode(
 c(default = mean(final_year$EIR),
   faster  = mean(seas_fast$EIR[(nrow(seas_fast) - 365 + 1):nrow(seas_fast)]))
 #>  default   faster 
-#> 18.65741 18.65741
+#> 18.62956 18.62956
 ```
 
 [`?ode_tuning`](https://pwinskill.github.io/fleet/reference/ode_tuning.md)
@@ -369,7 +369,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] fleet_0.0.0.9001
+#> [1] fleet_0.0.0.9002
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] jsonlite_2.0.0           dplyr_1.2.1              compiler_4.6.1          
