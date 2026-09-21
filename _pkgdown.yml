@@ -15,9 +15,12 @@ development:
 # `navbar-bg` is the one that has to stay: Bootstrap picks the light or dark
 # hamburger icon from it at compile time, and extra.scss cannot reach that
 # decision -- it swaps the icon back by hand for dark mode.
+# No light-switch, so the site is light only, the same as fleetcheck's. The
+# `[data-bs-theme="dark"]` rules in extra.scss are kept rather than deleted:
+# they cost nothing while they never fire, and they are what a light-switch
+# would need if one is ever wanted back.
 template:
   bootstrap: 5
-  light-switch: true
   bslib:
     navbar-bg: "#FFFFFF"
 

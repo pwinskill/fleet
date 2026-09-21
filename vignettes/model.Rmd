@@ -99,7 +99,7 @@ human population), which is why run time is independent of `human_population`.
 
 | Dimension | Symbol | Default size | Set by | What it indexes |
 | ------ | ------ | ---- | ---------- | -------------------------------------- |
-| Age group | $i = 1,\dots,n_a$ | 52 | `age_lower =` / `default_age_lower()` | Graded age grid: monthly to 1 y, quarterly to 5 y, yearly to 15 y, 5-yearly to 80 y, plus an absorbing top group. Individuals age by a linear-chain (McKendrick) flow $r_i$ between adjacent groups. |
+| Age group | $i = 1,\dots,n_a$ | 53 | `age_lower =` / `default_age_lower()` | Graded age grid, fine in infancy and coarse in adulthood. Group edges are pinned at the conventional reporting ages (0, 1, 2, 3, 5, 7, 10, 15, 20, 30, 40, 60 y), so output bands fall on group boundaries; between two anchors the groups are of equal width, with the budget of groups shared out in proportion to **log** width, because immunity rises with log age rather than with age. An absorbing top group runs from 80 y. Individuals age by a linear-chain (McKendrick) flow $r_i$ between adjacent groups. |
 | Biting heterogeneity | $j = 1,\dots,n_z$ | 5 | `parameters$n_heterogeneity_groups`, `enable_heterogeneity` | Gauss–Hermite nodes $\zeta_j$ and weights $w_j$ of the log-normal relative-biting-rate distribution with variance $\sigma^2$ (`sigma_squared`); $\zeta_j = \exp(z_j\sigma - \sigma^2/2)$. Fixed at birth, never mixed: a person stays in their stratum for life, as in the IBM. |
 | Vector species | $s = 1,\dots,n_v$ | 1 | `set_species()` | Independent aquatic + adult mosquito populations, each with its own biting rate, mortality, carrying capacity and vector-control response, coupled only through the shared human population. |
 | EIR lag stage | $1,\dots,n_E$ | 10 (`n_eir`) | `ode_tuning(n_eir =)` | Erlang chain approximating the sporozoite-to-infection delay $\tau_E$ (`de`). |
@@ -196,7 +196,7 @@ Abbreviations are at the end of §1.
 
 | Symbol | odin name | Meaning |
 | --- | --- | --- |
-| $r_i$ | `r_age` | Aging rate out of age group $i$ = 1/band width in days ($r_{n_a} = 0$, absorbing) |
+| $r_i$ | `r_age` | Aging rate out of age group $i$, exponentially fitted: $r_i = \mu_i / (e^{\mu_i h_i} - 1)$ for band width $h_i$ in days. This makes the stationary ratio between adjacent groups exactly $e^{-\mu_i h_i}$, where the obvious $r_i = 1/h_i$ gives $1/(1 + \mu_i h_i)$ and so always decays too slowly. Tends to $1/h_i$ as $\mu_i h_i \to 0$. ($r_{n_a} = 0$, absorbing.) |
 | $\mu_i(t)$ | `mu_age` | Age- and time-specific death rate |
 | $\rho_i(t) = r_i + \mu_i(t)$ | `re` | Combined exit rate |
 | $\psi_i$ | `psi` | Relative biting rate by age, $1 - \rho\,e^{-a_i/a_0}$ |

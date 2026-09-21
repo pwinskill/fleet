@@ -118,7 +118,7 @@ test_that("time-varying mortality drives the immunity ageing coefficient", {
   # 3% rather than 5%: exponentially fitting the ageing rate made the structure
   # itself more accurate, which shrank this transient from 6% to 4%.
   expect_gt(abs(o$EIR[n] / o$EIR[1] - 1), 0.03)
-  expect_equal(o$p_detect_lm_730_3650[1], 0.6505047604, tolerance = 1e-7)
-  expect_equal(o$p_detect_lm_730_3650[n], 0.6478867027, tolerance = 1e-7)
-  expect_equal(o$EIR[n], 37.61827543, tolerance = 1e-7)
+  expect_equal(o$p_detect_lm_730_3650[1], 0.6508366485, tolerance = 1e-7)
+  expect_equal(o$p_detect_lm_730_3650[n], 0.6479047601, tolerance = 1e-7)
+  expect_equal(o$EIR[n], 37.60968095, tolerance = 1e-7)
 })

@@ -1,9 +1,44 @@
 # fleet 0.0.0.9002
 
-One change, and it moves model output. The age-group ageing rate is now
-exponentially fitted, which corrects the population age structure every
-per-capita rate is divided by. Age-resolved numbers move a little everywhere and
-a lot in the oldest bands; an all-age run at equilibrium moves very little.
+Two changes to how age is discretised, both of which move model output. The
+ageing rate is now exponentially fitted, and the default age grid is log-spaced
+rather than made of fixed monthly / quarterly / yearly / 5-yearly sections.
+Together they halve the discretisation error at essentially the same cost.
+
+## The default age grid
+
+* **`default_age_lower()` is log-spaced between pinned anchor ages.** Group
+  edges are pinned at the conventional reporting boundaries — 0, 1, 2, 3, 5, 7,
+  10, 15, 20, 30, 40, 60 years — so the usual output bands still fall on group
+  boundaries exactly and every band weight is 0 or 1. Between two anchors the
+  groups are of equal width, and the budget of groups is shared across the
+  anchors in proportion to **log** width.
+
+  Log width, because what the grid has to resolve is the rise of immunity with
+  age, and that is much closer to a function of log age than of age. The old
+  grid spent 12 of its 52 groups in the first year of life and 4 on the whole of
+  40–60; this one spends 7 and 5.
+
+  Measured against the same model run to grid convergence, at the same number of
+  groups: the largest departure across age bands falls from **12.0% to 6.7%**
+  and the rms from **4.8% to 3.0%**, for a few per cent of extra runtime. An
+  equal-width grid at the same cost is twice as far off as the old one, so the
+  grading matters as much as the count.
+
+  This does **not** close the gap to `malariasimulation`'s age profile of
+  clinical incidence. That gap converges to a few per cent in young children as
+  the grid is refined, and is the mean-field approximation rather than
+  discretisation; refining the grid alone does not remove it.
+
+* **`default_age_lower()` gained `n_group`** (default 53). Refining the whole
+  grid while keeping its shape is now `default_age_lower(n_group = 105)` rather
+  than a bespoke script, which is what a grid-convergence check wants.
+
+* Age boundaries that do not land on a group edge — an SMC campaign targeting 3
+  to 59 months, say — are **apportioned by exact fractional overlap**, both for
+  output bands and for intervention targeting. Nothing is snapped to the grid,
+  so a boundary the old grid happened to have an edge on has not become less
+  accurate, only differently discretised.
 
 ## Numerics
 
