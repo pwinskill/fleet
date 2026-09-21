@@ -131,16 +131,16 @@ Mosquito compartments, all $`[n_v]`$ except the EIP chain:
 | $`E_M`$ | Incubating (exposed) adults (odin `Em_inc`) |
 | $`I_M`$ | Infectious adults |
 
-**Total state size.** With the defaults ($`n_a = 52`$, $`n_z = 5`$,
+**Total state size.** With the defaults ($`n_a = 53`$, $`n_z = 5`$,
 $`n_v = 1`$, $`n_E = n_F = 10`$, $`n_P = 20`$) and no drugs, so that
 $`k_P = k_{P_c} = 1`$:
 
 ``` math
-\underbrace{(10 + k_P + k_{P_c})\,n_a n_z}_{3120\ \text{human}} \;+\; \underbrace{n_E + n_F}_{20\ \text{lags}} \;+\; \underbrace{n_v(6 + n_P)}_{26\ \text{mosquito}} \;=\; 3166 .
+\underbrace{(10 + k_P + k_{P_c})\,n_a n_z}_{3180\ \text{human}} \;+\; \underbrace{n_E + n_F}_{20\ \text{lags}} \;+\; \underbrace{n_v(6 + n_P)}_{26\ \text{mosquito}} \;=\; 3226 .
 ```
 
-Every extra prophylaxis stage adds $`n_a n_z = 260`$ states: an SP-AQ
-SMC scenario ($`k_{P_c} = 14`$) has 6546.
+Every extra prophylaxis stage adds $`n_a n_z = 265`$ states: an SP-AQ
+SMC scenario ($`k_{P_c} = 14`$) has 6671.
 
 ### 2.2 What is captured *without* a dimension
 
@@ -189,7 +189,7 @@ Abbreviations are at the end of §1.
 
 | Symbol | odin name | Meaning |
 |----|----|----|
-| $`r_i`$ | `r_age` | Aging rate out of age group $`i`$, exponentially fitted: $`r_i = \mu_i / (e^{\mu_i h_i} - 1)`$ for band width $`h_i`$ in days. This makes the stationary ratio between adjacent groups exactly $`e^{-\mu_i h_i}`$, where the obvious $`r_i = 1/h_i`$ gives $`1/(1 + \mu_i h_i)`$ and so always decays too slowly. Tends to $`1/h_i`$ as $`\mu_i h_i \to 0`$. ($`r_{n_a} = 0`$, absorbing.) |
+| $`r_i`$ | `r_age` | Aging rate out of age group $`i`$, exponentially fitted: $`r_i = \mu_i(0) / (e^{\mu_i(0) h_i} - 1)`$ for band width $`h_i`$ in days, computed as `mu/expm1(mu*h)` to avoid cancellation when $`\mu h`$ is small. This makes the stationary ratio between adjacent groups exactly $`e^{-\mu_i h_i}`$, where the obvious $`r_i = 1/h_i`$ gives $`1/(1 + \mu_i h_i)`$ and so always decays too slowly. Tends to $`1/h_i`$ as $`\mu_i h_i \to 0`$. Fitted at the **baseline** mortality $`\mu_i(0)`$ and held constant: it does not follow `set_demography()` in time. ($`r_{n_a} = 0`$, absorbing.) |
 | $`\mu_i(t)`$ | `mu_age` | Age- and time-specific death rate |
 | $`\rho_i(t) = r_i + \mu_i(t)`$ | `re` | Combined exit rate |
 | $`\psi_i`$ | `psi` | Relative biting rate by age, $`1 - \rho\,e^{-a_i/a_0}`$ |

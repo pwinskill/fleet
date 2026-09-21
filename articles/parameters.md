@@ -366,7 +366,10 @@ the cohort.
 |----|----|----|
 | `timesteps` | Vaccination dates | 🟡 Antibody titre decays from each campaign date; campaigns combine as $`1-\prod_k(1-e_k)`$. As for mass PEV, the IBM overwrites each person’s vaccination date, giving a most-recent-receipt mixture instead. Identical for a single campaign; divergent when campaigns overlap |
 | `coverages` | Fraction vaccinated | ✅ |
-| `ages` | Whole years of age targeted | ✅ The IBM vaccinates everyone with $`\lfloor a/365\rfloor \in \text{ages}`$. `fleet` gives each model age group the **fraction of its own width** that falls in that year set and multiplies coverage by it, so a year set aligned with group edges gives weight 1 and everything else is weighted, not rounded. It has to be fractional, because above age 14 the default grid is 5-yearly and only one whole year per group could ever be a member: a target of `18:20` sits inside the 15–20 group without being it. A target that overlaps no group at all warns rather than silently vaccinating nobody |
+
+It has to be fractional, because above age 15 the default grid puts its
+edges at 15, 16.67, 18.33 and 20, so a whole-year target lines up with
+no group: `18:20` spans parts of three of them.
 
 Transmission-reducing activity is mapped to state-specific
 transmission-blocking activity via the IBM’s own transform

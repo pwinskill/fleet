@@ -15,7 +15,7 @@
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="The fleet model: formal specification">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><script src="../extra.js"></script><meta property="og:title" content="The fleet model: formal specification">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -510,21 +510,21 @@ no mortality</td>
 </tbody>
 </table>
 <p><strong>Total state size.</strong> With the defaults
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>a</mi></msub><mo>=</mo><mn>52</mn></mrow><annotation encoding="application/x-tex">n_a = 52</annotation></semantics></math>,
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>a</mi></msub><mo>=</mo><mn>53</mn></mrow><annotation encoding="application/x-tex">n_a = 53</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>z</mi></msub><mo>=</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">n_z = 5</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>v</mi></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">n_v = 1</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>E</mi></msub><mo>=</mo><msub><mi>n</mi><mi>F</mi></msub><mo>=</mo><mn>10</mn></mrow><annotation encoding="application/x-tex">n_E = n_F = 10</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>P</mi></msub><mo>=</mo><mn>20</mn></mrow><annotation encoding="application/x-tex">n_P = 20</annotation></semantics></math>)
 and no drugs, so that
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><mi>P</mi></msub><mo>=</mo><msub><mi>k</mi><msub><mi>P</mi><mi>c</mi></msub></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">k_P = k_{P_c} = 1</annotation></semantics></math>:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><munder><munder><mrow><mo stretchy="false" form="prefix">(</mo><mn>10</mn><mo>+</mo><msub><mi>k</mi><mi>P</mi></msub><mo>+</mo><msub><mi>k</mi><msub><mi>P</mi><mi>c</mi></msub></msub><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><msub><mi>n</mi><mi>a</mi></msub><msub><mi>n</mi><mi>z</mi></msub></mrow><mo accent="true">⏟</mo></munder><mrow><mn>3120</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">human</mtext></mrow></munder><mspace width="0.278em"></mspace><mo>+</mo><mspace width="0.278em"></mspace><munder><munder><mrow><msub><mi>n</mi><mi>E</mi></msub><mo>+</mo><msub><mi>n</mi><mi>F</mi></msub></mrow><mo accent="true">⏟</mo></munder><mrow><mn>20</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">lags</mtext></mrow></munder><mspace width="0.278em"></mspace><mo>+</mo><mspace width="0.278em"></mspace><munder><munder><mrow><msub><mi>n</mi><mi>v</mi></msub><mo stretchy="false" form="prefix">(</mo><mn>6</mn><mo>+</mo><msub><mi>n</mi><mi>P</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><mo accent="true">⏟</mo></munder><mrow><mn>26</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">mosquito</mtext></mrow></munder><mspace width="0.278em"></mspace><mo>=</mo><mspace width="0.278em"></mspace><mn>3166</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
-\underbrace{(10 + k_P + k_{P_c})\,n_a n_z}_{3120\ \text{human}} \;+\; \underbrace{n_E + n_F}_{20\ \text{lags}} \;+\; \underbrace{n_v(6 + n_P)}_{26\ \text{mosquito}} \;=\; 3166 .
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><munder><munder><mrow><mo stretchy="false" form="prefix">(</mo><mn>10</mn><mo>+</mo><msub><mi>k</mi><mi>P</mi></msub><mo>+</mo><msub><mi>k</mi><msub><mi>P</mi><mi>c</mi></msub></msub><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><msub><mi>n</mi><mi>a</mi></msub><msub><mi>n</mi><mi>z</mi></msub></mrow><mo accent="true">⏟</mo></munder><mrow><mn>3180</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">human</mtext></mrow></munder><mspace width="0.278em"></mspace><mo>+</mo><mspace width="0.278em"></mspace><munder><munder><mrow><msub><mi>n</mi><mi>E</mi></msub><mo>+</mo><msub><mi>n</mi><mi>F</mi></msub></mrow><mo accent="true">⏟</mo></munder><mrow><mn>20</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">lags</mtext></mrow></munder><mspace width="0.278em"></mspace><mo>+</mo><mspace width="0.278em"></mspace><munder><munder><mrow><msub><mi>n</mi><mi>v</mi></msub><mo stretchy="false" form="prefix">(</mo><mn>6</mn><mo>+</mo><msub><mi>n</mi><mi>P</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><mo accent="true">⏟</mo></munder><mrow><mn>26</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">mosquito</mtext></mrow></munder><mspace width="0.278em"></mspace><mo>=</mo><mspace width="0.278em"></mspace><mn>3226</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\underbrace{(10 + k_P + k_{P_c})\,n_a n_z}_{3180\ \text{human}} \;+\; \underbrace{n_E + n_F}_{20\ \text{lags}} \;+\; \underbrace{n_v(6 + n_P)}_{26\ \text{mosquito}} \;=\; 3226 .
 </annotation></semantics></math></p>
 <p>Every extra prophylaxis stage adds
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>a</mi></msub><msub><mi>n</mi><mi>z</mi></msub><mo>=</mo><mn>260</mn></mrow><annotation encoding="application/x-tex">n_a n_z = 260</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>a</mi></msub><msub><mi>n</mi><mi>z</mi></msub><mo>=</mo><mn>265</mn></mrow><annotation encoding="application/x-tex">n_a n_z = 265</annotation></semantics></math>
 states: an SP-AQ SMC scenario
 (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><msub><mi>P</mi><mi>c</mi></msub></msub><mo>=</mo><mn>14</mn></mrow><annotation encoding="application/x-tex">k_{P_c} = 14</annotation></semantics></math>)
-has 6546.</p>
+has 6671.</p>
 </div>
 <div class="section level3">
 <h3 id="what-is-captured-without-a-dimension">2.2 What is captured <em>without</em> a dimension<a class="anchor" aria-label="anchor" href="#what-is-captured-without-a-dimension"></a>
@@ -798,10 +798,14 @@ these upstream in <code>set_antimalarial_resistance()</code>
 <td>Aging rate out of age group
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>,
 exponentially fitted:
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mi>i</mi></msub><mo>=</mo><msub><mi>μ</mi><mi>i</mi></msub><mi>/</mi><mo stretchy="false" form="prefix">(</mo><msup><mi>e</mi><mrow><msub><mi>μ</mi><mi>i</mi></msub><msub><mi>h</mi><mi>i</mi></msub></mrow></msup><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">r_i = \mu_i / (e^{\mu_i h_i} - 1)</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mi>i</mi></msub><mo>=</mo><msub><mi>μ</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mo stretchy="false" form="prefix">(</mo><msup><mi>e</mi><mrow><msub><mi>μ</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><msub><mi>h</mi><mi>i</mi></msub></mrow></msup><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">r_i = \mu_i(0) / (e^{\mu_i(0) h_i} - 1)</annotation></semantics></math>
 for band width
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>h</mi><mi>i</mi></msub><annotation encoding="application/x-tex">h_i</annotation></semantics></math>
-in days. This makes the stationary ratio between adjacent groups exactly
+in days, computed as <code>mu/expm1(mu*h)</code> to avoid cancellation
+when
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi><mi>h</mi></mrow><annotation encoding="application/x-tex">\mu h</annotation></semantics></math>
+is small. This makes the stationary ratio between adjacent groups
+exactly
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mrow><mi>−</mi><msub><mi>μ</mi><mi>i</mi></msub><msub><mi>h</mi><mi>i</mi></msub></mrow></msup><annotation encoding="application/x-tex">e^{-\mu_i h_i}</annotation></semantics></math>,
 where the obvious
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mi>i</mi></msub><mo>=</mo><mn>1</mn><mi>/</mi><msub><mi>h</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">r_i = 1/h_i</annotation></semantics></math>
@@ -811,6 +815,10 @@ and so always decays too slowly. Tends to
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><msub><mi>h</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">1/h_i</annotation></semantics></math>
 as
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>i</mi></msub><msub><mi>h</mi><mi>i</mi></msub><mo>→</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\mu_i h_i \to 0</annotation></semantics></math>.
+Fitted at the <strong>baseline</strong> mortality
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mu_i(0)</annotation></semantics></math>
+and held constant: it does not follow <code>set_demography()</code> in
+time.
 (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><msub><mi>n</mi><mi>a</mi></msub></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">r_{n_a} = 0</annotation></semantics></math>,
 absorbing.)</td>
 </tr>

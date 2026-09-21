@@ -37,7 +37,7 @@ it. The measured agreement behind those claims is a separate project,
 
 Useful links:
 
-- <https://pwinskill.github.io/fleet>
+- <https://pwinskill.github.io/fleet/>
 
 - <https://github.com/pwinskill/fleet>
 

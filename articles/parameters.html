@@ -15,7 +15,7 @@
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="fleet parameter reference">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><script src="../extra.js"></script><meta property="og:title" content="fleet parameter reference">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -1687,22 +1687,11 @@ campaign; divergent when campaigns overlap</td>
 <td>Fraction vaccinated</td>
 <td>✅</td>
 </tr>
-<tr class="odd">
-<td><code>ages</code></td>
-<td>Whole years of age targeted</td>
-<td>✅ The IBM vaccinates everyone with
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">⌊</mo><mi>a</mi><mi>/</mi><mn>365</mn><mo stretchy="false" form="postfix">⌋</mo><mo>∈</mo><mtext mathvariant="normal">ages</mtext></mrow><annotation encoding="application/x-tex">\lfloor a/365\rfloor \in \text{ages}</annotation></semantics></math>.
-<code>fleet</code> gives each model age group the <strong>fraction of
-its own width</strong> that falls in that year set and multiplies
-coverage by it, so a year set aligned with group edges gives weight 1
-and everything else is weighted, not rounded. It has to be fractional,
-because above age 14 the default grid is 5-yearly and only one whole
-year per group could ever be a member: a target of <code>18:20</code>
-sits inside the 15–20 group without being it. A target that overlaps no
-group at all warns rather than silently vaccinating nobody</td>
-</tr>
 </tbody>
 </table>
+<p>It has to be fractional, because above age 15 the default grid puts
+its edges at 15, 16.67, 18.33 and 20, so a whole-year target lines up
+with no group: <code>18:20</code> spans parts of three of them.</p>
 <p>Transmission-reducing activity is mapped to state-specific
 transmission-blocking activity via the IBM’s own transform
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">TBA</mtext><mo stretchy="false" form="prefix">(</mo><msub><mi>m</mi><mi>x</mi></msub><mo>,</mo><mi>k</mi><mo>,</mo><mtext mathvariant="normal">TRA</mtext><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\text{TBA}(m_x, k, \text{TRA})</annotation></semantics></math>

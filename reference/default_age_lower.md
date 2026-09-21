@@ -2,10 +2,11 @@
 
 Lower edges (in years) of the age groups: fine in infancy, where
 immunity and maternal dynamics move fast, and coarse in adulthood. Group
-edges are pinned at the conventional reporting boundaries
-(`r paste(AGE_ANCHORS, collapse = ", ")` years), and the groups between
-two anchors are of equal width, with the budget of groups spread across
-the anchors in proportion to **log** width.
+edges are pinned at the conventional reporting boundaries – 0, 1, 2, 3,
+5, 7, 10, 15, 20, 30, 40, 60 years – and the groups between two anchors
+are of equal width, with the budget of groups spread across the anchors
+in proportion to the width in `log(1 + age)`. Each interval gets at
+least one group; the remainder is shared out largest-remainder.
 
 ## Usage
 
@@ -35,20 +36,26 @@ numeric vector of age-group lower edges in years.
 
 ## Details
 
-Log width rather than width, because what the grid has to resolve is the
-rise of immunity with age, and that is far closer to a function of log
-age than of age. An equal-width grid spends most of its groups above 20,
-where nothing moves, and is the worst of the options measured: against
-the same model run to grid convergence it is twice as far off as this
-one at the same cost.
+Log rather than linear width, because what the grid has to resolve is
+the rise of immunity with age, and that is far closer to a function of
+log age than of age. (Of `log(1 + age)` rather than `log(age)`, which is
+infinite over the first year. The offset is in years, so the allocation
+is not scale-free.) An equal-width grid spends most of its groups above
+20, where nothing moves, and is the worst of the options measured.
 
 This replaced a grid of fixed monthly / quarterly / yearly / 5-yearly
-sections. At the same number of groups the new one halves the
-discretisation error – the largest departure from the grid-converged
-solution falls from 12.0% to 6.7%, and the rms across age bands from
-4.8% to 3.0% – for a few per cent of extra runtime. The old grid
-over-resolved infancy (12 of its 52 groups in the first year, against 7
-here) and under-resolved everything above 15.
+sections, and roughly halves the discretisation error at the same number
+of groups, for a few per cent of runtime. The old grid over-resolved
+infancy (12 of its 52 groups in the first year, against 7 here) and
+under-resolved everything above 15.
+
+Refining the grid removes this error: `fleet`'s own age profile
+converges at first order, halving its departure from the grid-converged
+solution with each doubling of `n_group`. What refinement does **not**
+remove is the mean-field approximation itself – one immunity value per
+stratum, where the IBM holds a spread of infection histories at the same
+age – so a persistent difference from the IBM is not evidence that the
+grid is too coarse.
 
 Band aggregation weights each age group by the exact fraction of its own
 width that falls inside the band, so a band edge landing inside a group
