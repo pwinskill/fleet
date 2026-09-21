@@ -35,7 +35,7 @@ multi-decade run completes in seconds, independent of population size."><meta pr
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/fleet.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/using.html">Using fleet well</a></li>
-<li class="nav-item"><a class="nav-link" href="../articles/comparison.html">Comparison</a></li>
+<li class="nav-item"><a class="nav-link" href="https://pwinskill.github.io/fleetcheck/">Evidence</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-reference" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Reference</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-reference"><li><a class="dropdown-item" href="../articles/model.html">Model specification</a></li>
@@ -87,9 +87,10 @@ table (P. falciparum only).</p></li>
 </ul><p>The count table is malariasimulation-shaped, so post-process it with
 <span class="pkg">postie</span> exactly as you would an IBM run: <code>postie::get_rates(out)</code> and
 <code>postie::get_prevalence(out, diagnostic = "lm")</code>.
-See <code><a href="../articles/fleet.html">vignette("fleet")</a></code> for a worked tour, <code><a href="../articles/using.html">vignette("using")</a></code> for where and
-how much the ODE departs from the IBM and what to do about it, and
-<code><a href="../articles/comparison.html">vignette("comparison")</a></code> for the measured agreement behind those claims.</p>
+See <code><a href="../articles/fleet.html">vignette("fleet")</a></code> for a worked tour and <code><a href="../articles/using.html">vignette("using")</a></code> for where
+and how much the ODE departs from the IBM and what to do about it. The
+measured agreement behind those claims is a separate project,
+<a href="https://pwinskill.github.io/fleetcheck/">fleetcheck</a>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

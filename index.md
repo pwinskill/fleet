@@ -24,13 +24,14 @@ MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/pwin
 >   [`run_simulation_ode()`](https://pwinskill.github.io/fleet/reference/run_simulation_ode.md)’s
 >   signature has already changed once and may change again without
 >   deprecation.
-> - **Known discrepancies against the IBM are open, not resolved.**
->   All-age severe incidence runs about 4–6% below `malariasimulation`
->   and sits outside its replicate band at two of six transmission
->   levels; across the 63-country site-file comparison `fleet` runs
->   roughly 9% above the IBM on clinical and severe incidence, and that
->   excess is **not** explained. See *[Where the two models
->   differ](https://pwinskill.github.io/fleet/articles/comparison.html)*.
+> - **Known discrepancies against the IBM are open, not resolved.** The
+>   age distribution of clinical incidence does not match in every age
+>   band, and across the 63-country site-file comparison `fleet` runs
+>   roughly 9% above the IBM on clinical and severe incidence, an excess
+>   that is **not** explained. The current verdict on every claim, with
+>   the numbers behind it, is in
+>   *[fleetcheck](https://pwinskill.github.io/fleetcheck/)* — which is
+>   kept current, unlike any figure quoted here would be.
 > - **Severe incidence and anything derived from it (including DALYs)
 >   should be treated as indicative only.**
 > - Nothing here has been peer reviewed, and there is no versioned
@@ -148,24 +149,23 @@ parameter list.
 
 ## How well does it match the IBM?
 
-![Core transmission relationships: PfPR(2–10), under-5 clinical
-incidence, all-age clinical incidence and all-age severe incidence
-against EIR in both models](reference/figures/cmp_core_eir.png)
+That question has its own project:
+**[fleetcheck](https://pwinskill.github.io/fleetcheck/)**, a register of
+claims about how closely `fleet` reproduces `malariasimulation`, each
+with the criterion that decides it, the value measured against it, and a
+verdict.
 
-Core transmission relationships: PfPR(2–10), under-5 clinical incidence,
-all-age clinical incidence and all-age severe incidence against EIR in
-both models
+It lives outside this repository on purpose. Evidence kept beside the
+code it vouches for is evidence the code’s author can quietly leave out
+of date — and that is exactly what happened here: this README used to
+carry its own comparison figures, drawn from a copy of the scenario data
+that went eleven days and two model changes stale without anything
+noticing, still quoting bands built from ten IBM replicates after the
+count had been raised to twenty for being too narrow.
 
-*The same parameter list through both models across EIR 1–120: the IBM
-as the median of 10 stochastic replicates with a 10–90% band, `fleet` as
-one deterministic run. Across the grid LM prevalence matches the IBM
-median to within 1.6% and clinical incidence to within 2.6%; severe
-incidence is the outlier, and the reason is explained rather than
-hidden.*
-
-One of eight figures. The rest, the numbers behind them, and where the
-two models part company: **[Comparison with
-malariasimulation](https://pwinskill.github.io/fleet/articles/comparison.html)**.
+`fleetcheck` runs its own CI, fails when a verdict and the register
+disagree, and refuses to tolerate a failing claim that has no written
+reason.
 
 ## Documentation
 
@@ -173,7 +173,7 @@ malariasimulation](https://pwinskill.github.io/fleet/articles/comparison.html)**
 |----|----|
 | **[Get started](https://pwinskill.github.io/fleet/articles/fleet.html)** | A worked tour: run the model, read the outputs with `postie`, layer on each intervention, handle seasonality and burn-in. |
 | **[Using fleet well](https://pwinskill.github.io/fleet/articles/using.html)** | Where the mean field departs from the IBM and what to do about it: things to do, things to leave alone, results to treat with caution, and what a run costs. |
-| **[Comparison with malariasimulation](https://pwinskill.github.io/fleet/articles/comparison.html)** | The evidence: core relationships, age structure, demography, seasonality, interventions, fifteen-year programmes, and 63 country site files. |
+| **[fleetcheck](https://pwinskill.github.io/fleetcheck/)** | The evidence, as a separate project: a register of claims about agreement with the IBM — core relationships, age structure, demography, interventions, and 63 country site files — each with its criterion, measurement and verdict. |
 | **[Model specification](https://pwinskill.github.io/fleet/articles/model.html)** | The formal version: scope, what the state space does and does not carry, and the full ODE system. |
 | **[Parameter reference](https://pwinskill.github.io/fleet/articles/parameters.html)** | Every `malariasimulation` `set_*()` function argument by argument: what `fleet` reproduces exactly, what it approximates, and what it rejects. |
 

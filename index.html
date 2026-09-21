@@ -41,7 +41,7 @@
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="articles/fleet.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="articles/using.html">Using fleet well</a></li>
-<li class="nav-item"><a class="nav-link" href="articles/comparison.html">Comparison</a></li>
+<li class="nav-item"><a class="nav-link" href="https://pwinskill.github.io/fleetcheck/">Evidence</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-reference" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Reference</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-reference">
@@ -81,7 +81,7 @@
 <li>
 <strong>The API is unstable.</strong> <code><a href="reference/run_simulation_ode.html">run_simulation_ode()</a></code>’s signature has already changed once and may change again without deprecation.</li>
 <li>
-<strong>Known discrepancies against the IBM are open, not resolved.</strong> All-age severe incidence runs about 4–6% below <code>malariasimulation</code> and sits outside its replicate band at two of six transmission levels; across the 63-country site-file comparison <code>fleet</code> runs roughly 9% above the IBM on clinical and severe incidence, and that excess is <strong>not</strong> explained. See <em><a href="https://pwinskill.github.io/fleet/articles/comparison.html">Where the two models differ</a></em>.</li>
+<strong>Known discrepancies against the IBM are open, not resolved.</strong> The age distribution of clinical incidence does not match in every age band, and across the 63-country site-file comparison <code>fleet</code> runs roughly 9% above the IBM on clinical and severe incidence, an excess that is <strong>not</strong> explained. The current verdict on every claim, with the numbers behind it, is in <em><a href="https://pwinskill.github.io/fleetcheck/">fleetcheck</a></em> — which is kept current, unlike any figure quoted here would be.</li>
 <li><strong>Severe incidence and anything derived from it (including DALYs) should be treated as indicative only.</strong></li>
 <li>Nothing here has been peer reviewed, and there is no versioned release.</li>
 </ul>
@@ -145,7 +145,7 @@
 <h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://pwinskill.github.io/fleet">fleet</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://pwinskill.github.io/fleet/">fleet</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">malariasimulation</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/malariasimulation/man/get_parameters.html" class="external-link">get_parameters</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
@@ -170,11 +170,9 @@
 <div class="section level2">
 <h2 id="how-well-does-it-match-the-ibm">How well does it match the IBM?<a class="anchor" aria-label="anchor" href="#how-well-does-it-match-the-ibm"></a>
 </h2>
-<div class="float">
-<img src="reference/figures/cmp_core_eir.png" alt="Core transmission relationships: PfPR(2–10), under-5 clinical incidence, all-age clinical incidence and all-age severe incidence against EIR in both models"><div class="figcaption">Core transmission relationships: PfPR(2–10), under-5 clinical incidence, all-age clinical incidence and all-age severe incidence against EIR in both models</div>
-</div>
-<p><em>The same parameter list through both models across EIR 1–120: the IBM as the median of 10 stochastic replicates with a 10–90% band, <code>fleet</code> as one deterministic run. Across the grid LM prevalence matches the IBM median to within 1.6% and clinical incidence to within 2.6%; severe incidence is the outlier, and the reason is explained rather than hidden.</em></p>
-<p>One of eight figures. The rest, the numbers behind them, and where the two models part company: <strong><a href="https://pwinskill.github.io/fleet/articles/comparison.html">Comparison with malariasimulation</a></strong>.</p>
+<p>That question has its own project: <strong><a href="https://pwinskill.github.io/fleetcheck/">fleetcheck</a></strong>, a register of claims about how closely <code>fleet</code> reproduces <code>malariasimulation</code>, each with the criterion that decides it, the value measured against it, and a verdict.</p>
+<p>It lives outside this repository on purpose. Evidence kept beside the code it vouches for is evidence the code’s author can quietly leave out of date — and that is exactly what happened here: this README used to carry its own comparison figures, drawn from a copy of the scenario data that went eleven days and two model changes stale without anything noticing, still quoting bands built from ten IBM replicates after the count had been raised to twenty for being too narrow.</p>
+<p><code>fleetcheck</code> runs its own CI, fails when a verdict and the register disagree, and refuses to tolerate a failing claim that has no written reason.</p>
 </div>
 <div class="section level2">
 <h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
@@ -194,8 +192,8 @@
 <td>Where the mean field departs from the IBM and what to do about it: things to do, things to leave alone, results to treat with caution, and what a run costs.</td>
 </tr>
 <tr>
-<td><strong><a href="https://pwinskill.github.io/fleet/articles/comparison.html">Comparison with malariasimulation</a></strong></td>
-<td>The evidence: core relationships, age structure, demography, seasonality, interventions, fifteen-year programmes, and 63 country site files.</td>
+<td><strong><a href="https://pwinskill.github.io/fleetcheck/">fleetcheck</a></strong></td>
+<td>The evidence, as a separate project: a register of claims about agreement with the IBM — core relationships, age structure, demography, interventions, and 63 country site files — each with its criterion, measurement and verdict.</td>
 </tr>
 <tr>
 <td><strong><a href="https://pwinskill.github.io/fleet/articles/model.html">Model specification</a></strong></td>

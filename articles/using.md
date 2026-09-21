@@ -27,7 +27,8 @@ Section references of the form §B.4 are to
 which carries the formal system; function names link into
 [`vignette("parameters")`](https://pwinskill.github.io/fleet/articles/parameters.md);
 the measurements behind the claims here are in
-[`vignette("comparison")`](https://pwinskill.github.io/fleet/articles/comparison.md).
+[fleetcheck](https://pwinskill.github.io/fleetcheck/), which is kept
+current as the model changes, and this article is not.
 
 ## Things to do
 
@@ -115,11 +116,12 @@ under a custom one).
 
 ### Severe incidence
 
-`fleet` runs below the IBM here, by 6.2% on all ages at EIR 20, 4.0% at
-EIR 50 and 4.6% at EIR 120, and by 15–25% in the 5–20 year bands; DALYs
-derived from it inherit that. It is the largest open discrepancy between
-the two models
-([`vignette("comparison")`](https://pwinskill.github.io/fleet/articles/comparison.md)).
+`fleet` runs below the IBM here, and DALYs derived from it inherit that.
+The size of the gap is not quoted in this article on purpose: it moves
+whenever the model does, and a number written here would go stale
+silently. The measurement that is kept current is the
+`severe-allage-eir` claim in
+[fleetcheck](https://pwinskill.github.io/fleetcheck/).
 
 The obvious explanation is the wrong one: $`\theta`$ is the *shallowest*
 of the three acquired-immunity Hill functions, not the steepest. What
@@ -228,11 +230,11 @@ count nor the outputs. Loosening `atol` as well saves almost nothing
 occupancies of order `1e-6`, which a looser absolute tolerance lets go
 slightly negative.
 
-Measured with `comparison/benchmark.R` (minimum of five repeats, since
-contention can only add time) on R 4.5.2, `aarch64-w64-mingw32`. Treat
-them as indicative: one machine, one core, and a laptop under load will
-be slower. For how this compares with the IBM’s cost, see
-[`vignette("comparison")`](https://pwinskill.github.io/fleet/articles/comparison.md).
+Measured as the minimum of five repeats, since contention can only add
+time, on R 4.5.2, `aarch64-w64-mingw32`. Treat them as indicative: one
+machine, one core, and a laptop under load will be slower. For how this
+compares with the IBM’s cost, see the `speed` claim in
+[fleetcheck](https://pwinskill.github.io/fleetcheck/).
 
 ## Index of approximations
 

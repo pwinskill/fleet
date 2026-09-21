@@ -36,7 +36,7 @@
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../articles/fleet.html">Get started</a></li>
 <li class="active nav-item"><a class="nav-link" href="../articles/using.html">Using fleet well</a></li>
-<li class="nav-item"><a class="nav-link" href="../articles/comparison.html">Comparison</a></li>
+<li class="nav-item"><a class="nav-link" href="https://pwinskill.github.io/fleetcheck/">Evidence</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-reference" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Reference</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-reference">
@@ -99,8 +99,8 @@ caution.</p>
 <code><a href="../articles/fleet.html">vignette("fleet")</a></code>. Section references of the form §B.4 are
 to <code><a href="../articles/model.html">vignette("model")</a></code>, which carries the formal system;
 function names link into <code><a href="../articles/parameters.html">vignette("parameters")</a></code>; the
-measurements behind the claims here are in
-<code><a href="../articles/comparison.html">vignette("comparison")</a></code>.</p>
+measurements behind the claims here are in <a href="https://pwinskill.github.io/fleetcheck/">fleetcheck</a>, which is
+kept current as the model changes, and this article is not.</p>
 <div class="section level2">
 <h2 id="things-to-do">Things to do<a class="anchor" aria-label="anchor" href="#things-to-do"></a>
 </h2>
@@ -178,11 +178,11 @@ own value under a custom one).</p>
 <div class="section level3">
 <h3 id="severe-incidence">Severe incidence<a class="anchor" aria-label="anchor" href="#severe-incidence"></a>
 </h3>
-<p><code>fleet</code> runs below the IBM here, by 6.2% on all ages at
-EIR 20, 4.0% at EIR 50 and 4.6% at EIR 120, and by 15–25% in the 5–20
-year bands; DALYs derived from it inherit that. It is the largest open
-discrepancy between the two models
-(<code><a href="../articles/comparison.html">vignette("comparison")</a></code>).</p>
+<p><code>fleet</code> runs below the IBM here, and DALYs derived from it
+inherit that. The size of the gap is not quoted in this article on
+purpose: it moves whenever the model does, and a number written here
+would go stale silently. The measurement that is kept current is the
+<code>severe-allage-eir</code> claim in <a href="https://pwinskill.github.io/fleetcheck/">fleetcheck</a>.</p>
 <p>The obvious explanation is the wrong one:
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
 is the <em>shallowest</em> of the three acquired-immunity Hill
@@ -348,11 +348,11 @@ count nor the outputs. Loosening <code>atol</code> as well saves almost
 nothing (5.4 s) and is not worth having: the prophylaxis chain stages
 hold occupancies of order <code>1e-6</code>, which a looser absolute
 tolerance lets go slightly negative.</p>
-<p>Measured with <code>comparison/benchmark.R</code> (minimum of five
-repeats, since contention can only add time) on R 4.5.2,
-<code>aarch64-w64-mingw32</code>. Treat them as indicative: one machine,
-one core, and a laptop under load will be slower. For how this compares
-with the IBM’s cost, see <code><a href="../articles/comparison.html">vignette("comparison")</a></code>.</p>
+<p>Measured as the minimum of five repeats, since contention can only
+add time, on R 4.5.2, <code>aarch64-w64-mingw32</code>. Treat them as
+indicative: one machine, one core, and a laptop under load will be
+slower. For how this compares with the IBM’s cost, see the
+<code>speed</code> claim in <a href="https://pwinskill.github.io/fleetcheck/">fleetcheck</a>.</p>
 </div>
 <div class="section level2">
 <h2 id="index-of-approximations">Index of approximations<a class="anchor" aria-label="anchor" href="#index-of-approximations"></a>

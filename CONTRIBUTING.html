@@ -17,7 +17,7 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="articles/fleet.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="articles/using.html">Using fleet well</a></li>
-<li class="nav-item"><a class="nav-link" href="articles/comparison.html">Comparison</a></li>
+<li class="nav-item"><a class="nav-link" href="https://pwinskill.github.io/fleetcheck/">Evidence</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-reference" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Reference</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-reference"><li><a class="dropdown-item" href="articles/model.html">Model specification</a></li>
@@ -83,10 +83,7 @@
 </td>
 <td>absolute output levels, to 1e-6</td>
 <td><code>FLEET_REGENERATE_REFERENCE=1 Rscript -e 'devtools::test(filter = "reference")'</code></td>
-</tr><tr><td><code>comparison/data/rep_*.csv</code></td>
-<td>agreement with the IBM</td>
-<td><code>CMP_FLEET_ONLY=1 Rscript comparison/run_replicates.R</code></td>
-</tr></tbody></table><p>The IBM rows do not need re-running: nothing in <code>fleet</code> can affect them. See <a href="https://github.com/pwinskill/fleet/blob/main/comparison/README.md" class="external-link">comparison/README.md</a>.</p>
+</tr></tbody></table><p>Agreement with the IBM is a separate repository, <a href="https://github.com/pwinskill/fleetcheck" class="external-link">fleetcheck</a>. A change that moves model output moves its numbers too, so refresh it in the same change: clone it beside this one and run <code>CMP_FLEET_ONLY=1 Rscript validations/02-scenarios/run.R</code>, then <code>validations/02-scenarios/render.R</code>. The IBM rows do not need re-running — nothing in <code>fleet</code> can affect them — which is why that takes minutes rather than the twenty-five a full sweep costs.</p>
 <p><strong>Never regenerate a baseline to make a red test green.</strong> The diff <em>is</em> the record of what your change did to the model. Read it, and put it in the pull request.</p>
 <div class="section level3">
 <h3 id="house-rules-for-the-model-itself">House rules for the model itself<a class="anchor" aria-label="anchor" href="#house-rules-for-the-model-itself"></a></h3>

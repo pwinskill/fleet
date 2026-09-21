@@ -337,7 +337,7 @@ Four things to read before you trust a number from this model.
 |  |  |
 |----|----|
 | **[`vignette("using")`](https://pwinskill.github.io/fleet/articles/using.md)** | Where the mean field departs and what to do about it: burn-in, age grids, output bands, which settings to leave alone, which results to treat with caution, and what a run costs. |
-| **[`vignette("comparison")`](https://pwinskill.github.io/fleet/articles/comparison.md)** | How well it matches the IBM: the same parameter list through both models across eighteen scenarios, plus a 63-country site-file comparison. Not completed validation — the evidence that exists so far, with the open discrepancies named. |
+| **[fleetcheck](https://pwinskill.github.io/fleetcheck/)** | How well it matches the IBM, as a separate project: a register of claims, each with the criterion that decides it, the value measured against it and a verdict. Not completed validation — the evidence that exists so far, with the open discrepancies named and the failing claims left failing. |
 | **[`vignette("model")`](https://pwinskill.github.io/fleet/articles/model.md)** | The formal specification: the ODE system, and what each state dimension carries as against what is captured *without* one. |
 | **[`vignette("parameters")`](https://pwinskill.github.io/fleet/articles/parameters.md)** | Every `malariasimulation` `set_*()` function, argument by argument. |
 

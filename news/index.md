@@ -122,7 +122,7 @@ grid, in a run with no interventions, is unchanged.
   to send readers to someone else’s release. Install with
   `remotes::install_github("pwinskill/fleet")` and replace
   [`library(blink)`](https://pwinskill.github.io/blink) with
-  [`library(fleet)`](https://pwinskill.github.io/fleet).
+  [`library(fleet)`](https://pwinskill.github.io/fleet/).
 
   **No function signatures changed.** The three exported functions
   ([`run_simulation_ode()`](https://pwinskill.github.io/fleet/reference/run_simulation_ode.md),
@@ -385,10 +385,9 @@ grid, in a run with no interventions, is unchanged.
   [`vignette("model")`](https://pwinskill.github.io/fleet/articles/model.md)
   (the specification alone), the new
   [`vignette("parameters")`](https://pwinskill.github.io/fleet/articles/parameters.md)
-  and
-  [`vignette("comparison")`](https://pwinskill.github.io/fleet/articles/comparison.md).
-  `.github/CI.md` moved to `.github/workflows/CI.md`, where pkgdown no
-  longer renders it as the site’s front page.
+  and `vignette("comparison")`. `.github/CI.md` moved to
+  `.github/workflows/CI.md`, where pkgdown no longer renders it as the
+  site’s front page.
 
 ## fleet 0.0.0.9000
 
@@ -547,9 +546,8 @@ built on odin2/dust2.
   had been masking part of a larger, separate severe deficit. That
   compensation was accidental, so the corrected numbers are the honest
   ones and the severe gap is now the largest open discrepancy between
-  the two models.
-  [`vignette("comparison")`](https://pwinskill.github.io/fleet/articles/comparison.md)
-  and its tables are re-rendered accordingly.
+  the two models. `vignette("comparison")` and its tables are
+  re-rendered accordingly.
 
 - **`test-prophylaxis-chain.R`’s first test no longer errors when
   `malariasimulation` is absent.** It read `AL_params`/`SP_AQ_params`
@@ -604,15 +602,13 @@ built on odin2/dust2.
 
 ### Documentation
 
-- New article
-  [`vignette("comparison")`](https://pwinskill.github.io/fleet/articles/comparison.md)
-  — *Comparison with malariasimulation* — covering EIR, age,
-  seasonality, demography, 63 country site files and five interventions,
-  with the IBM as the median of 10 replicates and a 10–90% band.
-  `comparison/` was rewritten around one runner, one renderer and a
-  shared theme, with the per-replicate summaries committed so figures
-  redraw without re-running the models; the pre-replication-pass figures
-  (`A_`–`F_`, `inc_*`) are gone.
+- New article `vignette("comparison")` — *Comparison with
+  malariasimulation* — covering EIR, age, seasonality, demography, 63
+  country site files and five interventions, with the IBM as the median
+  of 10 replicates and a 10–90% band. `comparison/` was rewritten around
+  one runner, one renderer and a shared theme, with the per-replicate
+  summaries committed so figures redraw without re-running the models;
+  the pre-replication-pass figures (`A_`–`F_`, `inc_*`) are gone.
 - The comparison surfaced three fleet-side items, all fixed above: the
   top age group’s death rate under `set_demography()`, exponential
   prophylaxis under-estimating seasonal SMC, and the `set_equilibrium()`
@@ -712,10 +708,8 @@ The pass was validated monthly, *P. falciparum* only on both sides, over
 malariasimulation output, and moved every headline statistic the right
 way. Those numbers, the committed snapshot they were re-taken from
 (`comparison/data/site_snapshot.json`, 2026-09-09) and the discrepancies
-still open are in
-[`vignette("comparison")`](https://pwinskill.github.io/fleet/articles/comparison.md)
-and in the warning at the top of the README, characterised there rather
-than tuned away.
+still open are in `vignette("comparison")` and in the warning at the top
+of the README, characterised there rather than tuned away.
 
 ### Parameter-ingestion completeness
 
@@ -748,7 +742,6 @@ went stale. It lives where it is maintained:
   [`vignette("model")`](https://pwinskill.github.io/fleet/articles/model.md).
 - **Where the mean field departs, and what to do about it** –
   [`vignette("using")`](https://pwinskill.github.io/fleet/articles/using.md).
-- **How well it agrees with the IBM** –
-  [`vignette("comparison")`](https://pwinskill.github.io/fleet/articles/comparison.md).
+- **How well it agrees with the IBM** – `vignette("comparison")`.
 - **Scope, and the open discrepancies** – the warning at the top of the
   README.
