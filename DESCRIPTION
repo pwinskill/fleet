@@ -1,6 +1,6 @@
 Package: fleet
 Title: Mean-Field (ODE) Twin of the 'malariasimulation' Malaria Model
-Version: 0.0.0.9001
+Version: 0.0.0.9002
 Authors@R: c(
   person("Peter", "Winskill", role = c("aut", "cre", "cph"), email = "p.winskill@imperial.ac.uk"))
 Description: Provides a fast, deterministic mean-field (ordinary differential

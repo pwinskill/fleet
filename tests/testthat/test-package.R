@@ -135,11 +135,19 @@ test_that("custom demography changes the equilibrium age structure", {
   expect_equal(sum(prop), 1, tolerance = 1e-10)               # normalised
   # high infant/elderly mortality => fewer under-5s than constant-hazard (~0.21)
   expect_lt(sum(prop[am < 5 * 365]), 0.15)
-  # the open-ended top group (80+) must take the 80-100 death rate (0.12/y), not the
-  # 60-80 one its lower bound would fall into with right-closed bins: at equilibrium
-  # N_last / N_prev = r_prev / mu_last = (1 / 5y) / (0.12 / y)
+  # the open-ended top group (80+) must take the 80-100 death rate (0.12/y), not
+  # the 60-80 one its lower bound would fall into with right-closed bins. At
+  # equilibrium the chain gives N_last / N_prev = r_prev / mu_last, so assert
+  # that identity against the rate actually used rather than against 1/width:
+  # r_age is exponentially fitted now, so it is mu/expm1(mu*h), not 1/h, and
+  # hardcoding the old value would test the discretisation instead of the
+  # death rate this is about.
   n <- length(prop)
-  expect_equal(prop[n] / prop[n - 1], (1 / 5) / 0.12, tolerance = 1e-6)
+  expect_equal(inp$pars$mu_age_z[n, 1] * 365, 0.12, tolerance = 1e-8)
+  expect_equal(prop[n] / prop[n - 1],
+               inp$pars$r_age[n - 1] / inp$pars$mu_age_z[n, 1], tolerance = 1e-6)
+  # and the fit really is doing something in a 5-year-wide band
+  expect_lt(inp$pars$r_age[n - 1], 1 / (5 * 365))
   # default (constant hazard) still holds flat at equilibrium (offset 0 = least drift)
   pflat <- gp(); pflat$acquired_immunity_offset <- 0; pflat$bite_dedup <- 0
   o <- run_simulation_ode(400, eqm(pflat, 20))

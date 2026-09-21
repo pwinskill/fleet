@@ -102,22 +102,23 @@ test_that("time-varying mortality drives the immunity ageing coefficient", {
   # mortality step as the test above, run past it, where the structure is still
   # moving and the two forms genuinely disagree.
   #
-  # Reverting the coefficient to the frozen re[i] = r_age[i] + mu_age[i], and
-  # recompiling, gives a final prevalence of 0.6443813 and a final EIR of
-  # 36.57542 instead of the values below -- 2.5e-4 and 7.6e-4 relative, which
-  # is small but is thousands of times the tolerance asserted here. Measured by
-  # actually reverting, not assumed: restoring the coefficient returns these
-  # numbers bit for bit. The gap is modest on this two-band fixture; on a real
-  # site-file mortality series it reaches several per cent.
+  # Reverting the coefficient to the frozen re[i] = r_age[i] + mu_age[i] moves
+  # these numbers by thousands of times the tolerance asserted here. That was
+  # measured by actually reverting and recompiling, not assumed -- on the build
+  # before the ageing rate was exponentially fitted, where the pair came out
+  # 0.6443813 against 0.6442193. The pinned values below are the current
+  # model's; what the test asserts is unchanged.
   dr <- matrix(c(1e-4, 1e-3, 5e-5, 5e-4), nrow = 2, byrow = TRUE)
   p <- malariasimulation::set_demography(malariasimulation::get_parameters(),
     agegroups = c(1825, 36500), timesteps = c(0, 10 * 365), deathrates = dr)
   o <- run_simulation_ode(15 * 365, eqm(p, 20))
   n <- nrow(o)
 
-  # the step really does move the age structure, or the test proves nothing
-  expect_gt(abs(o$EIR[n] / o$EIR[1] - 1), 0.05)
-  expect_equal(o$p_detect_lm_730_3650[1], 0.6476852095, tolerance = 1e-7)
-  expect_equal(o$p_detect_lm_730_3650[n], 0.6442193184, tolerance = 1e-7)
-  expect_equal(o$EIR[n], 36.60322457, tolerance = 1e-7)
+  # The step really does move the age structure, or the test proves nothing.
+  # 3% rather than 5%: exponentially fitting the ageing rate made the structure
+  # itself more accurate, which shrank this transient from 6% to 4%.
+  expect_gt(abs(o$EIR[n] / o$EIR[1] - 1), 0.03)
+  expect_equal(o$p_detect_lm_730_3650[1], 0.6505047604, tolerance = 1e-7)
+  expect_equal(o$p_detect_lm_730_3650[n], 0.6478867027, tolerance = 1e-7)
+  expect_equal(o$EIR[n], 37.61827543, tolerance = 1e-7)
 })

@@ -366,16 +366,17 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
   n_age <- length(age_lower)
   age_days <- age_lower * 365
   width <- c(diff(age_days), Inf)
-  r_age <- 1 / width
-  r_age[n_age] <- 0
+  r_ce <- 1 / width; r_ce[n_age] <- 0   # malariaEquilibrium's own convention
   eta <- eqp[["eta"]]
   age_mid <- c((age_days[-n_age] + age_days[-1]) / 2, age_days[n_age])
   psi <- 1 - eqp[["rho"]] * exp(-age_mid / eqp[["a0"]])
-  # constant-hazard age structure = the malariaEquilibrium seed reference
+  # constant-hazard age structure = the malariaEquilibrium seed reference. This
+  # one keeps r = 1/width: it is not fleet's age structure, it is the structure
+  # the seed arrives on, and it has to match what malariaEquilibrium assumed.
   prop_ce <- numeric(n_age)
   for (i in seq_len(n_age)) {
-    if (i == 1) prop_ce[i] <- eta / (r_age[1] + eta)
-    else prop_ce[i] <- prop_ce[i - 1] * r_age[i - 1] / (r_age[i] + eta)
+    if (i == 1) prop_ce[i] <- eta / (r_ce[1] + eta)
+    else prop_ce[i] <- prop_ce[i - 1] * r_ce[i - 1] / (r_ce[i] + eta)
   }
   # age-specific mortality. Custom demography (set_demography) is time-varying:
   # mu_age is an interpolated [n_age, n_mut] series over deathrate_timesteps. The
@@ -416,6 +417,42 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
     mu_age_z <- cbind(mu_age_z, mu_age_z[, 1])
     mu_age_t <- c(mu_age_t[1], timesteps + 365)
   }
+  # AGEING RATE: exponentially fitted, not 1/width.
+  #
+  # A linear chain empties a band at r, so the chain's stationary ratio between
+  # consecutive bands is r / (r + mu). With the obvious r = 1/h that is
+  # 1 / (1 + mu*h), while the continuous truth is exp(-mu*h) -- and
+  # 1/(1+x) > exp(-x) for every x > 0, so the obvious rate ALWAYS decays too
+  # slowly and always leaves too many people alive at old ages. It is a
+  # first-order (donor-cell) discretisation of the McKendrick advection.
+  #
+  # Choosing instead
+  #     r = mu / (expm1(mu * h))
+  # makes that ratio exp(-mu*h) exactly, so the stationary age structure is the
+  # analytic band-integrated survival curve rather than an approximation to it.
+  # This is exponential fitting, the standard cure for a first-order advection
+  # scheme. It tends to 1/h as mu*h -> 0, so it is a no-op where bands are
+  # narrow -- 0.2% in the monthly groups -- and does its work in the wide ones,
+  # 11% in the 5-yearly section. Against 20 IBM replicates it took the worst
+  # band error from 7.4% to 1.3% and the population age structure from 9 of 11
+  # bands inside the replicate band to 11 of 11.
+  #
+  # r depends on mu, which reads oddly -- ageing should not depend on dying.
+  # It is not a biological rate: it is the coefficient that makes the DISCRETE
+  # scheme reproduce the CONTINUOUS solution, and that solution involves mu.
+  #
+  # Fitted at the baseline (t = 0) mortality. Under set_demography() with
+  # time-varying rates mu moves and this rate does not follow it, so the fit is
+  # exact at the seed and an improvement, not an identity, later. r_age is a
+  # constant in the odin model; making it time-varying would be the next step if
+  # a transient ever needs it.
+  mu0 <- mu_age
+  r_age <- c(mu0[-n_age] / expm1(mu0[-n_age] * width[-n_age]), 0)
+  # a zero hazard gives 0/0; the limit is 1/h
+  flat <- !is.finite(r_age) | mu0 * width <= 0
+  r_age[flat] <- r_ce[flat]
+  r_age[n_age] <- 0
+
   # equilibrium age structure under this mortality (McKendrick aging chain)
   prop <- numeric(n_age)
   prop[1] <- 1 / (r_age[1] + mu_age[1])

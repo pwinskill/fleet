@@ -1,3 +1,58 @@
+# fleet 0.0.0.9002
+
+One change, and it moves model output. The age-group ageing rate is now
+exponentially fitted, which corrects the population age structure every
+per-capita rate is divided by. Age-resolved numbers move a little everywhere and
+a lot in the oldest bands; an all-age run at equilibrium moves very little.
+
+## Numerics
+
+* **The ageing rate is exponentially fitted rather than `1/width`.** A linear
+  chain empties an age band at rate `r`, so the stationary ratio between
+  consecutive bands is `r / (r + mu)`. With the obvious `r = 1/h` that is
+  `1 / (1 + mu*h)`, where the continuous solution of the McKendrick equation is
+  `exp(-mu*h)` — and since `1/(1 + x) > exp(-x)` for every `x > 0`, the obvious
+  rate **always** decays too slowly and always leaves too many people alive at
+  old ages. It is a first-order donor-cell discretisation of an advection.
+
+  Setting `r = mu / expm1(mu*h)` makes that ratio exact, so the stationary age
+  structure is the analytic band-integrated survival curve rather than an
+  approximation to it. This is exponential fitting, the standard cure for a
+  first-order advection scheme.
+
+  It tends to `1/h` as `mu*h -> 0`, so it is nearly a no-op where bands are
+  narrow — 0.2% in the monthly groups — and does its work in the wide ones,
+  11.4% in the 5-yearly section. Against 20 `malariasimulation` replicates the
+  worst age-band error fell from 7.4% to 1.3%, and the population age structure
+  went from 9 of 11 bands inside the IBM's replicate band to 11 of 11.
+
+  `r` now depends on the death rate, which reads oddly: ageing should not depend
+  on dying. It is not a biological rate. It is the coefficient that makes the
+  discrete scheme reproduce the continuous solution, and that solution involves
+  `mu`.
+
+  It is fitted at the baseline (`t = 0`) mortality. Under `set_demography()`
+  with time-varying rates `mu` moves and this coefficient does not follow it, so
+  the fit is exact at the seed and an improvement, not an identity, afterwards.
+  Making `r_age` time-varying in the odin model would be the next step if a
+  transient ever needs it.
+
+  The seed is unaffected. `malariaEquilibrium` assumes `r = 1/width`, so the
+  constant-hazard reference the equilibrium arrives on keeps that convention and
+  is computed separately.
+
+## Testing
+
+* `tests/testthat/reference-values.csv` and `reference-interventions.csv` are
+  regenerated. Every pinned age-resolved output moved.
+
+* The time-varying-mortality test in `test-site-features.R` asserts a smaller
+  transient, 3% rather than 5%: a more accurate age structure shrank the
+  movement it is testing for from 6% to 4%. What the test asserts is unchanged.
+
+* `test-package.R` no longer hardcodes `r_age = 1/5y` for the 5-yearly section.
+  It asserts the exponential-fitting identity against the rate actually in use.
+
 # fleet 0.0.0.9001
 
 The package was renamed from `blink` to `fleet`. Otherwise this release is the
