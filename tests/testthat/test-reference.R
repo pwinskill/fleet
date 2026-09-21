@@ -155,7 +155,7 @@ reference_int_scenarios <- function() {
       rnm = matrix(0.24, 1, 1), gamman = 2.64 * 365),
 
     ## Fractional age weighting. 18:20 hits no age-group midpoint on the default
-    ## grid (above 14 the midpoints are 17, 22, 27, ...), so under the old rule
+    ## grid (above 14 the midpoints are 14.4, 15.8, 17.5, 19.2, 21.3, ...), so under the old rule
     ## this scenario was indistinguishable from no TBV.
     tbv_offgrid = malariasimulation::set_tbv(
       gp(), timesteps = NET_DAY, coverages = 0.9, ages = c(18, 19, 20)),

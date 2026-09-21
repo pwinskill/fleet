@@ -38,7 +38,7 @@ measured agreement behind those claims is a separate project,
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://pwinskill.github.io/fleet}
+  \item \url{https://pwinskill.github.io/fleet/}
   \item \url{https://github.com/pwinskill/fleet}
   \item Report bugs at \url{https://github.com/pwinskill/fleet/issues}
 }

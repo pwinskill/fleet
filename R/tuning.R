@@ -14,24 +14,27 @@
 #' Pass either this object or a plain named list of the fields you want to
 #' change; anything left out keeps its default.
 #'
-#' @param age_lower age-group lower edges in **years** (default graded grid:
-#'   monthly to 1 year, quarterly to 5, yearly to 15, then 5-yearly to an
-#'   absorbing top group). Must start at 0, increase strictly, and stay in years:
-#'   a top edge above 1000 is rejected as a grid supplied in days.
+#' @param age_lower age-group lower edges in **years**. The default is
+#'   [default_age_lower()], a 53-group grid log-spaced between pinned reporting
+#'   ages. Must start at 0, increase strictly, and stay in years: a top edge
+#'   above 1000 is rejected as a grid supplied in days.
 #'
-#'   The default grid is converged for prevalence and for clinical incidence
-#'   under 5 -- neither moves by more than 0.2 points against the IBM on any
-#'   finer grid tried -- but **not for severe disease or for adult clinical
-#'   incidence**. Against 20 IBM replicates at EIR 20, all-age severe incidence
-#'   goes from -2.8% on the default 52 groups to -2.3% (quarterly bands to 10 y,
-#'   71 groups), -0.9% (79 groups) and +0.2% (quarterly to 15 y and yearly to
-#'   40 y, 110 groups, 2.1x the run time), and adult clinical incidence in the
-#'   30-60 y bands from +14-16% to +6%. Both are Jensen error from averaging
-#'   the steep age dependence of `theta` and of adult immunity over yearly and
-#'   5-yearly bands, not model discrepancy, so a result that rests on severe
-#'   incidence or on adults should be checked on a finer grid than this. The
-#'   default is left as it is because every published comparison is stated on
-#'   it; changing it moves every number.
+#'   The default is **not** converged for severe disease or for adult clinical
+#'   incidence, and both carry a discretisation bias of the order of a few per
+#'   cent on it. That bias is removable: `fleet`'s own profile converges at
+#'   first order, so `default_age_lower(n_group = 105)` roughly halves it and
+#'   `n_group = 209` halves it again, at a proportionate cost in run time. A
+#'   result that rests on the *level* of severe incidence or on adult bands is
+#'   worth re-running on a finer grid to see how much of it is the grid.
+#'
+#'   What a finer grid will **not** do is close the remaining gap to the IBM.
+#'   That is the mean field itself -- one immunity value per stratum against a
+#'   spread of individual infection histories at the same age -- and it does not
+#'   shrink with group width. See the `age-profile-clinical` claim in
+#'   `fleetcheck` for the measurement.
+#'
+#'   The default is left where it is because every published comparison is
+#'   stated on it; changing it moves every number.
 #' @param n_eir,n_foim,n_eip Erlang-chain stage counts for the EIR lag, FOIM lag
 #'   and mosquito EIP. Larger values sharpen the (otherwise gamma-shaped) lags
 #'   toward the IBM's fixed delays; equilibrium is exact for any value.

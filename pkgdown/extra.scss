@@ -213,7 +213,7 @@ main a:focus {
 .navbar .navbar-brand .version,
 .navbar small,
 .navbar .nav-text,
-.navbar .dropdown-toggle,
+
 .navbar .navbar-toggler,
 .navbar .text-muted { color: var(--fl-nav-muted) !important; }
 .navbar .nav-link {
@@ -293,12 +293,26 @@ main :not(pre) > code {
 main a > code { color: inherit; background: transparent; padding: 0; }
 
 /* ---- Code blocks ------------------------------------------------------- */
+/* The wrapper is decorated, not both. pkgdown nests <pre> inside
+   div.sourceCode, so setting the fill, hairline and radius on both drew two
+   concentric borders a pixel apart -- and at narrow widths pkgdown gives the
+   inner one a negative margin, so the square-cornered box hung 11px past the
+   rounded one on each side. */
 main div.sourceCode,
 main pre {
   background-color: var(--fl-surface) !important;
   border: 1px solid var(--fl-border);
   border-radius: .5rem;
   box-shadow: none;
+}
+main div.sourceCode { overflow: hidden; }
+/* Stripped AFTER the rule above has set it, so the wrapper alone carries the
+   fill, the hairline and the radius. */
+main div.sourceCode > pre {
+  background: transparent !important;
+  border: 0;
+  border-radius: 0;
+  margin: 0;
 }
 main pre {
   padding: .9rem 1rem;

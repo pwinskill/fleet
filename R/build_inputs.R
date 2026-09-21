@@ -14,22 +14,32 @@ AGE_ANCHORS <- c(0, 1, 2, 3, 5, 7, 10, 15, 20, 30, 40, 60)
 #'
 #' Lower edges (in years) of the age groups: fine in infancy, where immunity and
 #' maternal dynamics move fast, and coarse in adulthood. Group edges are pinned
-#' at the conventional reporting boundaries (`r paste(AGE_ANCHORS, collapse =
-#' ", ")` years), and the groups between two anchors are of equal width, with
-#' the budget of groups spread across the anchors in proportion to **log** width.
+#' at the conventional reporting boundaries -- 0, 1, 2, 3, 5, 7, 10, 15, 20, 30,
+#' 40, 60 years -- and the groups between two anchors are of equal width, with
+#' the budget of groups spread across the anchors in proportion to the width in
+#' `log(1 + age)`. Each interval gets at least one group; the remainder is
+#' shared out largest-remainder.
 #'
-#' Log width rather than width, because what the grid has to resolve is the rise
-#' of immunity with age, and that is far closer to a function of log age than of
-#' age. An equal-width grid spends most of its groups above 20, where nothing
-#' moves, and is the worst of the options measured: against the same model run
-#' to grid convergence it is twice as far off as this one at the same cost.
+#' Log rather than linear width, because what the grid has to resolve is the
+#' rise of immunity with age, and that is far closer to a function of log age
+#' than of age. (Of `log(1 + age)` rather than `log(age)`, which is infinite
+#' over the first year. The offset is in years, so the allocation is not
+#' scale-free.) An equal-width grid at the same cost is four times as far from
+#' the converged solution as this one, so the grading matters more than the
+#' count.
 #'
 #' This replaced a grid of fixed monthly / quarterly / yearly / 5-yearly
-#' sections. At the same number of groups the new one halves the discretisation
-#' error -- the largest departure from the grid-converged solution falls from
-#' 12.0% to 6.7%, and the rms across age bands from 4.8% to 3.0% -- for a few per
-#' cent of extra runtime. The old grid over-resolved infancy (12 of its 52 groups
-#' in the first year, against 7 here) and under-resolved everything above 15.
+#' sections, halving the discretisation error at the same number of groups: the
+#' largest departure across age bands falls from 10.7% to 4.5% and the rms from
+#' 5.4% to 3.2%. The old grid over-resolved infancy (12 of its 52 groups in the
+#' first year, against 7 here) and under-resolved everything above 15.
+#'
+#' Refining removes that error: the departure from the converged profile halves
+#' with each doubling of `n_group`, first order. What refinement does **not**
+#' remove is the mean-field approximation itself -- one immunity value per
+#' stratum, where the IBM holds a spread of infection histories at the same age
+#' -- so a persistent difference from the IBM is not evidence that the grid is
+#' too coarse. `validations/age-grid/run.R` in `fleetcheck` measures both.
 #'
 #' Band aggregation weights each age group by the exact fraction of its own width
 #' that falls inside the band, so a band edge landing inside a group (as one
@@ -59,13 +69,20 @@ default_age_lower <- function(max_age = 80, n_group = 53L) {
          "the grid has too few anchor ages left to resolve the ages over which ",
          "immunity develops.", call. = FALSE)
   }
-  anchors <- c(AGE_ANCHORS[AGE_ANCHORS < max_age], max_age)
+  # An anchor a hair below `max_age` leaves a final band of microseconds, whose
+  # ageing rate is then thousands per day against a grid whose next-narrowest is
+  # 52 days -- a stiff system from a typo, accepted by every check downstream.
+  # Absorb an anchor that close instead.
+  anchors <- c(AGE_ANCHORS[AGE_ANCHORS < max_age - 1 / 365], max_age)
   n_iv <- length(anchors) - 1L
   if (length(n_group) != 1L || !is.numeric(n_group) || !is.finite(n_group) ||
-      n_group < n_iv + 1L) {
-    stop("`n_group` must be a single finite number >= ", n_iv + 1L,
-         " for max_age = ", max_age, ": one group per interval between the ",
-         "anchor ages, plus the absorbing top group.", call. = FALSE)
+      n_group != round(n_group) || n_group > 1e6 || n_group < n_iv + 1L) {
+    stop("`n_group` must be a single whole number between ", n_iv + 1L,
+         " and 1e6 for max_age = ", max_age, ": one group per interval between ",
+         "the anchor ages, plus the absorbing top group. A fractional value was ",
+         "silently truncated before this check existed, and one above the ",
+         "integer range died inside as.integer() saying nothing about age grids.",
+         call. = FALSE)
   }
   # one group per interval, then the remainder shared out by log width. Largest
   # remainder rather than rounding, so the groups allocated always sum to the
@@ -77,9 +94,18 @@ default_age_lower <- function(max_age = 80, n_group = 53L) {
     share <- (log1p(hi) - log1p(lo)) / sum(log1p(hi) - log1p(lo)) * spare
     cnt <- cnt + as.integer(floor(share))
     short <- spare - sum(as.integer(floor(share)))
-    if (short > 0L)
-      cnt[order(share - floor(share), decreasing = TRUE)[seq_len(short)]] <-
-        cnt[order(share - floor(share), decreasing = TRUE)[seq_len(short)]] + 1L
+    if (short > 0L) {
+      # Rounded before ordering, because several intervals have mathematically
+      # IDENTICAL log widths -- log1p(3)-log1p(2) and log1p(7)-log1p(5) are the
+      # same number -- and their computed remainders differ only in the last
+      # bits. Ordering on that noise let a different libm return a different
+      # grid, silently, for roughly one n_group in twelve. Rounding makes true
+      # ties exact so order()'s stable index tie-break decides them, which
+      # favours the younger interval and is reproducible everywhere.
+      top <- order(round(share - floor(share), 12), seq_len(n_iv),
+                   decreasing = c(TRUE, FALSE), method = "radix")[seq_len(short)]
+      cnt[top] <- cnt[top] + 1L
+    }
   }
   # equal width within each interval; `max_age` closes the last one and is the
   # lower edge of the absorbing group
@@ -479,8 +505,8 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
   # analytic band-integrated survival curve rather than an approximation to it.
   # This is exponential fitting, the standard cure for a first-order advection
   # scheme. It tends to 1/h as mu*h -> 0, so it is a no-op where bands are
-  # narrow -- 0.2% in the monthly groups -- and does its work in the wide ones,
-  # 11% in the 5-yearly section. Against 20 IBM replicates it took the worst
+  # narrow -- 0.3% in the narrowest bands -- and does its work in the wide ones,
+  # 11% in the 5-year bands above 60. Against 20 IBM replicates it took the worst
   # band error from 7.4% to 1.3% and the population age structure from 9 of 11
   # bands inside the replicate band to 11 of 11.
   #

@@ -19,16 +19,23 @@ Together they halve the discretisation error at essentially the same cost.
   grid spent 12 of its 52 groups in the first year of life and 4 on the whole of
   40–60; this one spends 7 and 5.
 
-  Measured against the same model run to grid convergence, at the same number of
-  groups: the largest departure across age bands falls from **12.0% to 6.7%**
-  and the rms from **4.8% to 3.0%**, for a few per cent of extra runtime. An
-  equal-width grid at the same cost is twice as far off as the old one, so the
-  grading matters as much as the count.
+  Measured against `fleet` run to grid convergence, at the same number of
+  groups: the largest departure across age bands falls from **10.7% to 4.5%**
+  and the rms from **5.4% to 3.2%**, for a few per cent of extra runtime. An
+  equal-width grid at the same cost is 13.0% rms — 2.4× the old grid and 4× this
+  one — so the grading matters more than the count.
+  `validations/age-grid/run.R` in `fleetcheck` reproduces all of it.
 
   This does **not** close the gap to `malariasimulation`'s age profile of
-  clinical incidence. That gap converges to a few per cent in young children as
-  the grid is refined, and is the mean-field approximation rather than
-  discretisation; refining the grid alone does not remove it.
+  clinical incidence, and refining the grid further will not either. The two
+  errors behave differently, which is the whole point of measuring them apart:
+  `fleet`'s departure from its own converged profile falls 4.5% → 2.3% → 1.1% →
+  0.6% as the group count doubles (a ratio of 2.0, clean first order), while its
+  departure from the IBM falls 7.7% → 5.3% → 4.6% → 4.3% and levels off.
+  Discretisation is removable; what is left is the mean-field approximation —
+  one immunity value per stratum against a spread of individual infection
+  histories at the same age. That spread is between people, not across an age
+  group, so no grid touches it.
 
 * **`default_age_lower()` gained `n_group`** (default 53). Refining the whole
   grid while keeping its shape is now `default_age_lower(n_group = 105)` rather
@@ -56,8 +63,8 @@ Together they halve the discretisation error at essentially the same cost.
   first-order advection scheme.
 
   It tends to `1/h` as `mu*h -> 0`, so it is nearly a no-op where bands are
-  narrow — 0.2% in the monthly groups — and does its work in the wide ones,
-  11.4% in the 5-yearly section. Against 20 `malariasimulation` replicates the
+  narrow — 0.3% in the narrowest bands — and does its work in the wide ones,
+  11.4% in the 5-year bands above 60. Against 20 `malariasimulation` replicates the
   worst age-band error fell from 7.4% to 1.3%, and the population age structure
   went from 9 of 11 bands inside the IBM's replicate band to 11 of 11.
 
