@@ -1,90 +1,79 @@
 /* =========================================================================
    fleet pkgdown theme
 
-   The palette is the logo's, measured rather than matched by eye: clustering
-   the hexagon's interior in CIE Lab puts a third of it on #1c1336, a deep
-   violet-black, and finds #c345e9 -- the rim -- as the most chromatic colour
-   in the image at C* 92. Those two anchor everything here. The rest of the
-   logo (neon pink, amber, a deep green) is left in the logo: a page that
-   repeats all six reads as a swatch book, and the one thing a documentation
-   site cannot afford is to be more interesting than its content.
+   fleetcheck's theme, colour and all. The two sites are one project and now
+   read as one: the same column arithmetic, type scale, hairline navbar,
+   index-style contents rail, focus ring, and sizing of code and tables, over
+   the same teal.
 
-   So: violet carries identity, neutrals carry the page, and #c345e9 appears
-   only where something is active or selected. No gradients on text, no
-   coloured rules under headings, no drop shadows -- hairlines and space do
-   that work instead.
+   This site used to carry a violet measured from the logo, a geometric display
+   face, and tinted panels with coloured rules. All of it has gone. The logo
+   stays, and it is the only place fleet's own colour appears -- which is the
+   point of a logo, and means the chrome no longer has to compete with it.
 
-   Every colour is a custom property redefined under [data-bs-theme="dark"],
-   so both modes are one design rather than a light one and its inversion.
-   All 18 text/background pairs were checked against WCAG AA before use; the
-   weakest is the accent on white at 3.93:1, and it is never used for text.
+   #0e7490 is 4.98:1 on white and 5.9:1 on the light surface, so it can carry
+   text as well as marks. It also stays clear of both series colours in the
+   comparison figures (#E5533F for the IBM, #4338CA for fleet), so nothing in
+   the chrome can be mistaken for a model.
+
+   Nothing here depends on colour to carry meaning. Hairlines and space do the
+   work that tinted panels, drop shadows and coloured rules used to.
    ========================================================================= */
 
 /* ---- Palette (Sass) ---------------------------------------------------- */
-/* Measured from man/figures/logo.png; see the header. */
-$fl-ink:          #1c1336;   // 32.7% of the logo interior
-$fl-accent:       #c345e9;   // the rim, C* 92
-$fl-violet:       #6d28d9;
-$fl-violet-deep:  #4c1d95;
-$fl-violet-soft:  #c4a7fb;
-$fl-violet-pale:  #e6d6ff;
+$fl-accent:      #0e7490;   // cyan-800
+$fl-accent-deep: #155e75;
+$fl-accent-soft: #67e8f9;
+$fl-accent-pale: #a5f3fc;
 
 /* ---- Theme-aware custom properties ------------------------------------- */
 :root {
   --fl-accent:      #{$fl-accent};
 
-  --bs-body-color:  #2b2438;
-  --fl-heading:     #17112b;
-  --fl-muted:       #635d70;
-  --fl-link:        #{$fl-violet};
-  --fl-link-hover:  #{$fl-violet-deep};
+  --bs-body-color:  #1f2937;
+  --fl-heading:     #0f172a;
+  --fl-muted:       #5b6673;   /* 4.71:1 on white */
+  --fl-link:        #{$fl-accent};
+  --fl-link-hover:  #{$fl-accent-deep};
 
-  --fl-surface:     #f5f3f9;
-  --fl-border:      #e6e2ee;
-  --fl-code:        #a21caf;
+  --fl-surface:     #f1f5f9;
+  --fl-border:      #e2e8f0;
+  --fl-code:        #0f766e;
 
-  /* The bar follows the theme rather than staying dark in both. A dark bar
-     over a white page anchors the logo nicely but weighs the whole thing
-     down, and this site is read in light mode. */
   --fl-nav-bg:      #ffffff;
-  --fl-nav-fg:      #2b2438;
-  --fl-nav-muted:   #635d70;
-  --fl-nav-hover:   #{$fl-violet};
-  --fl-nav-border:  #e6e2ee;
-  --fl-nav-input:   #f5f3f9;
-  --fl-nav-input-bd: #e0dbe9;
-  --fl-nav-ph:      #6f6880;   /* 4.81:1 on the input; #7d768c missed AA at 3.94 */
-
-  --fl-shadow:      0 1px 2px rgba(23, 17, 43, .04);
+  --fl-nav-fg:      #1f2937;
+  --fl-nav-muted:   #5b6673;
+  --fl-nav-hover:   #{$fl-accent};
+  --fl-nav-border:  #e2e8f0;
+  --fl-nav-input:   #f1f5f9;
+  --fl-nav-input-bd: #dbe2ea;
+  --fl-nav-ph:      #666f7d;
 }
 
 [data-bs-theme="dark"] {
-  --bs-body-bg:     #17112b;
-  --bs-body-color:  #d9d4e6;
-  --fl-heading:     #f4f1fb;
-  --fl-muted:       #a49cb6;
-  --fl-link:        #{$fl-violet-soft};
-  --fl-link-hover:  #{$fl-violet-pale};
+  --bs-body-bg:     #0f172a;
+  --bs-body-color:  #cbd5e1;
+  --fl-heading:     #f1f5f9;
+  --fl-muted:       #94a3b8;
+  --fl-link:        #{$fl-accent-soft};
+  --fl-link-hover:  #{$fl-accent-pale};
 
-  --fl-surface:     #201838;
-  --fl-border:      #332845;
-  --fl-code:        #f2a7d5;
+  --fl-surface:     #1e293b;
+  --fl-border:      #334155;
+  --fl-code:        #5eead4;
 
-  --fl-nav-bg:      #1c1336;
+  --fl-nav-bg:      #0f172a;
   --fl-nav-fg:      #ffffff;
   --fl-nav-muted:   rgba(255, 255, 255, .78);
-  --fl-nav-hover:   #d8b4fe;
+  --fl-nav-hover:   #{$fl-accent-soft};
   --fl-nav-border:  rgba(255, 255, 255, .09);
   --fl-nav-input:   rgba(255, 255, 255, .06);
   --fl-nav-input-bd: rgba(255, 255, 255, .13);
   --fl-nav-ph:      rgba(255, 255, 255, .45);
-
-  --fl-shadow:      0 1px 2px rgba(0, 0, 0, .3);
 }
 
-/* Bootstrap draws borders, muted text and table rules from its own variables,
-   so they are pointed at the same two values rather than left on the defaults
-   -- otherwise every hairline on the page is a slightly different grey. */
+/* Point Bootstrap's own border, muted and heading variables at the same values,
+   or every hairline on the page is a slightly different grey. */
 :root,
 [data-bs-theme="dark"] {
   --bs-border-color: var(--fl-border);
@@ -93,9 +82,7 @@ $fl-violet-pale:  #e6d6ff;
 }
 
 /* ---- Motion ------------------------------------------------------------ */
-html {
-  scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after {
@@ -104,106 +91,32 @@ html {
   }
 }
 
-/* ---- Page layout: a leaner table of contents --------------------------- */
-/* pkgdown caps the content column at 50rem but sizes the right-hand column as
-   a flat `col-md-3` -- a quarter of whatever the container happens to be. The
-   two do not agree above 1200px, and the wider the window the further apart
-   they drift. In a 1440px window: a 1320px container holding 800px of text, an
-   80px gutter, a 330px contents list, and 110px of space that nothing claims.
-   520px of right-hand side against 800px of content, which is the "menu takes
-   a third of the page" this fixes.
-
-   Both halves are the same bug -- a container sized independently of what goes
-   in it -- so the fix is to size it from its contents: 50rem of text, a 5rem
-   gutter, 15rem of contents list, 70rem in total. Then nothing is left over.
-   Capping the container rather than centring the row inside it is what keeps
-   the text aligned with the navbar brand on the left and the contents list
-   aligned with the navbar links on the right; centring the row balances the
-   page but pulls both away from the navbar above them.
-
-   Three details, each the reason a simpler version of this breaks:
-
-   * the contents list is capped with `max-width`, not given a width, so
-     Bootstrap's 25% still governs at md and lg, where the container is 720 or
-     960px and there is no slack to hand back. A flat 15rem at md would overrun
-     the row and wrap the sidebar underneath the text.
-   * `.row > main` becomes shrinkable. The three widths add up to the container
-     exactly, and an exact fit in a wrapping flex row is a cliff: one stray
-     pixel -- a scrollbar, a rounding difference -- and the sidebar drops below
-     the article. Letting main give the pixel back instead turns the cliff into
-     a slope.
-   * the gutter is moved down to xl. pkgdown adds it at xxl only, where it was
-     compensating for a container that was already too wide. Here it is part of
-     the arithmetic, so it has to hold wherever the cap does. */
+/* ---- Page layout ------------------------------------------------------- */
+/* Size the container from its contents rather than letting a 25% sidebar take
+   a quarter of whatever the window happens to be. 50rem of text + 5rem gutter
+   + 15rem of contents = 70rem, and above 1600px 64 + 6 + 18 = 88, so nothing
+   is left over at either size. The three details that make a simpler version
+   break are the max-width (not width) on the aside, the shrinkable main, and
+   the gutter moved down to xl. */
 @include media-breakpoint-up(md) {
-  .row > aside {
-    max-width: 15rem;
-  }
+  .row > aside { max-width: 15rem; }
 }
-
 @include media-breakpoint-up(xl) {
-  .container {
-    max-width: 70rem;
-  }
-  .row > main {
-    flex: 1 1 auto;
-  }
-  .row > aside {
-    margin-left: 5rem;
-  }
+  .container { max-width: 70rem; }
+  .row > main { flex: 1 1 auto; }
+  .row > aside { margin-left: 5rem; }
 }
-
-/* Above 1600px that 70rem cap stops reading as a measured column and starts
-   reading as one stranded in the middle of the screen: on a 1900px display it
-   leaves 400px of nothing down each side, 42% of the glass. Bootstrap stops at
-   xxl (1400px), so this is a raw query rather than a breakpoint mixin.
-
-   The extra goes to main, and main alone. Prose stays capped at its measure, so
-   what actually grows is the material that was genuinely cramped: the
-   multi-panel comparison figures and the wide parameter tables, from 776px to
-   about 1000. Widening the prose instead would push it past 80 characters a
-   line, which is the thing the cap exists to prevent.
-
-   64 + 6 + 18 = 88, so again nothing is left over. */
 @media (min-width: 1600px) {
-  .container {
-    max-width: 88rem;
-  }
-  .row > main {
-    max-width: 64rem;
-  }
-  .row > aside {
-    max-width: 18rem;
-    margin-left: 6rem;
-  }
+  .container { max-width: 88rem; }
+  .row > main { max-width: 64rem; }
+  .row > aside { max-width: 18rem; margin-left: 6rem; }
 }
 
 /* ---- Type -------------------------------------------------------------- */
-/* Tight tracking on display sizes and looser tracking on small caps is most
-   of what separates a considered page from a default one. */
 main {
   font-size: 1.0625rem;
   line-height: 1.7;
 }
-
-/* Measure: there isn't one. Prose, figures, tables and code all take the full
-   content column, so the page has a single left and right edge the whole way
-   down rather than a text column inset inside a wider one.
-
-   That is a deliberate choice against the usual typographic advice. The column
-   is 87 characters a line at 1440px and about 112 above 1600px, where 65-75 is
-   the conventional target for continuous prose. The judgement -- the author's,
-   made looking at the rendered pages -- is that a ragged inner edge, with
-   paragraphs stopping well short of the tables beside them, cost more here than
-   the long line does: this is reference material that is scanned and searched
-   more often than it is read start to finish.
-
-   Two earlier revisions capped it, at 38rem and then 50rem. The first was worse
-   than useless: it was set from a reading of 102 characters taken in Nunito Sans
-   at 16px, before the type changed in the same pass. Inter at 17px sets about
-   24% wider per character, so the column had already come down to 87 on its own
-   and the cap was correcting a number that no longer described the page. If
-   anyone reinstates a cap, measure the current font first. */
 main h1, main h2, main h3, main h4 {
   color: var(--fl-heading);
   font-weight: 600;
@@ -214,6 +127,15 @@ main h2 { font-size: 1.45rem; margin-top: 2.4rem; }
 main h3 { font-size: 1.15rem; margin-top: 1.8rem; }
 main h4 { font-size: 1rem; }
 main p, main li { text-wrap: pretty; }
+
+/* Function names in headings are identifiers, so they keep the mono face
+   rather than being set in the heading face at heading size. */
+main h1 code, main h2 code, main h3 code {
+  font-size: .82em;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
 
 /* ---- Links ------------------------------------------------------------- */
 main a {
@@ -229,62 +151,52 @@ main a:focus {
   text-decoration-color: currentColor;
 }
 
-/* A visible focus ring everywhere, in the accent, because the default one is
-   Bootstrap blue and belongs to a different site. */
+/* A visible focus ring on everything focusable, in the accent. Bootstrap's own
+   is blue and belongs to a different site; more to the point, the navbar search
+   box and the hamburger toggler were reachable by keyboard with no visible ring
+   at all, so a keyboard reader could not see where they were. */
 :focus-visible {
   outline: 2px solid var(--fl-accent);
   outline-offset: 2px;
   border-radius: 2px;
 }
-
-/* ---- Home hero --------------------------------------------------------- */
-.template-home main > h1:first-of-type,
-.template-home .page-header h1 {
-  font-size: clamp(2.6rem, 6vw, 4rem);
-  line-height: 1.02;
-  letter-spacing: -.035em;
-  font-weight: 600;
-  color: var(--fl-heading);
+.navbar .form-control:focus-visible,
+.navbar .navbar-toggler:focus-visible,
+.navbar .nav-link:focus-visible,
+#toc a:focus-visible {
+  outline: 2px solid var(--fl-accent);
+  outline-offset: 2px;
 }
-.template-home main > p:first-of-type,
-.template-home .lead {
-  font-size: 1.15rem;
-  line-height: 1.6;
-  color: var(--fl-muted);
-  max-width: 46ch;
-}
+/* Bootstrap's toggler adds its own blue box-shadow on focus, which sits under
+   the ring and reads as a second, contradicting highlight. */
+.navbar .navbar-toggler:focus { box-shadow: none; }
 
-/* ---- Home page logo ---------------------------------------------------- */
-/* The README gives the logo `width="30%"`, which GitHub draws at about 270px
-   against its content column. pkgdown renders that same README with the logo
-   fixed at 120px, so the front page of the site was showing it at under half
-   the size of the front page of the repository. Matched here: 270px against
-   the 800px content column is the same third of the width, so the two front
-   pages now agree.
-
-   Home page only: elsewhere `img.logo` is a marker beside the page title, and
-   270px of hexagon next to every article heading would be shouting. The
-   percentage cap is for narrow windows, where pkgdown's own rule would have
-   dropped it to 80px but does not, because `.template-home img.logo` outranks
-   it -- without the cap the logo eats most of the width of a phone. It is 36%
-   rather than 34% so that it stays a cap: percentages resolve against the
-   content box of main, 776px rather than 800px, and 34% of that is 264px,
-   which quietly beat the 270px it was meant to be defending. */
-.template-home img.logo {
-  width: 270px;
-  max-width: 36%;
-}
-
-/* ---- Page headers (reference / articles) ------------------------------- */
+/* ---- Page headers ------------------------------------------------------ */
 .page-header {
   border-bottom: 1px solid var(--fl-border);
   padding-bottom: .9rem;
   margin-bottom: 1.6rem;
 }
 
+/* ---- The logo ---------------------------------------------------------- */
+/* Kept, and the only thing on the page that is allowed to be loud.
+   The README gives it `width="30%"`, which GitHub draws at about 270px against
+   its content column; pkgdown renders that same README with the logo fixed at
+   120px, so the front page of the site showed it at under half the size of the
+   front page of the repository. Matched here.
+   Home page only. Elsewhere it is a marker beside the page title, and 270px of
+   hexagon next to every article heading would be shouting. The percentage cap
+   is for narrow windows: without it the logo eats most of the width of a phone,
+   because `.template-home img.logo` outranks pkgdown's own 80px rule. It is 36%
+   rather than 34% so that it stays a cap -- percentages resolve against the
+   content box of main, 776px rather than 800px, and 34% of that is 264px, which
+   quietly beat the 270px it was meant to be defending. */
+.template-home img.logo {
+  width: 270px;
+  max-width: 36%;
+}
+
 /* ---- Navbar ------------------------------------------------------------ */
-/* Flat and theme-following, held to the page by a hairline rather than a
-   shadow. In dark mode it takes the logo ground, #1c1336, exactly. */
 .navbar {
   background-color: var(--fl-nav-bg) !important;
   background-image: none !important;
@@ -296,11 +208,7 @@ main a:focus {
   font-weight: 600;
   letter-spacing: -.015em;
 }
-.navbar .nav-link,
-.navbar .navbar-toggler-icon { color: var(--fl-nav-fg); }
-/* Secondary navbar text (version tag, muted labels, dropdown carets) must also
-   stay legible on the dark bar -- the Bootstrap defaults are dark and fail
-   WCAG AA here. Excludes .form-control, which has dark text on a light input. */
+.navbar .nav-link { color: var(--fl-nav-fg); }
 .navbar .navbar-brand small,
 .navbar .navbar-brand .version,
 .navbar small,
@@ -312,15 +220,10 @@ main a:focus {
   position: relative;
   font-weight: 500;
   transition: color .15s ease;
-  /* Two-word items ("Get started", "Using fleet well") wrap mid-label when the
-     search box squeezes the row, which doubles the height of the bar and reads
-     as a mistake. Below lg the whole thing collapses to the toggler anyway. */
-  white-space: nowrap;
+  white-space: nowrap;   /* "Using fleet well" must not wrap mid-label */
 }
 .navbar .nav-link:hover,
 .navbar .nav-link:focus { color: var(--fl-nav-hover); }
-/* One accent bar, and it only ever marks where you are or where the pointer
-   is. It is the single place the logo's rim colour appears in the chrome. */
 .navbar .nav-link::after {
   content: "";
   position: absolute;
@@ -340,21 +243,13 @@ main a:focus {
   color: var(--fl-nav-fg);
 }
 .navbar .form-control::placeholder { color: var(--fl-nav-ph); }
-.navbar .form-control:focus {
-  border-color: var(--fl-accent);
-  box-shadow: none;
-}
+.navbar .form-control:focus { border-color: var(--fl-accent); box-shadow: none; }
 .navbar .navbar-toggler { border-color: var(--fl-nav-border); }
-/* Bootstrap bakes the stroke colour into the toggler icon as a data URI, so
-   the one generated for a light navbar is invisible on the dark one. */
 [data-bs-theme="dark"] .navbar-toggler-icon {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
 /* ---- Table of contents ------------------------------------------------- */
-/* pkgdown fills the active item with a grey block. A 2px accent rule in the
-   margin says the same thing and leaves the rail looking like an index rather
-   than a set of buttons. */
 #toc > .nav a.nav-link {
   color: var(--fl-muted);
   border-left: 2px solid transparent;
@@ -376,7 +271,9 @@ main a:focus {
   border-left-color: var(--fl-accent);
   font-weight: 500;
 }
-#toc h2 {
+#toc h2,
+aside h2,
+.template-home aside .h2 {
   font-size: .75rem;
   font-weight: 600;
   letter-spacing: .08em;
@@ -386,9 +283,6 @@ main a:focus {
 }
 
 /* ---- Inline code ------------------------------------------------------- */
-/* Tint only, no border. This prose runs four or five code spans to the
-   paragraph, and outlining every one of them turns a page of text into a page
-   of little boxes. */
 main :not(pre) > code {
   color: var(--fl-code);
   background: var(--fl-surface);
@@ -396,12 +290,9 @@ main :not(pre) > code {
   border-radius: .3rem;
   font-size: .855em;
 }
-/* Linked code (e.g. cross-references) reads as a link, not plain code */
 main a > code { color: inherit; background: transparent; padding: 0; }
 
 /* ---- Code blocks ------------------------------------------------------- */
-/* The highlight theme supplies token colours; the surface comes from here so
-   that code blocks sit in the same material as everything else on the page. */
 main div.sourceCode,
 main pre {
   background-color: var(--fl-surface) !important;
@@ -415,111 +306,58 @@ main pre {
   line-height: 1.6;
 }
 
-/* ---- Callouts / blockquotes / alerts ----------------------------------- */
+/* ---- Callouts ---------------------------------------------------------- */
+/* fleet's articles open with a work-in-progress warning, and several more sit
+   inside them. As tinted panels with a coloured rule they were the loudest
+   thing on a page whose content is prose -- the warning read as decoration
+   rather than as a warning. A hairline and an indent say the same thing and
+   let the words carry it. */
 main blockquote,
 main .alert {
-  border: 1px solid var(--fl-border);
-  border-left: 2px solid var(--fl-accent);
-  background: var(--fl-surface);
-  border-radius: .5rem;
-  padding: .9rem 1.1rem;
+  border: 0;
+  border-left: 2px solid var(--fl-border);
+  background: transparent;
+  border-radius: 0;
+  padding: .1rem 0 .1rem 1.1rem;
+  color: var(--fl-muted);
 }
 main blockquote > :last-child,
 main .alert > :last-child { margin-bottom: 0; }
 
-/* ---- Cards (home sidebar, layouts) ------------------------------------- */
-.card {
-  background: transparent;
-  border: 1px solid var(--fl-border);
-  border-radius: .5rem;
-  box-shadow: var(--fl-shadow);
-  transition: border-color .15s ease;
-}
-.card:hover { border-color: color-mix(in srgb, var(--fl-accent) 40%, var(--fl-border)); }
-
-/* ---- Buttons ----------------------------------------------------------- */
-.btn {
-  font-weight: 500;
-  letter-spacing: -.005em;
-  transition: background-color .15s ease, border-color .15s ease, color .15s ease;
-}
-.btn-primary {
-  background-color: var(--fl-link);
-  border-color: var(--fl-link);
-  background-image: none;
-  color: #fff;
-}
-.btn-primary:hover,
-.btn-primary:focus {
-  background-color: var(--fl-link-hover);
-  border-color: var(--fl-link-hover);
-  color: #fff;
-}
-.btn-outline-primary {
-  border-color: var(--fl-border);
-  color: var(--fl-link);
-}
-.btn-outline-primary:hover {
-  background-color: var(--fl-surface);
-  border-color: var(--fl-link);
-  color: var(--fl-link);
-}
-
-/* ---- Reference index --------------------------------------------------- */
-.ref-index td:first-child code a,
-.template-reference-index .ref-index .icon + a { font-weight: 600; }
-
-/* ---- Home sidebar ------------------------------------------------------ */
-.template-home aside .h2,
-.template-home aside h2,
-aside h2 {
-  font-size: .75rem;
-  font-weight: 600;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--fl-muted);
-}
-
 /* ---- Tables ------------------------------------------------------------ */
-main table.table thead th {
+main table.table thead th,
+main table thead th {
   background: var(--fl-surface);
   border-bottom: 1px solid var(--fl-border);
   font-weight: 600;
   font-size: .9em;
   letter-spacing: .01em;
 }
-
 /* The parameter-support matrix in vignette("model") has some genuinely wide
-   rows. Markdown tables get no responsive wrapper from pkgdown, so without this
-   they push the whole page sideways instead of scrolling within the column.
-   `display: block` is what makes overflow-x apply to a table element. */
+   rows, and markdown tables get no responsive wrapper from pkgdown, so without
+   this they push the whole page sideways instead of scrolling within the
+   column. `display: block` is what makes overflow-x apply to a table. */
 main table {
   display: block;
   overflow-x: auto;
   max-width: 100%;
   font-size: .925rem;
 }
+main table > thead > tr > th,
+main table > tbody > tr > td { vertical-align: top; }
 
 /* ---- Figures ----------------------------------------------------------- */
 main img {
   max-width: 100%;
   height: auto;
 }
+figure, main p > img { margin-block: 1.4rem; }
 
-/* The generated figures are opaque-white PNGs with black linework, so in dark
-   mode they land as a bright slab on a dark page. Making them transparent is
-   the wrong fix (every arrow and label is black and would vanish); instead,
-   frame them so the white reads as deliberate paper.
-
-   Scoped to LOCAL images. Without the [src^="http"] exclusion this also caught
-   every remote badge, wrapping the shields.io ones in a white slab while the
-   GitHub Actions ones escaped purely because their URLs happen to end in
-   ".svg" -- three badges in a white box beside three without, which is what it
-   looked like. Badges bring their own background and want no framing.
-
-   The hex logo is excluded for the same reason as the badges: it is a local PNG
-   with transparent corners, so framing it puts a white rounded rectangle behind
-   a shape whose whole point is not to be rectangular. */
+/* The generated diagrams are opaque-white PNGs with dark linework, so in dark
+   mode they land as a bright slab. Framing them makes the white read as paper.
+   Local images only: remote badges bring their own background, and the logo is
+   a local PNG with transparent corners, so framing it would put a white
+   rounded rectangle behind a shape whose whole point is not to be one. */
 [data-bs-theme="dark"] main img:not([src$=".svg"]):not([src^="http"]):not([src$="logo.png"]) {
   background: #fff;
   padding: .75rem;
@@ -548,4 +386,4 @@ footer {
 }
 
 /* ---- Text selection ---------------------------------------------------- */
-::selection { background: color-mix(in srgb, var(--fl-accent) 28%, transparent); }
+::selection { background: color-mix(in srgb, var(--fl-accent) 26%, transparent); }
