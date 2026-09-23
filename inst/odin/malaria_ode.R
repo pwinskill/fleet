@@ -549,9 +549,16 @@ dim(r_tot_v, hv, sh_v) <- c(n_age_v, n_het_v, n_hyp)
 ## whole-day rate the falciparum model uses; S has no progression, so its
 ## infection probability is 1 - exp(-hv). U's progression rate depends on IAA,
 ## so U's two probabilities are taken per node.
-pLMn[, , , ] <- philm_min + (philm_max - philm_min) / (1 + (xA[i, j, k, l] / alm50)^klm)
-pDn[, , , ] <- phi0_v * (phi1_v + (1 - phi1_v) / (1 + (xC[i, j, k, l] / ic0_v)^kc_v))
-rUn[, , , ] <- 1 / (dpcr_min + (dpcr_max - dpcr_min) / (1 + (xA[i, j, k, l] / apcr50)^kpcr))
+# The three Hill curves as exp(k (log x - log x50)) rather than (x / x50)^k:
+# the same function, but the two curves of IAA share one log, and a pow() is a
+# log and an exp, so this saves a log per node -- a tenth of a vivax run. x is
+# never negative (the means are clamped), and log(0) = -Inf gives exp() = 0,
+# the value pow(0, k) has.
+lxA[, , , ] <- log(xA[i, j, k, l])
+lxC[, , , ] <- log(xC[i, j, k, l])
+pLMn[, , , ] <- philm_min + (philm_max - philm_min) / (1 + exp(klm * (lxA[i, j, k, l] - l_alm50)))
+pDn[, , , ] <- phi0_v * (phi1_v + (1 - phi1_v) / (1 + exp(kc_v * (lxC[i, j, k, l] - l_ic0_v))))
+rUn[, , , ] <- 1 / (dpcr_min + (dpcr_max - dpcr_min) / (1 + exp(kpcr * (lxA[i, j, k, l] - l_apcr50))))
 eUn[, , , ] <- 1 - exp(-(hv[i, j, k] + rUn[i, j, k, l]))
 iUn[, , , ] <- eUn[i, j, k, l] * hv[i, j, k] / (hv[i, j, k] + rUn[i, j, k, l])
 ## weighted node terms, summed below: LM-detectable, LM-detectable AND
@@ -564,8 +571,9 @@ w_iu[, , , ] <- qw[l] * iUn[i, j, k, l]
 w_iulm[, , , ] <- w_iu[i, j, k, l] * pLMn[i, j, k, l]
 w_iulmc[, , , ] <- w_iulm[i, j, k, l] * pDn[i, j, k, l]
 w_eu[, , , ] <- qw[l] * eUn[i, j, k, l]
-dim(pLMn, pDn, rUn, eUn, iUn, w_lm, w_lmc, w_c, w_iu, w_iulm, w_iulmc, w_eu) <-
+dim(lxA, lxC, pLMn, pDn, rUn, eUn, iUn, w_lm, w_lmc, w_c, w_iu, w_iulm, w_iulmc, w_eu) <-
   c(n_age_v, n_het_v, n_hyp, n_q)
+l_alm50 <- log(alm50); l_ic0_v <- log(ic0_v); l_apcr50 <- log(apcr50)
 s_lm[, , ] <- sum(w_lm[i, j, k, ])
 s_lmc[, , ] <- sum(w_lmc[i, j, k, ])
 s_c[, , ] <- sum(w_c[i, j, k, ])

@@ -127,7 +127,7 @@ test_that("with no spread assumed, every node is the cell mean", {
   x_on <- build_inputs(p, init_EIR = 20, timesteps = 30)$pars
   p$immunity_spread <- FALSE
   x_off <- build_inputs(p, init_EIR = 20, timesteps = 30)$pars
-  expect_equal(x_on$n_q, 7L)
+  expect_equal(x_on$n_q, length(VIVAX_GH_Z))
   expect_equal(sum(x_on$qw), 1)
   expect_equal(x_off[c("spread_on", "n_q", "qz", "qw")],
                list(spread_on = 0, n_q = 1L, qz = 0, qw = 1))

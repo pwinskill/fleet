@@ -325,15 +325,16 @@ VIVAX_TOP_AGE <- 200
 
 # Within-cell immunity spread under vivax (see the note at pLM in the odin
 # model): the Gauss-Hermite rule the gamma is read at, and the switch.
-# Seven nodes hold the clinical curve (kc = 5.4) within ~5% of the exact gamma
-# expectation at the spreads the IBM shows (CV <= 0.6); the gamma closure itself
-# is no better than that in the far lower tail, so more nodes buy nothing.
-# parameters$immunity_spread = FALSE evaluates every curve at the cell mean.
-VIVAX_GH_Z <- c(-3.750439717725742, -2.366759410734541, -1.154405394739968, 0,
-                1.154405394739968, 2.366759410734541, 3.750439717725742)
-VIVAX_GH_W <- c(0.0005482688559722161, 0.0307571239675866, 0.2401231786050126,
-                0.4571428571428572, 0.2401231786050126, 0.0307571239675866,
-                0.0005482688559722161)
+# Five nodes hold the clinical curve (kc = 5.4) within ~5% of the exact gamma
+# expectation over the spreads the IBM shows (CV up to ~0.6 in school-age
+# children, less above), and the gamma closure is itself no better than that in
+# the far lower tail. Seven tighten it to ~3% at 40% more run time: the nodes
+# are over half the cost of a vivax run. parameters$immunity_spread = FALSE
+# evaluates every curve at the cell mean.
+VIVAX_GH_Z <- c(-2.856970013872806, -1.355626179974266, 0,
+                1.355626179974266, 2.856970013872806)
+VIVAX_GH_W <- c(0.01125741132772071, 0.2220759220056126, 0.5333333333333329,
+                0.2220759220056126, 0.01125741132772071)
 immunity_spread_rule <- function(p) {
   on <- p$immunity_spread
   if (is.null(on)) on <- TRUE
