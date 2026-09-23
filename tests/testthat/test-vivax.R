@@ -211,7 +211,9 @@ test_that("radical cure clears batches and fills liver-stage protection", {
 test_that("vivax output columns are malariasimulation's, and severe is absent", {
   skip_if_not_installed("malariaEquilibriumVivax")
   bands <- list(clinical_incidence_rendering_min_ages = c(0, 1825),
-                clinical_incidence_rendering_max_ages = c(1825, 36500))
+                clinical_incidence_rendering_max_ages = c(1825, 36500),
+                severe_incidence_rendering_min_ages = c(0, 1825),
+                severe_incidence_rendering_max_ages = c(1825, 36500))
   pv <- do.call(pv_list, c(list(drug = NULL), bands))
   pf <- eqm(malariasimulation::get_parameters(c(list(human_population = 10000), bands)), 20)
   o_pv <- run_simulation_ode(60, pv)
@@ -229,6 +231,23 @@ test_that("vivax output columns are malariasimulation's, and severe is absent", 
                   o_pv$n_with_hypnozoites < o_pv$n_age_0_36500))
   # vivax A is LM-detectable by definition: LM prevalence sits inside PCR
   expect_true(all(o_pv$n_detect_lm_730_3650 < o_pv$n_detect_pcr_730_3650))
+})
+
+test_that("vivax output feeds postie, severe bands following the clinical ones", {
+  skip_if_not_installed("malariaEquilibriumVivax")
+  skip_if_not_installed("postie")
+  # site::site_parameters(parasite = "vivax") sets clinical bands and no severe
+  # ones (malariasimulation renders no severe for vivax), and postie::get_rates()
+  # needs the two families on the same bands -- so the zero severe columns
+  # follow the clinical bands.
+  pv <- pv_list(clinical_incidence_rendering_min_ages = c(0, 1825, 5475),
+                clinical_incidence_rendering_max_ages = c(1825, 5475, 36500))
+  o <- run_simulation_ode(60, pv)
+  expect_true(all(c("n_inc_severe_0_1825", "n_inc_severe_1825_5475",
+                    "n_inc_severe_5475_36500") %in% names(o)))
+  r <- suppressWarnings(postie::get_rates(o))
+  expect_true(all(r$severe == 0))
+  expect_true(all(r$clinical > 0))
 })
 
 test_that("vivax refuses the chemoprevention malariasimulation cannot run", {

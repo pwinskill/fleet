@@ -364,6 +364,12 @@ output_bands <- function(p, family = c("all", "prevalence", "incidence",
   sev  <- gather("severe_incidence_rendering_min_ages", "severe_incidence_rendering_max_ages")
   agrp <- gather("age_group_rendering_min_ages", "age_group_rendering_max_ages")
   or_default <- function(x) if (length(x)) x else default
+  # P. vivax has no severe disease, and malariasimulation will not render severe
+  # bands for it. fleet still emits the (all-zero) severe columns so the column
+  # set does not change with the parasite, and puts them on the CLINICAL bands:
+  # postie::get_rates() insists the two families share their bands, so the
+  # vivax output stays postie-consumable.
+  if (!length(sev) && identical(p$parasite, "vivax")) sev <- clin
   switch(family,
     prevalence = unique(or_default(prev)),
     incidence  = unique(or_default(inc)),
