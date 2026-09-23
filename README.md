@@ -32,7 +32,7 @@
 > If you need results you can defend today, use
 > [malariasimulation](https://github.com/mrc-ide/malariasimulation).
 
-> A fast, deterministic **mean-field (ODE) twin** of the [malariasimulation](https://github.com/mrc-ide/malariasimulation) individual-based model of *Plasmodium falciparum* malaria: same inputs, seconds per run, population-independent.
+> A fast, deterministic **mean-field (ODE) twin** of the [malariasimulation](https://github.com/mrc-ide/malariasimulation) individual-based model of *Plasmodium falciparum* and *P. vivax* malaria: same inputs, seconds to minutes per run, population-independent.
 
 ## What it is
 
@@ -43,15 +43,16 @@
 | **Human states** | `S / D / A / U / Tr`, plus `Ph` (post-treatment) and `Ph_c` (chemoprevention) prophylaxis |
 | **Immunity** | four acquired states `IB / ICA / ID / IVA`; two maternal terms `ICM / IVM`, algebraic rather than state variables |
 | **Mosquito, per species** | `E / L / P / Sm / EIP-chain / Im` |
+| ***P. vivax*** | the same disease states over a hypnozoite-batch dimension (0 to `kmax` batches, plus liver-stage protection after radical cure); immunity `IAA / ICA` with its spread within each group; maternal `IAM / ICM` |
 
 It exists to give the malariasimulation ecosystem a **deterministic, Monte-Carlo-free companion** that:
 
-- **Takes the same inputs as the individual-based model (IBM).** `run_simulation_ode()` accepts a `malariasimulation::get_parameters()` list, with the usual `set_*` intervention builders layered on, unchanged. *P. falciparum only.*
-- **Is seeded at, and checked against, equilibrium.** Initial conditions come from `malariaEquilibrium`; with no interventions an undisturbed run relaxes off that seed by under half a percent over the first years and then holds, as the IBM does from the same seed.
+- **Takes the same inputs as the individual-based model (IBM).** `run_simulation_ode()` accepts a `malariasimulation::get_parameters()` list, with the usual `set_*` intervention builders layered on, unchanged. A `get_parameters(parasite = "vivax")` list runs the *P. vivax* model, relapse and radical cure included.
+- **Is seeded at, and checked against, equilibrium.** Initial conditions come from `malariaEquilibrium` (`malariaEquilibriumVivax` for vivax); with no interventions an undisturbed falciparum run relaxes off that seed by under half a percent over the first years and then holds, as the IBM does from the same seed.
 - **Produces postie-compatible outputs.** The returned wide count table is malariasimulation-shaped, so a post-processing pipeline written for the IBM works on a `fleet` run unchanged, with no wrapper in between.
-- **Is fast and population-independent.** All compartments are per-capita densities, so a 30-year daily run takes a few seconds whether you model a thousand people or ten million.
+- **Is fast and population-independent.** All compartments are per-capita densities, so a 30-year daily falciparum run takes a few seconds whether you model a thousand people or ten million. A vivax run, with its hypnozoite dimension, takes about a minute and a half.
 
-Reach for the IBM instead when you need stochastic variation, individual heterogeneity beyond the mean field, or *P. vivax*.
+Reach for the IBM instead when you need stochastic variation or individual heterogeneity beyond the mean field.
 
 ## Install
 

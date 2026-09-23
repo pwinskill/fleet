@@ -1,3 +1,38 @@
+# fleet (development version)
+
+## *P. vivax*
+
+* **`run_simulation_ode()` runs *P. vivax*.** A list from
+  `malariasimulation::get_parameters(parasite = "vivax")` runs a vivax block
+  alongside the falciparum one in the same compiled model, dispatched on
+  `parameters$parasite` as `malariasimulation` does. It carries the
+  hypnozoite-batch dimension (0 to `kmax` batches, relapse at `k * f`, one
+  batch lost at `k * gammal`), radical cure with liver-stage protection
+  (`CQ_PQ_params_vivax`, `CQ_TQ_params_vivax`), and no severe disease. MDA, SMC
+  and PMC are refused under vivax because `malariasimulation` itself fails on
+  them. `vignette("model")` §V specifies it.
+* Three IBM mechanisms turned out to matter for vivax, each found against IBM
+  replicates rather than by reasoning:
+  - the IBM resolves infection and each state's progression in **one draw a
+    day**, and vivax reinfects people in U, A and D, so `fleet` uses those daily
+    probabilities (the bare hazard counted 6% too many infections);
+  - people who share an age, heterogeneity group and batch count differ in
+    immunity by their batch *history*, and the vivax curves are steep, so each
+    cell carries the **second moment of immunity** and the curves are averaged
+    over a gamma. Without it school-age clinical incidence ran up to 40% low;
+  - `delay_gam = 0` for vivax, so the FOIM lag is bypassed.
+* Against four 25,000-person IBM replicates at EIR 20 over eight years: PCR
+  prevalence in 2–10 year olds within 0.8%, all infections 1.1%, LM prevalence
+  2.4%, clinical incidence 4–5%. A vivax run costs about 3 s per simulated year.
+* New output columns `n_relapses` and `n_with_hypnozoites` (exactly 0 under
+  falciparum, so the column set does not change with the parasite), and their
+  age bands when `incidence_relapse_rendering_*` and
+  `n_with_hypnozoites_rendering_*` are set. Under vivax the all-zero severe
+  columns follow the clinical bands, so the output feeds `postie::get_rates()`.
+* New fidelity setting `parameters$immunity_spread` (default `TRUE`), for vivax.
+* Falciparum output is unchanged to the pinned reference values; falciparum runs
+  are about 5% slower for the inert vivax block they carry.
+
 # fleet 0.0.0.9002
 
 Two changes to how age is discretised, both of which move model output. The

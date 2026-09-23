@@ -44,7 +44,9 @@ because this is an ODE and not the IBM, `vignette("using")`.
 ## 1. Scope and design
 
 `fleet` is a deterministic mean-field (ODE) counterpart to the
-`malariasimulation` individual-based model (IBM) of *Plasmodium falciparum*.
+`malariasimulation` individual-based model (IBM) of *Plasmodium falciparum* and
+*P. vivax*. Sections A–H specify the falciparum model; §V specifies what the
+vivax model adds and changes.
 
 *Mean field* means the model tracks the **distribution of the population over
 states** rather than the people themselves: **the state must not carry
@@ -182,7 +184,7 @@ entirely.
 
 | Feature | Why | Behaviour |
 | --- | --- | --- |
-| *P. vivax* | A different model (hypnozoites, relapse) | Error at input |
+| MDA, SMC or PMC under *P. vivax* | `malariasimulation` itself fails on them under vivax (`update_mass_drug_admin()` reads the falciparum-only `id` variable) | Error at input |
 | Individual mosquitoes (`individual_mosquitoes = TRUE`) | `fleet` is always compartmental | Ignored |
 | Intervention correlation (`get_correlation_parameters()`, `run_simulation(correlations =)`) | Purely individual-level; the mean field assumes independence between interventions | Warned and ignored |
 | Per-individual stochastic variation | Deterministic model | By construction |
@@ -804,3 +806,112 @@ deployment inherits the spacing of the background grid: off the 10-day
 vector-control grid, nets scheduled for day 100 reach 66% of their effect on EIR
 by day 99. With it, a round takes effect within a day of its schedule, the same
 resolution the chemoprevention pulses (§E) already have.
+
+## V. The *P. vivax* model
+
+A list from `get_parameters(parasite = "vivax")` runs a second human block in
+the same compiled model; the falciparum block is held empty (and vice versa,
+at one cell). The mosquito model (§D) is shared, fed by whichever block holds
+the population. What the vivax block adds and changes:
+
+### V.1 The hypnozoite dimension
+
+`malariasimulation` gives each person an integer count of hypnozoite batches,
+$k \in \{0, \dots, k_{\max}\}$. Relapse is a hazard $k f$, so it is linear in
+$k$, but immunity, detectability and the U → S rate are not, and a mean count
+would not carry them. Every vivax compartment and immunity stock is therefore
+indexed $[i, j, \ell]$ — age, heterogeneity, level — where levels
+$1 \dots k_{\max}+1$ are the batch counts and, when a radical-cure drug is on
+the schedule, further levels hold people whose liver stage is still
+drug-protected (V.5). Across levels, everyone:
+
+- loses a batch at rate $k \gamma_L$, whatever their disease state;
+- moves up one batch on an infection that came from a bite, capped at
+  $k_{\max}$ ($\min(k+1, k_{\max})$), and stays put on a relapse. The bite share
+  of infections is $\lambda / (\lambda + k f)$, the IBM's `relative_rates`, with
+  $\lambda = b \varepsilon$: vivax counts every bite, $1 - (1 - b)^n$, which for
+  Poisson bites is exactly a rate $b \varepsilon$.
+
+### V.2 The day, as the IBM resolves it
+
+The infection rate is $h = -\log\{1 - (1 - e^{-(\lambda + k f)})\,(1 -
+\text{PEV})\}$, so the vaccine reduces relapses too. The IBM resolves infection
+and the person's own progression ($r$: U → S, A → U, D → A) in one
+competing-hazard draw a day: some event happens with probability
+$1 - e^{-(h + r)}$, and it is infection with share $h / (h + r)$. `fleet` uses
+those daily probabilities as its rates, per state:
+
+$$
+\iota_X = (1 - e^{-(h + r_X)}) \frac{h}{h + r_X}, \qquad
+\rho_X = (1 - e^{-(h + r_X)}) \frac{r_X}{h + r_X},
+$$
+
+with $r_S = 0$ (so $\iota_S = 1 - e^{-h}$). Without infection $\rho_X$ is the
+whole-day rate $1 - e^{-r_X}$ the falciparum model uses (§B). Everyone in S, U, A
+and D can be infected; an infected D stays D. S and U pass through LM
+detectability $\phi_{LM}(\text{IAA})$ first — the rest of S go to U, the rest of
+U stay U — then LM-detectable S and U, and all infected A, through the clinical
+draw $\phi_D(\text{ICA})$. Clinical cases are treated with coverage × efficacy
+exactly as for falciparum (the rest go to D). `A` is LM-detectable by
+definition, so LM prevalence counts D, Tr and all of A; PCR adds U.
+
+### V.3 Immunity and its spread
+
+IAA (anti-parasite: LM detectability and the U → S duration) and ICA (clinical)
+are boosted on infection with the same renewal approximation to the integer
+refractory window as falciparum, $p / (p u + 1)$ for a person infected with
+daily probability $p$, and decay at $1/d$. A boost belongs to the level the
+person lands in. Immunity is held as stocks $J = \sum I$ per cell, not means:
+the ladder has cells that are exactly empty, where a mean's inflows would divide
+by zero.
+
+People who share a cell do not share an immunity: their batch *history*
+differs, and years with few batches mean far fewer infections. In the IBM at
+EIR 20 children's immunity has a coefficient of variation of 0.5–0.6 within a
+cell, and the vivax curves are steep ($\kappa_C = 5.4$), so the mean clinical
+probability is up to five times the probability at the mean immunity. Each cell
+therefore also carries $K = \sum I^2$, transported exactly as $J$ is — exact,
+because nothing that moves a person between cells depends on their own
+immunity once their cell is known — with a boost adding $2I + 1$ and decay
+shrinking $K$ at $2/d$. The variance a boost injects is the refractory renewal
+process's, whose Fano factor $(1 - p)/(p u + 1)^2$ is far below one for IAA's
+44-day window. The curves are then averaged over a gamma with the cell's mean
+and variance — the shape the IBM's within-cell distribution takes — at five
+Gauss–Hermite nodes through the Wilson–Hilferty map. IAA and ICA share nodes:
+they are boosted by the same infections and correlate at 0.92–0.97 within a
+cell below age 40, so "LM-detectable *and* clinical" is averaged jointly.
+`parameters$immunity_spread = FALSE` evaluates the curves at the cell mean.
+
+Maternal immunity is algebraic, as in §B.3: $\text{IAM}, \text{ICM} =
+p_{cm} \times$ the mean IAA, ICA of 20-year-old mothers, waning with age.
+
+### V.4 Treatment
+
+The post-treatment prophylaxis chain carries the level dimension, since people
+keep losing batches while protected. Its stage count is capped at five
+(`VIVAX_MAX_PH`), which keeps the mean and widens the spread.
+
+### V.5 Radical cure
+
+Of everyone treated, `drug_hypnozoite_efficacy` lose every batch — whether or
+not the blood stage cleared, since the IBM draws the two independently — and
+start liver-stage protection, which blocks new batches (not infection) for a
+Weibull time from the dose. Protection is an attribute of the person, not of
+their disease state, so it sits on the level dimension as an Erlang chain of up
+to five levels (`CQ_PQ_params_vivax`, `CQ_TQ_params_vivax`); the last returns to
+batch 0. The radically cured carry their immunity, and the spread their boosts
+injected, with them.
+
+### V.6 Seeding and outputs
+
+The seed is the IBM's own: `malariaEquilibriumVivax` on `malariasimulation`'s
+durations, solved on `fleet`'s age grid, with every cell starting at its mean
+immunity (no spread), as `initial_immunity()` starts the IBM. Neither model holds
+that state exactly — both resolve each day in one competing-hazard draw and
+build up a within-cell spread the equilibrium does not have — so both relax
+from it together. The FOIM lag is bypassed: vivax has `delay_gam = 0`.
+
+The output table has the falciparum columns, with severe identically 0 (on the
+clinical bands, so `postie::get_rates()` accepts it), plus `n_relapses` and
+`n_with_hypnozoites`, and their age bands when `incidence_relapse_rendering_*`
+and `n_with_hypnozoites_rendering_*` are set.

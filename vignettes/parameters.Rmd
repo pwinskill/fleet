@@ -78,7 +78,7 @@ Where a row carries two marks, the second is a caveat on the first.
 | Argument | malariasimulation meaning | `fleet` |
 | --- | --- | --- |
 | `overrides` | Named list overriding any default parameter | ✅ Passed through wholesale; see the group-by-group breakdown below |
-| `parasite` | `"falciparum"` or `"vivax"` | ✅ falciparum. ⛔ vivax: `build_inputs()` stops with an error |
+| `parasite` | `"falciparum"` or `"vivax"` | ✅ Both. `"vivax"` runs the *P. vivax* block (`vignette("model")`, §V); MDA, SMC and PMC are refused under vivax, as `malariasimulation` cannot run them |
 
 ### Breakdown of `overrides`
 
@@ -115,7 +115,7 @@ Where a row carries two marks, the second is a caveat on the first.
 | | `ib_`/`id_`/`ica_`/`iva_`/`idm_`/`icm_`/`ivm_rendering_*` | ⛔ `fleet` does not render mean immunity by band |
 | Metapopulation test-and-treat | `rdt_intercept`, `rdt_coeff` | ⛔ Ignored. They parameterise the PCR→RDT conversion used by `run_metapop_simulation()`'s mixing, which `fleet` does not support ([`Helpers and run functions`](#helpers)) |
 | Engine / solver | `mosquito_limit`, `individual_mosquitoes`, `r_tol`, `a_tol`, `ode_max_steps`, `progress_bar` | ⛔ Ignored: `fleet` is always compartmental and exposes its own `atol`/`rtol`/`step_size_max` through `ode_tuning()` |
-| Vivax-only | All hypnozoite parameters, `drug_hypnozoite_*`, `n_with_hypnozoites_rendering_*` | ⛔ Not applicable |
+| Vivax-only | All hypnozoite parameters, `drug_hypnozoite_*`, `n_with_hypnozoites_rendering_*` | ✅ Used under `parasite = "vivax"` |
 
 ### `fleet`-only extension fields
 
@@ -191,7 +191,7 @@ EIR instead.
 | &nbsp;&nbsp;`drug_efficacy` | Probability treatment clears the infection | ✅ Multiplies coverage into $f_t^{\text{eff}}$; also multiplies chemoprevention pulse fractions |
 | &nbsp;&nbsp;`drug_rel_c` | Infectivity of a treated case relative to `cd` | ✅ $c_T = c_d \times \text{rel_c}$, coverage-share-weighted across active drugs and time-varying |
 | &nbsp;&nbsp;`drug_prophylaxis_shape`, `drug_prophylaxis_scale` | Weibull prophylaxis survival | ✅ Both moments used. The chain mean is $\bar{d}_W - \int e^{-r_T t}W\,dt$, the protection left after the $T$ sojourn (§B.4), and its length $k_P$ matches the variance of the whole $T + P$ sojourn: 16 stages for SP-AQ, 20 for DHA-PQP, 1 for AL (the chemoprevention chain, with no $T$ stage in front, uses $1/\text{CV}_W^2$: 14 / 15). Capped at 20. 🟡 An Erlang chain is not a Weibull, and the exponential $T$ stage adds variability the IBM's parallel clock does not have; for AL the protection curve is reproduced in its integral, not its shape. `ode_tuning(n_ph =)` overrides the count |
-| &nbsp;&nbsp;`drug_hypnozoite_*` | *P. vivax* only | ⛔ Not applicable |
+| &nbsp;&nbsp;`drug_hypnozoite_*` | *P. vivax* only | ✅ Radical cure: batch reset for the treated, and liver-stage protection as an Erlang chain of up to five stages from the Weibull |
 
 ## `set_clinical_treatment(drug, timesteps, coverages)` {#set_clinical_treatment}
 
@@ -389,7 +389,7 @@ infectivity. All the `tbv_*` shape constants (`tbv_tau`, `tbv_rho`, `tbv_ds`,
 | `severe_incidence` | Bands for severe incidence | ✅ → `n_inc_severe_*` |
 | `prevalence` | Bands for prevalence | ✅ → `n_detect_lm_*`, `p_detect_lm_*`, `n_detect_pcr_*` |
 | `ica`, `icm`, `iva`, `ivm`, `id`, `ib` | Bands for mean immunity | ⛔ Not rendered by `fleet` |
-| `n_with_hypnozoites`, `hypnozoites`, `iaa`, `iam` | *P. vivax* only | ⛔ Not applicable |
+| `n_with_hypnozoites`, `hypnozoites`, `iaa`, `iam` | *P. vivax* only | ✅ `n_with_hypnozoites` and `n_relapses` are output columns (0 under falciparum); the immunity means are not rendered, as for falciparum |
 
 When a family's band list is empty, `fleet` falls back to the convenience bands
 2–10 y and all-ages for that family only. A bare `get_parameters()` leaves four
