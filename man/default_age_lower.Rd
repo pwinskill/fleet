@@ -33,21 +33,22 @@ Log rather than linear width, because what the grid has to resolve is the
 rise of immunity with age, and that is far closer to a function of log age
 than of age. (Of \code{log(1 + age)} rather than \code{log(age)}, which is infinite
 over the first year. The offset is in years, so the allocation is not
-scale-free.) An equal-width grid spends most of its groups above 20, where
-nothing moves, and is the worst of the options measured.
+scale-free.) An equal-width grid at the same cost is four times as far from
+the converged solution as this one, so the grading matters more than the
+count.
 
 This replaced a grid of fixed monthly / quarterly / yearly / 5-yearly
-sections, and roughly halves the discretisation error at the same number of
-groups, for a few per cent of runtime. The old grid over-resolved infancy (12
-of its 52 groups in the first year, against 7 here) and under-resolved
-everything above 15.
+sections, halving the discretisation error at the same number of groups: the
+largest departure across age bands falls from 10.7\% to 4.5\% and the rms from
+5.4\% to 3.2\%. The old grid over-resolved infancy (12 of its 52 groups in the
+first year, against 7 here) and under-resolved everything above 15.
 
-Refining the grid removes this error: \code{fleet}'s own age profile converges at
-first order, halving its departure from the grid-converged solution with each
-doubling of \code{n_group}. What refinement does \strong{not} remove is the mean-field
-approximation itself -- one immunity value per stratum, where the IBM holds a
-spread of infection histories at the same age -- so a persistent difference
-from the IBM is not evidence that the grid is too coarse.
+Refining removes that error: the departure from the converged profile halves
+with each doubling of \code{n_group}, first order. What refinement does \strong{not}
+remove is the mean-field approximation itself -- one immunity value per
+stratum, where the IBM holds a spread of infection histories at the same age
+-- so a persistent difference from the IBM is not evidence that the grid is
+too coarse. \code{validations/age-grid/run.R} in \code{fleetcheck} measures both.
 
 Band aggregation weights each age group by the exact fraction of its own width
 that falls inside the band, so a band edge landing inside a group (as one

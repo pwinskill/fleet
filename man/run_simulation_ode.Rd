@@ -34,10 +34,11 @@ you would for the IBM, before calling this function:
 That call also stores \code{eq_params}, which \code{fleet} honours if present. Setting
 \code{parameters$init_EIR} by hand works but skips that.
 
-\strong{Call \code{set_equilibrium()} last.} It freezes all 56 translated biological
-parameters at the values they held when it ran, and \code{fleet} merges that
-stored set over the live list. So an edit made \emph{after} it -- another
-\verb{set_*()} builder, or \code{parameters$du <- 10} by hand -- is a silent no-op for
+\strong{Call \code{set_equilibrium()} last.} It freezes all 56 equilibrium parameters,
+51 of them translated from the IBM list, at the values they held when it ran,
+and \code{fleet} merges that stored set over the live list. So an edit made
+\emph{after} it -- another \verb{set_*()} builder, or \code{parameters$du <- 10} by hand --
+is a silent no-op for
 anything in that set, and the run is bit-identical to one without the edit.
 The IBM reads those fields directly and would honour the edit, so this is a
 real difference between the two models rather than a detail of this one.
