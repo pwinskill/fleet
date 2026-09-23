@@ -250,6 +250,26 @@ test_that("vivax output feeds postie, severe bands following the clinical ones",
   expect_true(all(r$clinical > 0))
 })
 
+test_that("under a custom demography vivax sizes mosquitoes as set_equilibrium() does", {
+  skip_if_not_installed("malariaEquilibriumVivax")
+  # As for falciparum: set_equilibrium() sizes total_M from the equilibrium under
+  # the DEFAULT exponential age structure, and the IBM then realises whatever
+  # transmission that density supports under the custom mortality. fleet takes
+  # the IBM's density and seeds at the EIR its own equilibrium supports for it.
+  dr <- c(0.048, 0.007, 0.003, 0.004, 0.008, 0.020, 0.050, 0.120) / 365
+  p <- malariasimulation::get_parameters(list(human_population = 10000), parasite = "vivax")
+  p <- malariasimulation::set_demography(p,
+    agegroups = round(c(1, 5, 10, 20, 40, 60, 80, 100) * 365),
+    timesteps = 0, deathrates = matrix(dr, nrow = 1))
+  p <- eqm(p, 3)
+  inp <- build_inputs(p, 3)
+  expect_equal(inp$meta$total_M_ibm, p$total_M, tolerance = 1e-8)
+  expect_equal(inp$meta$total_M, p$total_M, tolerance = 1e-6)
+  expect_false(isTRUE(all.equal(inp$meta$eir_seed, 3)))
+  # the default demography is unaffected
+  expect_equal(build_inputs(pv_list(eir = 3), 3)$meta$eir_seed, 3)
+})
+
 test_that("vivax refuses the chemoprevention malariasimulation cannot run", {
   p <- malariasimulation::get_parameters(parasite = "vivax")
   p$smc <- TRUE

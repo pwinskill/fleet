@@ -219,6 +219,19 @@ ibm_total_M <- function(p, init_EIR, eqp_ibm, ft_raw) {
     sum(p$species_proportions * p$blood_meal_rates * p$Q0 * lifetime)
 }
 
+#' The same for P. vivax: set_equilibrium() takes its FOIM from
+#' malariaEquilibriumVivax, on the same 0.1-year grid, and equilibrium_total_M()
+#' is otherwise parasite-agnostic.
+#' @noRd
+ibm_total_M_vivax <- function(p, init_EIR, ft_raw) {
+  eq <- malariaEquilibriumVivax::vivax_equilibrium(
+    EIR = init_EIR, ft = ft_raw, p = translate_vivax_parameters(p), age = 0:999 / 10)
+  mum <- stats::weighted.mean(p$mum, p$species_proportions)
+  lifetime <- eq$FOIM * exp(-mum * p$dem) / (eq$FOIM + mum)
+  (init_EIR * p$human_population / 365) /
+    sum(p$species_proportions * p$blood_meal_rates * p$Q0 * lifetime)
+}
+
 #' Guard for malariasimulation features not represented in the mean-field model.
 #'
 #' Every intervention module is now modelled, including custom demography,
@@ -793,16 +806,14 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
   eir_seed <- init_EIR
   total_M_ibm <- NA_real_
   sub_threshold <- FALSE
-  # Not yet for vivax: rooting needs the IBM's total_M, which under vivax comes
-  # from malariaEquilibriumVivax rather than ibm_total_M()'s falciparum solve. A
-  # vivax run under a custom demography therefore seeds at init_EIR, as
-  # hold_init_EIR = TRUE would, and the IBM may settle at a different EIR.
-  if (isTRUE(p$custom_demography) && !isTRUE(p$hold_init_EIR) && !is_vivax) {
-    total_M_ibm <- ibm_total_M(p, init_EIR, eqp_ibm, ft)
+  if (isTRUE(p$custom_demography) && !isTRUE(p$hold_init_EIR)) {
+    total_M_ibm <- if (is_vivax) ibm_total_M_vivax(p, init_EIR, ft) else
+      ibm_total_M(p, init_EIR, eqp_ibm, ft)
+    seed <- if (is_vivax) seed_human_vivax else seed_human
     # fleet's total_M(EIR) is increasing in EIR and tends to the transmission
     # threshold M_crit as EIR -> 0, so a root exists iff M_crit < total_M_ibm:
     # test at a near-zero EIR rather than at an arbitrary fraction of init_EIR.
-    f <- function(lE) seed_human(exp(lE))$total_M - total_M_ibm
+    f <- function(lE) seed(exp(lE))$total_M - total_M_ibm
     lo <- log(init_EIR * 1e-6); f_lo <- f(lo)
     if (f_lo > 0) {
       # The IBM's mosquito density is below fleet's transmission threshold under
