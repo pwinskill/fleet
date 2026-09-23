@@ -312,7 +312,7 @@ VIVAX_MAX_PH <- 5L
 inert_vivax_block <- function(n_age) {
   z <- array(0, c(1L, 1L, 1L))
   c(list(pf_on = 1, pv_on = 0, n_age_v = 1L, n_het_v = 1L, n_bat = 1L, n_hyp = 1L,
-         n_phv = 1L,
+         n_phv = 1L, rc_on = 0,
          Sv0 = z, Dv0 = z, Av0 = z, Uv0 = z, Trv0 = z, JAv0 = z, JCv0 = z,
          KAv0 = z, KCv0 = z, spread_on = 0, n_q = 1L, qz = 0, qw = 1,
          Phv0 = array(0, c(1L, 1L, 1L, 1L)), mat_factor_v = numeric(n_age)),
@@ -328,9 +328,9 @@ VIVAX_TOP_AGE <- 200
 # Five nodes hold the clinical curve (kc = 5.4) within ~5% of the exact gamma
 # expectation over the spreads the IBM shows (CV up to ~0.6 in school-age
 # children, less above), and the gamma closure is itself no better than that in
-# the far lower tail. Seven tighten it to ~3% at 40% more run time: the nodes
-# are over half the cost of a vivax run. parameters$immunity_spread = FALSE
-# evaluates every curve at the cell mean.
+# the far lower tail. Seven tighten it to ~3% at ~20% more run time: each node
+# is a tenth of a vivax run, so the five are half of it.
+# parameters$immunity_spread = FALSE evaluates every curve at the cell mean.
 VIVAX_GH_Z <- c(-2.856970013872806, -1.355626179974266, 0,
                 1.355626179974266, 2.856970013872806)
 VIVAX_GH_W <- c(0.01125741132772071, 0.2220759220056126, 0.5333333333333329,
@@ -950,6 +950,8 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
     stopifnot(dim(hs$Sv0)[3] == p$kmax + 1)
     # Liver-stage protection after radical cure adds dser$n_ls levels to the
     # hypnozoite dimension; none without a radical-cure drug on the schedule.
+    # rc_on sizes the radical-cure transfers: full size only if some drug on
+    # the schedule gives radical cure, one inert cell otherwise.
     n_bat <- as.integer(p$kmax) + 1L
     n_ls <- dser$n_ls
     pl <- function(x) pad_levels(x, n_ls)
@@ -957,6 +959,7 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
     # factor computed above already is the vivax one
     c(list(pf_on = 0, pv_on = 1, n_age_v = n_age, n_het_v = n_het,
            n_bat = n_bat, n_hyp = n_bat + n_ls, n_phv = n_phv,
+           rc_on = as.numeric(any(dser$hyp > 0)),
            Sv0 = pl(hs$Sv0), Dv0 = pl(hs$Dv0), Av0 = pl(hs$Av0), Uv0 = pl(hs$Uv0),
            Trv0 = pl(hs$Trv0), Phv0 = pl(hs$Phv0), JAv0 = pl(hs$JAv0),
            JCv0 = pl(hs$JCv0), KAv0 = pl(hs$KAv0), KCv0 = pl(hs$KCv0),

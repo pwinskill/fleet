@@ -456,9 +456,6 @@ dim(nv_g) <- n_age
 ## stock form nothing divides by a population except turning a stock back into
 ## the mean the Hill functions need, and an empty cell there simply reads 0.
 ## The falciparum block keeps its mean form: no age group there is ever empty.
-IAAv[, , ] <- JAv[i, j, k] / (Npop_v[i, j, k] + pop_floor)
-ICAv[, , ] <- JCv[i, j, k] / (Npop_v[i, j, k] + pop_floor)
-dim(IAAv, ICAv) <- c(n_age_v, n_het_v, n_hyp)
 
 ## maternal immunity (algebraic). Inherited at birth -- at batch 0, since
 ## newborns carry no hypnozoites -- and decaying with age regardless of the
@@ -508,8 +505,8 @@ dim(ICMv, IAMv) <- c(n_age_v, n_het_v)
 ## fractionally negative, so that J / N is negative and a fractional power of it
 ## is NaN. max() compiles to one branchless instruction, so this does not
 ## reintroduce the cost of a branch in a loop that computes powers.
-mA[, , ] <- max(IAAv[i, j, k], 0)
-mC[, , ] <- max(ICAv[i, j, k], 0)
+mA[, , ] <- max(JAv[i, j, k] / (Npop_v[i, j, k] + pop_floor), 0)
+mC[, , ] <- max(JCv[i, j, k] / (Npop_v[i, j, k] + pop_floor), 0)
 cv2A[, , ] <- spread_on * min(max(KAv[i, j, k] / (Npop_v[i, j, k] + pop_floor) -
   mA[i, j, k] * mA[i, j, k], 0) / (mA[i, j, k] * mA[i, j, k] + 1e-12), 9)
 cv2C[, , ] <- spread_on * min(max(KCv[i, j, k] / (Npop_v[i, j, k] + pop_floor) -
@@ -519,18 +516,13 @@ whaC[, , ] <- 1 - cv2C[i, j, k] / 9
 whbA[, , ] <- sqrt(cv2A[i, j, k]) / 3
 whbC[, , ] <- sqrt(cv2C[i, j, k]) / 3
 dim(mA, mC, cv2A, cv2C, whaA, whaC, whbA, whbC) <- c(n_age_v, n_het_v, n_hyp)
-uA[, , , ] <- max(whaA[i, j, k] + whbA[i, j, k] * qz[l], 0)
-uC[, , , ] <- max(whaC[i, j, k] + whbC[i, j, k] * qz[l], 0)
-xA[, , , ] <- mA[i, j, k] * uA[i, j, k, l] * uA[i, j, k, l] * uA[i, j, k, l] + IAMv[i, j]
-xC[, , , ] <- mC[i, j, k] * uC[i, j, k, l] * uC[i, j, k, l] * uC[i, j, k, l] +
-  acq_offset + ICMv[i, j]
-dim(uA, uC, xA, xC) <- c(n_age_v, n_het_v, n_hyp, n_q)
 
 ## infection. Vivax counts every bite, 1 - (1 - b)^n, rather than deduplicating
 ## them; for Poisson bites at rate EPS that averages to 1 - exp(-b*EPS), whose
 ## rate is exactly b*EPS. Relapse adds k*ff. Both are summed and THEN reduced by
 ## PEV, as in calculate_vivax_infections(), so the vaccine blocks relapses too;
-## hv is the infection rate that function hands to the competing hazards. Only
+## iS_v is the day's infection probability, and hv = -log(1 - iS_v) the
+## infection rate that function hands to the competing hazards. Only
 ## an infection that came from a bite forms a new batch, which is what the
 ## relative_rates draw in relapse_bite_infection_hazard_resolution() decides;
 ## sh_v is that bite share wherever a batch can form -- below the top batch,
@@ -538,9 +530,10 @@ dim(uA, uC, xA, xC) <- c(n_age_v, n_het_v, n_hyp, n_q)
 lam_bv[, ] <- bv * EPS[i, j]
 dim(lam_bv) <- c(n_age_v, n_het_v)
 r_tot_v[, , ] <- lam_bv[i, j] + kk[k] * ff
-hv[, , ] <- -log(1 - (1 - exp(-r_tot_v[i, j, k])) * pev_factor[i])
+iS_v[, , ] <- (1 - exp(-r_tot_v[i, j, k])) * pev_factor[i]
+hv[, , ] <- -log(1 - iS_v[i, j, k])
 sh_v[, , ] <- shmask[k] * lam_bv[i, j] / (r_tot_v[i, j, k] + pop_floor)
-dim(r_tot_v, hv, sh_v) <- c(n_age_v, n_het_v, n_hyp)
+dim(r_tot_v, iS_v, hv, sh_v) <- c(n_age_v, n_het_v, n_hyp)
 
 ## The day, as malariasimulation resolves it. Each person faces infection (hv)
 ## and their own state's progression (U -> S, A -> U, D -> A) in ONE competing
@@ -550,31 +543,38 @@ dim(r_tot_v, hv, sh_v) <- c(n_age_v, n_het_v, n_hyp)
 ## person is infected at most once. fleet uses those daily probabilities as its
 ## rates. Without infection the recovery probability is 1 - exp(-r), the
 ## whole-day rate the falciparum model uses; S has no progression, so its
-## infection probability is 1 - exp(-hv). U's progression rate depends on IAA,
-## so U's two probabilities are taken per node.
+## infection probability is 1 - exp(-hv), which is iS_v. So exp(-(hv + r)) is
+## (1 - iS_v) exp(-r), and the states that progress at a constant rate need no
+## exp of their own. U's progression rate depends on IAA, so U's two
+## probabilities are taken per node.
 # The three Hill curves as exp(k (log x - log x50)) rather than (x / x50)^k:
 # the same function, but the two curves of IAA share one log, and a pow() is a
 # log and an exp, so this saves a log per node -- a tenth of a vivax run. x is
 # never negative (the means are clamped), and log(0) = -Inf gives exp() = 0,
-# the value pow(0, k) has.
-lxA[, , , ] <- log(xA[i, j, k, l])
-lxC[, , , ] <- log(xC[i, j, k, l])
+# the value pow(0, k) has. x is the Wilson-Hilferty node, m u^3 plus maternal
+# immunity with u = max(a + b z, 0), written out in place rather than held in
+# an array of its own.
+lxA[, , , ] <- log(mA[i, j, k] * max(whaA[i, j, k] + whbA[i, j, k] * qz[l], 0) *
+  max(whaA[i, j, k] + whbA[i, j, k] * qz[l], 0) * max(whaA[i, j, k] + whbA[i, j, k] * qz[l], 0) +
+  IAMv[i, j])
+lxC[, , , ] <- log(mC[i, j, k] * max(whaC[i, j, k] + whbC[i, j, k] * qz[l], 0) *
+  max(whaC[i, j, k] + whbC[i, j, k] * qz[l], 0) * max(whaC[i, j, k] + whbC[i, j, k] * qz[l], 0) +
+  acq_offset + ICMv[i, j])
 pLMn[, , , ] <- philm_min + (philm_max - philm_min) / (1 + exp(klm * (lxA[i, j, k, l] - l_alm50)))
 pDn[, , , ] <- phi0_v * (phi1_v + (1 - phi1_v) / (1 + exp(kc_v * (lxC[i, j, k, l] - l_ic0_v))))
 rUn[, , , ] <- 1 / (dpcr_min + (dpcr_max - dpcr_min) / (1 + exp(kpcr * (lxA[i, j, k, l] - l_apcr50))))
 eUn[, , , ] <- 1 - exp(-(hv[i, j, k] + rUn[i, j, k, l]))
-iUn[, , , ] <- eUn[i, j, k, l] * hv[i, j, k] / (hv[i, j, k] + rUn[i, j, k, l])
 ## weighted node terms, summed below: LM-detectable, LM-detectable AND
 ## clinical, clinical; and for U, infected, infected and LM-detectable,
 ## infected and LM-detectable and clinical, and any event at all
 w_lm[, , , ] <- qw[l] * pLMn[i, j, k, l]
 w_lmc[, , , ] <- w_lm[i, j, k, l] * pDn[i, j, k, l]
 w_c[, , , ] <- qw[l] * pDn[i, j, k, l]
-w_iu[, , , ] <- qw[l] * iUn[i, j, k, l]
+w_iu[, , , ] <- qw[l] * eUn[i, j, k, l] * hv[i, j, k] / (hv[i, j, k] + rUn[i, j, k, l])
 w_iulm[, , , ] <- w_iu[i, j, k, l] * pLMn[i, j, k, l]
 w_iulmc[, , , ] <- w_iulm[i, j, k, l] * pDn[i, j, k, l]
 w_eu[, , , ] <- qw[l] * eUn[i, j, k, l]
-dim(lxA, lxC, pLMn, pDn, rUn, eUn, iUn, w_lm, w_lmc, w_c, w_iu, w_iulm, w_iulmc, w_eu) <-
+dim(lxA, lxC, pLMn, pDn, rUn, eUn, w_lm, w_lmc, w_c, w_iu, w_iulm, w_iulmc, w_eu) <-
   c(n_age_v, n_het_v, n_hyp, n_q)
 l_alm50 <- log(alm50); l_ic0_v <- log(ic0_v); l_apcr50 <- log(apcr50)
 s_lm[, , ] <- sum(w_lm[i, j, k, ])
@@ -584,14 +584,14 @@ iU_v[, , ] <- sum(w_iu[i, j, k, ])
 s_iulm[, , ] <- sum(w_iulm[i, j, k, ])
 s_iulmc[, , ] <- sum(w_iulmc[i, j, k, ])
 recU_v[, , ] <- sum(w_eu[i, j, k, ]) - iU_v[i, j, k]
-iS_v[, , ] <- 1 - exp(-hv[i, j, k])
-eA_v[, , ] <- 1 - exp(-(hv[i, j, k] + rA_ms))
+eA_v[, , ] <- 1 - (1 - iS_v[i, j, k]) * e_rA
 iA_v[, , ] <- eA_v[i, j, k] * hv[i, j, k] / (hv[i, j, k] + rA_ms)
 recA_v[, , ] <- eA_v[i, j, k] - iA_v[i, j, k]
-eD_v[, , ] <- 1 - exp(-(hv[i, j, k] + rD_ms))
+eD_v[, , ] <- 1 - (1 - iS_v[i, j, k]) * e_rD
 iD_v[, , ] <- eD_v[i, j, k] * hv[i, j, k] / (hv[i, j, k] + rD_ms)
 recD_v[, , ] <- eD_v[i, j, k] - iD_v[i, j, k]
-dim(s_lm, s_lmc, s_c, iU_v, s_iulm, s_iulmc, recU_v, iS_v, eA_v, iA_v, recA_v,
+e_rA <- exp(-rA_ms); e_rD <- exp(-rD_ms)
+dim(s_lm, s_lmc, s_c, iU_v, s_iulm, s_iulmc, recU_v, eA_v, iA_v, recA_v,
     eD_v, iD_v, recD_v) <- c(n_age_v, n_het_v, n_hyp)
 
 ## where infections go. vivax_infection_outcome_process(): S and U pass through
@@ -627,6 +627,7 @@ dim(arr_U, arr_A, arr_C, arr_D) <- c(n_age_v, n_het_v, n_hyp)
 ## treatment (split fast/slow clearance by spc), the rest -- untreated and early
 ## treatment failures -- to D.
 trt_v[, , ] <- ft_eff * arr_C[i, j, k]
+dim(trt_v) <- c(n_age_v, n_het_v, n_hyp)
 ## Radical cure. Of everyone who is treated, drug_hypnozoite_efficacy lose every
 ## batch -- whether or not the blood stage cleared, since calculate_treated()
 ## draws the two independently -- and start liver-stage protection, so they move
@@ -634,12 +635,24 @@ trt_v[, , ] <- ft_eff * arr_C[i, j, k]
 ## D). The treated flux is summed over levels and delivered to k_rc. rcT_v
 ## carries ft_eff's (1 - etf): an early treatment failure leaves the blood stage
 ## uncleared, but its liver-stage draw still stands, so it falls to rcD_v.
+##
+## Without a radical-cure drug these transfers, and the immunity they carry
+## below, are all exactly zero, and evaluating them anyway costs 6-10% of a
+## vivax run. So they have dimensions of their own: full size when radical cure
+## is given at any point in the run (rc_on = 1), a single cell otherwise, and
+## their terms in the derivatives are guarded by rc_on -- safe for the same
+## reason as the batch-index guards, since the branch that reads a full-size
+## index is never evaluated.
+rc_on <- parameter(constant = TRUE)
+n_age_rc <- if (rc_on == 1) n_age_v else 1
+n_het_rc <- if (rc_on == 1) n_het_v else 1
+n_hyp_rc <- if (rc_on == 1) n_hyp else 1
 rcT_v[, , ] <- ft * eff_hyp * (1 - etf) * arr_C[i, j, k]
 rcD_v[, , ] <- ft * hyp_mix * arr_C[i, j, k] - rcT_v[i, j, k]
-dim(trt_v, rcT_v, rcD_v) <- c(n_age_v, n_het_v, n_hyp)
+dim(rcT_v, rcD_v) <- c(n_age_rc, n_het_rc, n_hyp_rc)
 rcT_tot[, ] <- sum(rcT_v[i, j, ])
 rcD_tot[, ] <- sum(rcD_v[i, j, ])
-dim(rcT_tot, rcD_tot) <- c(n_age_v, n_het_v)
+dim(rcT_tot, rcD_tot) <- c(n_age_rc, n_het_rc)
 
 ## Ageing, death and batch clearance are common to every compartment; newborns
 ## enter S at batch 0. Batch clearance moves everyone down one level whatever
@@ -675,15 +688,16 @@ deriv(Dv[, , ]) <-
   (if (k > n_bat + 1) rls_k * Dv[i, j, k - 1] else 0) - rls_k * lsmask[k] * Dv[i, j, k] +
   (if (k == 1) rls_k * lsmask[n_hyp] * Dv[i, j, n_hyp] else 0) -
   recD_v[i, j, k] * Dv[i, j, k] +
-  arr_D[i, j, k] + arr_C[i, j, k] - trt_v[i, j, k] - iD_v[i, j, k] * Dv[i, j, k] -
-  rcD_v[i, j, k] + (if (k == k_rc) rcD_tot[i, j] else 0)
+  arr_D[i, j, k] + arr_C[i, j, k] - trt_v[i, j, k] - iD_v[i, j, k] * Dv[i, j, k] +
+  (if (rc_on == 1) (if (k == k_rc) rcD_tot[i, j] else 0) - rcD_v[i, j, k] else 0)
 deriv(Trv[, , ]) <-
   (if (i > 1) r_age[i - 1] * Trv[i - 1, j, k] else 0) - re[i] * Trv[i, j, k] +
   (if (k < n_hyp) gammal * kk[k + 1] * Trv[i, j, k + 1] else 0) - gammal * kk[k] * Trv[i, j, k] +
   (if (k > n_bat + 1) rls_k * Trv[i, j, k - 1] else 0) - rls_k * lsmask[k] * Trv[i, j, k] +
   (if (k == 1) rls_k * lsmask[n_hyp] * Trv[i, j, n_hyp] else 0) -
   rT_v * Trv[i, j, k] +
-  (1 - spc) * (trt_v[i, j, k] - rcT_v[i, j, k] + (if (k == k_rc) rcT_tot[i, j] else 0))
+  (1 - spc) * (trt_v[i, j, k] +
+    (if (rc_on == 1) (if (k == k_rc) rcT_tot[i, j] else 0) - rcT_v[i, j, k] else 0))
 deriv(Trv_slow[, , ]) <-
   (if (i > 1) r_age[i - 1] * Trv_slow[i - 1, j, k] else 0) - re[i] * Trv_slow[i, j, k] +
   (if (k < n_hyp) gammal * kk[k + 1] * Trv_slow[i, j, k + 1] else 0) -
@@ -691,7 +705,8 @@ deriv(Trv_slow[, , ]) <-
   (if (k > n_bat + 1) rls_k * Trv_slow[i, j, k - 1] else 0) - rls_k * lsmask[k] * Trv_slow[i, j, k] +
   (if (k == 1) rls_k * lsmask[n_hyp] * Trv_slow[i, j, n_hyp] else 0) -
   rT_slow * Trv_slow[i, j, k] +
-  spc * (trt_v[i, j, k] - rcT_v[i, j, k] + (if (k == k_rc) rcT_tot[i, j] else 0))
+  spc * (trt_v[i, j, k] +
+    (if (rc_on == 1) (if (k == k_rc) rcT_tot[i, j] else 0) - rcT_v[i, j, k] else 0))
 
 ## Post-treatment prophylaxis: an Erlang chain like falciparum's Ph, but carrying
 ## the batch dimension, because people keep losing batches while drug-protected
@@ -706,13 +721,13 @@ deriv(Phv[, , , ]) <-
   (if (k > n_bat + 1) rls_k * Phv[i, j, k - 1, l] else 0) - rls_k * lsmask[k] * Phv[i, j, k, l] +
   (if (k == 1) rls_k * lsmask[n_hyp] * Phv[i, j, n_hyp, l] else 0)
 
-## Immunity dynamics, in stock form (see the note at IAAv). Each flow of people
-## carries its cell's mean with it, which in stock terms is just the stock times
-## the per-capita rate: ageing in r_age * J, ageing out and death re * J, batch
-## clearance kk * gammal * J, the liver-stage chain rls_k * J, newborns nothing
-## acquired. A bite moves the infected up a batch, so the stock carried up is
-## sh_v * (inf_n / N) * J, where inf_n / N is a daily probability and cannot
-## blow up.
+## Immunity dynamics, in stock form (see the note on stocks, above maternal
+## immunity). Each flow of people carries its cell's mean with it, which in
+## stock terms is just the stock times the per-capita rate: ageing in
+## r_age * J, ageing out and death re * J, batch clearance kk * gammal * J, the
+## liver-stage chain rls_k * J, newborns nothing acquired. A bite moves the
+## infected up a batch, so the stock carried up is sh_v * (inf_n / N) * J,
+## where inf_n / N is a daily probability and cannot blow up.
 ##
 ## Boosting is by infection, with the same renewal approximation to the integer
 ## refractory window as falciparum, p / (p * u + 1) for a person infected with
@@ -759,31 +774,31 @@ cBC_v[, , ] <- iS_v[i, j, k] * s_lmc[i, j, k] * Sv[i, j, k] * tSC[i, j, k] +
   iA_v[i, j, k] * s_c[i, j, k] * Av[i, j, k] * tAC[i, j, k]
 cJA_n[, , ] <- fC_v[i, j, k] * JAv[i, j, k] + cBA_v[i, j, k]
 cJC_n[, , ] <- fC_v[i, j, k] * JCv[i, j, k] + cBC_v[i, j, k]
-dim(fC_v, cBA_v, cBC_v, cJA_n, cJC_n) <- c(n_age_v, n_het_v, n_hyp)
+dim(fC_v, cBA_v, cBC_v, cJA_n, cJC_n) <- c(n_age_rc, n_het_rc, n_hyp_rc)
 rcJA_v[, , ] <- ft * hyp_mix * ((1 - sh_v[i, j, k]) * cJA_n[i, j, k] +
   (if (k > 1) sh_v[i, j, k - 1] * cJA_n[i, j, k - 1] else 0))
 rcJC_v[, , ] <- ft * hyp_mix * ((1 - sh_v[i, j, k]) * cJC_n[i, j, k] +
   (if (k > 1) sh_v[i, j, k - 1] * cJC_n[i, j, k - 1] else 0))
-dim(rcJA_v, rcJC_v) <- c(n_age_v, n_het_v, n_hyp)
+dim(rcJA_v, rcJC_v) <- c(n_age_rc, n_het_rc, n_hyp_rc)
 rcJA_tot[, ] <- sum(rcJA_v[i, j, ])
 rcJC_tot[, ] <- sum(rcJC_v[i, j, ])
-dim(rcJA_tot, rcJC_tot) <- c(n_age_v, n_het_v)
+dim(rcJA_tot, rcJC_tot) <- c(n_age_rc, n_het_rc)
 
 deriv(JAv[, , ]) <- bstA_in[i, j, k] +
   (if (i > 1) r_age[i - 1] * JAv[i - 1, j, k] else 0) - re[i] * JAv[i, j, k] +
   (if (k < n_hyp) gammal * kk[k + 1] * JAv[i, j, k + 1] else 0) - gammal * kk[k] * JAv[i, j, k] +
   (if (k > n_bat + 1) rls_k * JAv[i, j, k - 1] else 0) - rls_k * lsmask[k] * JAv[i, j, k] +
   (if (k == 1) rls_k * lsmask[n_hyp] * JAv[i, j, n_hyp] else 0) +
-  (if (k > 1) upA_v[i, j, k - 1] else 0) - upA_v[i, j, k] -
-  rcJA_v[i, j, k] + (if (k == k_rc) rcJA_tot[i, j] else 0) -
+  (if (k > 1) upA_v[i, j, k - 1] else 0) - upA_v[i, j, k] +
+  (if (rc_on == 1) (if (k == k_rc) rcJA_tot[i, j] else 0) - rcJA_v[i, j, k] else 0) -
   JAv[i, j, k] / d_iaa
 deriv(JCv[, , ]) <- bstC_in[i, j, k] +
   (if (i > 1) r_age[i - 1] * JCv[i - 1, j, k] else 0) - re[i] * JCv[i, j, k] +
   (if (k < n_hyp) gammal * kk[k + 1] * JCv[i, j, k + 1] else 0) - gammal * kk[k] * JCv[i, j, k] +
   (if (k > n_bat + 1) rls_k * JCv[i, j, k - 1] else 0) - rls_k * lsmask[k] * JCv[i, j, k] +
   (if (k == 1) rls_k * lsmask[n_hyp] * JCv[i, j, n_hyp] else 0) +
-  (if (k > 1) upC_v[i, j, k - 1] else 0) - upC_v[i, j, k] -
-  rcJC_v[i, j, k] + (if (k == k_rc) rcJC_tot[i, j] else 0) -
+  (if (k > 1) upC_v[i, j, k - 1] else 0) - upC_v[i, j, k] +
+  (if (rc_on == 1) (if (k == k_rc) rcJC_tot[i, j] else 0) - rcJC_v[i, j, k] else 0) -
   JCv[i, j, k] / d_ica_v
 
 ## Second moments, K = sum of I^2 over a cell. Every flow of people carries its
@@ -835,7 +850,7 @@ cvC_v[, , ] <-
   iS_v[i, j, k] * s_lmc[i, j, k] * Sv[i, j, k] * (1 - iS_v[i, j, k]) * tSC[i, j, k] * tSC[i, j, k] * tSC[i, j, k] +
   s_iulmc[i, j, k] * Uv[i, j, k] * (1 - iU_v[i, j, k]) * tUC[i, j, k] * tUC[i, j, k] * tUC[i, j, k] +
   iA_v[i, j, k] * s_c[i, j, k] * Av[i, j, k] * (1 - iA_v[i, j, k]) * tAC[i, j, k] * tAC[i, j, k] * tAC[i, j, k]
-dim(cvA_v, cvC_v) <- c(n_age_v, n_het_v, n_hyp)
+dim(cvA_v, cvC_v) <- c(n_age_rc, n_het_rc, n_hyp_rc)
 cKA_n[, , ] <- fC_v[i, j, k] * KAv[i, j, k] +
   2 * cBA_v[i, j, k] / (Npop_v[i, j, k] + pop_floor) * JAv[i, j, k] + cvA_v[i, j, k]
 cKC_n[, , ] <- fC_v[i, j, k] * KCv[i, j, k] +
@@ -844,27 +859,27 @@ rcKA_v[, , ] <- ft * hyp_mix * ((1 - sh_v[i, j, k]) * cKA_n[i, j, k] +
   (if (k > 1) sh_v[i, j, k - 1] * cKA_n[i, j, k - 1] else 0))
 rcKC_v[, , ] <- ft * hyp_mix * ((1 - sh_v[i, j, k]) * cKC_n[i, j, k] +
   (if (k > 1) sh_v[i, j, k - 1] * cKC_n[i, j, k - 1] else 0))
-dim(bKA_n, bKC_n, bKA_in, bKC_in, upKA_v, upKC_v, cKA_n, cKC_n, rcKA_v, rcKC_v) <-
-  c(n_age_v, n_het_v, n_hyp)
+dim(bKA_n, bKC_n, bKA_in, bKC_in, upKA_v, upKC_v) <- c(n_age_v, n_het_v, n_hyp)
+dim(cKA_n, cKC_n, rcKA_v, rcKC_v) <- c(n_age_rc, n_het_rc, n_hyp_rc)
 rcKA_tot[, ] <- sum(rcKA_v[i, j, ])
 rcKC_tot[, ] <- sum(rcKC_v[i, j, ])
-dim(rcKA_tot, rcKC_tot) <- c(n_age_v, n_het_v)
+dim(rcKA_tot, rcKC_tot) <- c(n_age_rc, n_het_rc)
 
 deriv(KAv[, , ]) <- bKA_in[i, j, k] +
   (if (i > 1) r_age[i - 1] * KAv[i - 1, j, k] else 0) - re[i] * KAv[i, j, k] +
   (if (k < n_hyp) gammal * kk[k + 1] * KAv[i, j, k + 1] else 0) - gammal * kk[k] * KAv[i, j, k] +
   (if (k > n_bat + 1) rls_k * KAv[i, j, k - 1] else 0) - rls_k * lsmask[k] * KAv[i, j, k] +
   (if (k == 1) rls_k * lsmask[n_hyp] * KAv[i, j, n_hyp] else 0) +
-  (if (k > 1) upKA_v[i, j, k - 1] else 0) - upKA_v[i, j, k] -
-  rcKA_v[i, j, k] + (if (k == k_rc) rcKA_tot[i, j] else 0) -
+  (if (k > 1) upKA_v[i, j, k - 1] else 0) - upKA_v[i, j, k] +
+  (if (rc_on == 1) (if (k == k_rc) rcKA_tot[i, j] else 0) - rcKA_v[i, j, k] else 0) -
   2 * KAv[i, j, k] / d_iaa
 deriv(KCv[, , ]) <- bKC_in[i, j, k] +
   (if (i > 1) r_age[i - 1] * KCv[i - 1, j, k] else 0) - re[i] * KCv[i, j, k] +
   (if (k < n_hyp) gammal * kk[k + 1] * KCv[i, j, k + 1] else 0) - gammal * kk[k] * KCv[i, j, k] +
   (if (k > n_bat + 1) rls_k * KCv[i, j, k - 1] else 0) - rls_k * lsmask[k] * KCv[i, j, k] +
   (if (k == 1) rls_k * lsmask[n_hyp] * KCv[i, j, n_hyp] else 0) +
-  (if (k > 1) upKC_v[i, j, k - 1] else 0) - upKC_v[i, j, k] -
-  rcKC_v[i, j, k] + (if (k == k_rc) rcKC_tot[i, j] else 0) -
+  (if (k > 1) upKC_v[i, j, k - 1] else 0) - upKC_v[i, j, k] +
+  (if (rc_on == 1) (if (k == k_rc) rcKC_tot[i, j] else 0) - rcKC_v[i, j, k] else 0) -
   2 * KCv[i, j, k] / d_ica_v
 
 ## onward infectivity. A is LM-detectable by definition for vivax and carries
