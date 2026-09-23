@@ -1,8 +1,11 @@
 # =============================================================================
-# fleet: mean-field (ODE) twin of malariasimulation (P. falciparum)
-# Core transmission model (Phase 1): human S/D/A/U/Tr/Ph over [age, het] with
-# the six Griffin immunity functions, coupled to the compartmental mosquito
-# model (E/L/P/Sm/[EIP chain]/Im per species).
+# fleet: mean-field (ODE) twin of malariasimulation (P. falciparum and P. vivax)
+# P. falciparum: human S/D/A/U/Tr/Ph over [age, het] with the six Griffin
+# immunity functions. P. vivax: the same disease states over
+# [age, het, hypnozoite level], with IAA/ICA immunity and its within-cell spread
+# (the "P. vivax human block" below). One parasite per run, the other block held
+# empty; both coupled to the compartmental mosquito model (E/L/P/Sm/[EIP
+# chain]/Im per species).
 #
 # Lags are implemented as Erlang (linear-chain) filters rather than delay():
 # odin2's delay() warm-up seeding is unreliable with multiple delays, whereas
