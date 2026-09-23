@@ -105,15 +105,15 @@ kept current as the model changes, and this article is not.</p>
 <h2 id="things-to-do">Things to do<a class="anchor" aria-label="anchor" href="#things-to-do"></a>
 </h2>
 <p><strong>Call <code>set_equilibrium()</code> last.</strong> It freezes
-all 56 translated biological parameters at the values they held when it
-ran, and <code>fleet</code> merges that stored set over the live list.
-An edit made <em>after</em> it — another <code>set_*()</code> builder,
-or <code>parameters$du &lt;- 10</code> by hand — is a silent no-op, and
-the run comes out bit-identical to one without the edit. The IBM reads
-those fields directly and would honour the edit, so this is a real
-difference between the two models, not a quirk of this one.
-<code>fleet</code> warns when a live value disagrees with the stored
-one. If a calibration loop varies any of them, re-call
+all 56 equilibrium parameters, 51 of them translated from the IBM list,
+at the values they held when it ran, and <code>fleet</code> merges that
+stored set over the live list. An edit made <em>after</em> it — another
+<code>set_*()</code> builder, or <code>parameters$du &lt;- 10</code> by
+hand — is a silent no-op, and the run comes out bit-identical to one
+without the edit. The IBM reads those fields directly and would honour
+the edit, so this is a real difference between the two models, not a
+quirk of this one. <code>fleet</code> warns when a live value disagrees
+with the stored one. If a calibration loop varies any of them, re-call
 <code>set_equilibrium()</code> each iteration.</p>
 <p><strong>Burn in before calibrating.</strong> The seed is a close
 approximation, not the exact fixed point (§F), and a seasonal run needs

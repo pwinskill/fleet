@@ -84,10 +84,11 @@ you would for the IBM, before calling this function:
 <code>parameters &lt;- malariasimulation::set_equilibrium(parameters, init_EIR = 20)</code>.
 That call also stores <code>eq_params</code>, which <code>fleet</code> honours if present. Setting
 <code>parameters$init_EIR</code> by hand works but skips that.</p>
-<p><strong>Call <code>set_equilibrium()</code> last.</strong> It freezes all 56 translated biological
-parameters at the values they held when it ran, and <code>fleet</code> merges that
-stored set over the live list. So an edit made <em>after</em> it – another
-<code>set_*()</code> builder, or <code>parameters$du &lt;- 10</code> by hand – is a silent no-op for
+<p><strong>Call <code>set_equilibrium()</code> last.</strong> It freezes all 56 equilibrium parameters,
+51 of them translated from the IBM list, at the values they held when it ran,
+and <code>fleet</code> merges that stored set over the live list. So an edit made
+<em>after</em> it – another <code>set_*()</code> builder, or <code>parameters$du &lt;- 10</code> by hand –
+is a silent no-op for
 anything in that set, and the run is bit-identical to one without the edit.
 The IBM reads those fields directly and would honour the edit, so this is a
 real difference between the two models rather than a detail of this one.

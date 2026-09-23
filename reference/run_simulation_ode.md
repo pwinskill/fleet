@@ -42,16 +42,17 @@ run_simulation_ode(
   That call also stores `eq_params`, which `fleet` honours if present.
   Setting `parameters$init_EIR` by hand works but skips that.
 
-  **Call `set_equilibrium()` last.** It freezes all 56 translated
-  biological parameters at the values they held when it ran, and `fleet`
-  merges that stored set over the live list. So an edit made *after* it
-  – another `set_*()` builder, or `parameters$du <- 10` by hand – is a
-  silent no-op for anything in that set, and the run is bit-identical to
-  one without the edit. The IBM reads those fields directly and would
-  honour the edit, so this is a real difference between the two models
-  rather than a detail of this one. `fleet` warns when a live value
-  disagrees with the stored one. If a calibration loop varies any of
-  them, re-call `set_equilibrium()` each iteration.
+  **Call `set_equilibrium()` last.** It freezes all 56 equilibrium
+  parameters, 51 of them translated from the IBM list, at the values
+  they held when it ran, and `fleet` merges that stored set over the
+  live list. So an edit made *after* it – another `set_*()` builder, or
+  `parameters$du <- 10` by hand – is a silent no-op for anything in that
+  set, and the run is bit-identical to one without the edit. The IBM
+  reads those fields directly and would honour the edit, so this is a
+  real difference between the two models rather than a detail of this
+  one. `fleet` warns when a live value disagrees with the stored one. If
+  a calibration loop varies any of them, re-call `set_equilibrium()`
+  each iteration.
 
   Three further optional fields tune how faithfully the mean field
   mirrors the IBM. The first two are per-individual arithmetic, the

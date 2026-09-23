@@ -32,16 +32,16 @@ current as the model changes, and this article is not.
 
 ## Things to do
 
-**Call `set_equilibrium()` last.** It freezes all 56 translated
-biological parameters at the values they held when it ran, and `fleet`
-merges that stored set over the live list. An edit made *after* it —
-another `set_*()` builder, or `parameters$du <- 10` by hand — is a
-silent no-op, and the run comes out bit-identical to one without the
-edit. The IBM reads those fields directly and would honour the edit, so
-this is a real difference between the two models, not a quirk of this
-one. `fleet` warns when a live value disagrees with the stored one. If a
-calibration loop varies any of them, re-call `set_equilibrium()` each
-iteration.
+**Call `set_equilibrium()` last.** It freezes all 56 equilibrium
+parameters, 51 of them translated from the IBM list, at the values they
+held when it ran, and `fleet` merges that stored set over the live list.
+An edit made *after* it — another `set_*()` builder, or
+`parameters$du <- 10` by hand — is a silent no-op, and the run comes out
+bit-identical to one without the edit. The IBM reads those fields
+directly and would honour the edit, so this is a real difference between
+the two models, not a quirk of this one. `fleet` warns when a live value
+disagrees with the stored one. If a calibration loop varies any of them,
+re-call `set_equilibrium()` each iteration.
 
 **Burn in before calibrating.** The seed is a close approximation, not
 the exact fixed point (§F), and a seasonal run needs ~10 years to settle
