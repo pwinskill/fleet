@@ -21,9 +21,16 @@
     cell carries the **second moment of immunity** and the curves are averaged
     over a gamma. Without it school-age clinical incidence ran up to 40% low;
   - `delay_gam = 0` for vivax, so the FOIM lag is bypassed.
-* Against four 25,000-person IBM replicates at EIR 20 over eight years: PCR
-  prevalence in 2–10 year olds within 0.8%, all infections 1.1%, LM prevalence
-  2.4%, clinical incidence 4–5%. A vivax run costs about 3 s per simulated year.
+* Against four 25,000-person IBM replicates at EIR 20 over eight years, with no
+  treatment: PCR prevalence in 2–10 year olds within 0.8%, all infections 1.1%,
+  LM prevalence 2.4%, clinical incidence 4–5%. A vivax run costs about 3 s per
+  simulated year.
+* **Open: with treatment, and on real vivax sites, `fleet` runs high.** With
+  chloroquine at 40% coverage at EIR 1 it drifts to 8% above the IBM over eight
+  years. Across 82 site-file sub-sites its monthly clinical incidence is about
+  50% above the IBM's diagnostics (r = 0.85): the two agree in 2000 and part
+  over the following decade, faster where treatment coverage is higher. The
+  cause is not yet isolated. Treat vivax results as provisional.
 * New output columns `n_relapses` and `n_with_hypnozoites` (exactly 0 under
   falciparum, so the column set does not change with the parasite), and their
   age bands when `incidence_relapse_rendering_*` and
