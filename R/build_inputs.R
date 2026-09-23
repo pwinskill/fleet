@@ -284,6 +284,17 @@ check_unsupported <- function(p) {
   }, character(1), USE.NAMES = FALSE)
 }
 
+# The vivax block's inputs for a falciparum run: switched off, collapsed to one
+# cell, and empty. One cell rather than zero because odin2 cannot have a
+# zero-length dimension -- the same reason enable_heterogeneity collapses n_het
+# to 1 rather than removing it. gammal is irrelevant to an empty block, but the
+# odin model declares it without a default, so it has to be supplied.
+inert_vivax_block <- function() {
+  z <- array(0, c(1L, 1L, 1L))
+  list(pf_on = 1, pv_on = 0, n_age_v = 1L, n_het_v = 1L, n_hyp = 1L,
+       gammal = 0, Sv0 = z, Dv0 = z, Av0 = z, Uv0 = z, Trv0 = z)
+}
+
 #' Build odin2 inputs.
 #' @param parameters a malariasimulation::get_parameters() list (falciparum).
 #' @param init_EIR target adult EIR (infectious bites per adult per year).
@@ -750,6 +761,7 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
     ME0 = ME0, ML0 = ML0, MP0 = MP0, Sm0 = Sm0, Xi0 = Xi0, Em_inc0 = Em_inc0, Im0 = Im0,
     Xe0 = Xe0, Xf0 = Xf0
   )
+  pars <- c(pars, inert_vivax_block())
 
   list(
     pars = pars,

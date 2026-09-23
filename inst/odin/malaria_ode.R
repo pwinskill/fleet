@@ -24,6 +24,36 @@ n_eip <- parameter(constant = TRUE)   # EIP chain stages
 n_ph <- parameter(constant = TRUE)    # post-treatment prophylaxis chain stages
 n_phc <- parameter(constant = TRUE)   # chemoprevention prophylaxis chain stages
 
+## ---- parasite species -------------------------------------------------------
+# One parasite per run, as in malariasimulation, where `parasite` is a scalar.
+# Both blocks are always compiled; the one not in use is held empty and inert.
+#
+# The vivax block has its own dimensions so that under falciparum it collapses to
+# a single cell -- n_age_v = n_het_v = n_hyp = 1 -- and costs a handful of states.
+# The falciparum block is NOT collapsed under vivax: its ageing is written with
+# index ranges (`S[2:n_age, ]`), and a range to a dimension of 1 becomes `2:1`,
+# which counts downwards. Collapsing it would mean rewriting every falciparum
+# equation. So under vivax it sits at full size, empty.
+#
+# An empty block divides by its own zero population, and a NaN derivative
+# anywhere fails the whole run even if nothing reaches a shared quantity -- so
+# multiplying its output by zero is not enough (0 x NaN is NaN). Divisions by a
+# cell population therefore carry pop_floor in the denominator: an empty cell
+# gives 0/pop_floor = 0, and in an occupied one it is an exact no-op, since the
+# smallest real cell (~1e-5) has an ulp near 1e-21.
+#
+# NOT `if (pf_on > 0.5) ... else 0`. That was tried first, and although it is
+# correct it made every falciparum run 10x slower at an unchanged step count:
+# the branch sat in the loop that also computes 1 - exp(-EPS) and 1 - exp(-FOI),
+# and stopped the compiler optimising it. Keep species switches out of loops
+# that carry transcendentals.
+pop_floor <- 1e-300
+pf_on <- parameter(constant = TRUE)   # 1 under falciparum, 0 under vivax
+pv_on <- parameter(constant = TRUE)   # 1 under vivax, 0 under falciparum
+n_age_v <- parameter(constant = TRUE) # n_age under vivax, 1 otherwise
+n_het_v <- parameter(constant = TRUE) # n_het under vivax, 1 otherwise
+n_hyp <- parameter(constant = TRUE)   # kmax + 1 under vivax, 1 otherwise
+
 ## ---- grid / demography (data) ---------------------------------------------
 r_age <- parameter(); psi <- parameter()
 age_mid <- parameter(); mask20 <- parameter()
@@ -253,10 +283,16 @@ dim(Ph_tot, Phc_tot) <- c(n_age, n_het)
 Npop[, ] <- S[i, j] + D[i, j] + A[i, j] + U[i, j] + Tr[i, j] + Tr_slow[i, j] + Ph_tot[i, j] + Phc_tot[i, j]
 deaths[, ] <- mu_age[i] * Npop[i, j]
 dim(Npop, deaths) <- c(n_age, n_het)
-births <- sum(deaths)
+# Births replace deaths from whichever block holds the population. Under
+# falciparum the vivax block is empty, so its deaths are exactly 0 and this is
+# sum(deaths) + 0. Each block then receives births only while it is the one in
+# use; births_f keeps the falciparum equations below in their original shape.
+births <- sum(deaths) + sum(deaths_v)
+births_f <- births * pf_on
+births_v <- births * pv_on
 
 ## ---- human ODEs -----------------------------------------------------------
-deriv(S[1, ]) <- births * het_wt[j] + rU * U[1, j] + rPk * Ph[1, j, n_ph] +
+deriv(S[1, ]) <- births_f * het_wt[j] + rU * U[1, j] + rPk * Ph[1, j, n_ph] +
   rPck * Ph_c[1, j, n_phc] - FOI[1, j] * S[1, j] - re[1] * S[1, j]
 deriv(S[2:n_age, ]) <- r_age[i - 1] * S[i - 1, j] + rU * U[i, j] + rPk * Ph[i, j, n_ph] +
   rPck * Ph_c[i, j, n_phc] - FOI[i, j] * S[i, j] - re[i] * S[i, j]
@@ -316,6 +352,70 @@ deriv(Ph_c[1, , 2:n_phc]) <- rPck * (Ph_c[1, j, k - 1] - Ph_c[1, j, k]) - re[1] 
 deriv(Ph_c[2:n_age, , 2:n_phc]) <- r_age[i - 1] * Ph_c[i - 1, j, k] +
   rPck * (Ph_c[i, j, k - 1] - Ph_c[i, j, k]) - re[i] * Ph_c[i, j, k]
 
+## ---- P. vivax human block -------------------------------------------------
+# Indexed [age, heterogeneity, hypnozoite batch]. malariasimulation carries an
+# integer batch count per person, k in 0..kmax, and relapse is a hazard of k*f.
+# A mean-field model cannot hold only the mean count: the relapse hazard is
+# linear in k, but immunity, detectability and the U->S rate are not, and
+# malariaEquilibriumVivax returns every state as [age, het, batch] for the same
+# reason. kk[k] is the batch count at level k, so kk = 0 at the first level.
+#
+# Written with `if` guards on the index rather than index ranges. A range to the
+# last batch, 2:(n_hyp - 1), becomes 2:0 when n_hyp = 1 -- the falciparum
+# collapse -- which counts DOWNWARDS and fails with "step too small" rather than
+# an error. Guards also need one equation per compartment instead of six
+# (two age boundaries by three batch boundaries). odin2 warns that it cannot
+# validate accesses such as X[i, j, k + 1]; they are safe, because the generated
+# code is a ternary and the out-of-range branch is never evaluated.
+kk[] <- as.numeric(i) - 1
+dim(kk) <- n_hyp
+
+gammal <- parameter()   # per-batch hypnozoite clearance rate (k -> k-1 at k*gammal)
+
+dim(Sv, Dv, Av, Uv, Trv, Trv_slow) <- c(n_age_v, n_het_v, n_hyp)
+
+Npop_v[, , ] <- Sv[i, j, k] + Dv[i, j, k] + Av[i, j, k] + Uv[i, j, k] +
+  Trv[i, j, k] + Trv_slow[i, j, k]
+deaths_v[, , ] <- mu_age[i] * Npop_v[i, j, k]
+dim(Npop_v, deaths_v) <- c(n_age_v, n_het_v, n_hyp)
+
+# Vivax population by age, mapped onto the shared age index so it can join n_g
+# (and through it mpsi, the population-weighted mean biting rate). Under
+# falciparum n_age_v = 1 and this is exactly 0 everywhere.
+Nv_age[] <- sum(Npop_v[i, , ])
+dim(Nv_age) <- n_age_v
+nv_g[] <- if (i <= n_age_v) Nv_age[i] else 0
+dim(nv_g) <- n_age
+
+# Ageing and death, as for falciparum; newborns enter S at batch 0 carrying no
+# hypnozoites. Batch clearance moves everyone down one level at k*gammal,
+# whatever their disease state -- hypnozoites die in the liver regardless of what
+# is happening in the blood.
+deriv(Sv[, , ]) <-
+  (if (i > 1) r_age[i - 1] * Sv[i - 1, j, k] else (if (k == 1) births_v * het_wt[j] else 0)) +
+  (if (k < n_hyp) gammal * kk[k + 1] * Sv[i, j, k + 1] else 0) -
+  gammal * kk[k] * Sv[i, j, k] - re[i] * Sv[i, j, k]
+deriv(Dv[, , ]) <-
+  (if (i > 1) r_age[i - 1] * Dv[i - 1, j, k] else 0) +
+  (if (k < n_hyp) gammal * kk[k + 1] * Dv[i, j, k + 1] else 0) -
+  gammal * kk[k] * Dv[i, j, k] - re[i] * Dv[i, j, k]
+deriv(Av[, , ]) <-
+  (if (i > 1) r_age[i - 1] * Av[i - 1, j, k] else 0) +
+  (if (k < n_hyp) gammal * kk[k + 1] * Av[i, j, k + 1] else 0) -
+  gammal * kk[k] * Av[i, j, k] - re[i] * Av[i, j, k]
+deriv(Uv[, , ]) <-
+  (if (i > 1) r_age[i - 1] * Uv[i - 1, j, k] else 0) +
+  (if (k < n_hyp) gammal * kk[k + 1] * Uv[i, j, k + 1] else 0) -
+  gammal * kk[k] * Uv[i, j, k] - re[i] * Uv[i, j, k]
+deriv(Trv[, , ]) <-
+  (if (i > 1) r_age[i - 1] * Trv[i - 1, j, k] else 0) +
+  (if (k < n_hyp) gammal * kk[k + 1] * Trv[i, j, k + 1] else 0) -
+  gammal * kk[k] * Trv[i, j, k] - re[i] * Trv[i, j, k]
+deriv(Trv_slow[, , ]) <-
+  (if (i > 1) r_age[i - 1] * Trv_slow[i - 1, j, k] else 0) +
+  (if (k < n_hyp) gammal * kk[k + 1] * Trv_slow[i, j, k + 1] else 0) -
+  gammal * kk[k] * Trv_slow[i, j, k] - re[i] * Trv_slow[i, j, k]
+
 ## ---- immunity ODEs (aging uses re[i]; boundary I0 = 0) --------------------
 # Immunity boosting, matching the IBM's refractory renewal process exactly.
 # malariasimulation boosts on a per-DAY EVENT with an integer refractory window:
@@ -332,7 +432,7 @@ deriv(Ph_c[2:n_age, , 2:n_phc]) <- r_age[i - 1] * Ph_c[i - 1, j, k] +
 # boosted for everyone bitten, whatever their state, so it is not scaled.
 q_b[, ] <- 1 - exp(-EPS[i, j])
 q_f[, ] <- 1 - exp(-FOI[i, j])
-at_risk[, ] <- (S[i, j] + A[i, j] + U[i, j]) / Npop[i, j]
+at_risk[, ] <- (S[i, j] + A[i, j] + U[i, j]) / (Npop[i, j] + pop_floor)
 bst_b[, ] <- q_b[i, j] / (q_b[i, j] * ub_eff + 1)
 bst_c[, ] <- at_risk[i, j] * q_f[i, j] / (q_f[i, j] * uc_eff + 1)
 bst_d[, ] <- at_risk[i, j] * q_f[i, j] / (q_f[i, j] * ud_eff + 1)
@@ -354,8 +454,11 @@ dim(q_b, q_f, at_risk, bst_b, bst_c, bst_d, bst_v) <- c(n_age, n_het)
 # from the NEW death rate while N still had the OLD shape, was the wrong
 # coefficient for the whole transient. The site files carry exactly such
 # series (yearly rates, 2000 onward).
-ain[1, ] <- births * het_wt[j] / Npop[1, j]
-ain[2:n_age, ] <- r_age[i - 1] * Npop[i - 1, j] / Npop[i, j]
+# births_f rather than births -- the same number under falciparum, and the
+# correct one by construction, since it is what actually enters S. The
+# pop_floor keeps an empty block finite; see its definition.
+ain[1, ] <- births_f * het_wt[j] / (Npop[1, j] + pop_floor)
+ain[2:n_age, ] <- r_age[i - 1] * Npop[i - 1, j] / (Npop[i, j] + pop_floor)
 dim(ain) <- c(n_age, n_het)
 deriv(IB[1, ]) <- bst_b[1, j] - IB[1, j] / d_ib - ain[1, j] * IB[1, j]
 deriv(IB[2:n_age, ]) <- bst_b[i, j] - IB[i, j] / d_ib +
@@ -455,6 +558,18 @@ initial(Im[]) <- Im0[i]
 initial(Xe[]) <- Xe0
 initial(Xf[]) <- Xf0
 
+# vivax block: seeded from malariaEquilibriumVivax under vivax, all zero (in a
+# single cell) under falciparum
+Sv0 <- parameter(); Dv0 <- parameter(); Av0 <- parameter()
+Uv0 <- parameter(); Trv0 <- parameter()
+dim(Sv0, Dv0, Av0, Uv0, Trv0) <- c(n_age_v, n_het_v, n_hyp)
+initial(Sv[, , ]) <- Sv0[i, j, k]
+initial(Dv[, , ]) <- Dv0[i, j, k]
+initial(Av[, , ]) <- Av0[i, j, k]
+initial(Uv[, , ]) <- Uv0[i, j, k]
+initial(Trv[, , ]) <- (1 - spc0) * Trv0[i, j, k]
+initial(Trv_slow[, , ]) <- spc0 * Trv0[i, j, k]
+
 dim(S, D, A, U, Tr, Tr_slow) <- c(n_age, n_het)
 dim(Ph) <- c(n_age, n_het, n_ph)
 dim(Ph_c) <- c(n_age, n_het, n_phc)
@@ -492,7 +607,7 @@ detlm[, ] <- D[i, j] + Tr[i, j] + Tr_slow[i, j] + q[i, j] * A[i, j]
 detpcr[, ] <- D[i, j] + Tr[i, j] + Tr_slow[i, j] + A[i, j] + U[i, j]
 dim(clin_inc_a, sev_inc_a, inc_a, detlm, detpcr) <- c(n_age, n_het)
 
-n_g[] <- sum(Npop[i, ])
+n_g[] <- sum(Npop[i, ]) + nv_g[i]    # both blocks; the one not in use is empty
 det_lm_g[] <- sum(detlm[i, ])
 det_pcr_g[] <- sum(detpcr[i, ])
 clin_g[] <- sum(clin_inc_a[i, ])
