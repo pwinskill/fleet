@@ -187,7 +187,8 @@ test_that("invalid inputs error clearly", {
   # rejects one of its own before fleet sees it, so this is the path fleet owns
   p0 <- malariasimulation::get_parameters(); p0$init_EIR <- 0
   expect_error(run_simulation_ode(10, p0), "positive")
-  expect_error(run_simulation_ode(10, eqm(malariasimulation::get_parameters(parasite = "vivax"), 10)), "falciparum")
+  p1 <- eqm(malariasimulation::get_parameters(), 10); p1$parasite <- "ovale"
+  expect_error(run_simulation_ode(10, p1), "'falciparum' or 'vivax'")
 })
 
 test_that("the run signature mirrors run_simulation() and points at the replacement call", {

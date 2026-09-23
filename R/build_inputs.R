@@ -284,16 +284,98 @@ check_unsupported <- function(p) {
   }, character(1), USE.NAMES = FALSE)
 }
 
+# Default cap on the vivax post-treatment prophylaxis chain. Each stage carries
+# the batch dimension, and at full length (17 stages for chloroquine) the chain
+# alone would be ~50,000 states; five keeps the mean and widens the spread
+# (Erlang-5 CV 0.45 against the Weibull's 0.23).
+VIVAX_MAX_PH <- 5L
+
 # The vivax block's inputs for a falciparum run: switched off, collapsed to one
 # cell, and empty. One cell rather than zero because odin2 cannot have a
 # zero-length dimension -- the same reason enable_heterogeneity collapses n_het
-# to 1 rather than removing it. gammal is irrelevant to an empty block, but the
-# odin model declares it without a default, so it has to be supplied.
-inert_vivax_block <- function() {
+# to 1 rather than removing it. The rate constants only have to be finite and
+# keep every denominator away from zero; an empty block never uses them.
+# mat_factor_v is per shared age band, so it needs the real n_age.
+inert_vivax_block <- function(n_age) {
   z <- array(0, c(1L, 1L, 1L))
-  list(pf_on = 1, pv_on = 0, n_age_v = 1L, n_het_v = 1L, n_hyp = 1L,
-       gammal = 0, Sv0 = z, Dv0 = z, Av0 = z, Uv0 = z, Trv0 = z)
+  c(list(pf_on = 1, pv_on = 0, n_age_v = 1L, n_het_v = 1L, n_bat = 1L, n_hyp = 1L,
+         n_phv = 1L,
+         Sv0 = z, Dv0 = z, Av0 = z, Uv0 = z, Trv0 = z, JAv0 = z, JCv0 = z,
+         KAv0 = z, KCv0 = z, spread_on = 0, n_q = 1L, qz = 0, qw = 1,
+         Phv0 = array(0, c(1L, 1L, 1L, 1L)), mat_factor_v = numeric(n_age)),
+    as.list(stats::setNames(rep(1, length(VIVAX_SCALARS)), VIVAX_SCALARS)))
 }
+
+# Upper edge given to malariaEquilibriumVivax for fleet's open-ended top age
+# group. Nobody is alive at 200, so the bin holds everyone over fleet's last edge.
+VIVAX_TOP_AGE <- 200
+
+# Within-cell immunity spread under vivax (see the note at pLM in the odin
+# model): the Gauss-Hermite rule the gamma is read at, and the switch.
+# Seven nodes hold the clinical curve (kc = 5.4) within ~5% of the exact gamma
+# expectation at the spreads the IBM shows (CV <= 0.6); the gamma closure itself
+# is no better than that in the far lower tail, so more nodes buy nothing.
+# parameters$immunity_spread = FALSE evaluates every curve at the cell mean.
+VIVAX_GH_Z <- c(-3.750439717725742, -2.366759410734541, -1.154405394739968, 0,
+                1.154405394739968, 2.366759410734541, 3.750439717725742)
+VIVAX_GH_W <- c(0.0005482688559722161, 0.0307571239675866, 0.2401231786050126,
+                0.4571428571428572, 0.2401231786050126, 0.0307571239675866,
+                0.0005482688559722161)
+immunity_spread_rule <- function(p) {
+  on <- p$immunity_spread
+  if (is.null(on)) on <- TRUE
+  if (!(is.logical(on) && length(on) == 1 && !is.na(on)))
+    stop("parameters$immunity_spread must be TRUE or FALSE.", call. = FALSE)
+  if (on) list(spread_on = 1, n_q = length(VIVAX_GH_Z), qz = VIVAX_GH_Z, qw = VIVAX_GH_W)
+  else list(spread_on = 0, n_q = 1L, qz = 0, qw = 1)
+}
+
+# Append n empty levels to the hypnozoite dimension (the third) of a seed array:
+# the liver-stage-protected levels, which the equilibrium has no notion of --
+# malariaEquilibriumVivax has no radical cure, so the IBM starts with nobody
+# protected too.
+pad_levels <- function(x, n) {
+  if (n == 0) return(x)
+  d <- dim(x)
+  out <- array(0, replace(d, 3, d[3] + n))
+  idx <- lapply(d, seq_len)
+  do.call(`[<-`, c(list(out), idx, list(value = x)))
+}
+
+# The live vivax constants, read from a malariasimulation vivax list. D -> A and
+# A -> U progress at the IBM's own rates 1/dd and 1/da, because the model
+# resolves them against infection in the same daily competing-hazard draw the
+# IBM does (so does the immunity-dependent U -> S rate, inside the model). Tr
+# competes with nothing and takes eqp's whole-day rate. The refractory windows
+# use the same integer rule as falciparum's: ms tests (timestep - last_boosted)
+# >= u, so the realised wait is ceil(u) days and u_eff = ceil(u) - 1.
+vivax_scalars <- function(p, eqp) {
+  v <- list(gammal = p$gammal, ff = p$f, bv = p$b,
+            philm_min = p$philm_min, philm_max = p$philm_max,
+            alm50 = p$alm50, klm = p$klm,
+            phi0_v = p$phi0, phi1_v = p$phi1, ic0_v = p$ic0, kc_v = p$kc,
+            dpcr_min = p$dpcr_min, dpcr_max = p$dpcr_max,
+            apcr50 = p$apcr50, kpcr = p$kpcr,
+            rD_ms = 1 / p$dd, rA_ms = 1 / p$da, rT_v = eqp[["rT"]],
+            cD_v = p$cd, cA_v = p$ca, cU_v = p$cu,
+            d_iaa = p$ra, d_ica_v = p$rc,
+            ua_eff = ceiling(p$ua) - 1, uc_v_eff = ceiling(p$uc) - 1,
+            PM_v = p$pcm)
+  stopifnot(setequal(names(v), VIVAX_SCALARS))
+  bad <- names(v)[!vapply(v, function(x) length(x) == 1 && is.finite(x), logical(1))]
+  if (length(bad))
+    stop("vivax parameter(s) missing or non-finite: ", paste(bad, collapse = ", "),
+         ". Build the list with malariasimulation::get_parameters(parasite = ",
+         "\"vivax\").", call. = FALSE)
+  v
+}
+
+# The vivax scalar constants the odin model declares, in one place so the inert
+# and live builds cannot fall out of step.
+VIVAX_SCALARS <- c("gammal", "ff", "bv", "philm_min", "philm_max", "alm50", "klm",
+                   "phi0_v", "phi1_v", "ic0_v", "kc_v", "dpcr_min", "dpcr_max",
+                   "apcr50", "kpcr", "rD_ms", "rA_ms", "rT_v", "cD_v", "cA_v", "cU_v",
+                   "d_iaa", "d_ica_v", "ua_eff", "uc_v_eff", "PM_v")
 
 #' Build odin2 inputs.
 #' @param parameters a malariasimulation::get_parameters() list (falciparum).
@@ -315,8 +397,30 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
                          n_eir = 10L, n_foim = 10L, n_eip = 20L, n_ph = NULL, n_phc = NULL,
                          timesteps = 3650) {
   p <- parameters
-  if (!is.null(p$parasite) && p$parasite == "vivax") {
-    stop("fleet supports P. falciparum only (parasite = 'vivax' not supported)")
+  # One parasite per run, as in malariasimulation. Much of what follows is shared
+  # unchanged, because a vivax list carries the falciparum names wherever the two
+  # coincide: da, dd, dt arrive as rA, rD, rT, and rm, pcm as dm, PM, so the
+  # whole-day rate conversion, the drug series and the maternal-immunity factor
+  # below are already the vivax ones under vivax. Falciparum-only constants the
+  # vivax list lacks (b0, ib0, ...) keep malariaEquilibrium's defaults: finite
+  # values for a falciparum block that is held empty.
+  is_vivax <- identical(p$parasite, "vivax")
+  if (!is.null(p$parasite) && !p$parasite %in% c("falciparum", "vivax")) {
+    stop("parameters$parasite must be 'falciparum' or 'vivax'.", call. = FALSE)
+  }
+  # malariasimulation cannot run these under vivax -- update_mass_drug_admin()
+  # passes variables$id, which does not exist for vivax, and fails with "attempt
+  # to apply non-function" (present in 3.0.0 and 3.0.1). A twin cannot offer a
+  # result the original cannot produce, so refuse rather than run a pulse into
+  # the empty falciparum chain and report it as a vivax answer.
+  if (is_vivax) {
+    chemo <- c(mda = isTRUE(p$mda), smc = isTRUE(p$smc), pmc = isTRUE(p$pmc))
+    if (any(chemo))
+      stop("parameters$parasite = 'vivax' cannot be combined with ",
+           paste(toupper(names(chemo)[chemo]), collapse = ", "), ": malariasimulation ",
+           "itself fails on this combination (update_mass_drug_admin() reads the ",
+           "falciparum-only `id` variable), so there is no IBM result to reproduce.",
+           call. = FALSE)
   }
   # A single finite positive NUMBER. `is.na() || <= 0` alone let two values through
   # to die far downstream in messages that never mention init_EIR: Inf (reaches
@@ -380,8 +484,19 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
   }
   n_eir <- chk_stages(n_eir, "n_eir"); n_foim <- chk_stages(n_foim, "n_foim")
   n_eip <- chk_stages(n_eip, "n_eip")
+  n_ph_auto <- is.null(n_ph)
   n_ph  <- if (is.null(n_ph))  dser$seed$n_ph else chk_stages(n_ph, "n_ph")
   n_phc <- if (is.null(n_phc)) chp$n_stages   else chk_stages(n_phc, "n_phc")
+  # Under vivax the post-treatment chain is the vivax block's, and it carries the
+  # batch dimension, so each stage costs n_age * n_het * (kmax + 1) states rather
+  # than n_age * n_het. Capped at VIVAX_MAX_PH stages by default: the chain mean is
+  # unchanged, only its spread widens. An explicit n_ph is honoured as given. The
+  # falciparum chains collapse to one inert stage.
+  n_phv <- 1L
+  if (is_vivax) {
+    n_phv <- if (n_ph_auto) min(VIVAX_MAX_PH, n_ph) else n_ph
+    n_ph <- 1L; n_phc <- 1L
+  }
   if (!is.null(p$hold_init_EIR) && !(is.logical(p$hold_init_EIR) &&
                                      length(p$hold_init_EIR) == 1 && !is.na(p$hold_init_EIR)))
     stop("parameters$hold_init_EIR must be TRUE or FALSE.", call. = FALSE)
@@ -618,6 +733,50 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
          Xf0 = Xf0, foim0 = foim0, total_M = (EIR / 365) * hp / denom)
   }
 
+  ## The vivax seed. malariaEquilibriumVivax returns every state as
+  ## [age, het, batch], with the heterogeneity strata already built -- on the same
+  ## Gauss-Hermite nodes fleet and the IBM use, which is what makes that usable.
+  ## Two differences from the falciparum path:
+  ##   * it treats its ages as bin EDGES, so fleet's lower edges would give one
+  ##     group fewer and no open top; one extra upper edge gives fleet's absorbing
+  ##     top group a bin to take its within-age fractions from.
+  ##   * its own age structure is not fleet's. The distribution WITHIN each age
+  ##     group over (het, batch, state) is correct conditional on age, so it is
+  ##     re-weighted onto fleet's stationary structure `prop`, as resc does for
+  ##     falciparum.
+  ## Its prophylaxis state P goes into the post-treatment chain, spread evenly
+  ## over the stages, which is a uniform-rate chain's stationary occupancy.
+  seed_human_vivax <- function(EIR) {
+    ## The IBM's own seed, exactly as set_equilibrium() and create_variables()
+    ## build it. fleet's fixed point cannot be solved for here -- no equilibrium
+    ## solver has the daily competing-hazard draw -- so both models start from
+    ## the same state and relax from it together.
+    pvt <- translate_vivax_parameters(p)
+    e <- malariaEquilibriumVivax::vivax_equilibrium(
+      EIR = EIR, ft = ft_seed, p = pvt, age = c(age_lower, VIVAX_TOP_AGE))
+    st <- e$states
+    tot_age <- apply(st$S + st$U + st$A + st$D + st$T + st$P, 1, sum)
+    rw <- function(x) sweep(x, 1, prop / tot_age, `*`)
+    Sv0 <- rw(st$S); Uv0 <- rw(st$U); Av0 <- rw(st$A); Dv0 <- rw(st$D)
+    Trv0 <- rw(st$T)
+    Phv0 <- array(rep(rw(st$P) / n_phv, n_phv), c(dim(Sv0), n_phv))
+    ## infectivity sum and mosquito sizing exactly as seed_human(), summed over
+    ## the batch dimension; A carries the constant ca for vivax
+    inf0 <- p$cd * Dv0 + p$ca * Av0 + p$cu * Uv0 + eqp[["cT"]] * Trv0
+    Xf0 <- sum(outer(psi, zeta) * apply(inf0, c(1, 2), sum)) / mean_psi
+    foim0 <- a_spp * Xf0
+    denom <- sum(a_spp * species_prop * foim0 * g_s / (foim0 + mum_v))
+    ## immunity as stocks (the model holds J = N * I): the equilibrium's mean
+    ## per cell, which is conditional on age, times the re-weighted population
+    Ncell <- Sv0 + Uv0 + Av0 + Dv0 + Trv0 + rw(st$P)
+    list(Sv0 = Sv0, Dv0 = Dv0, Av0 = Av0, Uv0 = Uv0, Trv0 = Trv0, Phv0 = Phv0,
+         JAv0 = st$IAA * Ncell, JCv0 = st$ICA * Ncell,
+         # everyone in a cell starts at its mean, as initial_immunity() starts
+         # the IBM, so the within-cell spread builds up from zero in both
+         KAv0 = st$IAA^2 * Ncell, KCv0 = st$ICA^2 * Ncell,
+         Xf0 = Xf0, foim0 = foim0, total_M = (EIR / 365) * hp / denom)
+  }
+
   ## Which EIR to seed at. Under the default demography fleet's own sizing is
   ## malariasimulation's formula evaluated at fleet's own equilibrium (its age
   ## grid, whole-day rates, drug-linked cT and ft*eff), which lands within ~1-2% of
@@ -634,7 +793,11 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
   eir_seed <- init_EIR
   total_M_ibm <- NA_real_
   sub_threshold <- FALSE
-  if (isTRUE(p$custom_demography) && !isTRUE(p$hold_init_EIR)) {
+  # Not yet for vivax: rooting needs the IBM's total_M, which under vivax comes
+  # from malariaEquilibriumVivax rather than ibm_total_M()'s falciparum solve. A
+  # vivax run under a custom demography therefore seeds at init_EIR, as
+  # hold_init_EIR = TRUE would, and the IBM may settle at a different EIR.
+  if (isTRUE(p$custom_demography) && !isTRUE(p$hold_init_EIR) && !is_vivax) {
     total_M_ibm <- ibm_total_M(p, init_EIR, eqp_ibm, ft)
     # fleet's total_M(EIR) is increasing in EIR and tends to the transmission
     # threshold M_crit as EIR -> 0, so a root exists iff M_crit < total_M_ibm:
@@ -658,10 +821,19 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
                                      extendInt = "upX", tol = 1e-10)$root)
     }
   }
-  hs <- seed_human(eir_seed)
-  S0 <- hs$S0; D0 <- hs$D0; A0 <- hs$A0; U0 <- hs$U0; Tr0 <- hs$Tr0
-  Ph0 <- hs$Ph0; Phc0 <- hs$Phc0
-  IB_init <- hs$IB_init; ICA_init <- hs$ICA_init; ID_init <- hs$ID_init; IVA_init <- hs$IVA_init
+  hs <- if (is_vivax) seed_human_vivax(eir_seed) else seed_human(eir_seed)
+  if (is_vivax) {
+    # the falciparum block is held empty under vivax: zero state, one inert
+    # prophylaxis stage each (n_ph and n_phc were collapsed to 1 above)
+    zf <- matrix(0, n_age, n_het)
+    S0 <- D0 <- A0 <- U0 <- Tr0 <- zf
+    IB_init <- ICA_init <- ID_init <- IVA_init <- zf
+    Ph0 <- array(0, c(n_age, n_het, n_ph)); Phc0 <- array(0, c(n_age, n_het, n_phc))
+  } else {
+    S0 <- hs$S0; D0 <- hs$D0; A0 <- hs$A0; U0 <- hs$U0; Tr0 <- hs$Tr0
+    Ph0 <- hs$Ph0; Phc0 <- hs$Phc0
+    IB_init <- hs$IB_init; ICA_init <- hs$ICA_init; ID_init <- hs$ID_init; IVA_init <- hs$IVA_init
+  }
   Xf0 <- hs$Xf0; foim0 <- hs$foim0
   total_M <- if (sub_threshold) total_M_ibm else hs$total_M
   Xe0 <- eir_seed / 365   # equilibrium adult EIR per day
@@ -744,6 +916,7 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
     n_ftt = length(trt$times), ft_times = trt$times, ft_vals = trt$vals,
     n_dmix = length(dser$times), dmix_times = dser$times,
     cT_vals = dser$cT, drug_eff_vals = dser$drug_eff, rP_vals = dser$rP,
+    hyp_vals = dser$hyp, eff_hyp_vals = dser$eff_hyp, mean_ls_vals = dser$mean_ls,
     n_rest = length(res$times), res_times = res$times,
     etf_vals = res$etf, spc_vals = res$spc,
     del = p$del, dl = p$dl, dpl = p$dpl, me = p$me, ml = p$ml, mup = p$mup,
@@ -761,7 +934,24 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
     ME0 = ME0, ML0 = ML0, MP0 = MP0, Sm0 = Sm0, Xi0 = Xi0, Em_inc0 = Em_inc0, Im0 = Im0,
     Xe0 = Xe0, Xf0 = Xf0
   )
-  pars <- c(pars, inert_vivax_block())
+  pars <- c(pars, if (is_vivax) {
+    stopifnot(dim(hs$Sv0)[3] == p$kmax + 1)
+    # Liver-stage protection after radical cure adds dser$n_ls levels to the
+    # hypnozoite dimension; none without a radical-cure drug on the schedule.
+    n_bat <- as.integer(p$kmax) + 1L
+    n_ls <- dser$n_ls
+    pl <- function(x) pad_levels(x, n_ls)
+    # mat_factor_v: under vivax eqp$dm is vivax's rm, so the falciparum maternal
+    # factor computed above already is the vivax one
+    c(list(pf_on = 0, pv_on = 1, n_age_v = n_age, n_het_v = n_het,
+           n_bat = n_bat, n_hyp = n_bat + n_ls, n_phv = n_phv,
+           Sv0 = pl(hs$Sv0), Dv0 = pl(hs$Dv0), Av0 = pl(hs$Av0), Uv0 = pl(hs$Uv0),
+           Trv0 = pl(hs$Trv0), Phv0 = pl(hs$Phv0), JAv0 = pl(hs$JAv0),
+           JCv0 = pl(hs$JCv0), KAv0 = pl(hs$KAv0), KCv0 = pl(hs$KCv0),
+           mat_factor_v = icm_factor),
+      immunity_spread_rule(p),
+      vivax_scalars(p, eqp))
+  } else inert_vivax_block(n_age))
 
   list(
     pars = pars,

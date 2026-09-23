@@ -93,7 +93,8 @@ treatment_series <- function(p) {
 # so a first-line drug switch changes the mix over time.
 drug_mix <- function(p, eqp, t = NULL) {
   drugs <- p$clinical_treatment_drugs
-  none <- list(drug_eff = 1, cT = eqp[["cT"]], rP = eqp[["rP"]], n_ph = 1L)
+  none <- list(drug_eff = 1, cT = eqp[["cT"]], rP = eqp[["rP"]], n_ph = 1L,
+               hyp = 0, eff_hyp = 0, mean_ls = 1, n_ls = 0L)
   if (is.null(drugs) || length(drugs) == 0) return(none)
   di <- vapply(drugs, function(x) x[[1]], numeric(1))
   peak <- vapply(p$clinical_treatment_coverages, max, numeric(1))
@@ -109,11 +110,41 @@ drug_mix <- function(p, eqp, t = NULL) {
   # floored at one day: a shorter chain would need a per-day rate the explicit
   # solver cannot take, and no antimalarial protects for less than a day
   mean_chain <- max(1, sum(wn * .chain_mean_after_tr(shp, scl, eqp[["rT"]])))
-  list(drug_eff = sum(wn * p$drug_efficacy[di]),
-       cT = p$cd * sum(wn * p$drug_rel_c[di]),
-       rP = 1 / mean_chain,
-       # chain length matched to the variance of the whole Tr + chain sojourn
-       n_ph = erlang_stages(shp, scl, wn, tr = 1 / eqp[["rT"]], m_chain = mean_chain))
+  c(list(drug_eff = sum(wn * p$drug_efficacy[di]),
+         cT = p$cd * sum(wn * p$drug_rel_c[di]),
+         rP = 1 / mean_chain,
+         # chain length matched to the variance of the whole Tr + chain sojourn
+         n_ph = erlang_stages(shp, scl, wn, tr = 1 / eqp[["rT"]], m_chain = mean_chain)),
+    radical_cure_mix(p, di, wn, peak))
+}
+
+# P. vivax radical cure, coverage-weighted like the rest of the mix. A treated
+# person's liver stage is cleared with probability drug_hypnozoite_efficacy,
+# drawn independently of whether the blood stage cleared
+# (calculate_successful_treatments), so the model needs both the radically
+# cured share of treatment (hyp) and the share that is ALSO cleared in the
+# blood (eff_hyp). Liver-stage protection then blocks new batches for a Weibull
+# time from the dose -- the same clock as the dose, so unlike the blood-stage
+# chain there is no Tr sojourn to subtract. Its chain is weighted by who
+# enters it (coverage x hypnozoite efficacy). Zero for falciparum, whose drugs
+# carry no liver-stage parameters.
+radical_cure_mix <- function(p, di, wn, peak) {
+  # a falciparum list carries the field empty, so indexing it gives NA
+  hyp_d <- p$drug_hypnozoite_efficacy[di]
+  if (is.null(hyp_d)) hyp_d <- numeric(length(di))
+  hyp_d[is.na(hyp_d)] <- 0
+  if (!any(hyp_d > 0)) return(list(hyp = 0, eff_hyp = 0, mean_ls = 1, n_ls = 0L))
+  wl <- wn * hyp_d
+  if (sum(wl) == 0) wl <- peak * hyp_d            # none active now: hold the mix
+  shp <- p$drug_hypnozoite_prophylaxis_shape[di]
+  scl <- p$drug_hypnozoite_prophylaxis_scale[di]
+  on <- wl > 0 & shp > 0 & scl > 0                # drugs that protect at all
+  ls <- if (any(on)) {
+    m <- sum(wl[on] * .weibull_mean(shp[on], scl[on])) / sum(wl[on])
+    list(mean_ls = max(1, m),
+         n_ls = min(VIVAX_MAX_PH, erlang_stages(shp[on], scl[on], wl[on])))
+  } else list(mean_ls = 1, n_ls = 0L)
+  c(list(hyp = sum(wn * hyp_d), eff_hyp = sum(wn * p$drug_efficacy[di] * hyp_d)), ls)
 }
 
 # Time-varying drug_eff/cT/rP over the clinical-treatment change times, so a
@@ -127,13 +158,17 @@ drug_mix_series <- function(p, eqp) {
     min(unlist(p$clinical_treatment_timesteps)) else 0
   seed <- drug_mix(p, eqp, if (is.null(drugs) || !length(drugs)) NULL else base_t)
   if (is.null(drugs) || length(drugs) <= 1)
-    return(list(times = 0, drug_eff = seed$drug_eff, cT = seed$cT, rP = seed$rP, seed = seed))
+    return(list(times = 0, drug_eff = seed$drug_eff, cT = seed$cT, rP = seed$rP,
+                hyp = seed$hyp, eff_hyp = seed$eff_hyp, mean_ls = seed$mean_ls,
+                n_ls = seed$n_ls, seed = seed))
   ts <- sort(unique(c(0, unlist(p$clinical_treatment_timesteps))))
   m <- lapply(ts, function(t) drug_mix(p, eqp, max(t, base_t)))   # t<base_t -> baseline blend
-  list(times = ts,
-       drug_eff = vapply(m, `[[`, numeric(1), "drug_eff"),
-       cT = vapply(m, `[[`, numeric(1), "cT"),
-       rP = vapply(m, `[[`, numeric(1), "rP"),
+  col <- function(nm) vapply(m, `[[`, numeric(1), nm)
+  list(times = ts, drug_eff = col("drug_eff"), cT = col("cT"), rP = col("rP"),
+       hyp = col("hyp"), eff_hyp = col("eff_hyp"), mean_ls = col("mean_ls"),
+       # the liver-stage chain is a dimension, so it is sized for the longest-
+       # staged mix on the schedule, not only the one in force at the seed
+       n_ls = as.integer(max(col("n_ls"))),
        seed = seed)
 }
 

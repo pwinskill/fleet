@@ -26,16 +26,22 @@ get_generator <- function(odin_file = NULL) {
 #'
 #' @param timesteps number of days to simulate. Output has `timesteps + 1` rows
 #'   (day 0 is the seeded equilibrium; days 1..timesteps are integrated).
-#' @param parameters a malariasimulation::get_parameters() list (falciparum),
-#'   optionally with interventions layered on via the `set_*` builders. The
+#' @param parameters a malariasimulation::get_parameters() list, optionally with
+#'   interventions layered on via the `set_*` builders. The
 #'   following are applied automatically from the list (no extra arguments):
 #'   clinical treatment (time-varying), antimalarial resistance, bed nets, IRS,
 #'   MDA/SMC/PMC, PEV (EPI + mass) and TBV vaccines, seasonality and flexible
 #'   carrying capacity, and custom demography (`set_demography`: age-specific
-#'   mortality and the resulting equilibrium age structure). P. vivax is rejected;
-#'   the model is always compartmental (the individual-mosquito path does not
-#'   apply). `vignette("using")` indexes the mean-field approximations and when
-#'   each one matters.
+#'   mortality and the resulting equilibrium age structure). The parasite is
+#'   `parameters$parasite`, as in malariasimulation: a list from
+#'   `get_parameters(parasite = "vivax")` runs the P. vivax model -- hypnozoite
+#'   batches and relapse, radical cure with liver-stage protection
+#'   (`CQ_PQ_params_vivax`, `CQ_TQ_params_vivax`), no severe disease -- and adds
+#'   `n_relapses` and `n_with_hypnozoites`. MDA, SMC and PMC are refused under
+#'   vivax because malariasimulation itself fails on them. The model is always
+#'   compartmental (the individual-mosquito path does not apply).
+#'   `vignette("using")` indexes the mean-field approximations and when each one
+#'   matters.
 #'
 #'   **The target EIR is read from this list**, as `parameters$init_EIR`, which is
 #'   where `malariasimulation` puts it and reads it from too. Seed it the same way
@@ -89,6 +95,17 @@ get_generator <- function(odin_file = NULL) {
 #'       density and seeds at the EIR its own equilibrium under the custom age
 #'       structure then supports (a fixed point, so no burn-in), which is generally
 #'       *not* `init_EIR`. Set `TRUE` to seed at `init_EIR` exactly instead.
+#'     \item `immunity_spread` (default `TRUE`; P. vivax only): model the spread of
+#'       immunity among people who share an age, heterogeneity group and
+#'       hypnozoite batch count. In the IBM they differ by their batch *history*
+#'       -- years with few batches mean far fewer infections -- and the vivax
+#'       immunity curves are steep enough that the mean probability of clinical
+#'       disease can be several times the probability at the mean immunity. fleet
+#'       carries each cell's second moment of immunity and averages the curves
+#'       over a gamma with that mean and variance. `FALSE` evaluates them at the
+#'       cell mean, which under-predicts clinical incidence in school-age children
+#'       and young adults by up to 40% at EIR 20 once the IBM has built up its
+#'       spread.
 #'   }
 #' @param correlations accepted so the first three arguments mirror
 #'   `malariasimulation::run_simulation(timesteps, parameters, correlations)`
@@ -133,6 +150,13 @@ get_generator <- function(odin_file = NULL) {
 #'       `n_age_*` band renders, and names the age groups it sits in. A band that
 #'       overlaps no age group at all (it lies above the open-ended top group)
 #'       warns too, and its `p_detect_lm_*` is `NA` rather than 0.
+#'     \item P. vivax: `n_relapses` (per-day relapse infections) and
+#'       `n_with_hypnozoites` (people carrying at least one batch), exactly 0
+#'       under falciparum so the column set does not change with the parasite;
+#'       plus `n_inc_relapse_*` and `n_with_hypnozoites_*` over the bands in
+#'       `incidence_relapse_rendering_*` and `n_with_hypnozoites_rendering_*`,
+#'       when those are set. The severe columns are 0 for vivax, and for vivax an
+#'       `A` is LM-detectable by definition, so `n_detect_lm_*` counts all of it.
 #'     \item `ft` (treated fraction), `EIR` (per adult per year), `FOIM`.
 #'     \item population-total infection-state counts `S_count`, `D_count`,
 #'       `A_count`, `U_count`, `Tr_count`, `Ph_count` (diagnostic).
@@ -263,6 +287,7 @@ run_simulation_ode <- function(timesteps, parameters = NULL, correlations = NULL
 
 # odin output/aggregate variables recorded from each run (all of render_output's inputs)
 OUTPUT_VARS <- c("n_g", "det_lm_g", "det_pcr_g", "clin_g", "sev_g", "inc_g",
+                 "relapse_g", "hyp_g",
                  "S_g", "D_g", "A_g", "U_g", "Tr_g", "Ph_g", "EIR_yr", "FOIM", "ft_out")
 
 #' Integrate with chemoprevention pulses applied between segments.
@@ -324,7 +349,8 @@ simulate_with_pulses <- function(sys, times, events, meta, uidx, out_idx) {
 #' bands when a family's own rendering list is empty (e.g. a bare get_parameters()).
 #' @noRd
 output_bands <- function(p, family = c("all", "prevalence", "incidence",
-                                       "clinical", "severe")) {
+                                       "clinical", "severe", "relapse",
+                                       "hypnozoites")) {
   family <- match.arg(family)
   gather <- function(lo, hi) {
     lo <- p[[lo]]; hi <- p[[hi]]
@@ -343,6 +369,12 @@ output_bands <- function(p, family = c("all", "prevalence", "incidence",
     incidence  = unique(or_default(inc)),
     clinical   = unique(or_default(clin)),
     severe     = unique(or_default(sev)),
+    # P. vivax only, and rendered only when asked for: malariasimulation has no
+    # default bands for these, and they stay out of the n_age_* union, as there
+    relapse     = unique(gather("incidence_relapse_rendering_min_ages",
+                                "incidence_relapse_rendering_max_ages")),
+    hypnozoites = unique(gather("n_with_hypnozoites_rendering_min_ages",
+                                "n_with_hypnozoites_rendering_max_ages")),
     # n_age_* spans the union of everything (matching malariasimulation)
     all = unique(c(prev, inc, clin, sev, agrp, default)))
 }
@@ -525,6 +557,18 @@ render_output <- function(y, times, inp, uidx, out_idx) {
   for (b in output_bands(p, "incidence")) {
     out[[paste0("n_inc_", tag_of(b))]] <- band_sum(inc_g, band_wt(b)) * hp
   }
+  # P. vivax relapses and hypnozoite carriage. The totals are always emitted --
+  # exactly zero under falciparum -- so the column set does not change with the
+  # parasite; the age bands only when their rendering ages are set.
+  relapse_g <- get("relapse_g"); hyp_g <- get("hyp_g")
+  for (b in output_bands(p, "relapse")) {
+    out[[paste0("n_inc_relapse_", tag_of(b))]] <- band_sum(relapse_g, band_wt(b)) * hp
+  }
+  for (b in output_bands(p, "hypnozoites")) {
+    out[[paste0("n_with_hypnozoites_", tag_of(b))]] <- band_sum(hyp_g, band_wt(b)) * hp
+  }
+  out$n_relapses <- colSums(relapse_g) * hp
+  out$n_with_hypnozoites <- colSums(hyp_g) * hp
   out$ft <- get("ft_out", FALSE)
   out$EIR <- get("EIR_yr", FALSE)
   out$FOIM <- get("FOIM", FALSE)

@@ -16,16 +16,22 @@ run_simulation_ode(
 \item{timesteps}{number of days to simulate. Output has \code{timesteps + 1} rows
 (day 0 is the seeded equilibrium; days 1..timesteps are integrated).}
 
-\item{parameters}{a malariasimulation::get_parameters() list (falciparum),
-optionally with interventions layered on via the \verb{set_*} builders. The
+\item{parameters}{a malariasimulation::get_parameters() list, optionally with
+interventions layered on via the \verb{set_*} builders. The
 following are applied automatically from the list (no extra arguments):
 clinical treatment (time-varying), antimalarial resistance, bed nets, IRS,
 MDA/SMC/PMC, PEV (EPI + mass) and TBV vaccines, seasonality and flexible
 carrying capacity, and custom demography (\code{set_demography}: age-specific
-mortality and the resulting equilibrium age structure). P. vivax is rejected;
-the model is always compartmental (the individual-mosquito path does not
-apply). \code{vignette("using")} indexes the mean-field approximations and when
-each one matters.
+mortality and the resulting equilibrium age structure). The parasite is
+\code{parameters$parasite}, as in malariasimulation: a list from
+\code{get_parameters(parasite = "vivax")} runs the P. vivax model -- hypnozoite
+batches and relapse, radical cure with liver-stage protection
+(\code{CQ_PQ_params_vivax}, \code{CQ_TQ_params_vivax}), no severe disease -- and adds
+\code{n_relapses} and \code{n_with_hypnozoites}. MDA, SMC and PMC are refused under
+vivax because malariasimulation itself fails on them. The model is always
+compartmental (the individual-mosquito path does not apply).
+\code{vignette("using")} indexes the mean-field approximations and when each one
+matters.
 
 \strong{The target EIR is read from this list}, as \code{parameters$init_EIR}, which is
 where \code{malariasimulation} puts it and reads it from too. Seed it the same way
@@ -79,6 +85,17 @@ supports. By default fleet replicates that: it takes the IBM's mosquito
 density and seeds at the EIR its own equilibrium under the custom age
 structure then supports (a fixed point, so no burn-in), which is generally
 \emph{not} \code{init_EIR}. Set \code{TRUE} to seed at \code{init_EIR} exactly instead.
+\item \code{immunity_spread} (default \code{TRUE}; P. vivax only): model the spread of
+immunity among people who share an age, heterogeneity group and
+hypnozoite batch count. In the IBM they differ by their batch \emph{history}
+-- years with few batches mean far fewer infections -- and the vivax
+immunity curves are steep enough that the mean probability of clinical
+disease can be several times the probability at the mean immunity. fleet
+carries each cell's second moment of immunity and averages the curves
+over a gamma with that mean and variance. \code{FALSE} evaluates them at the
+cell mean, which under-predicts clinical incidence in school-age children
+and young adults by up to 40\% at EIR 20 once the IBM has built up its
+spread.
 }}
 
 \item{correlations}{accepted so the first three arguments mirror
@@ -123,6 +140,13 @@ That is not silent: the run warns, names the share of the population no
 \verb{n_age_*} band renders, and names the age groups it sits in. A band that
 overlaps no age group at all (it lies above the open-ended top group)
 warns too, and its \verb{p_detect_lm_*} is \code{NA} rather than 0.
+\item P. vivax: \code{n_relapses} (per-day relapse infections) and
+\code{n_with_hypnozoites} (people carrying at least one batch), exactly 0
+under falciparum so the column set does not change with the parasite;
+plus \verb{n_inc_relapse_*} and \verb{n_with_hypnozoites_*} over the bands in
+\verb{incidence_relapse_rendering_*} and \verb{n_with_hypnozoites_rendering_*},
+when those are set. The severe columns are 0 for vivax, and for vivax an
+\code{A} is LM-detectable by definition, so \verb{n_detect_lm_*} counts all of it.
 \item \code{ft} (treated fraction), \code{EIR} (per adult per year), \code{FOIM}.
 \item population-total infection-state counts \code{S_count}, \code{D_count},
 \code{A_count}, \code{U_count}, \code{Tr_count}, \code{Ph_count} (diagnostic).

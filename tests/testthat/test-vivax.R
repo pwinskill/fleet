@@ -86,3 +86,153 @@ test_that("vivax shares its heterogeneity nodes with fleet and the IBM", {
   expect_equal(zeta_fleet, zeta_eq)
   expect_equal(gq$weights, q$weights)
 })
+
+## ---- the running model -------------------------------------------------------
+
+# A vivax parameter list at EIR 20, optionally with a vivax drug at 50% coverage.
+pv_list <- function(drug = NULL, eir = 20, ...) {
+  p <- malariasimulation::get_parameters(list(human_population = 10000, ...),
+                                         parasite = "vivax")
+  if (!is.null(drug)) {
+    p <- malariasimulation::set_drugs(p, list(drug))
+    p <- malariasimulation::set_clinical_treatment(p, drug = 1, timesteps = 1,
+                                                   coverages = 0.5)
+  }
+  eqm(p, eir)
+}
+pop_of <- function(out) with(out, S_count + D_count + A_count + U_count + Tr_count + Ph_count)
+
+test_that("a vivax run conserves population and relaxes gently off the IBM's seed", {
+  skip_if_not_installed("malariaEquilibriumVivax")
+  out <- run_simulation_ode(365, pv_list())
+
+  expect_equal(out$EIR[1], 20, tolerance = 1e-6)
+  pop <- pop_of(out)
+  expect_lt(max(abs(pop - 10000)) / 10000, 1e-6)
+
+  # The seed is the IBM's own (malariaEquilibriumVivax on malariasimulation's
+  # durations), which neither model holds exactly: both resolve each day in one
+  # competing-hazard draw and build up a within-cell spread of immunity the
+  # equilibrium does not have. Measured against the IBM they relax together, so
+  # the test is only that the relaxation is gentle and bounded.
+  pcr <- out$n_detect_pcr_730_3650 / out$n_age_730_3650
+  expect_lt(max(abs(pcr / pcr[1] - 1)), 0.02)
+})
+
+test_that("with no spread assumed, every node is the cell mean", {
+  skip_if_not_installed("malariaEquilibriumVivax")
+  # immunity_spread = FALSE must reduce the closure to the plain mean-field
+  # curves -- one node, at the mean -- rather than to something else
+  p <- pv_list()
+  x_on <- build_inputs(p, init_EIR = 20, timesteps = 30)$pars
+  p$immunity_spread <- FALSE
+  x_off <- build_inputs(p, init_EIR = 20, timesteps = 30)$pars
+  expect_equal(x_on$n_q, 7L)
+  expect_equal(sum(x_on$qw), 1)
+  expect_equal(x_off[c("spread_on", "n_q", "qz", "qw")],
+               list(spread_on = 0, n_q = 1L, qz = 0, qw = 1))
+  # the second moments start with no spread: K = J^2 / N in every cell
+  N <- x_on$Sv0 + x_on$Dv0 + x_on$Av0 + x_on$Uv0 + x_on$Trv0 + apply(x_on$Phv0, 1:3, sum)
+  occ <- N > 1e-12
+  expect_equal(x_on$KCv0[occ], x_on$JCv0[occ]^2 / N[occ], tolerance = 1e-10)
+  # and the spread builds up, as it does in the IBM: clinical incidence in
+  # school-age children rises off the seed only when the spread is modelled
+  bands <- list(clinical_incidence_rendering_min_ages = 1825,
+                clinical_incidence_rendering_max_ages = 3650)
+  on <- run_simulation_ode(730, do.call(pv_list, c(list(drug = NULL), bands)))
+  pq <- do.call(pv_list, c(list(drug = NULL), bands)); pq$immunity_spread <- FALSE
+  off <- run_simulation_ode(730, pq)
+  last <- nrow(on)
+  expect_gt(on$n_inc_clinical_1825_3650[last], 1.1 * off$n_inc_clinical_1825_3650[last])
+})
+
+test_that("batch clearance alone decays the hypnozoite ladder exactly", {
+  skip_if_not_installed("malariaEquilibriumVivax")
+  # With no bites (b = 0) and no relapse (f = 0), batches only clear, one at a
+  # time at k * gammal, and people die at the age-independent default rate.
+  # Summed over the ladder that is linear: K = sum(k * N_k) obeys
+  # dK/dt = -(gammal + mu) K exactly, whatever the batch distribution, because
+  # births arrive with none. So the solver must reproduce a pure exponential.
+  p <- pv_list()
+  x <- build_inputs(p, init_EIR = 20, timesteps = 365)$pars
+  x$bv <- 0; x$ff <- 0
+  mu <- unique(as.vector(x$mu_age_z))
+  expect_length(mu, 1)
+
+  sys <- dust2::dust_system_create(malaria_ode, pars = x, n_particles = 1,
+    ode_control = dust2::dust_ode_control(atol = 1e-10, rtol = 1e-8))
+  dust2::dust_system_set_state_initial(sys)
+  idx <- dust2::dust_unpack_index(sys)
+  times <- c(0, 100, 365)
+  y <- dust2::dust_system_simulate(sys, times)
+  dims <- c(x$n_age_v, x$n_het_v, x$n_hyp)
+  kk <- c(seq_len(x$n_bat) - 1, rep(0, x$n_hyp - x$n_bat))
+  K <- vapply(seq_along(times), function(ti) {
+    N <- Reduce(`+`, lapply(c("Sv", "Dv", "Av", "Uv", "Trv", "Trv_slow"),
+                            function(nm) array(y[idx[[nm]], ti], dims)))
+    N <- N + apply(array(y[idx$Phv, ti], c(dims, x$n_phv)), 1:3, sum)
+    sum(apply(N, 3, sum) * kk)
+  }, numeric(1))
+
+  expect_gt(K[1], 1)                       # a real ladder to decay
+  expect_equal(K, K[1] * exp(-(x$gammal + mu) * times), tolerance = 1e-6)
+})
+
+test_that("radical cure clears batches and fills liver-stage protection", {
+  skip_if_not_installed("malariaEquilibriumVivax")
+  ms <- asNamespace("malariasimulation")
+  cq <- pv_list(ms$CQ_params_vivax)
+  tq <- pv_list(ms$CQ_TQ_params_vivax)
+
+  # the protected levels exist only when a radical-cure drug is on the schedule
+  x_cq <- build_inputs(cq, init_EIR = 20, timesteps = 365)$pars
+  x_tq <- build_inputs(tq, init_EIR = 20, timesteps = 365)$pars
+  expect_equal(x_cq$n_hyp, x_cq$n_bat)
+  expect_equal(x_tq$n_hyp, x_tq$n_bat + VIVAX_MAX_PH)
+  expect_equal(x_tq$hyp_vals, 0.713)
+  expect_equal(x_tq$eff_hyp_vals, 1 * 0.713)
+  # tafenoquine: Weibull(5, 30) liver-stage protection, mean 30 * gamma(1.2)
+  expect_equal(x_tq$mean_ls_vals, 30 * gamma(1.2))
+
+  o_cq <- run_simulation_ode(365, cq)
+  o_tq <- run_simulation_ode(365, tq)
+  for (o in list(o_cq, o_tq)) expect_lt(max(abs(pop_of(o) - 10000)) / 10000, 1e-6)
+  # The same carriers at the seed: malariaEquilibriumVivax has no radical cure
+  # and lets treated people gain batches, so its batch distribution does not
+  # depend on the drug (the IBM starts from it too). Then fewer carriers,
+  # relapses and infections under tafenoquine.
+  expect_equal(o_tq$n_with_hypnozoites[1], o_cq$n_with_hypnozoites[1])
+  last <- nrow(o_cq)
+  expect_lt(o_tq$n_with_hypnozoites[last], 0.95 * o_cq$n_with_hypnozoites[last])
+  expect_lt(o_tq$n_relapses[last], o_cq$n_relapses[last])
+  expect_lt(o_tq$n_detect_pcr_730_3650[last], o_cq$n_detect_pcr_730_3650[last])
+})
+
+test_that("vivax output columns are malariasimulation's, and severe is absent", {
+  skip_if_not_installed("malariaEquilibriumVivax")
+  bands <- list(clinical_incidence_rendering_min_ages = c(0, 1825),
+                clinical_incidence_rendering_max_ages = c(1825, 36500))
+  pv <- do.call(pv_list, c(list(drug = NULL), bands))
+  pf <- eqm(malariasimulation::get_parameters(c(list(human_population = 10000), bands)), 20)
+  o_pv <- run_simulation_ode(60, pv)
+  o_pf <- run_simulation_ode(60, pf)
+
+  # the same columns for either parasite, so runs stay rbind-able
+  expect_identical(names(o_pv), names(o_pf))
+  # vivax has no severe pathway; falciparum has no relapses or hypnozoites
+  sev <- grep("^n_inc_severe_", names(o_pv), value = TRUE)
+  expect_true(all(unlist(o_pv[sev]) == 0))
+  expect_true(all(o_pf$n_relapses == 0) && all(o_pf$n_with_hypnozoites == 0))
+  # relapses are a share of all infections; carriers a share of the population
+  expect_true(all(o_pv$n_relapses > 0 & o_pv$n_relapses < o_pv$n_inc_0_36500))
+  expect_true(all(o_pv$n_with_hypnozoites > 0 &
+                  o_pv$n_with_hypnozoites < o_pv$n_age_0_36500))
+  # vivax A is LM-detectable by definition: LM prevalence sits inside PCR
+  expect_true(all(o_pv$n_detect_lm_730_3650 < o_pv$n_detect_pcr_730_3650))
+})
+
+test_that("vivax refuses the chemoprevention malariasimulation cannot run", {
+  p <- malariasimulation::get_parameters(parasite = "vivax")
+  p$smc <- TRUE
+  expect_error(build_inputs(p, init_EIR = 20), "cannot be combined with SMC")
+})
