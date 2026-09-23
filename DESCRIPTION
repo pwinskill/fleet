@@ -29,11 +29,13 @@ Remotes:
     mrc-ide/dust2,
     mrc-ide/monty,
     mrc-ide/malariaEquilibrium,
+    mrc-ide/malariaEquilibriumVivax,
     mrc-ide/malariasimulation,
     mrc-ide/postie
 Imports:
     dust2 (>= 0.3.28),
     malariaEquilibrium (>= 1.0.1),
+    malariaEquilibriumVivax (>= 1.0.1),
     stats,
     utils
 LinkingTo:
@@ -46,6 +48,7 @@ Suggests:
     postie (>= 1.1.0),
     knitr,
     rmarkdown,
+    statmod,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Config/Needs/website: pkgdown
