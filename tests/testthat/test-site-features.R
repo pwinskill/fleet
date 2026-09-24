@@ -26,8 +26,8 @@ test_that("logistic-retention bed nets build and run (no exponential-only error)
   p$bednet_logistic_k <- 20
   expect_silent(vc <- vector_control_series(p, 2000))
   o <- run_simulation_ode(1200, eqm(p, 20))
-  expect_true(all(is.finite(o$p_detect_lm_730_3650)))
-  expect_lt(min(o$p_detect_lm_730_3650), o$p_detect_lm_730_3650[1])   # nets reduce prevalence
+  expect_true(all(is.finite(pfpr(o))))
+  expect_lt(min(pfpr(o)), pfpr(o)[1])   # nets reduce prevalence
 })
 
 test_that("repeated net distributions accumulate more usage than a single one", {
@@ -56,9 +56,11 @@ test_that("time-varying demography: mu_age series varies over time and runs", {
   inp <- build_inputs(p, 20, timesteps = 20 * 365)
   expect_equal(inp$pars$n_mut, 2)                                   # two demography knots
   expect_true(any(inp$pars$mu_age_z[, 1] != inp$pars$mu_age_z[, 2]))# genuinely time-varying
-  expect_equal(inp$pars$mu_age_t, c(0, 10 * 365))
+  # one day earlier than the schedule: the IBM reads death rates on the day
+  # itself, and the daily update from t to t + 1 is its timestep t + 1
+  expect_equal(inp$pars$mu_age_t, c(0, 10 * 365) - 1)
   o <- run_simulation_ode(15 * 365, eqm(p, 20))
-  expect_true(all(is.finite(o$p_detect_lm_730_3650)))
+  expect_true(all(is.finite(pfpr(o))))
 })
 
 test_that("the live ageing and FOIM coefficients equal the frozen ones at the seed", {
@@ -118,7 +120,7 @@ test_that("time-varying mortality drives the immunity ageing coefficient", {
   # 3% rather than 5%: exponentially fitting the ageing rate made the structure
   # itself more accurate, which shrank this transient from 6% to 4%.
   expect_gt(abs(o$EIR[n] / o$EIR[1] - 1), 0.03)
-  expect_equal(o$p_detect_lm_730_3650[1], 0.6508366485, tolerance = 1e-7)
-  expect_equal(o$p_detect_lm_730_3650[n], 0.6479047601, tolerance = 1e-7)
-  expect_equal(o$EIR[n], 37.60968095, tolerance = 1e-7)
+  expect_equal(pfpr(o)[1], 0.6508432222, tolerance = 1e-7)
+  expect_equal(pfpr(o)[n], 0.6468019490, tolerance = 1e-7)
+  expect_equal(o$EIR[n], 37.55384154, tolerance = 1e-7)
 })

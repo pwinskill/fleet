@@ -7,58 +7,58 @@
 # (which has no interventions) is preserved; interventions act from their
 # scheduled timesteps onward, exactly as malariasimulation applies them.
 
-# lgamma forms so absurd shapes (< 0.01) give Inf rather than NaN
-.weibull_mean <- function(shape, scale) scale * exp(lgamma(1 + 1 / shape))
-.weibull_var  <- function(shape, scale)
-  scale^2 * (exp(lgamma(1 + 2 / shape)) - exp(2 * lgamma(1 + 1 / shape)))
-
-# Erlang stage count for a prophylaxis chain, moment-matched to a (mixture of)
-# Weibull protection distribution(s) with mixture mean M and variance V. The IBM
-# applies the Weibull survival W(t - t_drug) to each treated person's infection
-# probability, so the cohort's mean protection at lag t is W(t); a chain with the
-# same mean and variance reproduces that curve far better than one exponential
-# stage (SP-AQ at day 30: Weibull 0.70, Erlang-14 0.67, exponential 0.42), and a
-# drug MIXTURE (bimodal survival) gets a far larger variance than the shape-average
-# would suggest.
-#   * chemoprevention chain (tr = 0): k = M^2 / V, i.e. 1/CV^2 for one drug --
-#     SP-AQ shape 4.3 -> 14, DHA-PQP 4.4 -> 15.
-#   * post-treatment chain (tr = mean Tr sojourn): the chain FOLLOWS an exponential
-#     Tr stage (variance tr^2) while the IBM's clock runs from the dose, so match
-#     the variance of the whole Tr + chain sojourn: k = m_chain^2 / (V - tr^2) with
-#     m_chain the integrated-protection mean of .chain_mean_after_tr(). When
-#     V <= tr^2 the treated stage alone is already more variable than the Weibull
-#     (AL: sd 1.1 d against Tr's 5.5 d) and no chain length can help, so k = 1 --
-#     measured output-identical to k = 20 at half the run time. SP-AQ as a
-#     treatment drug -> 16, DHA-PQP -> 20 (capped).
-# Capped at 20: each stage adds n_age*n_het states and beyond ~20 the run time
-# climbs steeply (40 stages: 4x) for a shoulder already sharper than any
-# intervention cadence resolves. The per-stage rate k / mean is also capped at
-# MAX_STAGE_RATE per day (AL's rate at 20 stages): dust2 has no implicit stepper,
-# so a stiff stage would stall the solver. 1 = one exponential stage.
-MAX_STAGE_RATE <- 4
-erlang_stages <- function(shape, scale = 1, w = 1, tr = 0, m_chain = NULL) {
+# The protection a dose gives, day by day. The IBM applies the Weibull survival
+# W(t - t_drug) to each treated person's infection probability, and a dose given
+# on day 0 first acts on day 1 (the dose is an update queued at the end of its
+# day), so the cohort's mean protection on day n is W(n). Read as the survival of
+# a whole number of protected days T, P(T >= n) = W(n), its mean is sum_n W(n)
+# and its variance sum_n (2n - 1) W(n) - mean^2. A drug MIXTURE averages the W
+# curves, which gives a bimodal survival and a far larger variance than the
+# shape-average would suggest. Summed until W falls below 1e-12.
+.protection_days <- function(shape, scale, w = 1) {
   w <- w / sum(w)
-  m <- .weibull_mean(shape, scale); v <- .weibull_var(shape, scale)
-  M <- sum(w * m); V <- sum(w * (v + m^2)) - M^2
-  Vc <- V - tr^2
-  mc <- if (is.null(m_chain)) M else m_chain
-  if (!is.finite(Vc) || Vc <= 0 || !is.finite(mc) || mc <= 0) return(1L)
-  k <- min(20, round(mc^2 / Vc), floor(MAX_STAGE_RATE * mc))
-  as.integer(max(1, k))
+  horizon <- scale * log(1e12)^(1 / shape)
+  nmax <- as.integer(min(36500, max(1, ceiling(max(horizon[is.finite(horizon)], 1)))))
+  n <- seq_len(nmax)
+  W <- numeric(nmax)
+  for (d in seq_along(shape)) W <- W + w[d] * exp(-(n / scale[d])^shape[d])
+  list(n = n, W = W, mean = sum(W), var = sum((2 * n - 1) * W) - sum(W)^2)
 }
 
-# Mean protection the post-treatment chain must carry. The IBM's Weibull clock
-# starts at treatment and runs IN PARALLEL with the Tr sojourn (exponential at rT),
-# so a treated person is unprotected at lag t with probability F_Tr(t)*(1 - W(t));
-# fleet's chain starts when Tr ends. Matching the integrated protection,
-#   int (1 - F_Tr (1 - W)) dt = 1/rT + mean_W - int exp(-rT t) W(t) dt,
-# against fleet's 1/rT + mean_chain gives mean_chain = mean_W - int exp(-rT t) W dt.
-# This reduces to mean_W - 1/rT only when W ~ 1 throughout the Tr sojourn (true for
-# SP-AQ, 29.2 vs 29.2 d; not for AL's ~10-day protection, 5.5 vs 4.6 d).
-.chain_mean_after_tr <- function(shape, scale, rT) {
-  overlap <- vapply(seq_along(shape), function(i) stats::integrate(
-    function(t) exp(-rT * t) * exp(-(t / scale[i])^shape[i]), 0, Inf)$value, numeric(1))
-  .weibull_mean(shape, scale) - overlap
+# Stage count for a prophylaxis chain on the daily clock, moment-matched to the
+# protection it stands in for. A stage is left with probability p a day, so it
+# lasts a geometric number of days, variance (1 - p) / p^2, and k stages at
+# p = k / m have mean m and variance m^2 / k - m. A chain matching that mean and
+# variance reproduces the protection curve far better than a single stage.
+#   * chemoprevention chain: its days are the dose's protected days, so
+#     k = M^2 / (V + M) -- 10 for SP-AQ, 9 for DHA-PQP.
+#   * post-treatment chain: it FOLLOWS the treated stage Tr, which is left with
+#     probability rT a day (variance var_tr = (1 - rT) / rT^2), while the IBM's
+#     clock runs from the dose, so match the variance of the whole Tr + chain
+#     sojourn: k = m^2 / (V - var_tr + m), m being the protection left after Tr
+#     (.chain_mean_after_tr()). When that is not positive, Tr alone is already
+#     more variable than the protection (AL: sd 1.1 d against Tr's 5.0 d) and no
+#     chain length can help, so k = 1. SP-AQ as a treatment drug -> 9.
+# p = k / m cannot exceed 1, since a stage lasts at least a day, so k <= m; and
+# k is capped at 20, where each stage adds n_age*n_het states for a shoulder
+# already sharper than any intervention cadence resolves. 1 = a single stage.
+erlang_stages <- function(M, V, var_tr = 0, m = M) {
+  den <- V - var_tr + m
+  if (!is.finite(den) || den <= 0 || !is.finite(m) || m <= 0) return(1L)
+  as.integer(max(1, min(20, round(m^2 / den), floor(m))))
+}
+
+# Mean protection the post-treatment chain must carry. The IBM's protection
+# clock starts at treatment and runs IN PARALLEL with the Tr sojourn, and a
+# person is at risk -- so their protection matters -- only once out of Tr. A
+# person treated on day 0 is still in Tr on day n with probability
+# (1 - rT)^(n - 1), so the protected days at risk number
+#   sum_n (1 - (1 - rT)^(n - 1)) W(n),
+# which is what fleet's chain, entered on leaving Tr, has to carry. This is the
+# whole protection less the part spent in Tr: nearly all of it is left for
+# SP-AQ, little for AL's ~10-day protection.
+.chain_mean_after_tr <- function(pd, rT) {
+  sum((1 - (1 - rT)^(pd$n - 1)) * pd$W)
 }
 
 # Coverage active at timestep t for one drug's (timesteps, coverages).
@@ -104,16 +104,17 @@ drug_mix <- function(p, eqp, t = NULL) {
   if (sum(w) == 0) return(none)
   wn <- w / sum(w)
   shp <- p$drug_prophylaxis_shape[di]; scl <- p$drug_prophylaxis_scale[di]
-  # chain mean = Weibull mean less the protection already spent during the Tr
-  # sojourn (see .chain_mean_after_tr), coverage-weighted across the mix
-  # floored at one day: a shorter chain would need a per-day rate the explicit
-  # solver cannot take, and no antimalarial protects for less than a day
-  mean_chain <- max(1, sum(wn * .chain_mean_after_tr(shp, scl, eqp[["rT"]])))
+  pd <- .protection_days(shp, scl, wn)
+  rT <- eqp[["rT"]]
+  # chain mean = the protection left once out of Tr (see .chain_mean_after_tr),
+  # over the coverage-weighted mix; floored at one day, since a stage lasts at
+  # least a day, and no antimalarial protects for less
+  mean_chain <- max(1, .chain_mean_after_tr(pd, rT))
   list(drug_eff = sum(wn * p$drug_efficacy[di]),
        cT = p$cd * sum(wn * p$drug_rel_c[di]),
        rP = 1 / mean_chain,
        # chain length matched to the variance of the whole Tr + chain sojourn
-       n_ph = erlang_stages(shp, scl, wn, tr = 1 / eqp[["rT"]], m_chain = mean_chain))
+       n_ph = erlang_stages(pd$mean, pd$var, var_tr = (1 - rT) / rT^2, m = mean_chain))
 }
 
 # Time-varying drug_eff/cT/rP over the clinical-treatment change times, so a
@@ -222,7 +223,7 @@ vector_control_series <- function(p, timesteps) {
   spray <- isTRUE(p$spraying)
   # Knots: a coarse 10-day grid for the smooth within-round decay, every
   # deployment day, AND the day BEFORE every deployment. a/mu are interpolated
-  # LINEARLY (inst/odin/malaria_ode.R:122 -- correct for the IRS logistic phase
+  # LINEARLY (inst/odin/malaria_daily.R -- correct for the IRS logistic phase
   # decay, which the IBM recomputes every timestep), so a deployment day that is
   # not preceded by an adjacent knot ramps in from the previous knot up to 10
   # days early: nets scheduled for day 100 had reached -66% of their effect on
@@ -241,6 +242,12 @@ vector_control_series <- function(p, timesteps) {
   # recent net came from d and is still in use. sum(w) is total usage; the net-age
   # mixture (via t - t_d) then decays each distribution's efficacy separately. This
   # reduces to the single-distribution formula and is exact for repeated nets.
+  #
+  # Clocks. The value at knot t is the one day t + 1 uses: a round on day T lands
+  # at the end of day T and acts from day T + 1. That day the IBM reads a net's
+  # and a spray's efficacy at timestep - T = t + 1 - T days since deployment,
+  # while no net has been lost yet (the loss process's removals land at the end of
+  # the day), so retention is read at t - T and efficacy decay at t + 1 - T.
   net_w <- vector("list", ng)
   if (nets) {
     bt <- p$bednet_timesteps; bc <- as.numeric(unlist(p$bednet_coverages))
@@ -264,7 +271,7 @@ vector_control_series <- function(p, timesteps) {
       sn_bar <- 1; rn_bar <- 0
       if (nets && !is.null(net_w[[g]])) {
         nw <- net_w[[g]]; idx <- nw$idx; w <- nw$w
-        decay <- exp(-nw$sn / p$bednet_gamman[idx])          # net-age efficacy decay
+        decay <- exp(-(nw$sn + 1) / p$bednet_gamman[idx])    # net-age efficacy decay
         rnv <- (p$bednet_rn[idx, s] - p$bednet_rnm[idx, s]) * decay + p$bednet_rnm[idx, s]
         dnv <- p$bednet_dn0[idx, s] * decay
         snv <- 1 - rnv - dnv
@@ -286,7 +293,7 @@ vector_control_series <- function(p, timesteps) {
           w <- cm * suff
           ss_surv <- 0; rs_bar <- 0
           for (di in seq_along(m)) {
-            r <- m[di]; ss <- t - p$spraying_timesteps[r]
+            r <- m[di]; ss <- t + 1 - p$spraying_timesteps[r]
             ls <- .spray_decay(ss, p$spraying_ls_theta[r, s], p$spraying_ls_gamma[r, s])
             ks <- k0 * .spray_decay(ss, p$spraying_ks_theta[r, s], p$spraying_ks_gamma[r, s])
             ms <- .spray_decay(ss, p$spraying_ms_theta[r, s], p$spraying_ms_gamma[r, s])
@@ -394,8 +401,8 @@ vector_control_series <- function(p, timesteps) {
 # ---- chemoprevention pulses (MDA / SMC / PMC) ------------------------------
 # Each is a mass drug administration applied at scheduled timesteps to a target
 # age band: a fraction (coverage x drug_efficacy) of the targeted population has
-# infections cleared and receives prophylaxis. Applied as instantaneous state
-# jumps between ODE integration segments. PMC (age-based delivery in the IBM) is
+# infections cleared and receives prophylaxis. Applied as state jumps between
+# days. PMC (age-based delivery in the IBM) is
 # approximated here as periodic pulses on the target age band.
 # Early-treatment-failure fraction for a drug at time t (0 if no resistance on it).
 # The IBM applies resistance to MDA/SMC/PMC as well as clinical treatment, so a
@@ -410,9 +417,40 @@ vector_control_series <- function(p, timesteps) {
   p$artemisinin_resistance_proportion[[k]][i] * p$early_treatment_failure_probability[[k]][i]
 }
 
+# Slow-parasite-clearance fraction for a drug at time t: of those it treats
+# successfully, the share whose Tr stay takes dt_slow (0 if no resistance on it).
+.drug_spc_at <- function(p, drug, t) {
+  if (!isTRUE(p$antimalarial_resistance)) return(0)
+  rd <- vapply(p$antimalarial_resistance_drug, function(x) x[[1]], numeric(1))
+  k <- which(rd == drug); if (!length(k)) return(0); k <- k[1]
+  ts <- p$antimalarial_resistance_timesteps[[k]]
+  if (t < min(ts)) return(0)
+  i <- max(which(ts <= t))
+  p$artemisinin_resistance_proportion[[k]][i] * p$slow_parasite_clearance_probability[[k]][i]
+}
+
+# The chemoprevention drugs' slow-clearance Tr exit, as a whole-day probability
+# 1 - exp(-1 / dt_slow): the longest dt_slow among the chemoprevention drugs that
+# carry resistance, and rT itself when none does (the slow compartment then stays
+# empty).
+.chemo_rT_slow <- function(p, rT) {
+  if (!isTRUE(p$antimalarial_resistance)) return(rT)
+  drugs <- c(if (isTRUE(p$smc)) p$smc_drug, if (isTRUE(p$mda)) p$mda_drug,
+             if (isTRUE(p$pmc)) p$pmc_drug)
+  rd <- vapply(p$antimalarial_resistance_drug, function(x) x[[1]], numeric(1))
+  k <- which(rd %in% drugs)
+  if (!length(k)) return(rT)
+  dts <- unlist(lapply(k, function(i) p$dt_slow_parasite_clearance[[i]]))
+  if (!length(dts)) return(rT)
+  1 - exp(-1 / max(dts))
+}
+
 chemoprevention_events <- function(p, timesteps) {
   ev <- list()
   recycle <- function(x, n) if (length(x) == 1L) rep_len(x, n) else x
+  # Each round carries what the pulse needs of its drug: the fraction of the band
+  # treated successfully, the drug's relative infectivity in Tr, and the share of
+  # its Tr entrants that clear slowly.
   add <- function(on, drug, ts, cov, lo, hi) {
     if (!isTRUE(on) || is.null(ts) || length(ts) == 0) return(invisible())
     n <- length(ts); cov <- recycle(cov, n); lo <- recycle(lo, n); hi <- recycle(hi, n)
@@ -420,7 +458,9 @@ chemoprevention_events <- function(p, timesteps) {
     for (k in seq_len(n)) {
       fr <- cov[k] * eff * (1 - .drug_etf_at(p, drug, ts[k]))       # resistance ETF
       if (fr <= 0) next                                             # zero-coverage round: no-op
-      ev[[length(ev) + 1L]] <<- list(time = ts[k], lo = lo[k], hi = hi[k], frac = fr)
+      ev[[length(ev) + 1L]] <<- list(time = ts[k], lo = lo[k], hi = hi[k], frac = fr,
+                                     rel_c = p$drug_rel_c[drug],
+                                     spc = .drug_spc_at(p, drug, ts[k]))
     }
   }
   add(p$mda, p$mda_drug, p$mda_timesteps, p$mda_coverages, p$mda_min_ages, p$mda_max_ages)
@@ -439,46 +479,59 @@ chemoprevention_events <- function(p, timesteps) {
       if (cv <= 0) next
       fr <- cv * eff * (1 - .drug_etf_at(p, drug, t))
       for (a in p$pmc_ages)
-        ev[[length(ev) + 1L]] <- list(time = t, frac = fr, lo = a, hi = a + band)
+        ev[[length(ev) + 1L]] <- list(time = t, frac = fr, lo = a, hi = a + band,
+                                      rel_c = p$drug_rel_c[drug],
+                                      spc = .drug_spc_at(p, drug, t))
     }
   }
   ev
 }
 
-# Prophylaxis chain for the shared chemoprevention compartment Ph_c: its rate
-# (1 / the MDA/SMC/PMC drug(s)' Weibull mean) and stage count (from their Weibull
-# shape). Distinct from the clinical-treatment rP. When several chemoprevention
-# types with different drugs are co-deployed, the single chain uses the
-# coverage-weighted mean duration and shape (better than an arbitrary priority
-# ordering).
+# The two chemoprevention prophylaxis chains, moment-matched to the MDA/SMC/PMC
+# drug(s)' Weibull protection and distinct from the clinical-treatment chain. A
+# round clears most of those it treats straight into protection, Ph_c, which
+# carries every protected day of the dose. The clinical and LM-detectable
+# asymptomatic it clears pass through Tr first, as in the IBM, while the dose's
+# protection clock runs from the round; their chain, Ph_ct, carries only the
+# protection left once out of Tr and is sized as the post-treatment chain is
+# (see erlang_stages() and .chain_mean_after_tr()). Co-deployed chemoprevention
+# with different drugs shares both chains, moment-matched to the coverage-weighted
+# mixture of the drugs' protection.
 chemoprevention_prophylaxis <- function(p, eqp) {
   tot_cov <- function(cov) if (is.null(cov)) 0 else sum(unlist(cov))
   active <- list()
   if (isTRUE(p$smc)) active[[length(active) + 1L]] <- c(p$smc_drug, tot_cov(p$smc_coverages))
   if (isTRUE(p$mda)) active[[length(active) + 1L]] <- c(p$mda_drug, tot_cov(p$mda_coverages))
   if (isTRUE(p$pmc)) active[[length(active) + 1L]] <- c(p$pmc_drug, tot_cov(p$pmc_coverages))
-  if (!length(active)) return(list(rate = eqp[["rP"]], n_stages = 1L))
+  rT <- eqp[["rT"]]
+  if (!length(active)) {
+    return(list(rate = eqp[["rP"]], n_stages = 1L, rate_t = eqp[["rP"]], n_stages_t = 1L))
+  }
   w <- vapply(active, `[`, numeric(1), 2)
   wn <- if (sum(w) > 0) w / sum(w) else rep(1 / length(w), length(w))
   di <- vapply(active, `[`, numeric(1), 1)
   shp <- p$drug_prophylaxis_shape[di]; scl <- p$drug_prophylaxis_scale[di]
-  # no Tr sojourn precedes chemoprevention protection: the chain carries the full
-  # Weibull mean; stages moment-matched to the (mixture of) Weibull(s)
-  list(rate = 1 / max(1, sum(wn * .weibull_mean(shp, scl))), n_stages = erlang_stages(shp, scl, wn))
+  pd <- .protection_days(shp, scl, wn)
+  M <- max(1, pd$mean)
+  m_t <- max(1, .chain_mean_after_tr(pd, rT))
+  list(rate = 1 / M, n_stages = erlang_stages(M, pd$var),
+       rate_t = 1 / m_t,
+       n_stages_t = erlang_stages(pd$mean, pd$var, var_tr = (1 - rT) / rT^2, m = m_t))
 }
 
-# Apply a single chemoprevention pulse to the packed dust2 state in place: a
+# Apply a single chemoprevention pulse to the packed dust2 state in place. A
 # fraction `frac` (coverage x efficacy x (1 - ETF): the IBM's "successfully
-# treated") of the targeted age band is cleared of infection and starts a fresh
-# protection clock at stage 1 of the chemoprevention chain Ph_c. That applies to
-# EVERY state -- the IBM resets drug_time for all successfully treated people,
-# including those already under post-treatment or chemoprevention prophylaxis,
-# so Ph and Ph_c mass is renewed too, which matters for monthly SMC rounds. (The
-# brief treated-infectious phase the IBM gives detectable cases -- D and LM-
-# detectable A pass through Tr for ~dt days -- is omitted; negligible for the
-# fast-clearing MDA/SMC/PMC drugs.)
+# treated") of the targeted age band is treated, as update_mass_drug_admin()
+# treats it: the clinical and the LM-detectable asymptomatic go to Tr, where they
+# stay detectable and infectious at their infectivity x drug_rel_c for the Tr
+# stay (dt, or dt_slow for the slow-clearing share), and then into Ph_ct, the
+# protection left after it; everyone else treated -- susceptible, subpatent,
+# undetected asymptomatic, already treated or already protected -- starts a
+# fresh protection clock at stage 1 of Ph_c. The IBM resets drug_time for all of
+# them, so protected mass is renewed too, which matters for monthly SMC rounds.
 apply_chemoprevention_pulse <- function(sys, uidx, meta, event) {
   n_age <- meta$n_age; n_het <- meta$n_het; n_ph <- meta$n_ph; n_phc <- meta$n_phc
+  n_phct <- meta$n_phct
   # per-group fraction of the pulse: coverage x efficacy x (fraction of the group
   # that overlaps the target band). Weighting by overlap (not midpoint membership)
   # stops narrow bands from being silently dropped and coarse groups from being
@@ -492,25 +545,40 @@ apply_chemoprevention_pulse <- function(sys, uidx, meta, event) {
   ga <- function(nm, k) array(sv[uidx[[nm]]], c(n_age, n_het, k))
   S <- gv("S"); D <- gv("D"); A <- gv("A"); U <- gv("U")
   Tr <- gv("Tr"); Trs <- gv("Tr_slow")
-  Ph <- ga("Ph", n_ph); Phc <- ga("Ph_c", n_phc)
+  Trc <- gv("Tr_c"); Trcs <- gv("Tr_cs"); Jc <- gv("J_c"); Jcs <- gv("J_cs")
+  Ph <- ga("Ph", n_ph); Phc <- ga("Ph_c", n_phc); Phct <- ga("Ph_ct", n_phct)
+  # each A's chance of LM detection, and its infectivity, from the cell's
+  # detection immunity (the model's q and cA)
+  pp <- meta$detect
+  ID <- gv("ID")[arows, , drop = FALSE]
+  q <- pp$d1 + (1 - pp$d1) / (1 + (ID / pp$id0)^pp$kd * pp$fd[arows])
+  cA <- pp$cU + (pp$cD - pp$cU) * q^pp$g_inf
+  rows <- function(x) x[arows, , drop = FALSE]
   keep <- 1 - fr                                     # recycles along the age (first) dim
   tot3 <- function(x) apply(x[arows, , , drop = FALSE], c(1, 2), sum)
-  cleared <- fr * (S[arows, , drop = FALSE] + U[arows, , drop = FALSE] +
-                   A[arows, , drop = FALSE] + D[arows, , drop = FALSE] +
-                   Tr[arows, , drop = FALSE] + Trs[arows, , drop = FALSE] +
-                   tot3(Ph) + tot3(Phc))
-  S[arows, ]   <- S[arows, , drop = FALSE]   * keep
-  U[arows, ]   <- U[arows, , drop = FALSE]   * keep
-  A[arows, ]   <- A[arows, , drop = FALSE]   * keep
-  D[arows, ]   <- D[arows, , drop = FALSE]   * keep
-  Tr[arows, ]  <- Tr[arows, , drop = FALSE]  * keep
-  Trs[arows, ] <- Trs[arows, , drop = FALSE] * keep
-  Ph[arows, , ]  <- Ph[arows, , , drop = FALSE]  * keep
-  Phc[arows, , ] <- Phc[arows, , , drop = FALSE] * keep
+  to_tr <- fr * (rows(D) + q * rows(A))
+  j_in <- fr * (pp$cD * rows(D) + cA * q * rows(A)) * event$rel_c
+  cleared <- fr * (rows(S) + rows(U) + (1 - q) * rows(A) + rows(Tr) + rows(Trs) +
+                   rows(Trc) + rows(Trcs) + tot3(Ph) + tot3(Phc) + tot3(Phct))
+  S[arows, ]    <- rows(S) * keep
+  U[arows, ]    <- rows(U) * keep
+  A[arows, ]    <- rows(A) * keep
+  D[arows, ]    <- rows(D) * keep
+  Tr[arows, ]   <- rows(Tr) * keep
+  Trs[arows, ]  <- rows(Trs) * keep
+  Trc[arows, ]  <- rows(Trc) * keep + (1 - event$spc) * to_tr
+  Trcs[arows, ] <- rows(Trcs) * keep + event$spc * to_tr
+  Jc[arows, ]   <- rows(Jc) * keep + (1 - event$spc) * j_in
+  Jcs[arows, ]  <- rows(Jcs) * keep + event$spc * j_in
+  Ph[arows, , ]   <- Ph[arows, , , drop = FALSE] * keep
+  Phc[arows, , ]  <- Phc[arows, , , drop = FALSE] * keep
+  Phct[arows, , ] <- Phct[arows, , , drop = FALSE] * keep
   Phc[arows, , 1] <- Phc[arows, , 1, drop = FALSE] + array(cleared, c(length(arows), n_het, 1))
   sv[uidx[["S"]]] <- S; sv[uidx[["U"]]] <- U; sv[uidx[["A"]]] <- A
   sv[uidx[["D"]]] <- D; sv[uidx[["Tr"]]] <- Tr; sv[uidx[["Tr_slow"]]] <- Trs
-  sv[uidx[["Ph"]]] <- Ph; sv[uidx[["Ph_c"]]] <- Phc
+  sv[uidx[["Tr_c"]]] <- Trc; sv[uidx[["Tr_cs"]]] <- Trcs
+  sv[uidx[["J_c"]]] <- Jc; sv[uidx[["J_cs"]]] <- Jcs
+  sv[uidx[["Ph"]]] <- Ph; sv[uidx[["Ph_c"]]] <- Phc; sv[uidx[["Ph_ct"]]] <- Phct
   dust2::dust_system_set_state(sys, sv)
   invisible()
 }
@@ -683,7 +751,7 @@ pev_series <- function(p, age_mid, timesteps) {
   # Knots: a coarse 30-day grid for the smooth antibody decay, every distribution
   # day, every efficacy-onset day (+7/+14 to resolve the fast initial decay), AND
   # the day BEFORE each of those. As in vector_control_series(), the multiplier is
-  # interpolated LINEARLY (inst/odin/malaria_ode.R), so an instant that is not
+  # interpolated LINEARLY (inst/odin/malaria_daily.R), so an instant that is not
   # preceded by an adjacent knot ramps in from the previous knot up to 29 days
   # early: a mass campaign on day 400 (efficacy onset 490) had already delivered
   # 34% of its FOI reduction by day 485, before anyone was protected. The onset-1
@@ -726,9 +794,16 @@ pev_series <- function(p, age_mid, timesteps) {
     const_bcov <- is.null(bcovm) ||
       !(nrow(as.matrix(bcovm)) > 1L && length(p$pev_epi_timesteps) > 1L)
     bcov0 <- if (const_bcov) .booster_cov_vec(bcovm, p$pev_epi_timesteps, bspace)
+    # A group is protected in the part of it older than the completion age, and
+    # that part's time since completion is taken at its own midpoint: the group
+    # straddling the completion age is partly vaccinated, not wholly or not at all.
+    edges_epi <- .age_edges(age_mid)
     for (i in seq_len(n_age)) {
-      if (age_mid[i] < vax_complete) next
-      tsince <- age_mid[i] - vax_complete
+      w_epi <- .band_overlap(vax_complete, Inf, edges_epi$lo[i], edges_epi$hi[i])
+      if (w_epi <= 0) next
+      part_lo <- max(edges_epi$lo[i], vax_complete)
+      tsince <- if (is.finite(edges_epi$hi[i])) (part_lo + edges_epi$hi[i]) / 2 - vax_complete else
+        part_lo - vax_complete
       prot0 <- if (const_bcov) pev_protection(prof, bprofs, bspace, bcov0, tsince)
       # eligible once the FIRST dose (last_dose before efficacy onset) falls in-programme
       for (g in seq_len(ng)) if (grid[g] >= start + tsince + last_dose) {
@@ -738,7 +813,7 @@ pev_series <- function(p, age_mid, timesteps) {
         prot <- if (const_bcov) prot0 else pev_protection(
           prof, bprofs, bspace,
           .booster_cov_vec(bcovm, p$pev_epi_timesteps, vd + bspace), tsince)
-        red[i, g] <- .combine(red[i, g], cov * prot)
+        red[i, g] <- .combine(red[i, g], w_epi * cov * prot)
       }
     }
   }
@@ -759,48 +834,49 @@ pev_series <- function(p, age_mid, timesteps) {
     lo <- p$mass_pev_min_ages; hi <- p$mass_pev_max_ages   # bands applied at EVERY campaign
     nc <- length(p$mass_pev_timesteps)
     cov <- .recycle(p$mass_pev_coverages, nc)
-    # Fraction of each age group inside each [min_age, max_age) band, rather than
-    # the groups whose midpoint lands in it: a band narrower than the groups it
-    # falls between (min_ages = 20*365, max_ages = 21*365 on the default grid,
-    # whose midpoints jump 17y -> 22y) selected NO group and the campaign was a
-    # silent no-op. The weight is the covered fraction of the group, so it
-    # multiplies coverage exactly as an age-restricted campaign should; a band
-    # aligned with group edges gives weight 1 and reproduces the midpoint rule.
+    # The fraction of each age group that was in one of a campaign's bands on the
+    # campaign day, `shift` days later: the bands move up with the cohort, so the
+    # protection ages with the people who received it, and those born since, or
+    # who have since aged into the band, share none of it. Weighted by the part of
+    # each group inside a band rather than by midpoint membership, so a band
+    # narrower than the groups it falls between still vaccinates someone. The
+    # bands are ONE campaign, so their weights add before anything else is done
+    # with them.
     edges <- .age_edges(age_mid)
-    bwt <- lapply(seq_along(lo), function(b) {
-      w <- .band_overlap(lo[b], hi[b], edges$lo, edges$hi)
-      if (!any(w > 0) && any(cov > 0)) {
+    cohort_w <- function(shift) {
+      pmin(Reduce(`+`, lapply(seq_along(lo), function(b)
+        .band_overlap(lo[b] + shift, hi[b] + shift, edges$lo, edges$hi)), numeric(n_age)), 1)
+    }
+    for (b in seq_along(lo)) {
+      if (!any(.band_overlap(lo[b], hi[b], edges$lo, edges$hi) > 0) && any(cov > 0)) {
         warning("Mass PEV age band [", signif(lo[b] / 365, 4), ", ",
                 signif(hi[b] / 365, 4), ") years overlaps no model age group, ",
                 "so this campaign vaccinates nobody. Widen the band or refine ",
                 "the age grid (see default_age_lower()).", call. = FALSE)
       }
-      w
-    })
-    # The bands are ONE campaign, so their weights ADD into a single per-group
-    # covered fraction BEFORE the campaign loop. Folding each band into `red`
-    # separately combined them with .combine() = 1 - (1-a)(1-b) -- the rule for
-    # INDEPENDENT campaigns -- which is wrong here: cov[k] and pev_protection()
-    # do not depend on the band, so a group's value must be (sum_b w_b) * cov * prot.
-    # The midpoint rule could not expose this (a group belonged to at most one
-    # band), but fractional weights can: splitting min_ages/max_ages at 1195 days
-    # gives the group straddling that edge weights 0.09589 + 0.90411 = 1, and the
-    # separate folds returned 0.6834 against 0.7295 for the identical single band
-    # -- a 6.3% shortfall on a split that should change nothing. .combine() is
-    # kept ACROSS campaigns (k), where independent protection IS the right rule.
-    cw <- pmin(Reduce(`+`, bwt, numeric(n_age)), 1)
-    rows <- which(cw > 0); wrow <- cw[rows]
-    if (length(rows)) for (k in seq_len(nc)) {
-      tc <- p$mass_pev_timesteps[k]
-      # each booster read at its admin date tc + last_dose + bspace[j] (final dose + spacing)
-      bcov <- .booster_cov_vec(bcovm, p$mass_pev_timesteps, tc + last_dose + bspace)
-      for (g in seq_len(ng)) if (grid[g] >= tc + last_dose) {
-        tsince <- grid[g] - tc - last_dose
-        red[rows, g] <- .combine(
-          red[rows, g],
-          wrow * cov[k] * pev_protection(prof, bprofs, bspace, bcov, tsince))
+    }
+    # Most recent dose. The IBM overwrites a person's last_eff_pev_timestep at each
+    # campaign's final primary dose, so their protection is that of the latest
+    # campaign to have completed on them. Walking back from the latest, campaign k
+    # protects the part of its cohort no later completed campaign has claimed,
+    # c_k w_k prod_{j>k} (1 - c_j w_j).
+    bcovs <- lapply(seq_len(nc), function(k)            # boosters read at their admin dates
+      .booster_cov_vec(bcovm, p$mass_pev_timesteps, p$mass_pev_timesteps[k] + last_dose + bspace))
+    mass <- matrix(0, n_age, ng)
+    for (g in seq_len(ng)) {
+      free <- rep(1, n_age)
+      for (k in rev(seq_len(nc))) {
+        tc <- p$mass_pev_timesteps[k]
+        if (grid[g] < tc + last_dose || cov[k] <= 0) next
+        w <- cov[k] * cohort_w(grid[g] - tc)
+        # the value at knot t is day t + 1's, and the IBM reads efficacy at
+        # timestep - last dose on that day
+        tsince <- grid[g] + 1 - tc - last_dose
+        mass[, g] <- mass[, g] + free * w * pev_protection(prof, bprofs, bspace, bcovs[[k]], tsince)
+        free <- free * (1 - w)
       }
     }
+    red <- .combine(red, mass)
   }
   list(times = grid, vals = 1 - red)
 }
@@ -833,31 +909,37 @@ tbv_series <- function(p, age_mid, timesteps) {
                                     (1 - p$tbv_rho) * exp(-t * log(2) / p$tbv_dl))
   tra_of <- function(ab) (ab / p$tbv_tra_mu)^p$tbv_gamma1 /
     ((ab / p$tbv_tra_mu)^p$tbv_gamma1 + p$tbv_gamma2)
-  # Fraction of each age group whose ages fall in the target year set, rather
-  # than the groups whose midpoint year is a member: the IBM vaccinates every
-  # individual with floor(age / 365) in tbv_ages, but only the years 17, 22, 27,
-  # ... are represented by a midpoint above age 14 on the default grid, so a set
-  # like 18:20 matched nothing and the whole vaccine was a silent no-op. A year
-  # set aligned with group edges gives weight 1 and reproduces the old rule.
+  # The fraction of each age group whose ages were in the target year set on the
+  # vaccination day, `shift` days later: the IBM vaccinates everyone with
+  # floor(age / 365) in tbv_ages, and the vaccinated then age, so the year set
+  # moves up with them and those born since share none of the protection.
+  # Weighted by the part of each group inside the set rather than by midpoint
+  # membership, so a set like 18:20, which contains no group midpoint on the
+  # default grid, still vaccinates someone.
   edges <- .age_edges(age_mid)
-  wt <- .year_set_overlap(p$tbv_ages, edges$lo, edges$hi)
-  inband <- which(wt > 0)
-  if (!length(inband) && any(unlist(p$tbv_coverages) > 0)) {
+  cohort_w <- function(shift) .year_set_overlap(p$tbv_ages, edges$lo - shift, edges$hi - shift)
+  if (!any(cohort_w(0) > 0) && any(unlist(p$tbv_coverages) > 0)) {
     yrs <- if (length(p$tbv_ages)) paste0(paste(range(p$tbv_ages), collapse = "-"), "y")
            else "an empty age set"
     warning("set_tbv() targets ", yrs, ", which overlaps no model age group, so ",
             "the vaccine has no effect. Widen the target or refine the age grid ",
             "(see default_age_lower()).", call. = FALSE)
   }
-  wband <- wt[inband]
-  for (k in seq_along(p$tbv_timesteps)) {
-    tc <- p$tbv_timesteps[k]; cov <- wband * p$tbv_coverages[k]
-    for (g in seq_len(ng)) if (grid[g] >= tc) {
-      tra <- tra_of(ab_of(grid[g] - tc))
-      rU[inband, g] <- .combine(rU[inband, g], cov * .calculate_TBA(p$tbv_mu, p$tbv_k, tra))
-      rA[inband, g] <- .combine(rA[inband, g], cov * .calculate_TBA(p$tbv_ma, p$tbv_k, tra))
-      rD[inband, g] <- .combine(rD[inband, g], cov * .calculate_TBA(p$tbv_md, p$tbv_k, tra))
-      rT[inband, g] <- .combine(rT[inband, g], cov * .calculate_TBA(p$tbv_mt, p$tbv_k, tra))
+  # Most recent dose: the IBM overwrites tbv_vaccinated at each round, so a round
+  # protects the part of its cohort no later round has reached. The value at knot
+  # t is day t + 1's, when the IBM reads antibody at timestep - round days.
+  for (g in seq_len(ng)) {
+    free <- rep(1, n_age)
+    for (k in rev(seq_along(p$tbv_timesteps))) {
+      tc <- p$tbv_timesteps[k]
+      if (grid[g] < tc || p$tbv_coverages[k] <= 0) next
+      share <- free * p$tbv_coverages[k] * cohort_w(grid[g] - tc)
+      tra <- tra_of(ab_of(grid[g] + 1 - tc))
+      rU[, g] <- rU[, g] + share * .calculate_TBA(p$tbv_mu, p$tbv_k, tra)
+      rA[, g] <- rA[, g] + share * .calculate_TBA(p$tbv_ma, p$tbv_k, tra)
+      rD[, g] <- rD[, g] + share * .calculate_TBA(p$tbv_md, p$tbv_k, tra)
+      rT[, g] <- rT[, g] + share * .calculate_TBA(p$tbv_mt, p$tbv_k, tra)
+      free <- free * (1 - p$tbv_coverages[k] * cohort_w(grid[g] - tc))
     }
   }
   list(times = grid, fU = 1 - rU, fA = 1 - rA, fD = 1 - rD, fT = 1 - rT)

@@ -74,8 +74,8 @@ jobs:
 
   # Is the compiled model still the model in inst/odin?
   #
-  # inst/odin/malaria_ode.R is the source of truth, but the artifact the matrix
-  # above compiles is the committed, generated src/malaria_ode.cpp (with
+  # inst/odin/malaria_daily.R is the source of truth, but the artifact the matrix
+  # above compiles is the committed, generated src/malaria_daily.cpp (with
   # R/dust.R, R/cpp11.R, src/cpp11.cpp and inst/dust). Edit the odin model,
   # forget to regenerate, and all five runners compile the OLD model and pass;
   # so do the tests; and fleetcheck's drift check passes loudest of all,
@@ -154,7 +154,7 @@ jobs:
         shell: bash
 
       # A dirty tree means the committed generated files are behind
-      # inst/odin/malaria_ode.R. It can also mean odin2 or dust2 moved: their
+      # inst/odin/malaria_daily.R. It can also mean odin2 or dust2 moved: their
       # version is stamped into the header of every file they write, and pak
       # installs them from the Remotes pin at HEAD. Either way the fix is the
       # same -- regenerate and commit.
@@ -171,14 +171,14 @@ jobs:
           if [ -n "$dirty" ]; then
             echo "$dirty"
             git diff -- src R/dust.R R/cpp11.R inst/dust
-            echo "::error::the compiled model is stale. src/malaria_ode.cpp,"
+            echo "::error::the compiled model is stale. src/malaria_daily.cpp,"
             echo "::error::R/dust.R, R/cpp11.R and inst/dust are generated from"
-            echo "::error::inst/odin/malaria_ode.R and no longer match it (or a"
+            echo "::error::inst/odin/malaria_daily.R and no longer match it (or a"
             echo "::error::newly generated one was never committed), so a"
             echo "::error::build here would compile the old model. Run"
             echo "::error::odin2::odin_package('.') locally and commit the"
             echo "::error::regenerated files."
             exit 1
           fi
-          echo "the generated model is up to date with inst/odin/malaria_ode.R"
+          echo "the generated model is up to date with inst/odin/malaria_daily.R"
         shell: bash

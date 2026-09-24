@@ -2,103 +2,81 @@
 % Please edit documentation in R/tuning.R
 \name{ode_tuning}
 \alias{ode_tuning}
-\title{ODE solver and discretisation settings.}
+\title{Discretisation settings.}
 \usage{
 ode_tuning(
   age_lower = default_age_lower(),
-  n_eir = 10L,
-  n_foim = 10L,
-  n_eip = 20L,
   n_ph = NULL,
   n_phc = NULL,
-  atol = 1e-08,
-  rtol = 1e-08,
-  step_size_max = 1,
-  odin_file = NULL
+  n_sub = 32L,
+  odin_file = NULL,
+  ...
 )
 }
 \arguments{
 \item{age_lower}{age-group lower edges in \strong{years}. The default is
 \code{\link[=default_age_lower]{default_age_lower()}}, a 53-group grid log-spaced between pinned reporting
 ages. Must start at 0, increase strictly, and stay in years: a top edge
-above 1000 is rejected as a grid supplied in days.
+above 1000 is rejected as a grid supplied in days. Every group loses its
+ageing and mortality fraction each day out of the same stock as its
+infection and progression, so the narrowest group must be wide enough for
+the two together, a few days: a grid finer than that is an error.
 
-The default is \strong{not} converged for severe disease or for adult clinical
-incidence, and both carry a discretisation bias of the order of a few per
-cent on it. That bias is removable: \code{fleet}'s own profile converges at
-first order, so \code{default_age_lower(n_group = 105)} roughly halves it and
-\code{n_group = 209} halves it again, at a proportionate cost in run time. A
-result that rests on the \emph{level} of severe incidence or on adult bands is
-worth re-running on a finer grid to see how much of it is the grid.
-
-What a finer grid will \strong{not} do is close the remaining gap to the IBM.
-That is the mean field itself -- one immunity value per stratum against a
-spread of individual infection histories at the same age -- and it does not
-shrink with group width. See the \code{age-profile-clinical} claim in
-\code{fleetcheck} for the measurement.
+The default is \strong{not} converged for severe disease or for clinical
+incidence in young children at high transmission, both of which it puts a
+few per cent low (severe 8\% low at EIR 120). That bias is removable:
+\code{fleet}'s profile converges at first order, so
+\code{default_age_lower(n_group = 105)} roughly halves it and \code{n_group = 209}
+halves it again, at a proportionate cost in run time; refined to 417 groups
+\code{fleet} lands within about 1\% of the IBM on clinical and severe incidence at
+EIR 20 to 120. A result that rests on the \emph{level} of severe incidence, or on
+young children at high transmission, is worth re-running on a finer grid to
+see how much of it is the grid. See the \code{age-profile-clinical} and
+\code{severe-allage-eir} claims in \code{fleetcheck} for the measurements.
 
 The default is left where it is because every published comparison is
 stated on it; changing it moves every number.}
 
-\item{n_eir, n_foim, n_eip}{Erlang-chain stage counts for the EIR lag, FOIM lag
-and mosquito EIP. Larger values sharpen the (otherwise gamma-shaped) lags
-toward the IBM's fixed delays; equilibrium is exact for any value.}
+\item{n_ph, n_phc}{stage counts for the post-treatment (\code{Ph}) and
+chemoprevention (\code{Ph_c}) prophylaxis chains. \code{NULL} (default) matches the
+chain to the drug's Weibull protection curve. A stage is left with a fixed
+probability a day, so it lasts a geometric number of days, and \code{k} stages
+match the protection's mean \code{M} and variance \code{V} at \code{M^2 / (V + M)} stages:
+10 for SP-AQ as chemoprevention, 9 for DHA-PQP. \code{Ph} follows the treated
+stage \code{Tr}, so its count matches the variance of the whole \code{Tr + Ph} sojourn
+and its mean is the protection left after \code{Tr}: 9 stages for SP-AQ, 10 for
+DHA-PQP, and 1 for AL, whose 10-day protection is already less variable
+than \code{Tr} itself. A drug mixture is moment-matched as a mixture. A stage
+lasts at least a day, and each day it also loses its ageing and mortality
+fraction, so the default is held to what fits the shortest-protecting drug
+on the schedule and capped at 20, and an explicit count that does not fit
+is an error. The count is fixed for the run, sized at the seed's drug mix: a
+first-line switch moves the chain's mean, not its shape.}
 
-\item{n_ph, n_phc}{Erlang-chain stage counts for the post-treatment (\code{Ph}) and
-chemoprevention (\code{Ph_c}) prophylaxis compartments. \code{NULL} (default) matches the
-chain's variance to the drug's Weibull protection curve, capped at 20. For
-\code{Ph_c} that is \verb{1/CV²} of the Weibull: 14 for SP-AQ, 15 for DHA-PQP. \code{Ph}
-follows the exponential treated stage \code{Tr}, so its count matches the variance
-of the whole \code{Tr + Ph} sojourn and its mean is the integrated protection left
-after \code{Tr}: 16 stages for SP-AQ, 20 for DHA-PQP, and 1 for AL, whose 10-day
-protection is already less variable than \code{Tr} itself. A drug mixture is
-moment-matched as a mixture. \code{1} is a single exponential stage, which for
-\code{Ph_c} leaks protection early between monthly SMC rounds. The count is fixed
-at the seed's drug mix: a first-line switch moves the chain's mean, not its
-shape.}
-
-\item{atol, rtol, step_size_max}{dust2 ODE-solver controls. The defaults
-(\code{1e-8}, \code{1e-8}, \code{1}) preserve the flat equilibrium exactly. For long dynamic
-projections \code{rtol = 1e-6} runs about 1.4x faster on seasonal ones (7.2 s to
-5.0 s over 30 years) with a maximum deviation of 4e-7 in daily clinical
-incidence -- five orders of magnitude inside the IBM's replicate band -- and
-not at all faster on aseasonal ones.
-
-That last point is a hard floor, and it is worth knowing where it comes from.
-On an equilibrium run every accepted step is 0.62 days, and that step does
-not move with \code{atol}, \code{rtol}, \code{step_size_max}, the output grid, or the
-delay-chain lengths below 4 per day. A step that ignores both tolerances is a
-stability limit, not an accuracy one: the stiffest eigenvalue in the system
-is the late-larval density-dependent mortality, \code{ml * gamma * (E + 2L) / K},
-which at the seed is 5.3 per day (gamma is 13.25 and the early-larval stock
-sits at about ten times K), and Dormand-Prince's stability boundary of ~3.3
-on that mode gives 3.3 / 5.31 = 0.621 days. It is intrinsic to
-malariasimulation's larval model at its default parameters, so the 1.6
-steps per day it forces is what an explicit stepper costs here, and only an
-implicit one (dust2 has none) could take longer steps at equilibrium. The
-daily output grid adds about 2,700 rejected trial steps on top over 30
-years -- the controller re-grows the step after each forced stop -- which is
-why output every 30 days is ~25\% faster on aseasonal runs and no more.
-
-\strong{\code{step_size_max} is a safety rail, not a speed control}, despite travelling
-with \code{rtol} in the preset above. On 30-year runs, seasonal and not, the
-solver takes the same number of steps at \code{1}, \code{5}, \code{30} and \code{Inf} to within
-four in nineteen thousand, and the outputs agree to 1e-10. What the cap is
-for is stopping a trial step overshooting the end of an interpolation grid.
-The intervention series are interpolated on grids that extend just past
-\code{timesteps}, and near equilibrium the stepper will propose a step of tens of
-days; uncapped, such a step could land beyond the end of a coarse grid and
-abort the run ("Tried to interpolate at time = ..., which is ... after the
-last time"). None of the runs measured here did, but the cap costs nothing
-measurable, so leave it at \code{1} unless you have a specific reason.
-
-Keep \code{atol} at \code{1e-8}: the individual prophylaxis chain stages hold
-occupancies of order \code{1e-6}, which a looser absolute tolerance lets dip
-below zero.}
+\item{n_sub}{sub-steps per day of the mosquito model, integrated by an
+exponential midpoint rule (second order, and stable however stiff the
+larval equations get). Once a run is on its cycle the error falls
+fourfold with each doubling. At the default of 32 a seasonal run's daily
+EIR stays within 2.4e-4 of the converged solution at the seasonal trough
+(5.5e-6 of its peak), comparable to the per-step tolerance
+\code{malariasimulation} integrates its own mosquito model to
+(\code{r_tol = a_tol = 1e-4}); 8 would leave it 3.6e-3 off, a slight shift in
+the phase of the seasonal cycle. Annual means agree to about 4e-6 at 32 and
+5e-5 at 8, and a run with no seasonality and no interventions is exact to
+1e-11 at any count. The mosquito model is a small part of the day, so 32
+costs 2 to 13\% more than 8.}
 
 \item{odin_file}{optional path to an odin source to compile instead of the
-generator built into the package (development use; needs 'odin2' and a C++
-toolchain).}
+generator built into the package: a discrete-time model with the built-in
+one's parameters and states (development use; needs 'odin2' and a C++
+toolchain). The compiled model is cached by path for the session, so an
+edit to the file needs a new session.}
+
+\item{...}{the ODE solver's controls (\code{atol}, \code{rtol}, \code{step_size_max}) and the
+Erlang lag stage counts (\code{n_eir}, \code{n_foim}, \code{n_eip}) are accepted with a
+warning and ignored: the model advances one day at a time, with the IBM's
+own delay lines, so there is no solver to control and no lag to discretise.
+Any other name is an error.}
 }
 \value{
 a \code{fleet_ode_tuning} list.
@@ -110,9 +88,9 @@ Pass either this object or a plain named list of the fields you want to
 change; anything left out keeps its default.
 }
 \examples{
-ode_tuning()$atol
-# a faster long projection: the tolerance is the lever, not the step cap
-ode_tuning(rtol = 1e-6)$rtol
+ode_tuning()$n_sub
+# a finer age grid, to see how much of a severe-incidence level is the grid
+length(ode_tuning(age_lower = default_age_lower(n_group = 105))$age_lower)
 }
 \seealso{
 \code{\link[=run_simulation_ode]{run_simulation_ode()}}

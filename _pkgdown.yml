@@ -65,19 +65,21 @@ navbar:
       href: CONTRIBUTING.html
 
 home:
-  title: fleet • a fast ODE twin of malariasimulation
+  title: fleet • a fast mean-field twin of malariasimulation
   description: >
-    A fast, deterministic mean-field (ODE) counterpart to the malariasimulation
-    individual-based model of Plasmodium falciparum malaria, built on odin2 / dust2.
+    A fast, deterministic mean-field counterpart to the malariasimulation
+    individual-based model of Plasmodium falciparum malaria, advanced one day at a
+    time on the IBM's own daily clock, built on odin2 / dust2.
   sidebar:
     structure: [glance, links, citation, license, authors, dev]
     components:
       glance:
         title: At a glance
         text: >
-          A single multi-decade run finishes in **seconds**, independent of
-          population size. Feed it an unmodified `malariasimulation` parameter
-          list and get `postie`-style outputs straight back.
+          A single multi-decade run finishes in **under a second**, independent
+          of population size. Feed it an unmodified `malariasimulation` parameter
+          list and get `malariasimulation`'s output table straight back, ready for
+          `postie`.
 articles:
 - title: Articles
   navbar: ~
@@ -95,14 +97,14 @@ reference:
 - title: Run the model
   desc: >
     Simulate malaria transmission dynamics with the deterministic mean-field
-    ODE model.
+    model, one day at a time.
   contents:
   - run_simulation_ode
-- title: Solver settings
+- title: Discretisation settings
   desc: >
-    Numerical tolerances and the discretisation of the age grid, the Erlang lag
-    chains and the prophylaxis compartments. Every default is the validated
-    choice: change one only when you have a reason to.
+    The age grid, the prophylaxis chains' stage counts and the mosquito
+    sub-steps per day. Every default is the validated choice: change one only
+    when you have a reason to.
   contents:
   - ode_tuning
 - title: Age grid

@@ -2,7 +2,7 @@
 # ("eq") parameter names. Replicated from malariasimulation R/compatibility.R
 # (back_translations) so this package is self-contained and version-robust.
 # The resulting eq_params supply BOTH the human equilibrium seed
-# (via malariaEquilibrium) AND the human ODE rate constants used by the odin model.
+# (via malariaEquilibrium) AND the human rate constants used by the odin model.
 
 .inverse_param <- function(name, new_name) {
   function(params) list(new_name, 1 / params[[name]])

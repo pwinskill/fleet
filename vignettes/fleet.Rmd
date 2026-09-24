@@ -25,20 +25,22 @@ knitr::opts_chunk$set(eval = can_run)
 > `malariasimulation`, can be examined and argued with, not so that anyone can
 > rely on its numbers: the API is unstable and nothing here has been peer
 > reviewed. The known discrepancies against the IBM are open rather than
-> resolved, the largest being all-age severe incidence, which runs about 4 to 6%
-> below the IBM, alongside a roughly 9% excess on clinical and severe incidence
-> across the 63-country site files that is not yet explained. The full statement
+> resolved: an excess on clinical and severe incidence across the 63-country
+> site files that is not yet explained, and, on the default age grid, clinical
+> and severe incidence a few per cent low at high transmission, the grid's own
+> discretisation error. The full statement
 > is on the [package front page](https://pwinskill.github.io/fleet/); if you need
 > results you can defend today, use
 > [malariasimulation](https://github.com/mrc-ide/malariasimulation).
 
-`fleet` is a fast, deterministic **mean-field (ODE) twin** of the
+`fleet` is a fast, deterministic **mean-field twin** of the
 [malariasimulation](https://github.com/mrc-ide/malariasimulation) individual-based
 model of *Plasmodium falciparum* malaria. It reproduces the same age- and
 biting-heterogeneity-structured human model and compartmental mosquito model,
-takes the **same parameter list** as the IBM, and is seeded at the
-[malariaEquilibrium](https://github.com/mrc-ide/malariaEquilibrium) fixed point.
-A multi-decade run finishes in a couple of seconds, independent of population
+advances them one day at a time in the IBM's own order, takes the **same
+parameter list** as the IBM, and is seeded at the
+[malariaEquilibrium](https://github.com/mrc-ide/malariaEquilibrium) solution.
+A multi-decade run finishes in under a second, independent of population
 size. That speed is the point: the intended uses are calibration, sweeps and
 quick scenario work, where a stochastic IBM would be too slow. It is not ready
 for those jobs yet (see the note above).
@@ -62,51 +64,63 @@ library(fleet)
 
 ## A basic run
 
-Build an unmodified `malariasimulation` parameter list and run it. You supply a
-target adult EIR (infectious bites per adult per year); the model seeds itself at
-the corresponding equilibrium, so no separate burn-in is needed for an aseasonal
-run.
+Build a `malariasimulation` parameter list and run it, exactly as you would
+run the IBM. You supply a target adult EIR (infectious bites per adult per
+year), and the model is seeded at the corresponding equilibrium. The list asks
+for the age bands to report, as it does of the IBM: here incidence in under-5s
+and at all ages, beside the default 2-10 prevalence band.
 
 ```{r basic}
-p <- malariasimulation::get_parameters(list(human_population = 1000))
+p <- malariasimulation::get_parameters(list(
+  human_population = 1000,
+  clinical_incidence_rendering_min_ages = c(0, 0),
+  clinical_incidence_rendering_max_ages = c(5, 100) * 365 - 1,
+  severe_incidence_rendering_min_ages = c(0, 0),
+  severe_incidence_rendering_max_ages = c(5, 100) * 365 - 1))
 
 # 15 years at a daily step, seeded at the equilibrium for EIR = 20
 out <- run_simulation_ode(timesteps = 15 * 365, parameters = malariasimulation::set_equilibrium(p, init_EIR = 20))
 
 out[1:3, c("timestep", "n_age_730_3650", "n_detect_lm_730_3650",
-           "p_detect_lm_730_3650", "EIR", "ft")]
+           "n_inc_clinical_0_1824", "EIR")]
 ```
 
-The return value is a wide, `malariasimulation`-style daily count table. Column
-tags carry the age band **in days**: `730_3650` is the canonical 2-10y band
-(always included), and `0_36500` is all ages. `p_detect_lm_*` is LM-detectable
-prevalence, `EIR` is per adult per year, and `ft` is the treated fraction. Because
-the model is mean-field, prevalence and EIR are population-independent;
-`human_population` only rescales the count columns.
+The return value is `malariasimulation`'s daily table, with the columns the IBM
+would give this parameter list, under the same names and with the same
+meanings. Column tags carry the age band **in days**, both ends included:
+`730_3650` is the 2-10y band, and `0_1824` the under-5s. Every `n_*` column is
+a count: `n_detect_lm_*` the LM-positive and `n_inc_clinical_*` the day's new
+clinical cases in the band. (`p_detect_lm_*` is the IBM's expected-count
+partner of `n_detect_lm_*`, not a prevalence.) `EIR` is per adult per year.
+Because the model is mean-field, rates are population-independent;
+`human_population` only rescales the counts.
 
 With no interventions the run settles rather than holding perfectly still:
 
 ```{r flat}
-range(out$EIR)                    # ~20 throughout
-range(out$p_detect_lm_730_3650)   # a ~0.3% relaxation over the first years
+pfpr <- out$n_detect_lm_730_3650 / out$n_age_730_3650   # LM prevalence, 2-10y
+range(out$EIR)   # ~20 throughout
+range(pfpr)      # a ~0.4% relaxation over the first years
 ```
 
-Over these fifteen years LM prevalence in 2-10 year olds runs between 0.5485
-(the seed, at day 0) and 0.5470 (its low point near the end of the first year),
-a spread of 0.28%, and is flat to 0.02% over the last five years. EIR stays
-within 0.5% of its target throughout.
+Row 1 is day 1, whose state is the seed. Over these fifteen years LM prevalence
+in 2-10 year olds runs between 0.5489 (the seed) and 0.5469 (its low point, about
+a year and a half in), a spread of 0.36%, and is flat to 0.006% over the last
+five years. EIR stays within 0.4% of its target throughout. Incidence relaxes
+further off the seed than prevalence does, a few per cent over the first years
+at this EIR and more at higher ones.
 
 That relaxation is expected, not a numerical error. The
-[malariaEquilibrium](https://github.com/mrc-ide/malariaEquilibrium) seed solves a
-*simplified* form of the model, so it is a close **approximation** to `fleet`'s
-true fixed point rather than the fixed point itself; `malariasimulation` is
-seeded from the same solution and drifts off it the same way. `vignette("model")`
-lists the four simplifications. **Burn in before calibrating, and read a settled
-window rather than day 0.**
+[malariaEquilibrium](https://github.com/mrc-ide/malariaEquilibrium) seed solves
+the model's continuous-time form, so it is a close **approximation** to
+`fleet`'s true fixed point on the daily clock rather than the fixed point
+itself; `malariasimulation` is seeded from the same solution and drifts off it
+too. `vignette("model")` lists the differences. **Burn in before calibrating,
+and read a settled window rather than the first days.**
 
 ## Reading outputs with postie
 
-Because the count table is `malariasimulation`-shaped, it goes straight into
+Because the table is `malariasimulation`'s, it goes straight into
 [postie](https://github.com/mrc-ide/postie): the same two calls you would make
 on an IBM run, with no fleet-specific wrapper in between.
 
@@ -126,30 +140,34 @@ Use `diagnostic = "pcr"` for PCR prevalence, and postie's own arguments
 means a post-processing pipeline written for the IBM works on a `fleet` run
 unchanged.
 
-### Getting finer age resolution
+### Choosing age bands
 
-By default you get the 2-10y and all-ages bands. To emit more, set the
-`malariasimulation` rendering fields on the parameter list before running (the
-same fields the IBM uses):
+The bands come from the `malariasimulation` rendering fields on the parameter
+list, the same fields the IBM reads, and each family is reported over its own
+list only: `prevalence_rendering_*` for detection, `clinical_incidence_*`,
+`severe_incidence_*` and `incidence_rendering_*` for the three incidence
+families, and `age_group_rendering_*` for population alone. A band need not
+line up with the model's age groups:
 
 ```{r bands}
 p_bands <- p
 p_bands$prevalence_rendering_min_ages <- c(0,  2, 10) * 365
-p_bands$prevalence_rendering_max_ages <- c(2, 10, 100) * 365
+p_bands$prevalence_rendering_max_ages <- c(2, 10, 100) * 365 - 1
 p_bands$clinical_incidence_rendering_min_ages <- c(0, 2) * 365
-p_bands$clinical_incidence_rendering_max_ages <- c(2, 10) * 365
+p_bands$clinical_incidence_rendering_max_ages <- c(2, 10) * 365 - 1
 
 out_bands <- run_simulation_ode(10 * 365, malariasimulation::set_equilibrium(p_bands, init_EIR = 20))
-grep("^p_detect_lm_", names(out_bands), value = TRUE)
+grep("^n_detect_lm_|^n_inc_clinical_", names(out_bands), value = TRUE)
 ```
 
 ## Layering interventions
 
 Interventions are configured with the ordinary `malariasimulation::set_*`
 builders and applied automatically from the list. There are no extra arguments
-to `run_simulation_ode()`. Every module starts at its baseline at t = 0, so the
-equilibrium seed is preserved and each intervention acts from its scheduled
-timestep. A few representative examples follow.
+to `run_simulation_ode()`. As in the IBM, settings read on the day (treatment
+coverage, the drug mix, resistance, death rates) change on their own timestep,
+and deployments (nets, spraying, vaccination, chemoprevention) act from the day
+after theirs. A few representative examples follow.
 
 ### Bed nets
 
@@ -161,8 +179,8 @@ p_nets <- malariasimulation::set_bednets(
   rnm = matrix(0.24, 1, 1), gamman = 2.64 * 365)
 
 nets <- run_simulation_ode(12 * 365, malariasimulation::set_equilibrium(p_nets, init_EIR = 20))
-c(baseline = nets$p_detect_lm_730_3650[1],
-  trough   = min(nets$p_detect_lm_730_3650))
+pfpr_nets <- nets$n_detect_lm_730_3650 / nets$n_age_730_3650
+c(baseline = pfpr_nets[1], trough = min(pfpr_nets))
 ```
 
 Prevalence falls after deployment and then relaxes as the nets decay. Both
@@ -186,14 +204,16 @@ p_smc$prevalence_rendering_min_ages <- round(0.25 * 365)
 p_smc$prevalence_rendering_max_ages <- round(5 * 365)
 
 smc <- run_simulation_ode(3 * 365, malariasimulation::set_equilibrium(p_smc, init_EIR = 20))
-band <- "p_detect_lm_91_1825"        # the 0.25-5y target band, tag in days
-c(baseline = smc[[band]][1], trough = min(smc[[band]]))
+pfpr_smc <- smc$n_detect_lm_91_1825 / smc$n_age_91_1825   # the 0.25-5y target band
+c(baseline = pfpr_smc[1], trough = min(pfpr_smc))
 ```
 
-SMC/MDA/PMC are applied as pulsed mass drug administration between integration
-segments: a fraction (coverage x drug efficacy) of the target age band is cleared
-and moved to the first stage of a chemoprevention prophylaxis chain matched to the
-drug's Weibull protection curve.
+SMC, MDA and PMC rounds are applied between days, as the IBM applies them: of
+the target band, a fraction (coverage x drug efficacy) is treated. The clinical
+and LM-detectable asymptomatic among them pass through the treated state first,
+still detectable and infectious for a few days, and everyone treated is then
+protected by a prophylaxis chain matched to the drug's Weibull protection
+curve.
 
 ### PEV vaccine (RTS,S via EPI, with a booster)
 
@@ -206,15 +226,16 @@ p_pev <- malariasimulation::set_pev_epi(
   booster_profile = list(malariasimulation::rtss_booster_profile))
 
 pev <- run_simulation_ode(12 * 365, malariasimulation::set_equilibrium(p_pev, init_EIR = 20))
-c(baseline = pev$p_detect_lm_730_3650[1],
-  year12   = pev$p_detect_lm_730_3650[nrow(pev)])
+pfpr_pev <- pev$n_detect_lm_730_3650 / pev$n_age_730_3650
+c(baseline = pfpr_pev[1], year12 = pfpr_pev[nrow(pev)])
 ```
 
 PEV reduces the infection hazard by a per-age, per-time factor. Efficacy is
 averaged over the per-individual antibody distribution the IBM samples (a 4-D
 Gauss-Hermite rule over `cs`/`rho`/`ds`/`dl`), not evaluated at the profile
 median; primary and booster doses, EPI and mass campaigns, and time-varying EPI
-coverage are all modelled.
+coverage are all modelled, and a campaign's protection ages with the cohort it
+vaccinated.
 Transmission-blocking vaccines are available via `set_tbv()`.
 
 ## Demography
@@ -248,7 +269,7 @@ a warning fires if the model age grid runs past them.
 Turn on seasonality with the Fourier rainfall parameters. Unlike an aseasonal
 run, a seasonal run **oscillates** around a limit cycle rather than holding flat.
 The state is seeded at the annual-mean equilibrium, so the first ~10 years are a
-transient onto the cycle, and the seasonal annual-mean EIR sits a few percent
+transient onto the cycle, and the seasonal annual-mean EIR sits about 7%
 below the aseasonal `init_EIR` target (nonlinear averaging). Run long and read a
 **burned-in** year for calibration or comparison:
 
@@ -260,33 +281,31 @@ p_seas <- malariasimulation::get_parameters(list(
 seas <- run_simulation_ode(20 * 365, malariasimulation::set_equilibrium(p_seas, init_EIR = 20))
 final_year <- seas[(nrow(seas) - 365 + 1):nrow(seas), ]
 range(final_year$EIR)   # seasonal swing in the settled cycle
-mean(final_year$EIR)    # a few % below the aseasonal target of 20
+mean(final_year$EIR)    # about 7% below the aseasonal target of 20
 ```
 
-## Solver settings
+## Discretisation settings
 
 Every run above uses the default numerics, which live in `run_simulation_ode()`'s
 fourth argument, `tuning` — an `ode_tuning()` object, or a plain named list of
 just the fields you want to change. Nothing epidemiological sits there: model
-parameters, the target EIR included, stay on the parameter list. Every default is
-the validated choice, so leave `tuning` alone except on a long projection like
-the 20-year run above, where the solver rather than the daily output grid sets
-the step count. There, loosening the relative tolerance runs about 1.4–1.7x
-faster on a seasonal projection and moves the aggregate outputs far less than
-anything you would report.
+parameters, the target EIR included, stay on the parameter list. There are only
+three settings — the age grid, the prophylaxis chains' stage counts and the
+mosquito sub-steps per day — and every default is the validated choice. The one
+worth reaching for is the age grid: a result that rests on the *level* of severe
+incidence, or on adult bands, is worth re-running on a finer grid to see how
+much of it is the grid.
 
 ```{r tuning}
-seas_fast <- run_simulation_ode(
+seas_fine <- run_simulation_ode(
   20 * 365, malariasimulation::set_equilibrium(p_seas, init_EIR = 20),
-  tuning = list(rtol = 1e-6, step_size_max = 10))
+  tuning = list(age_lower = default_age_lower(n_group = 105)))
 
 c(default = mean(final_year$EIR),
-  faster  = mean(seas_fast$EIR[(nrow(seas_fast) - 365 + 1):nrow(seas_fast)]))
+  finer   = mean(seas_fine$EIR[(nrow(seas_fine) - 365 + 1):nrow(seas_fine)]))
 ```
 
-`?ode_tuning` documents every field, including why `atol` should stay at `1e-8`
-whatever else you change, and why `step_size_max` is a safety rail rather than a
-speed control.
+`?ode_tuning` documents every field.
 
 ## Where to go next
 
@@ -295,8 +314,8 @@ Four things to read before you trust a number from this model.
 | | |
 | --- | --- |
 | **`vignette("using")`** | Where the mean field departs and what to do about it: burn-in, age grids, output bands, which settings to leave alone, which results to treat with caution, and what a run costs. |
-| **[fleetcheck](https://pwinskill.github.io/fleetcheck/)** | How well it matches the IBM, as a separate project: a register of claims, each with the criterion that decides it, the value measured against it and a verdict. Not completed validation — the evidence that exists so far, with the open discrepancies named and the failing claims left failing. |
-| **`vignette("model")`** | The formal specification: the ODE system, and what each state dimension carries as against what is captured *without* one. |
+| **[fleetcheck](https://pwinskill.github.io/fleetcheck/)** | How well it matches the IBM, as a separate project: a register of claims, each with the criterion that decides it, the value measured against it and a verdict. Not completed validation — the evidence that exists so far, with the open discrepancies named and any failing claim left failing. |
+| **`vignette("model")`** | The formal specification: the daily update, and what each state dimension carries as against what is captured *without* one. |
 | **`vignette("parameters")`** | Every `malariasimulation` `set_*()` function, argument by argument. |
 
 Scope: `fleet` is **P. falciparum only**. *P. vivax* parameter lists are rejected

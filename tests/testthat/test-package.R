@@ -99,8 +99,8 @@ test_that("multi-drug resistance is coverage-weighted and drives dynamics", {
   # end-to-end: resistance raises prevalence vs the SAME treatment without resistance
   base <- run_simulation_ode(1500, eqm(base_p, 30))
   o <- run_simulation_ode(1500, eqm(p, 30))
-  expect_true(all(is.finite(o$p_detect_lm_730_3650)))
-  expect_gt(o$p_detect_lm_730_3650[1500], base$p_detect_lm_730_3650[1500])
+  expect_true(all(is.finite(pfpr(o))))
+  expect_gt(pfpr(o)[1500], pfpr(base)[1500])
 })
 
 test_that("resistance rT_slow uses the PEAK timestep, not the last", {
@@ -202,27 +202,40 @@ test_that("the run signature mirrors run_simulation() and points at the replacem
   # every argument that moved names where it went, rather than R's bare
   # "unused argument": a silent signature change is the expensive kind
   expect_error(run_simulation_ode(10, p, init_EIR = 20), "no longer an argument")
-  expect_error(run_simulation_ode(10, p, atol = 1e-6), "field of `tuning`")
-  expect_error(run_simulation_ode(10, p, n_ph = 2, rtol = 1e-6), "fields of `tuning`")
+  expect_error(run_simulation_ode(10, p, n_sub = 4), "field of `tuning`")
+  expect_error(run_simulation_ode(10, p, n_ph = 2, n_sub = 4), "fields of `tuning`")
+  expect_error(run_simulation_ode(10, p, atol = 1e-6), "drop it")
   expect_error(run_simulation_ode(10, p, bogus = 1), "unused argument")
 })
 
 test_that("ode_tuning validates its fields and accepts a partial list", {
   expect_s3_class(ode_tuning(), "fleet_ode_tuning")
-  expect_equal(ode_tuning()$atol, 1e-8)
+  expect_equal(ode_tuning()$n_sub, 32L)
   # a partial list fills the rest from the defaults
-  tn <- as_ode_tuning(list(rtol = 1e-6))
-  expect_equal(tn$rtol, 1e-6)
-  expect_equal(tn$atol, ode_tuning()$atol)
-  # a mistyped field is an error, not a silently ignored one: a typo'd rtol that
-  # quietly did nothing would read as the tolerance simply not mattering
-  expect_error(as_ode_tuning(list(rtoll = 1e-6)), "unknown `tuning` field")
+  tn <- as_ode_tuning(list(n_sub = 4))
+  expect_equal(tn$n_sub, 4L)
+  expect_equal(tn$age_lower, ode_tuning()$age_lower)
+  # the ODE solver's fields are ignored, and say so, so a script written for it
+  # keeps running
+  expect_warning(tr <- as_ode_tuning(list(rtol = 1e-6, step_size_max = 10)), "ignored")
+  expect_equal(unclass(tr), unclass(ode_tuning()))
+  expect_warning(ode_tuning(n_eip = 20), "no ODE solver")
+  # a mistyped field is an error, not a silently ignored one: a typo'd n_sub that
+  # quietly did nothing would read as the setting simply not mattering
+  expect_error(as_ode_tuning(list(n_subs = 4)), "unknown `tuning` field")
+  expect_error(ode_tuning(bogus = 1), "unknown `tuning` field")
   expect_error(as_ode_tuning(list(1e-6)), "must be named")
-  expect_error(ode_tuning(n_eir = 0), "n_eir")
-  expect_error(ode_tuning(n_eip = 2.5), "n_eip")
-  expect_error(ode_tuning(atol = -1), "atol")
+  expect_error(ode_tuning(n_sub = 0), "n_sub")
+  expect_error(ode_tuning(n_sub = 2.5), "n_sub")
   expect_error(ode_tuning(age_lower = c(1, 2, 3)), "starting at 0")
   expect_error(ode_tuning(age_lower = c(0, 2, 1)), "increasing")
+})
+
+test_that("an age group narrower than a day is refused", {
+  skip_if_not_installed("malariasimulation")
+  p <- eqm(malariasimulation::get_parameters(), 20)
+  narrow <- sort(c(default_age_lower(), 0.5, 0.5 + 0.5 / 365))  # a half-day group at 6 months
+  expect_error(run_simulation_ode(10, p, tuning = list(age_lower = narrow)), "too narrow")
 })
 
 test_that("IRS reduces prevalence; zero-coverage IRS == baseline", {
@@ -234,9 +247,9 @@ test_that("IRS reduces prevalence; zero-coverage IRS == baseline", {
     ks_theta = matrix(-2.222, 1, 1), ks_gamma = matrix(0.008, 1, 1),
     ms_theta = matrix(-1.232, 1, 1), ms_gamma = matrix(-0.009, 1, 1))
   z <- run_simulation_ode(1200, eqm(irs(0), 20))
-  expect_lt(max(abs(z$p_detect_lm_730_3650 - base$p_detect_lm_730_3650)), 1e-9)
+  expect_lt(max(abs(pfpr(z) - pfpr(base))), 1e-9)
   o <- run_simulation_ode(1200, eqm(irs(0.8), 20))
-  expect_lt(min(o$p_detect_lm_730_3650), base$p_detect_lm_730_3650[1])
+  expect_lt(min(pfpr(o)), pfpr(base)[1])
 })
 
 test_that("carrying-capacity scaler = 1 is a no-op (flat)", {
@@ -261,7 +274,12 @@ test_that("seasonal cycle is annually periodic (settled)", {
 test_that("kitchen-sink run is finite, conserved, and postie-consumable", {
   skip_if_not_installed("malariasimulation")
   skip_if_not_installed("postie")
-  gp <- malariasimulation::get_parameters
+  # postie reads clinical and severe rates band by band, so both over the same bands
+  lo <- c(0, 5, 15) * 365; hi <- c(5, 15, 100) * 365 - 1
+  gp <- function(overrides = list()) malariasimulation::get_parameters(c(list(
+    clinical_incidence_rendering_min_ages = lo, clinical_incidence_rendering_max_ages = hi,
+    severe_incidence_rendering_min_ages = lo, severe_incidence_rendering_max_ages = hi),
+    overrides))
   p <- gp(overrides = list(model_seasonality = TRUE))
   p <- malariasimulation::set_drugs(p, list(malariasimulation::AL_params,
                                             malariasimulation::SP_AQ_params))
@@ -279,10 +297,12 @@ test_that("kitchen-sink run is finite, conserved, and postie-consumable", {
   base <- run_simulation_ode(730, eqm(gp(), 20))
   o <- run_simulation_ode(730, eqm(p, 20))
   expect_true(all(is.finite(as.matrix(o[sapply(o, is.numeric)]))))
-  expect_identical(names(o), names(base))               # column stability
-  pop <- with(o, S_count + D_count + A_count + U_count + Tr_count + Ph_count)
+  # the same columns as without interventions, plus ft, which the IBM renders
+  # only when treatment is deployed
+  expect_identical(setdiff(names(o), "ft"), names(base))
+  pop <- with(o, S_count + D_count + A_count + U_count + Tr_count)
   expect_equal(max(pop), min(pop), tolerance = 1e-5)
-  expect_true(all(o$p_detect_lm_730_3650 >= 0 & o$p_detect_lm_730_3650 <= 1))
+  expect_true(all(pfpr(o) >= 0 & pfpr(o) <= 1))
   prevalence <- postie::get_prevalence(o, diagnostic = "lm")
   rates <- postie::get_rates(o)
   expect_true(all(prevalence$lm_prevalence_2_10 >= 0 &
@@ -291,8 +311,12 @@ test_that("kitchen-sink run is finite, conserved, and postie-consumable", {
   expect_true(all(is.finite(rates$dalys)))
 })
 
-test_that("timesteps = 1 returns two rows", {
+test_that("timesteps = 1 returns one row, day 1, the seed", {
   skip_if_not_installed("malariasimulation")
-  o <- run_simulation_ode(1, eqm(malariasimulation::get_parameters(), 20))
-  expect_equal(nrow(o), 2)
+  p <- eqm(malariasimulation::get_parameters(), 20)
+  o <- run_simulation_ode(1, p)
+  expect_equal(nrow(o), 1)
+  expect_equal(o$timestep, 1)
+  # row t is the start of day t, so a longer run starts on the same row
+  expect_equal(unlist(run_simulation_ode(30, p)[1, ]), unlist(o[1, ]))
 })

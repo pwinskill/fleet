@@ -4,18 +4,20 @@
 \name{fleet-package}
 \alias{fleet}
 \alias{fleet-package}
-\title{fleet: a mean-field (ODE) twin of malariasimulation}
+\title{fleet: a mean-field twin of malariasimulation}
 \description{
-A fast, deterministic mean-field (ODE) counterpart to the
-\pkg{malariasimulation} individual-based model of \emph{Plasmodium falciparum}
-malaria, built on the \pkg{odin2} / \pkg{dust2} stack. It reproduces the
-age- and biting-heterogeneity-structured human model (states S/D/A/U/Tr plus
-treatment and chemoprevention prophylaxis, and the six immunity functions)
-coupled to the compartmental mosquito model, and honours the same intervention
-modules. It accepts an unmodified \code{malariasimulation::get_parameters()} list,
-is seeded at the \pkg{malariaEquilibrium} fixed point, and returns
+A fast, deterministic mean-field counterpart to the \pkg{malariasimulation}
+individual-based model of \emph{Plasmodium falciparum} malaria, built on the
+\pkg{odin2} / \pkg{dust2} stack and advanced one day at a time on the
+individual-based model's own clock. It reproduces the age- and
+biting-heterogeneity-structured human model (states S/D/A/U/Tr plus treatment
+and chemoprevention prophylaxis, and the six immunity functions) coupled to
+the compartmental mosquito model, and honours the same intervention modules.
+It accepts an unmodified \code{malariasimulation::get_parameters()} list, is
+seeded at the \pkg{malariaEquilibrium} solution, and returns
 malariasimulation-style outputs that feed straight into \pkg{postie}. A
-multi-decade run completes in seconds, independent of population size.
+multi-decade run completes in under a second, independent of population
+size.
 }
 \section{Getting started}{
 
@@ -23,14 +25,13 @@ multi-decade run completes in seconds, independent of population size.
 \item \code{\link[=run_simulation_ode]{run_simulation_ode()}}: run the model; returns a wide, daily count
 table (P. falciparum only).
 \item \code{\link[=default_age_lower]{default_age_lower()}}: the default graded age grid.
-\item \code{\link[=ode_tuning]{ode_tuning()}}: solver and discretisation settings, passed as
-\verb{tuning =}.
+\item \code{\link[=ode_tuning]{ode_tuning()}}: discretisation settings, passed as \verb{tuning =}.
 }
 The count table is malariasimulation-shaped, so post-process it with
 \pkg{postie} exactly as you would an IBM run: \code{postie::get_rates(out)} and
 \code{postie::get_prevalence(out, diagnostic = "lm")}.
 See \code{vignette("fleet")} for a worked tour and \code{vignette("using")} for where
-and how much the ODE departs from the IBM and what to do about it. The
+and how much the mean field departs from the IBM and what to do about it. The
 measured agreement behind those claims is a separate project,
 \href{https://pwinskill.github.io/fleetcheck/}{fleetcheck}.
 }

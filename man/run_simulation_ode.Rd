@@ -2,7 +2,7 @@
 % Please edit documentation in R/run.R
 \name{run_simulation_ode}
 \alias{run_simulation_ode}
-\title{Run the mean-field (ODE) malaria model.}
+\title{Run the mean-field malaria model.}
 \usage{
 run_simulation_ode(
   timesteps,
@@ -13,8 +13,9 @@ run_simulation_ode(
 )
 }
 \arguments{
-\item{timesteps}{number of days to simulate. Output has \code{timesteps + 1} rows
-(day 0 is the seeded equilibrium; days 1..timesteps are integrated).}
+\item{timesteps}{number of days to simulate. Output has one row per day,
+\verb{1..timesteps}, as malariasimulation's does: row \code{t} holds the state at the
+start of day \code{t} and the incidence during it, so row 1 is the seed.}
 
 \item{parameters}{a malariasimulation::get_parameters() list (falciparum),
 optionally with interventions layered on via the \verb{set_*} builders. The
@@ -55,18 +56,12 @@ them alone:
 deduplication. malariasimulation collects the day's bitten individuals in a
 bitset, so a person bitten repeatedly in one timestep is infected at most
 once: the daily infection probability is \code{(1 - exp(-EPS)) * b}, which
-saturates. Setting \code{0} uses the unbounded \code{b * EPS} instead, the linear
-form \code{malariaEquilibrium} assumes, which over-predicts infection where
-exposure approaches one bite/person/day (seasonal peaks, high-\code{zeta}
-strata). It does \strong{not} make the \code{malariaEquilibrium} seed an exact fixed
-point, and it does not make a run flat: deduplication is only the largest
-of four departures from that solution, which \code{vignette("model")} lists in
-its initial-conditions section. What it
-does do is roughly halve the largest excursion from the seed: over an
-undisturbed 15-year run at EIR 20, PfPR(2-10) departs from its seeded value
-by at most 0.14\% with \code{0}, against 0.28\% at the default. That is the metric
-the package's own equilibrium tests assert, which is why they set it.
-Leave it at \code{1} for any scientific run.
+saturates. Setting \code{0} lets every bite infect independently instead,
+\code{1 - exp(-b * EPS)}, which over-predicts infection where exposure
+approaches one bite/person/day (seasonal peaks, high-\code{zeta} strata).
+Neither makes the \code{malariaEquilibrium} seed an exact fixed point:
+\code{vignette("model")} lists the departures from that solution in its
+initial-conditions section. Leave it at \code{1} for any scientific run.
 \item \code{acquired_immunity_offset} (default \code{0}): the IBM adds \code{+0.5} to
 positive acquired immunity inside the \code{b}/\code{phi}/\code{theta} Hill functions. That
 is a per-individual detail which does not carry over to a stratum mean; an
@@ -78,68 +73,107 @@ the equilibrium under its \emph{default} exponential age structure, so under a
 custom demography the IBM drifts to whatever transmission that density
 supports. By default fleet replicates that: it takes the IBM's mosquito
 density and seeds at the EIR its own equilibrium under the custom age
-structure then supports (a fixed point, so no burn-in), which is generally
-\emph{not} \code{init_EIR}. Set \code{TRUE} to seed at \code{init_EIR} exactly instead.
+structure then supports, which is generally \emph{not} \code{init_EIR}. Set \code{TRUE}
+to seed at \code{init_EIR} exactly instead. Either way the seed is the
+\code{malariaEquilibrium} solution at that EIR, and it relaxes slightly, as
+every seed does.
 }}
 
 \item{correlations}{accepted so the first three arguments mirror
 \code{malariasimulation::run_simulation(timesteps, parameters, correlations)}
 exactly (drop-in call compatibility). Intervention correlation is an
 individual-level feature with no mean-field analogue, so a non-NULL value is
-ignored with a warning (the ODE assumes independence between interventions).
+ignored with a warning (the model assumes independence between interventions).
 \code{tuning} is the \emph{fourth} argument: an \code{\link[=ode_tuning]{ode_tuning()}} object (or a list of its
 fields) passed positionally here would land in \code{correlations} and be thrown
 away, so that is an error rather than a silently defaulted run.}
 
-\item{tuning}{ODE solver and discretisation settings, from \code{\link[=ode_tuning]{ode_tuning()}}.
-A plain named list of the fields you want to change is also accepted; every
-field left out keeps its default. These are numerical-approximation knobs,
-not model parameters: nothing epidemiological lives here.}
+\item{tuning}{discretisation settings, from \code{\link[=ode_tuning]{ode_tuning()}}. A plain named
+list of the fields you want to change is also accepted; every field left out
+keeps its default. These are numerical-approximation knobs, not model
+parameters: nothing epidemiological lives here.}
 
 \item{...}{not used. Named arguments that were top-level before the signature
 was cut back to \code{malariasimulation::run_simulation()}'s are caught here and
 reported with the call that replaces them.}
 }
 \value{
-a wide, malariasimulation-style daily count table, one row per output
-day. The column names do not change with the parameter set, so runs with and
-without interventions are directly comparable and \code{rbind}-able. Columns:
+a wide daily table in malariasimulation's layout, one row per day. The
+columns follow malariasimulation's rendering rules: a parameter list gives the
+columns the IBM would give it, under the same names and with the same
+meanings, as far as a mean field carries them. Columns:
 \itemize{
-\item \code{timestep}: output day (0..timesteps), the row key.
-\item per age band (tags in \strong{days}, \verb{<lo>_<hi>}): \verb{n_age_*} (population),
-\verb{n_detect_lm_*} and \verb{p_detect_lm_*} (LM-positive count and PfPR
-proportion), \verb{n_detect_pcr_*}, \verb{n_inc_clinical_*}, \verb{n_inc_severe_*} and
-\verb{n_inc_*} (all-infection incidence), all per-day counts. A band is
-aggregated by exact overlap: each model age group contributes the fraction
-of its own width that lies inside the band, so a band need not align with
-the \code{age_lower} grid, and bands that partition a span of the age axis
-partition the population living in that span exactly. The one age group
-that is not a finite interval is the absorbing top group, which holds
-everyone from its lower edge upward: a band is given all of it if it
-extends \emph{above} that edge and none of it if it stops exactly on it. So a
-band \verb{[0, 36500)} renders the whole population on the default grid (top
-group from 29200 days) but leaves the top group out on a grid built with
-\code{max_age = 100} -- 1.3\% of the population, at the default demography.
-That is not silent: the run warns, names the share of the population no
-\verb{n_age_*} band renders, and names the age groups it sits in. A band that
-overlaps no age group at all (it lies above the open-ended top group)
-warns too, and its \verb{p_detect_lm_*} is \code{NA} rather than 0.
-\item \code{ft} (treated fraction), \code{EIR} (per adult per year), \code{FOIM}.
-\item population-total infection-state counts \code{S_count}, \code{D_count},
-\code{A_count}, \code{U_count}, \code{Tr_count}, \code{Ph_count} (diagnostic).
+\item \code{timestep}: output day (1..timesteps), the row key.
+\item age-banded counts, one set per band in the parameter list's rendering
+lists and none for an empty list: \verb{n_detect_lm_*}, \verb{p_detect_lm_*} and
+\verb{n_detect_pcr_*} over \verb{prevalence_rendering_*}; \verb{n_inc_*} and \verb{p_inc_*}
+over \verb{incidence_rendering_*}; \verb{n_inc_clinical_*} and \verb{p_inc_clinical_*}
+over \verb{clinical_incidence_rendering_*}; \verb{n_inc_severe_*} and
+\verb{p_inc_severe_*} over \verb{severe_incidence_rendering_*}; and \verb{n_age_*}
+(population) over all of those and \verb{age_group_rendering_*} together. The
+tag is \verb{<lower>_<upper>} in days, formatted as malariasimulation formats
+it. A band \verb{[lower, upper]} holds the whole-day ages \code{lower} to \code{upper},
+both included, as in the IBM, so \verb{0_1824} and \verb{1825_5474} partition the
+age axis while \verb{0_1825} and \verb{1825_5475} share one day's cohort.
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{  In the IBM an `n_*` column is a sampled count and its `p_*` partner the
+  expected count behind it: `p_detect_lm_*` is the clinically detected
+  count plus each asymptomatic person's probability of detection, a count
+  and not a prevalence. A mean field carries expectations, so here the two
+  are the same number. The exception is `p_inc_*`, which is 0 because
+  malariasimulation 3.0.0 renders it from `incidence_min_ages`, a field no
+  parameter list sets, and so returns 0 for it too. Prevalence is
+  `n_detect_lm_*` / `n_age_*`, as postie computes it.
+
+  A band is aggregated by exact overlap with the model's age groups, so it
+  need not align with the `age_lower` grid. The one group that is not a
+  finite interval is the absorbing top group, which holds everyone from its
+  lower edge upward: a band is given all of it if it reaches above that edge
+  and none of it otherwise. A band ending inside it (60-85 years on the
+  default grid, whose top group starts at 80) is therefore given all of it,
+  and a band ending exactly on its lower edge none of it, which warns, as
+  does a band that selects no age group at all.
+\\item `n_infections` (new infections at all ages) and, when clinical
+  treatment is deployed, `ft` (the fraction of clinical cases treated), as
+  in the IBM.
+\\item population totals by infection state, `S_count`, `A_count`,
+  `D_count`, `U_count` and `Tr_count`, counted as the IBM counts them:
+  someone a drug is protecting is uninfected, and so in `S_count`.
+\\item three columns malariasimulation does not have: `EIR` (infectious
+  bites per adult per year), `FOIM` (the force of infection on the first
+  mosquito species) and `Ph_count` (how many of `S_count` a drug is
+  protecting).
+}\if{html}{\out{</div>}}
+
 }
-Incidence columns are per-day counts; do not thin rows before postie. Can be
-passed directly to postie::get_rates() / postie::get_prevalence().
+malariasimulation columns this table does not carry: \code{n_bitten},
+\code{infectivity}, \verb{EIR_<species>}, \verb{FOIM_<species>}, \verb{mu_<species>}, the
+immunity means (\code{ica_mean} and the rest), the mosquito compartment counts and
+\verb{total_M_<species>}, \code{natural_deaths}, and the treatment and intervention
+tallies (\code{n_treated}, \code{n_smc_treated} and the rest).
+
+Incidence columns are per-day counts; do not thin rows before postie. The
+table can be passed directly to postie::get_rates() / postie::get_prevalence().
 }
 \description{
-Run the mean-field (ODE) malaria model.
+The population is advanced one day at a time, in the order malariasimulation
+resolves a day: immunity decay, biting and infection, one competing draw per
+person between infection and progression, a day of the mosquito model, and
+deaths replaced by births. See \code{vignette("model")}.
 }
 \details{
-Seasonal runs oscillate around a limit cycle rather than holding flat;
-the state is seeded at the annual-mean (aseasonal) equilibrium, so the first
-~10 years are a transient onto the cycle and the seasonal annual-mean EIR
-sits a few percent below the aseasonal \code{init_EIR} target (nonlinear
-averaging). Use a burned-in cycle for calibration/comparison.
+The seed is where malariasimulation's own seed is: the
+\code{malariaEquilibrium} solution for \code{init_EIR}, the humans under the treatment
+coverage in force at timestep 0 and the mosquitoes sized under the coverage
+at timestep 1, as \code{set_equilibrium()} and the IBM's initialisation do. It is
+close to the daily model's fixed point but not on it: prevalence relaxes by
+under half a per cent, incidence by a few per cent over the first years,
+more at high transmission. Seasonal runs oscillate around a limit cycle
+rather than holding flat; the state is seeded at the annual-mean (aseasonal)
+equilibrium, so the first ~10 years are a transient onto the cycle and the
+seasonal annual-mean EIR sits about 7\% below the aseasonal \code{init_EIR}
+target (nonlinear averaging). Use a burned-in window for calibration and
+comparison.
 }
 \examples{
 \dontrun{
@@ -149,10 +183,11 @@ p <- malariasimulation::set_equilibrium(
 out <- run_simulation_ode(timesteps = 3650, parameters = p)
 head(out[, c("timestep", "n_age_730_3650", "n_detect_lm_730_3650", "EIR")])
 
-# a long projection, trading a little accuracy for speed
-fast <- run_simulation_ode(3650, p, tuning = list(rtol = 1e-6, step_size_max = 10))
+# the same run on an age grid twice as fine
+fine <- run_simulation_ode(3650, p,
+  tuning = list(age_lower = default_age_lower(n_group = 105)))
 }
 }
 \seealso{
-\code{\link[=ode_tuning]{ode_tuning()}} for the solver and discretisation settings.
+\code{\link[=ode_tuning]{ode_tuning()}} for the discretisation settings.
 }

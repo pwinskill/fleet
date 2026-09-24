@@ -1,16 +1,17 @@
 # Contributing to fleet
 
-Thanks for your interest. `fleet` is a deterministic mean-field (ODE) twin of the
+Thanks for your interest. `fleet` is a deterministic mean-field twin of the
 [malariasimulation](https://github.com/mrc-ide/malariasimulation) individual-based
-model. That framing drives almost every rule below: where the two models can be made
-to agree, they should agree *by construction*, not by fitting.
+model, advanced one day at a time on the IBM's own clock. That framing drives almost
+every rule below: where the two models can be made to agree, they should agree *by
+construction*, not by fitting.
 
 > `fleet` is a work in progress and is not ready for real use. See the warning at the
 > top of the [README](https://github.com/pwinskill/fleet#not-ready-for-real-use).
 
 ## The one thing that will catch you out
 
-**`inst/odin/malaria_ode.R` is the model. `src/malaria_ode.cpp` is what actually runs.**
+**`inst/odin/malaria_daily.R` is the model. `src/malaria_daily.cpp` is what actually runs.**
 
 The C++ is generated from the odin source and is committed to the repository. If you
 edit the odin file and do not regenerate, everything passes: `R CMD check` compiles
@@ -18,7 +19,7 @@ the old model, the tests exercise the old model, and the drift check reports "no
 moved", which reads as *my change was numerically inert* rather than *my change was
 never compiled*.
 
-After any edit to `inst/odin/malaria_ode.R`:
+After any edit to `inst/odin/malaria_daily.R`:
 
 ```r
 odin2::odin_package(".")
@@ -27,11 +28,17 @@ odin2::odin_package(".")
 then commit the regenerated files alongside your change:
 
 ```
-src/malaria_ode.cpp   src/cpp11.cpp   R/dust.R   R/cpp11.R   inst/dust/malaria_ode.cpp
+src/malaria_daily.cpp   src/cpp11.cpp   R/dust.R   R/cpp11.R   inst/dust/malaria_daily.cpp
 ```
 
 CI enforces this: the `generated-code` job in `.github/workflows/R-CMD-check.yaml`
 regenerates and fails on any diff.
+
+**`devtools::load_all()` and `devtools::test()` compile the model with debug flags**
+(`-O0`), which runs it about ten times slower, and they leave those object files in
+`src/`. `R CMD INSTALL` on the source directory then reuses them, so an install made
+after a `load_all()` is silently the slow build. Install with
+`R CMD INSTALL --preclean .` (or delete `src/*.o` first) before timing anything.
 
 ## Setup
 
@@ -58,19 +65,21 @@ locally only.
 
 ## Changing the model
 
-Two committed baselines pin `fleet`'s numbers. A deliberate model change means
+Two committed baselines pin `fleet`'s numbers: this repository's reference
+values, and `fleetcheck`'s committed fleet rows. A deliberate model change means
 refreshing **both**, and reading both diffs.
 
 | baseline | what it pins | regenerate with |
 |---|---|---|
-| `tests/testthat/reference-values.csv`<br>`tests/testthat/reference-interventions.csv` | absolute output levels, to 1e-6 | `FLEET_REGENERATE_REFERENCE=1 Rscript -e 'devtools::test(filter = "reference")'` |
+| `tests/testthat/reference-values.csv`<br>`tests/testthat/reference-interventions.csv` | absolute output levels, to 1e-6 | `FLEET_REGENERATE_REFERENCE=1 Rscript -e 'testthat::test_file("tests/testthat/test-reference.R", package = "fleet", load_package = "installed")'`, against a fresh `R CMD INSTALL` |
+
 Agreement with the IBM is a separate repository,
 [fleetcheck](https://github.com/pwinskill/fleetcheck). A change that moves model
 output moves its numbers too, so refresh it in the same change: clone it beside
 this one and run `CMP_FLEET_ONLY=1 Rscript validations/02-scenarios/run.R`,
 then `validations/02-scenarios/render.R`. The IBM rows do not need re-running —
-nothing in `fleet` can affect them — which is why that takes minutes rather than
-the twenty-five a full sweep costs.
+nothing in `fleet` can affect them — which is why that takes under a minute rather
+than the hours a full sweep costs.
 
 **Never regenerate a baseline to make a red test green.** The diff *is* the record of
 what your change did to the model. Read it, and put it in the pull request.
@@ -98,7 +107,7 @@ what your change did to the model. Read it, and put it in the pull request.
 - New behaviour needs a test that fails without the change. For anything touching model
   output, that means an absolute assertion, not only a relation: a test that checks
   "intervention-on is below intervention-off" survives multiplying the whole output by a
-  constant, and two real mutations once passed the entire suite that way.
+  constant.
 - Documentation counts as part of the change. If you falsify a claim in the README or a
   vignette, fix it in the same pull request.
 

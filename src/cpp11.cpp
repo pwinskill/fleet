@@ -5,113 +5,105 @@
 #include "cpp11/declarations.hpp"
 #include <R_ext/Visibility.h>
 
-// malaria_ode.cpp
-SEXP dust2_system_malaria_ode_alloc(cpp11::list r_pars, cpp11::sexp r_time, cpp11::list r_time_control, cpp11::sexp r_n_particles, cpp11::sexp r_n_groups, cpp11::sexp r_seed, cpp11::sexp r_deterministic, cpp11::sexp r_n_threads);
-extern "C" SEXP _fleet_dust2_system_malaria_ode_alloc(SEXP r_pars, SEXP r_time, SEXP r_time_control, SEXP r_n_particles, SEXP r_n_groups, SEXP r_seed, SEXP r_deterministic, SEXP r_n_threads) {
+// malaria_daily.cpp
+SEXP dust2_system_malaria_daily_alloc(cpp11::list r_pars, cpp11::sexp r_time, cpp11::list r_time_control, cpp11::sexp r_n_particles, cpp11::sexp r_n_groups, cpp11::sexp r_seed, cpp11::sexp r_deterministic, cpp11::sexp r_n_threads);
+extern "C" SEXP _fleet_dust2_system_malaria_daily_alloc(SEXP r_pars, SEXP r_time, SEXP r_time_control, SEXP r_n_particles, SEXP r_n_groups, SEXP r_seed, SEXP r_deterministic, SEXP r_n_threads) {
   BEGIN_CPP11
-    return cpp11::as_sexp(dust2_system_malaria_ode_alloc(cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(r_pars), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_time), cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(r_time_control), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_n_particles), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_n_groups), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_seed), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_deterministic), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_n_threads)));
+    return cpp11::as_sexp(dust2_system_malaria_daily_alloc(cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(r_pars), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_time), cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(r_time_control), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_n_particles), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_n_groups), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_seed), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_deterministic), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_n_threads)));
   END_CPP11
 }
-// malaria_ode.cpp
-SEXP dust2_system_malaria_ode_internals(cpp11::sexp ptr, bool include_coefficients, bool include_history);
-extern "C" SEXP _fleet_dust2_system_malaria_ode_internals(SEXP ptr, SEXP include_coefficients, SEXP include_history) {
+// malaria_daily.cpp
+SEXP dust2_system_malaria_daily_run_to_time(cpp11::sexp ptr, cpp11::sexp r_time);
+extern "C" SEXP _fleet_dust2_system_malaria_daily_run_to_time(SEXP ptr, SEXP r_time) {
   BEGIN_CPP11
-    return cpp11::as_sexp(dust2_system_malaria_ode_internals(cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(ptr), cpp11::as_cpp<cpp11::decay_t<bool>>(include_coefficients), cpp11::as_cpp<cpp11::decay_t<bool>>(include_history)));
+    return cpp11::as_sexp(dust2_system_malaria_daily_run_to_time(cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(ptr), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_time)));
   END_CPP11
 }
-// malaria_ode.cpp
-SEXP dust2_system_malaria_ode_run_to_time(cpp11::sexp ptr, cpp11::sexp r_time);
-extern "C" SEXP _fleet_dust2_system_malaria_ode_run_to_time(SEXP ptr, SEXP r_time) {
+// malaria_daily.cpp
+SEXP dust2_system_malaria_daily_state(cpp11::sexp ptr, cpp11::sexp r_index_state, cpp11::sexp r_index_particle, cpp11::sexp r_index_group, bool preserve_particle_dimension, bool preserve_group_dimension);
+extern "C" SEXP _fleet_dust2_system_malaria_daily_state(SEXP ptr, SEXP r_index_state, SEXP r_index_particle, SEXP r_index_group, SEXP preserve_particle_dimension, SEXP preserve_group_dimension) {
   BEGIN_CPP11
-    return cpp11::as_sexp(dust2_system_malaria_ode_run_to_time(cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(ptr), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_time)));
+    return cpp11::as_sexp(dust2_system_malaria_daily_state(cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(ptr), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_index_state), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_index_particle), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_index_group), cpp11::as_cpp<cpp11::decay_t<bool>>(preserve_particle_dimension), cpp11::as_cpp<cpp11::decay_t<bool>>(preserve_group_dimension)));
   END_CPP11
 }
-// malaria_ode.cpp
-SEXP dust2_system_malaria_ode_state(cpp11::sexp ptr, cpp11::sexp r_index_state, cpp11::sexp r_index_particle, cpp11::sexp r_index_group, bool preserve_particle_dimension, bool preserve_group_dimension);
-extern "C" SEXP _fleet_dust2_system_malaria_ode_state(SEXP ptr, SEXP r_index_state, SEXP r_index_particle, SEXP r_index_group, SEXP preserve_particle_dimension, SEXP preserve_group_dimension) {
+// malaria_daily.cpp
+SEXP dust2_system_malaria_daily_time(cpp11::sexp ptr);
+extern "C" SEXP _fleet_dust2_system_malaria_daily_time(SEXP ptr) {
   BEGIN_CPP11
-    return cpp11::as_sexp(dust2_system_malaria_ode_state(cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(ptr), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_index_state), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_index_particle), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_index_group), cpp11::as_cpp<cpp11::decay_t<bool>>(preserve_particle_dimension), cpp11::as_cpp<cpp11::decay_t<bool>>(preserve_group_dimension)));
+    return cpp11::as_sexp(dust2_system_malaria_daily_time(cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(ptr)));
   END_CPP11
 }
-// malaria_ode.cpp
-SEXP dust2_system_malaria_ode_time(cpp11::sexp ptr);
-extern "C" SEXP _fleet_dust2_system_malaria_ode_time(SEXP ptr) {
+// malaria_daily.cpp
+SEXP dust2_system_malaria_daily_set_state_initial(cpp11::sexp ptr);
+extern "C" SEXP _fleet_dust2_system_malaria_daily_set_state_initial(SEXP ptr) {
   BEGIN_CPP11
-    return cpp11::as_sexp(dust2_system_malaria_ode_time(cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(ptr)));
+    return cpp11::as_sexp(dust2_system_malaria_daily_set_state_initial(cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(ptr)));
   END_CPP11
 }
-// malaria_ode.cpp
-SEXP dust2_system_malaria_ode_set_state_initial(cpp11::sexp ptr);
-extern "C" SEXP _fleet_dust2_system_malaria_ode_set_state_initial(SEXP ptr) {
+// malaria_daily.cpp
+SEXP dust2_system_malaria_daily_set_state(cpp11::sexp ptr, cpp11::list r_state);
+extern "C" SEXP _fleet_dust2_system_malaria_daily_set_state(SEXP ptr, SEXP r_state) {
   BEGIN_CPP11
-    return cpp11::as_sexp(dust2_system_malaria_ode_set_state_initial(cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(ptr)));
+    return cpp11::as_sexp(dust2_system_malaria_daily_set_state(cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(ptr), cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(r_state)));
   END_CPP11
 }
-// malaria_ode.cpp
-SEXP dust2_system_malaria_ode_set_state(cpp11::sexp ptr, cpp11::list r_state);
-extern "C" SEXP _fleet_dust2_system_malaria_ode_set_state(SEXP ptr, SEXP r_state) {
+// malaria_daily.cpp
+SEXP dust2_system_malaria_daily_reorder(cpp11::sexp ptr, cpp11::integers r_index);
+extern "C" SEXP _fleet_dust2_system_malaria_daily_reorder(SEXP ptr, SEXP r_index) {
   BEGIN_CPP11
-    return cpp11::as_sexp(dust2_system_malaria_ode_set_state(cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(ptr), cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(r_state)));
+    return cpp11::as_sexp(dust2_system_malaria_daily_reorder(cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(ptr), cpp11::as_cpp<cpp11::decay_t<cpp11::integers>>(r_index)));
   END_CPP11
 }
-// malaria_ode.cpp
-SEXP dust2_system_malaria_ode_reorder(cpp11::sexp ptr, cpp11::integers r_index);
-extern "C" SEXP _fleet_dust2_system_malaria_ode_reorder(SEXP ptr, SEXP r_index) {
+// malaria_daily.cpp
+SEXP dust2_system_malaria_daily_rng_state(cpp11::sexp ptr);
+extern "C" SEXP _fleet_dust2_system_malaria_daily_rng_state(SEXP ptr) {
   BEGIN_CPP11
-    return cpp11::as_sexp(dust2_system_malaria_ode_reorder(cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(ptr), cpp11::as_cpp<cpp11::decay_t<cpp11::integers>>(r_index)));
+    return cpp11::as_sexp(dust2_system_malaria_daily_rng_state(cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(ptr)));
   END_CPP11
 }
-// malaria_ode.cpp
-SEXP dust2_system_malaria_ode_rng_state(cpp11::sexp ptr);
-extern "C" SEXP _fleet_dust2_system_malaria_ode_rng_state(SEXP ptr) {
+// malaria_daily.cpp
+SEXP dust2_system_malaria_daily_set_rng_state(cpp11::sexp ptr, cpp11::sexp r_rng_state);
+extern "C" SEXP _fleet_dust2_system_malaria_daily_set_rng_state(SEXP ptr, SEXP r_rng_state) {
   BEGIN_CPP11
-    return cpp11::as_sexp(dust2_system_malaria_ode_rng_state(cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(ptr)));
+    return cpp11::as_sexp(dust2_system_malaria_daily_set_rng_state(cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(ptr), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_rng_state)));
   END_CPP11
 }
-// malaria_ode.cpp
-SEXP dust2_system_malaria_ode_set_rng_state(cpp11::sexp ptr, cpp11::sexp r_rng_state);
-extern "C" SEXP _fleet_dust2_system_malaria_ode_set_rng_state(SEXP ptr, SEXP r_rng_state) {
+// malaria_daily.cpp
+SEXP dust2_system_malaria_daily_set_time(cpp11::sexp ptr, cpp11::sexp r_time);
+extern "C" SEXP _fleet_dust2_system_malaria_daily_set_time(SEXP ptr, SEXP r_time) {
   BEGIN_CPP11
-    return cpp11::as_sexp(dust2_system_malaria_ode_set_rng_state(cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(ptr), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_rng_state)));
+    return cpp11::as_sexp(dust2_system_malaria_daily_set_time(cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(ptr), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_time)));
   END_CPP11
 }
-// malaria_ode.cpp
-SEXP dust2_system_malaria_ode_set_time(cpp11::sexp ptr, cpp11::sexp r_time);
-extern "C" SEXP _fleet_dust2_system_malaria_ode_set_time(SEXP ptr, SEXP r_time) {
+// malaria_daily.cpp
+SEXP dust2_system_malaria_daily_update_pars(cpp11::sexp ptr, cpp11::list pars);
+extern "C" SEXP _fleet_dust2_system_malaria_daily_update_pars(SEXP ptr, SEXP pars) {
   BEGIN_CPP11
-    return cpp11::as_sexp(dust2_system_malaria_ode_set_time(cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(ptr), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_time)));
+    return cpp11::as_sexp(dust2_system_malaria_daily_update_pars(cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(ptr), cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(pars)));
   END_CPP11
 }
-// malaria_ode.cpp
-SEXP dust2_system_malaria_ode_update_pars(cpp11::sexp ptr, cpp11::list pars);
-extern "C" SEXP _fleet_dust2_system_malaria_ode_update_pars(SEXP ptr, SEXP pars) {
+// malaria_daily.cpp
+SEXP dust2_system_malaria_daily_simulate(cpp11::sexp ptr, cpp11::sexp r_times, cpp11::sexp r_index_state, bool preserve_particle_dimension, bool preserve_group_dimension);
+extern "C" SEXP _fleet_dust2_system_malaria_daily_simulate(SEXP ptr, SEXP r_times, SEXP r_index_state, SEXP preserve_particle_dimension, SEXP preserve_group_dimension) {
   BEGIN_CPP11
-    return cpp11::as_sexp(dust2_system_malaria_ode_update_pars(cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(ptr), cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(pars)));
-  END_CPP11
-}
-// malaria_ode.cpp
-SEXP dust2_system_malaria_ode_simulate(cpp11::sexp ptr, cpp11::sexp r_times, cpp11::sexp r_index_state, bool preserve_particle_dimension, bool preserve_group_dimension);
-extern "C" SEXP _fleet_dust2_system_malaria_ode_simulate(SEXP ptr, SEXP r_times, SEXP r_index_state, SEXP preserve_particle_dimension, SEXP preserve_group_dimension) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(dust2_system_malaria_ode_simulate(cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(ptr), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_times), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_index_state), cpp11::as_cpp<cpp11::decay_t<bool>>(preserve_particle_dimension), cpp11::as_cpp<cpp11::decay_t<bool>>(preserve_group_dimension)));
+    return cpp11::as_sexp(dust2_system_malaria_daily_simulate(cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(ptr), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_times), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_index_state), cpp11::as_cpp<cpp11::decay_t<bool>>(preserve_particle_dimension), cpp11::as_cpp<cpp11::decay_t<bool>>(preserve_group_dimension)));
   END_CPP11
 }
 
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
-    {"_fleet_dust2_system_malaria_ode_alloc",             (DL_FUNC) &_fleet_dust2_system_malaria_ode_alloc,             8},
-    {"_fleet_dust2_system_malaria_ode_internals",         (DL_FUNC) &_fleet_dust2_system_malaria_ode_internals,         3},
-    {"_fleet_dust2_system_malaria_ode_reorder",           (DL_FUNC) &_fleet_dust2_system_malaria_ode_reorder,           2},
-    {"_fleet_dust2_system_malaria_ode_rng_state",         (DL_FUNC) &_fleet_dust2_system_malaria_ode_rng_state,         1},
-    {"_fleet_dust2_system_malaria_ode_run_to_time",       (DL_FUNC) &_fleet_dust2_system_malaria_ode_run_to_time,       2},
-    {"_fleet_dust2_system_malaria_ode_set_rng_state",     (DL_FUNC) &_fleet_dust2_system_malaria_ode_set_rng_state,     2},
-    {"_fleet_dust2_system_malaria_ode_set_state",         (DL_FUNC) &_fleet_dust2_system_malaria_ode_set_state,         2},
-    {"_fleet_dust2_system_malaria_ode_set_state_initial", (DL_FUNC) &_fleet_dust2_system_malaria_ode_set_state_initial, 1},
-    {"_fleet_dust2_system_malaria_ode_set_time",          (DL_FUNC) &_fleet_dust2_system_malaria_ode_set_time,          2},
-    {"_fleet_dust2_system_malaria_ode_simulate",          (DL_FUNC) &_fleet_dust2_system_malaria_ode_simulate,          5},
-    {"_fleet_dust2_system_malaria_ode_state",             (DL_FUNC) &_fleet_dust2_system_malaria_ode_state,             6},
-    {"_fleet_dust2_system_malaria_ode_time",              (DL_FUNC) &_fleet_dust2_system_malaria_ode_time,              1},
-    {"_fleet_dust2_system_malaria_ode_update_pars",       (DL_FUNC) &_fleet_dust2_system_malaria_ode_update_pars,       2},
+    {"_fleet_dust2_system_malaria_daily_alloc",             (DL_FUNC) &_fleet_dust2_system_malaria_daily_alloc,             8},
+    {"_fleet_dust2_system_malaria_daily_reorder",           (DL_FUNC) &_fleet_dust2_system_malaria_daily_reorder,           2},
+    {"_fleet_dust2_system_malaria_daily_rng_state",         (DL_FUNC) &_fleet_dust2_system_malaria_daily_rng_state,         1},
+    {"_fleet_dust2_system_malaria_daily_run_to_time",       (DL_FUNC) &_fleet_dust2_system_malaria_daily_run_to_time,       2},
+    {"_fleet_dust2_system_malaria_daily_set_rng_state",     (DL_FUNC) &_fleet_dust2_system_malaria_daily_set_rng_state,     2},
+    {"_fleet_dust2_system_malaria_daily_set_state",         (DL_FUNC) &_fleet_dust2_system_malaria_daily_set_state,         2},
+    {"_fleet_dust2_system_malaria_daily_set_state_initial", (DL_FUNC) &_fleet_dust2_system_malaria_daily_set_state_initial, 1},
+    {"_fleet_dust2_system_malaria_daily_set_time",          (DL_FUNC) &_fleet_dust2_system_malaria_daily_set_time,          2},
+    {"_fleet_dust2_system_malaria_daily_simulate",          (DL_FUNC) &_fleet_dust2_system_malaria_daily_simulate,          5},
+    {"_fleet_dust2_system_malaria_daily_state",             (DL_FUNC) &_fleet_dust2_system_malaria_daily_state,             6},
+    {"_fleet_dust2_system_malaria_daily_time",              (DL_FUNC) &_fleet_dust2_system_malaria_daily_time,              1},
+    {"_fleet_dust2_system_malaria_daily_update_pars",       (DL_FUNC) &_fleet_dust2_system_malaria_daily_update_pars,       2},
     {NULL, NULL, 0}
 };
 }

@@ -12,9 +12,9 @@ group). Must be a single finite number \verb{>= 20}: below that the grid has too
 few anchors left to resolve the ages over which immunity develops.}
 
 \item{n_group}{total number of age groups, the absorbing top group included.
-The default, 53, is one more than the 52 the old grid used, and is what the
-error figures above were measured at. Raising it refines the whole grid
-while keeping its shape, which is what a grid-convergence check wants.}
+The default is 53, which the error figures above were measured at.
+Raising it refines the whole grid while keeping its shape, which is what a
+grid-convergence check wants.}
 }
 \value{
 numeric vector of age-group lower edges in years.
@@ -23,7 +23,9 @@ numeric vector of age-group lower edges in years.
 Lower edges (in years) of the age groups: fine in infancy, where immunity and
 maternal dynamics move fast, and coarse in adulthood. Group edges are pinned
 at the conventional reporting boundaries -- 0, 1, 2, 3, 5, 7, 10, 15, 20, 30,
-40, 60 years -- and the groups between two anchors are of equal width, with
+40, 60 years -- and at 21, so that one group holds exactly the mothers the IBM
+draws maternal immunity from, [20, 21). The groups between two anchors are of
+equal width, with
 the budget of groups spread across the anchors in proportion to the width in
 \code{log(1 + age)}. Each interval gets at least one group; the remainder is
 shared out largest-remainder.
@@ -34,14 +36,11 @@ rise of immunity with age, and that is far closer to a function of log age
 than of age. (Of \code{log(1 + age)} rather than \code{log(age)}, which is infinite
 over the first year. The offset is in years, so the allocation is not
 scale-free.) An equal-width grid at the same cost is four times as far from
-the converged solution as this one, so the grading matters more than the
-count.
-
-This replaced a grid of fixed monthly / quarterly / yearly / 5-yearly
-sections, halving the discretisation error at the same number of groups: the
-largest departure across age bands falls from 10.7\% to 4.5\% and the rms from
-5.4\% to 3.2\%. The old grid over-resolved infancy (12 of its 52 groups in the
-first year, against 7 here) and under-resolved everything above 15.
+the converged solution as this one (rms over the age profile), and a grid of
+fixed monthly / quarterly / yearly / 5-yearly sections, which over-resolves
+infancy and under-resolves everything above 15, nearly twice as far: the
+grading matters more than the count. On the default grid the largest departure of the EIR 20 age profile
+from \code{fleet}'s own converged one is 4.4\%, and the rms 3.0\%.
 
 Refining removes that error: the departure from the converged profile halves
 with each doubling of \code{n_group}, first order. What refinement does \strong{not}

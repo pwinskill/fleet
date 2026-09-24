@@ -26,9 +26,12 @@ test_that("mass PEV protects every target age band, at every campaign", {
     timesteps = 365, coverages = 0.9, min_ages = c(0.5, 6) * 365, max_ages = c(5, 10) * 365,
     min_wait = 0, booster_spacing = 365, booster_coverage = matrix(0.8, 1, 1),
     booster_profile = list(malariasimulation::rtss_booster_profile))
-  ps <- pev_series(mp, am, 5 * 365); g <- ncol(ps$vals)
-  b1 <- which(am >= 0.5 * 365 & am < 5 * 365)[1]
-  b2 <- which(am >= 6 * 365 & am < 10 * 365)[1]
+  ps <- pev_series(mp, am, 5 * 365)
+  # a week after efficacy starts, each band's cohort, now that much older
+  g <- which(ps$times >= 365 + max(mp$pev_doses) + 7)[1]
+  shift <- ps$times[g] - 365
+  b1 <- which(am >= 0.5 * 365 + shift + 30 & am < 5 * 365 + shift)[1]
+  b2 <- which(am >= 6 * 365 + shift + 30 & am < 10 * 365 + shift)[1]
   expect_gt(1 - ps$vals[b1, g], 0.02)              # band 1 protected
   expect_gt(1 - ps$vals[b2, g], 0.02)              # band 2 protected (was dropped before)
 })
@@ -65,7 +68,7 @@ test_that("IRS accumulates over rounds (closely-spaced rounds add protection)", 
 
 test_that("all-infection incidence is output and exceeds clinical incidence", {
   skip_if_not_installed("malariasimulation")
-  o <- run_simulation_ode(400, eqm(malariasimulation::get_parameters(), 30))
+  o <- run_simulation_ode(400, eqm(gp_bands(), 30))
   expect_true("n_inc_730_3650" %in% names(o))
   expect_true(all(o$n_inc_730_3650 >= o$n_inc_clinical_730_3650 - 1e-9))   # all >= clinical
   expect_true(all(is.finite(o$n_inc_0_36500)))

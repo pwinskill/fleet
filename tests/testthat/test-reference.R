@@ -17,10 +17,12 @@
 # HOW to regenerate, when a model change is intended and the new numbers are the
 # ones to keep:
 #
-#   FLEET_REGENERATE_REFERENCE=1 Rscript -e 'devtools::test(filter = "reference")'
+#   FLEET_REGENERATE_REFERENCE=1 Rscript -e 'testthat::test_file(
+#     "tests/testthat/test-reference.R", package = "fleet", load_package = "installed")'
 #
-# which rewrites tests/testthat/reference-values.csv from the current model and
-# then trivially passes. Do it deliberately, and read the CSV diff: it is the
+# against a fresh R CMD INSTALL (devtools::test() compiles a debug build into
+# src/, see CONTRIBUTING.md), which rewrites both reference CSVs from the current
+# model and then trivially passes. Do it deliberately, and read the CSV diff: it is the
 # record of exactly what the change did to the model's output. Never regenerate
 # to make a red test go green.
 
@@ -45,34 +47,29 @@ REF_EIRS <- c(1, 20, 120)
 ## hole this file exists to close.
 ##
 ## Why the other three state columns are not here. ft, Tr_count and Ph_count are
-## identically 0 across this scenario (default parameters treat nobody, so nothing
+## absent or identically 0 across this scenario (it treats nobody, so nothing
 ## enters Tr or Ph). A pinned 0 would assert nothing about the model and would
 ## read as coverage the file does not have. They belong in a scenario with
 ## treatment switched on, or nowhere.
 ##
-## Why only two of the three n_age bands. n_age_* is emitted over the union of
-## every rendering band, so this scenario has 0-5, all-age, and 2-10. The 2-10 one
-## is already pinned to 1e-6 in effect: it is n_detect_lm_730_3650 /
-## p_detect_lm_730_3650, both pinned, and it is constant in time so its sum is
-## implied too. The other two are not implied by anything: n_age_0_1825 pins the
-## demography's under-5 share and n_age_0_36500 pins the population scaling that
-## turns every fraction in the model into the counts above.
+## Why only two of the n_age bands. n_age_* is emitted over the union of every
+## rendering band. The 2-10 one is already pinned to 1e-6 in effect -- it is
+## n_detect_lm_730_3650 over PfPR, and it is constant in time so its sum is
+## implied too -- and the others are not implied by anything: n_age_0_1825 pins
+## the demography's under-5 share and n_age_0_36500 pins the population scaling
+## that turns every fraction in the model into the counts above.
 REF_QUANTITIES <- c(
-  "p_detect_lm_730_3650", "n_detect_lm_730_3650", "n_detect_pcr_730_3650",
+  "n_detect_lm_730_3650", "n_detect_pcr_730_3650",
   "n_inc_clinical_0_1825", "n_inc_clinical_0_36500",
   "n_inc_severe_730_3650", "n_inc_severe_0_36500",
   "n_inc_0_36500", "FOIM", "EIR",
   "S_count", "D_count", "A_count", "U_count",
   "n_age_0_1825", "n_age_0_36500", "n_inc_730_3650")
 
-## Bare defaults, plus the two clinical rendering bands: an unmodified
-## get_parameters() renders clinical incidence only over the fallback 2-10 / all-age
-## bands, and the under-5 band is where clinical burden actually concentrates.
-reference_parameters <- function() {
-  malariasimulation::get_parameters(overrides = list(
-    clinical_incidence_rendering_min_ages = c(0, 0),
-    clinical_incidence_rendering_max_ages = c(5 * 365, 100 * 365)))
-}
+## Default parameters, rendering clinical, severe and all-infection incidence as
+## well as the default 2-10 prevalence: malariasimulation renders only what the
+## list asks for, and so does fleet.
+reference_parameters <- function() gp_bands()
 
 ## Two deterministic reductions per series: the final day pins the LEVEL the run
 ## settles to, the sum over every output day pins the TRAJECTORY that got there.
@@ -82,7 +79,7 @@ reference_summary <- function() {
   rows <- list()
   for (eir in REF_EIRS) {
     out <- run_simulation_ode(REF_DAYS, eqm(reference_parameters(), eir))
-    expect_equal(nrow(out), REF_DAYS + 1)
+    expect_equal(nrow(out), REF_DAYS)                    # one row per day, 1..REF_DAYS
     expect_true(all(REF_QUANTITIES %in% names(out)))
     for (q in REF_QUANTITIES) {
       v <- out[[q]]
@@ -140,13 +137,22 @@ test_that("model output matches the committed reference values", {
 REF_INT_DAYS <- 400
 NET_DAY <- 100
 
-## The days are the point. `before` is the day before deployment: it MUST equal the
-## no-intervention run, and it is what goes red if the onset knots are ever lost.
-## `onset` and `after` pin that the effect arrives, and arrives at the right size.
-REF_INT_DAYS_SAMPLED <- c(before = NET_DAY - 1, onset = NET_DAY, after = NET_DAY + 5)
+## The days are the point. `before` is the deployment day itself: a round on day
+## 100 lands at the end of it, so row 100 MUST equal the no-intervention run, and
+## it is what goes red if a deployment ever acts a day early. Each scenario is then
+## sampled on the first day its effect reaches the sampled quantities and again
+## later, so the samples pin that the effect arrives, and at the right size. Nets
+## cut the biting rate from day 101, and humans feel it de = 12 days later (row
+## 113). TBV cuts onward infectivity from day 101; mosquitoes read it delay_gam
+## later, incubate for 9 days, and their bites reach humans de after that (row
+## 135). Mass PEV protects nobody until its last primary dose, 60 days on (row 161).
+REF_INT_DAYS_SAMPLED <- list(
+  nets = c(before = NET_DAY, onset = NET_DAY + 13, after = NET_DAY + 18),
+  tbv_offgrid = c(before = NET_DAY, onset = NET_DAY + 35, after = NET_DAY + 65),
+  mass_pev_split = c(before = NET_DAY, onset = NET_DAY + 61, after = NET_DAY + 106))
 
 reference_int_scenarios <- function() {
-  gp <- malariasimulation::get_parameters
+  gp <- function() gp_bands()
   list(
     ## Onset timing. Nets are the cleanest probe: one campaign, a hard start date.
     nets = malariasimulation::set_bednets(
@@ -172,7 +178,7 @@ reference_int_scenarios <- function() {
       booster_profile = list(malariasimulation::rtss_booster_profile)))
 }
 
-REF_INT_QUANTITIES <- c("EIR", "p_detect_lm_730_3650", "n_inc_clinical_730_3650")
+REF_INT_QUANTITIES <- c("EIR", "n_detect_lm_730_3650", "n_inc_clinical_730_3650")
 
 reference_int_summary <- function() {
   rows <- list()
@@ -180,10 +186,11 @@ reference_int_summary <- function() {
     out <- run_simulation_ode(REF_INT_DAYS, eqm(reference_int_scenarios()[[nm]], 20))
     expect_true(all(REF_INT_QUANTITIES %in% names(out)))
     for (q in REF_INT_QUANTITIES) {
-      for (s in names(REF_INT_DAYS_SAMPLED)) {
+      days <- REF_INT_DAYS_SAMPLED[[nm]]
+      for (s in names(days)) {
         rows[[length(rows) + 1]] <- data.frame(
           scenario = nm, quantity = q, statistic = s,
-          value = out[[q]][out$timestep == REF_INT_DAYS_SAMPLED[[s]]])
+          value = out[[q]][out$timestep == days[[s]]])
       }
       rows[[length(rows) + 1]] <- data.frame(
         scenario = nm, quantity = q, statistic = "final",
@@ -222,14 +229,20 @@ test_that("no intervention acts before the day it is deployed", {
   skip_if_not_installed("malariasimulation")
 
   ## The onset-timing invariant stated directly, independent of any committed
-  ## number: on the day BEFORE deployment every scenario must still be sitting on
-  ## the no-intervention trajectory. This is what caught the 10-day lead, and it
-  ## stays meaningful even if the CSV is regenerated for an unrelated reason.
-  base <- run_simulation_ode(REF_INT_DAYS, eqm(malariasimulation::get_parameters(), 20))
+  ## number: up to and including the deployment day, every scenario must still be
+  ## sitting on the no-intervention trajectory, in every column -- the round lands
+  ## at the end of its day. This is what caught the 10-day lead, and it stays
+  ## meaningful even if the CSV is regenerated for an unrelated reason.
+  base <- run_simulation_ode(REF_INT_DAYS, eqm(gp_bands(), 20))
+  num <- setdiff(names(base), "timestep")
   for (nm in names(reference_int_scenarios())) {
     out <- run_simulation_ode(REF_INT_DAYS, eqm(reference_int_scenarios()[[nm]], 20))
-    i <- which(out$timestep <= NET_DAY - 1)
-    expect_equal(out$EIR[i], base$EIR[i], tolerance = 1e-9,
-                 label = sprintf("%s EIR up to the day before deployment", nm))
+    i <- which(out$timestep <= NET_DAY)
+    expect_equal(as.matrix(out[i, num]), as.matrix(base[i, num]), tolerance = 1e-9,
+                 label = sprintf("%s up to the deployment day", nm))
   }
+  ## and the nets act the day after: the biting rate falls at once, so the force
+  ## of infection on mosquitoes moves on row NET_DAY + 1
+  nets <- run_simulation_ode(REF_INT_DAYS, eqm(reference_int_scenarios()$nets, 20))
+  expect_false(isTRUE(all.equal(nets$FOIM[NET_DAY + 1], base$FOIM[NET_DAY + 1])))
 })

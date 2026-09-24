@@ -1,21 +1,22 @@
 Package: fleet
-Title: Mean-Field (ODE) Twin of the 'malariasimulation' Malaria Model
-Version: 0.0.0.9002
+Title: Mean-Field Twin of the 'malariasimulation' Malaria Model
+Version: 0.0.0.9003
 Authors@R: c(
   person("Peter", "Winskill", role = c("aut", "cre", "cph"), email = "p.winskill@imperial.ac.uk"))
-Description: Provides a fast, deterministic mean-field (ordinary differential
-  equation) counterpart to the 'malariasimulation' individual-based model of
-  Plasmodium falciparum malaria. The human population is structured by age and
-  biting heterogeneity with the full acquired- and maternal-immunity model,
-  coupled to a compartmental larval-and-adult mosquito model and driven by the
-  same intervention modules: clinical treatment and antimalarial resistance,
-  bed nets and indoor residual spraying, chemoprevention (MDA, SMC, PMC),
-  pre-erythrocytic and transmission-blocking vaccines, seasonality, and custom
-  demography. It accepts an unmodified 'malariasimulation' parameter list, is
-  seeded at and validated against the 'malariaEquilibrium' fixed point, and
-  returns 'malariasimulation'-style outputs that feed directly into 'postie'.
-  Built on the 'odin2' and 'dust2' stack, a single multi-decade run completes in
-  seconds, independent of population size.
+Description: Provides a fast, deterministic mean-field counterpart to the
+  'malariasimulation' individual-based model of Plasmodium falciparum malaria,
+  advanced one day at a time on the individual-based model's own daily clock.
+  The human population is structured by age and biting heterogeneity with the
+  full acquired- and maternal-immunity model, coupled to a compartmental
+  larval-and-adult mosquito model and driven by the same intervention modules:
+  clinical treatment and antimalarial resistance, bed nets and indoor residual
+  spraying, chemoprevention (MDA, SMC, PMC), pre-erythrocytic and
+  transmission-blocking vaccines, seasonality, and custom demography. It
+  accepts an unmodified 'malariasimulation' parameter list, is seeded at the
+  'malariaEquilibrium' solution, and returns 'malariasimulation'-style outputs
+  that feed directly into 'postie'. Built on the 'odin2' and 'dust2' stack, a
+  single multi-decade run completes in under a second, independent of
+  population size.
 License: MIT + file LICENSE
 SystemRequirements: C++17
 URL: https://pwinskill.github.io/fleet/, https://github.com/pwinskill/fleet

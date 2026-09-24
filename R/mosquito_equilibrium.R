@@ -44,4 +44,4 @@ initial_mosquito_counts <- function(p, species, foim, m) {
 }
 
 # (The former equilibrium_total_M() helper was removed: total_M is solved inline
-# in build_inputs() to be consistent with the Erlang EIP chain's survival.)
+# in build_inputs() to be consistent with the incubation survival it applies.)

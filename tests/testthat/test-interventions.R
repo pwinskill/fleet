@@ -8,7 +8,7 @@ test_that("no intervention (multi-species) holds flat at equilibrium", {
   p$acquired_immunity_offset <- 0; p$bite_dedup <- 0                    # flat-machinery check (least drift)
   o <- run_simulation_ode(1000, eqm(p, 20))
   expect_lt(max(abs(o$EIR - o$EIR[1])) / o$EIR[1], 1e-2)
-  expect_lt(max(abs(o$p_detect_lm_730_3650 - o$p_detect_lm_730_3650[1])) / o$p_detect_lm_730_3650[1], 1e-2)
+  expect_lt(max(abs(pfpr(o) - pfpr(o)[1])) / pfpr(o)[1], 1e-2)
 })
 
 test_that("zero-coverage bednets == no intervention", {
@@ -20,7 +20,7 @@ test_that("zero-coverage bednets == no intervention", {
     rnm = matrix(0.24, 1, 1), gamman = 2.64 * 365
   )
   nets0 <- run_simulation_ode(1000, eqm(p, 20))
-  expect_lt(max(abs(nets0$p_detect_lm_730_3650 - base$p_detect_lm_730_3650)), 1e-9)
+  expect_lt(max(abs(pfpr(nets0) - pfpr(base))), 1e-9)
 })
 
 test_that("bednets reduce prevalence then revert as they decay", {
@@ -31,9 +31,9 @@ test_that("bednets reduce prevalence then revert as they decay", {
     rnm = matrix(0.24, 1, 1), gamman = 2.64 * 365
   )
   o <- run_simulation_ode(2000, eqm(p, 20))
-  base <- o$p_detect_lm_730_3650[1]
-  expect_lt(min(o$p_detect_lm_730_3650), base)          # nets reduce prevalence
-  expect_gt(o$p_detect_lm_730_3650[2001], min(o$p_detect_lm_730_3650))  # reverts
+  base <- pfpr(o)[1]
+  expect_lt(min(pfpr(o)), base)          # nets reduce prevalence
+  expect_gt(pfpr(o)[2000], min(pfpr(o)))  # reverts
 })
 
 test_that("higher net coverage gives lower prevalence (monotone)", {
@@ -44,7 +44,7 @@ test_that("higher net coverage gives lower prevalence (monotone)", {
       retention = 5 * 365, dn0 = matrix(0.387, 1, 1), rn = matrix(0.563, 1, 1),
       rnm = matrix(0.24, 1, 1), gamman = 2.64 * 365
     )
-    run_simulation_ode(1200, eqm(p, 20))$p_detect_lm_730_3650[1201]
+    pfpr(run_simulation_ode(1200, eqm(p, 20)))[1200]
   }, numeric(1))
   expect_true(all(diff(prev) < 0))
 })
@@ -57,8 +57,8 @@ test_that("time-varying treatment lowers prevalence and ft column tracks schedul
                                                  coverages = 0.6)
   o <- run_simulation_ode(2000, eqm(p, 20))
   expect_equal(o$ft[500], 0)          # before treatment
-  expect_equal(o$ft[2001], 0.6)       # after treatment
-  expect_lt(o$p_detect_lm_730_3650[2001], o$p_detect_lm_730_3650[500])
+  expect_equal(o$ft[2000], 0.6)       # after treatment
+  expect_lt(pfpr(o)[2000], pfpr(o)[500])
 })
 
 test_that("antimalarial resistance raises prevalence at fixed coverage", {
@@ -73,8 +73,8 @@ test_that("antimalarial resistance raises prevalence at fixed coverage", {
     slow_parasite_clearance_probability = 0.5, early_treatment_failure_probability = 0.5,
     late_clinical_failure_probability = 0, late_parasitological_failure_probability = 0,
     reinfection_during_prophylaxis_probability = 0, slow_parasite_clearance_time = 20)
-  base <- run_simulation_ode(1825, eqm(base_p, 20))$p_detect_lm_730_3650[1826]
-  res <- run_simulation_ode(1825, eqm(res_p, 20))$p_detect_lm_730_3650[1826]
+  base <- pfpr(run_simulation_ode(1825, eqm(base_p, 20)))[1825]
+  res <- pfpr(run_simulation_ode(1825, eqm(res_p, 20)))[1825]
   expect_gt(res, base)
 })
 
@@ -86,9 +86,9 @@ test_that("MDA clears infection (prevalence dips, population conserved)", {
     coverages = c(0.8, 0.8), min_ages = rep(round(0.25 * 365), 2),
     max_ages = rep(round(5 * 365), 2))
   o <- run_simulation_ode(1200, eqm(p, 20))
-  pop <- with(o, S_count + D_count + A_count + U_count + Tr_count + Ph_count)
+  pop <- with(o, S_count + D_count + A_count + U_count + Tr_count)
   expect_equal(max(pop), min(pop), tolerance = 1e-6)         # conserved
-  expect_lt(min(o$p_detect_lm_730_3650), o$p_detect_lm_730_3650[1])  # MDA reduces
+  expect_lt(min(pfpr(o)), pfpr(o)[1])  # MDA reduces
 })
 
 test_that("single-round MDA runs (regression: no rep() self-recursion)", {
@@ -99,9 +99,9 @@ test_that("single-round MDA runs (regression: no rep() self-recursion)", {
     drug = 1, timesteps = 365, coverages = 0.8,
     min_ages = round(0.25 * 365), max_ages = round(5 * 365))
   o <- run_simulation_ode(800, eqm(p, 20))
-  pop <- with(o, S_count + D_count + A_count + U_count + Tr_count + Ph_count)
+  pop <- with(o, S_count + D_count + A_count + U_count + Tr_count)
   expect_equal(max(pop), min(pop), tolerance = 1e-6)
-  expect_lt(min(o$p_detect_lm_730_3650), o$p_detect_lm_730_3650[1])
+  expect_lt(min(pfpr(o)), pfpr(o)[1])
 })
 
 test_that("SMC reduces transmission and conserves population", {
@@ -112,9 +112,9 @@ test_that("SMC reduces transmission and conserves population", {
     drug = 1, timesteps = c(365, 395, 425), coverages = rep(0.9, 3),
     min_ages = rep(round(0.25 * 365), 3), max_ages = rep(round(5 * 365), 3))
   o <- run_simulation_ode(800, eqm(smc, 20))
-  pop <- with(o, S_count + D_count + A_count + U_count + Tr_count + Ph_count)
+  pop <- with(o, S_count + D_count + A_count + U_count + Tr_count)
   expect_equal(max(pop), min(pop), tolerance = 1e-6)
-  expect_lt(min(o$p_detect_lm_730_3650), o$p_detect_lm_730_3650[1])
+  expect_lt(min(pfpr(o)), pfpr(o)[1])
 })
 
 test_that("PMC generates continuous-cadence events and runs finite", {
@@ -127,8 +127,8 @@ test_that("PMC generates continuous-cadence events and runs finite", {
   ev <- chemoprevention_events(pmc, 730)
   expect_gt(length(ev), 20)          # monthly cadence, not just 2 timesteps
   o <- run_simulation_ode(730, eqm(pmc, 20))
-  expect_true(all(is.finite(o$p_detect_lm_730_3650)))
-  pop <- with(o, S_count + D_count + A_count + U_count + Tr_count + Ph_count)
+  expect_true(all(is.finite(pfpr(o))))
+  pop <- with(o, S_count + D_count + A_count + U_count + Tr_count)
   expect_equal(max(pop), min(pop), tolerance = 1e-6)
 })
 
@@ -141,7 +141,7 @@ test_that("zero-coverage MDA == no intervention", {
     drug = 1, timesteps = 200, coverages = 0,
     min_ages = round(0.25 * 365), max_ages = round(5 * 365))
   z <- run_simulation_ode(600, eqm(p, 20))
-  expect_lt(max(abs(z$p_detect_lm_730_3650 - base$p_detect_lm_730_3650)), 1e-9)
+  expect_lt(max(abs(pfpr(z) - pfpr(base))), 1e-9)
 })
 
 test_that("PEV (EPI and mass) reduces prevalence", {
@@ -152,7 +152,7 @@ test_that("PEV (EPI and mass) reduces prevalence", {
     booster_spacing = round(12 * 30), booster_coverage = matrix(0.8, 1, 1),
     booster_profile = list(malariasimulation::rtss_booster_profile))
   o <- run_simulation_ode(2000, eqm(epi, 20))
-  expect_lt(o$p_detect_lm_730_3650[2001], o$p_detect_lm_730_3650[1])
+  expect_lt(pfpr(o)[2000], pfpr(o)[1])
 
   mass <- malariasimulation::set_mass_pev(
     malariasimulation::get_parameters(), profile = malariasimulation::rtss_profile,
@@ -161,8 +161,8 @@ test_that("PEV (EPI and mass) reduces prevalence", {
     booster_coverage = matrix(0.8, 1, 1),
     booster_profile = list(malariasimulation::rtss_booster_profile))
   om <- run_simulation_ode(1200, eqm(mass, 20))
-  expect_lt(min(om$p_detect_lm_730_3650), om$p_detect_lm_730_3650[1] - 0.05)
-  pop <- with(om, S_count + D_count + A_count + U_count + Tr_count + Ph_count)
+  expect_lt(min(pfpr(om)), pfpr(om)[1] - 0.05)
+  pop <- with(om, S_count + D_count + A_count + U_count + Tr_count)
   expect_equal(max(pop), min(pop), tolerance = 1e-6)
 })
 
@@ -172,7 +172,7 @@ test_that("TBV reduces onward transmission (EIR and prevalence fall)", {
                                   timesteps = 365, coverages = 0.9, ages = 5:15)
   o <- run_simulation_ode(1200, eqm(p, 20))
   expect_lt(min(o$EIR), o$EIR[1])
-  expect_lt(min(o$p_detect_lm_730_3650), o$p_detect_lm_730_3650[1])
+  expect_lt(min(pfpr(o)), pfpr(o)[1])
 })
 
 test_that("zero-coverage vaccines == no intervention (PEV and TBV)", {
@@ -184,11 +184,11 @@ test_that("zero-coverage vaccines == no intervention (PEV and TBV)", {
     min_wait = 0, booster_spacing = round(12 * 30), booster_coverage = matrix(0, 1, 1),
     booster_profile = list(malariasimulation::rtss_booster_profile))
   z <- run_simulation_ode(800, eqm(pe, 20))
-  expect_lt(max(abs(z$p_detect_lm_730_3650 - base$p_detect_lm_730_3650)), 1e-9)
+  expect_lt(max(abs(pfpr(z) - pfpr(base))), 1e-9)
   tb <- malariasimulation::set_tbv(malariasimulation::get_parameters(),
                                    timesteps = 200, coverages = 0, ages = 5:15)
   zt <- run_simulation_ode(800, eqm(tb, 20))
-  expect_lt(max(abs(zt$p_detect_lm_730_3650 - base$p_detect_lm_730_3650)), 1e-9)
+  expect_lt(max(abs(pfpr(zt) - pfpr(base))), 1e-9)
 })
 
 test_that("mass PEV: higher coverage -> larger reduction; only target ages affected", {
@@ -199,14 +199,15 @@ test_that("mass PEV: higher coverage -> larger reduction; only target ages affec
     min_wait = 0, booster_spacing = round(12 * 30), booster_coverage = matrix(0.8, 1, 1),
     booster_profile = list(malariasimulation::rtss_booster_profile))
   dip <- vapply(c(0, 0.4, 0.8), function(cov)
-    min(run_simulation_ode(900, eqm(mk(cov), 20))$p_detect_lm_730_3650), numeric(1))
+    min(pfpr(run_simulation_ode(900, eqm(mk(cov), 20)))), numeric(1))
   expect_true(all(diff(dip) < 0))
-  # age-targeting: mass PEV on 2-10y reduces FOI only in that band, ever
+  # age-targeting: mass PEV on 2-10y protects that cohort as it ages, and never
+  # anyone younger than 2 years (born since, or too young on the day)
   am <- build_inputs(mk(0.8), 20)$meta$age_mid
   pv <- pev_series(mk(0.8), am, 900)$vals
   in_band <- am >= 2 * 365 & am < 10 * 365
-  expect_true(all(pv[!in_band, ] == 1))       # out-of-band never reduced
-  expect_true(any(pv[in_band, ] < 1))         # in-band reduced at some time
+  expect_true(all(pv[am < 2 * 365 - 30, ] == 1))
+  expect_true(any(pv[in_band, ] < 1))
 })
 
 test_that("seasonality: aseasonal is flat, seasonal oscillates around the mean", {

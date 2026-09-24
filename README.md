@@ -18,10 +18,11 @@
 >
 > - **The API is unstable.** `run_simulation_ode()`'s signature has already
 >   changed once and may change again without deprecation.
-> - **Known discrepancies against the IBM are open, not resolved.** The age
->   distribution of clinical incidence does not match in every age band, and
->   across the 63-country site-file comparison `fleet` runs roughly 9% above the
->   IBM on clinical and severe incidence, an excess that is **not** explained.
+>   **Known discrepancies against the IBM are open, not resolved.** Across the
+>   63-country site-file comparison `fleet` runs above the IBM on clinical and
+>   severe incidence, an excess that is **not** explained, and on the default
+>   age grid clinical and severe incidence run a few per cent low at high
+>   transmission, the grid's own discretisation error.
 >   The current verdict on every claim, with the numbers behind it, is in
 >   *[fleetcheck](https://pwinskill.github.io/fleetcheck/)* — which is kept
 >   current, unlike any figure quoted here would be.
@@ -32,24 +33,24 @@
 > If you need results you can defend today, use
 > [malariasimulation](https://github.com/mrc-ide/malariasimulation).
 
-> A fast, deterministic **mean-field (ODE) twin** of the [malariasimulation](https://github.com/mrc-ide/malariasimulation) individual-based model of *Plasmodium falciparum* malaria: same inputs, seconds per run, population-independent.
+> A fast, deterministic **mean-field twin** of the [malariasimulation](https://github.com/mrc-ide/malariasimulation) individual-based model of *Plasmodium falciparum* malaria, run on its daily clock: same inputs, under a second per run, population-independent.
 
 ## What it is
 
-`fleet` reproduces the Griffin-style human model, structured by age and biting heterogeneity, coupled to the compartmental mosquito model. It is written in [odin2](https://github.com/mrc-ide/odin2) / [dust2](https://github.com/mrc-ide/dust2).
+`fleet` reproduces the Griffin-style human model, structured by age and biting heterogeneity, coupled to the compartmental mosquito model. Like `malariasimulation`, it advances one day at a time: every day it applies immunity decay, biting, one competing draw per person between infection and progression, a day of the mosquito model, and deaths and births, in the IBM's order. It is written in [odin2](https://github.com/mrc-ide/odin2) / [dust2](https://github.com/mrc-ide/dust2).
 
 | | |
 | --- | --- |
-| **Human states** | `S / D / A / U / Tr`, plus `Ph` (post-treatment) and `Ph_c` (chemoprevention) prophylaxis |
+| **Human states** | `S / D / A / U / Tr`, plus the post-treatment and chemoprevention prophylaxis chains and the chemoprevention treated phase |
 | **Immunity** | four acquired states `IB / ICA / ID / IVA`; two maternal terms `ICM / IVM`, algebraic rather than state variables |
-| **Mosquito, per species** | `E / L / P / Sm / EIP-chain / Im` |
+| **Mosquito, per species** | `E / L / P / Sm / Em / Im`, with the IBM's own delay lines for incubation, the EIR and human infectivity |
 
 It exists to give the malariasimulation ecosystem a **deterministic, Monte-Carlo-free companion** that:
 
 - **Takes the same inputs as the individual-based model (IBM).** `run_simulation_ode()` accepts a `malariasimulation::get_parameters()` list, with the usual `set_*` intervention builders layered on, unchanged. *P. falciparum only.*
-- **Is seeded at, and checked against, equilibrium.** Initial conditions come from `malariaEquilibrium`; with no interventions an undisturbed run relaxes off that seed by under half a percent over the first years and then holds, as the IBM does from the same seed.
-- **Produces postie-compatible outputs.** The returned wide count table is malariasimulation-shaped, so a post-processing pipeline written for the IBM works on a `fleet` run unchanged, with no wrapper in between.
-- **Is fast and population-independent.** All compartments are per-capita densities, so a 30-year daily run takes a few seconds whether you model a thousand people or ten million.
+- **Is seeded where the IBM is seeded.** Initial conditions come from `malariaEquilibrium`, under the same treatment coverage the IBM seeds with. An undisturbed run's prevalence relaxes off that seed by under half a percent and then holds; incidence relaxes by a few per cent over the first years, more at high transmission, so burn in before comparing levels, as with the IBM.
+- **Returns malariasimulation's output table.** A parameter list gives the columns the IBM would give it, under the same names and with the same meanings, so a post-processing pipeline written for the IBM, postie included, works on a `fleet` run unchanged.
+- **Is fast and population-independent.** All compartments are per-capita densities, so a 30-year daily run takes under a second whether you model a thousand people or ten million.
 
 Reach for the IBM instead when you need stochastic variation, individual heterogeneity beyond the mean field, or *P. vivax*.
 
@@ -75,9 +76,16 @@ remotes::install_github(c("mrc-ide/malariasimulation", "mrc-ide/postie"))
 ```r
 library(fleet)
 
-p <- malariasimulation::get_parameters()
+# ask for incidence by age as you would of the IBM: fleet renders exactly the
+# bands the list asks for (the defaults give 2-10 prevalence and no incidence)
+bands <- list(min = c(0, 5, 15) * 365, max = c(5, 15, 100) * 365 - 1)
+p <- malariasimulation::get_parameters(list(
+  clinical_incidence_rendering_min_ages = bands$min,
+  clinical_incidence_rendering_max_ages = bands$max,
+  severe_incidence_rendering_min_ages = bands$min,
+  severe_incidence_rendering_max_ages = bands$max))
 
-# 10-year daily wide count table (malariasimulation-style columns)
+# 10-year daily table, in malariasimulation's columns
 out <- run_simulation_ode(timesteps = 3650, parameters = malariasimulation::set_equilibrium(p, init_EIR = 20))
 
 # postie-format rates and prevalence, exactly as for an IBM run
@@ -98,13 +106,13 @@ p <- malariasimulation::set_bednets(
 out <- run_simulation_ode(timesteps = 3650, parameters = malariasimulation::set_equilibrium(p, init_EIR = 20))
 ```
 
-Three exported functions: `run_simulation_ode()` runs the model, `ode_tuning()` holds the solver and discretisation settings, and `default_age_lower()` gives the default graded age grid. Everything else comes off the parameter list.
+Three exported functions: `run_simulation_ode()` runs the model, `ode_tuning()` holds the discretisation settings, and `default_age_lower()` gives the default graded age grid. Everything else comes off the parameter list. (The `ode` in two of the names is kept for compatibility: the model is a daily update, not an ODE.)
 
 ## How well does it match the IBM?
 
 That question has its own project: **[fleetcheck](https://pwinskill.github.io/fleetcheck/)**, a register of claims about how closely `fleet` reproduces `malariasimulation`, each with the criterion that decides it, the value measured against it, and a verdict.
 
-It lives outside this repository on purpose. Evidence kept beside the code it vouches for is evidence the code's author can quietly leave out of date — and that is exactly what happened here: this README used to carry its own comparison figures, drawn from a copy of the scenario data that went eleven days and two model changes stale without anything noticing, still quoting bands built from ten IBM replicates after the count had been raised to twenty for being too narrow.
+It lives outside this repository on purpose. Evidence kept beside the code it vouches for is evidence the code's author can quietly leave out of date, so this README quotes no comparison figures of its own.
 
 `fleetcheck` runs its own CI, fails when a verdict and the register disagree, and refuses to tolerate a failing claim that has no written reason.
 
@@ -115,7 +123,7 @@ It lives outside this repository on purpose. Evidence kept beside the code it vo
 | **[Get started](https://pwinskill.github.io/fleet/articles/fleet.html)** | A worked tour: run the model, read the outputs with `postie`, layer on each intervention, handle seasonality and burn-in. |
 | **[Using fleet well](https://pwinskill.github.io/fleet/articles/using.html)** | Where the mean field departs from the IBM and what to do about it: things to do, things to leave alone, results to treat with caution, and what a run costs. |
 | **[fleetcheck](https://pwinskill.github.io/fleetcheck/)** | The evidence, as a separate project: a register of claims about agreement with the IBM — core relationships, age structure, demography, interventions, and 63 country site files — each with its criterion, measurement and verdict. |
-| **[Model specification](https://pwinskill.github.io/fleet/articles/model.html)** | The formal version: scope, what the state space does and does not carry, and the full ODE system. |
+| **[Model specification](https://pwinskill.github.io/fleet/articles/model.html)** | The formal version: scope, what the state space does and does not carry, and the full daily update. |
 | **[Parameter reference](https://pwinskill.github.io/fleet/articles/parameters.html)** | Every `malariasimulation` `set_*()` function argument by argument: what `fleet` reproduces exactly, what it approximates, and what it rejects. |
 
 Function reference: [`?run_simulation_ode`](https://pwinskill.github.io/fleet/reference/run_simulation_ode.html), [`?ode_tuning`](https://pwinskill.github.io/fleet/reference/ode_tuning.html), [`?default_age_lower`](https://pwinskill.github.io/fleet/reference/default_age_lower.html). Contributing: [CONTRIBUTING.md](https://github.com/pwinskill/fleet/blob/main/CONTRIBUTING.md).

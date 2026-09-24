@@ -1,4 +1,4 @@
-# Solver and discretisation settings for run_simulation_ode().
+# Discretisation settings for run_simulation_ode().
 #
 # These are gathered into one object rather than sitting on the run signature so
 # that run_simulation_ode(timesteps, parameters, correlations) matches
@@ -7,7 +7,7 @@
 # and changing one should move the answer only by its own error term. Model
 # parameters, the target EIR included, live on the parameter list.
 
-#' ODE solver and discretisation settings.
+#' Discretisation settings.
 #'
 #' Numerical settings for [run_simulation_ode()]. Every default is the validated
 #' choice; a run with `ode_tuning()` untouched is the reference configuration.
@@ -17,101 +17,77 @@
 #' @param age_lower age-group lower edges in **years**. The default is
 #'   [default_age_lower()], a 53-group grid log-spaced between pinned reporting
 #'   ages. Must start at 0, increase strictly, and stay in years: a top edge
-#'   above 1000 is rejected as a grid supplied in days.
+#'   above 1000 is rejected as a grid supplied in days. Every group loses its
+#'   ageing and mortality fraction each day out of the same stock as its
+#'   infection and progression, so the narrowest group must be wide enough for
+#'   the two together, a few days: a grid finer than that is an error.
 #'
-#'   The default is **not** converged for severe disease or for adult clinical
-#'   incidence, and both carry a discretisation bias of the order of a few per
-#'   cent on it. That bias is removable: `fleet`'s own profile converges at
-#'   first order, so `default_age_lower(n_group = 105)` roughly halves it and
-#'   `n_group = 209` halves it again, at a proportionate cost in run time. A
-#'   result that rests on the *level* of severe incidence or on adult bands is
-#'   worth re-running on a finer grid to see how much of it is the grid.
-#'
-#'   What a finer grid will **not** do is close the remaining gap to the IBM.
-#'   That is the mean field itself -- one immunity value per stratum against a
-#'   spread of individual infection histories at the same age -- and it does not
-#'   shrink with group width. See the `age-profile-clinical` claim in
-#'   `fleetcheck` for the measurement.
+#'   The default is **not** converged for severe disease or for clinical
+#'   incidence in young children at high transmission, both of which it puts a
+#'   few per cent low (severe 8% low at EIR 120). That bias is removable:
+#'   `fleet`'s profile converges at first order, so
+#'   `default_age_lower(n_group = 105)` roughly halves it and `n_group = 209`
+#'   halves it again, at a proportionate cost in run time; refined to 417 groups
+#'   `fleet` lands within about 1% of the IBM on clinical and severe incidence at
+#'   EIR 20 to 120. A result that rests on the *level* of severe incidence, or on
+#'   young children at high transmission, is worth re-running on a finer grid to
+#'   see how much of it is the grid. See the `age-profile-clinical` and
+#'   `severe-allage-eir` claims in `fleetcheck` for the measurements.
 #'
 #'   The default is left where it is because every published comparison is
 #'   stated on it; changing it moves every number.
-#' @param n_eir,n_foim,n_eip Erlang-chain stage counts for the EIR lag, FOIM lag
-#'   and mosquito EIP. Larger values sharpen the (otherwise gamma-shaped) lags
-#'   toward the IBM's fixed delays; equilibrium is exact for any value.
-#' @param n_ph,n_phc Erlang-chain stage counts for the post-treatment (`Ph`) and
-#'   chemoprevention (`Ph_c`) prophylaxis compartments. `NULL` (default) matches the
-#'   chain's variance to the drug's Weibull protection curve, capped at 20. For
-#'   `Ph_c` that is `1/CV²` of the Weibull: 14 for SP-AQ, 15 for DHA-PQP. `Ph`
-#'   follows the exponential treated stage `Tr`, so its count matches the variance
-#'   of the whole `Tr + Ph` sojourn and its mean is the integrated protection left
-#'   after `Tr`: 16 stages for SP-AQ, 20 for DHA-PQP, and 1 for AL, whose 10-day
-#'   protection is already less variable than `Tr` itself. A drug mixture is
-#'   moment-matched as a mixture. `1` is a single exponential stage, which for
-#'   `Ph_c` leaks protection early between monthly SMC rounds. The count is fixed
-#'   at the seed's drug mix: a first-line switch moves the chain's mean, not its
-#'   shape.
-#' @param atol,rtol,step_size_max dust2 ODE-solver controls. The defaults
-#'   (`1e-8`, `1e-8`, `1`) preserve the flat equilibrium exactly. For long dynamic
-#'   projections `rtol = 1e-6` runs about 1.4x faster on seasonal ones (7.2 s to
-#'   5.0 s over 30 years) with a maximum deviation of 4e-7 in daily clinical
-#'   incidence -- five orders of magnitude inside the IBM's replicate band -- and
-#'   not at all faster on aseasonal ones.
-#'
-#'   That last point is a hard floor, and it is worth knowing where it comes from.
-#'   On an equilibrium run every accepted step is 0.62 days, and that step does
-#'   not move with `atol`, `rtol`, `step_size_max`, the output grid, or the
-#'   delay-chain lengths below 4 per day. A step that ignores both tolerances is a
-#'   stability limit, not an accuracy one: the stiffest eigenvalue in the system
-#'   is the late-larval density-dependent mortality, `ml * gamma * (E + 2L) / K`,
-#'   which at the seed is 5.3 per day (gamma is 13.25 and the early-larval stock
-#'   sits at about ten times K), and Dormand-Prince's stability boundary of ~3.3
-#'   on that mode gives 3.3 / 5.31 = 0.621 days. It is intrinsic to
-#'   malariasimulation's larval model at its default parameters, so the 1.6
-#'   steps per day it forces is what an explicit stepper costs here, and only an
-#'   implicit one (dust2 has none) could take longer steps at equilibrium. The
-#'   daily output grid adds about 2,700 rejected trial steps on top over 30
-#'   years -- the controller re-grows the step after each forced stop -- which is
-#'   why output every 30 days is ~25% faster on aseasonal runs and no more.
-#'
-#'   **`step_size_max` is a safety rail, not a speed control**, despite travelling
-#'   with `rtol` in the preset above. On 30-year runs, seasonal and not, the
-#'   solver takes the same number of steps at `1`, `5`, `30` and `Inf` to within
-#'   four in nineteen thousand, and the outputs agree to 1e-10. What the cap is
-#'   for is stopping a trial step overshooting the end of an interpolation grid.
-#'   The intervention series are interpolated on grids that extend just past
-#'   `timesteps`, and near equilibrium the stepper will propose a step of tens of
-#'   days; uncapped, such a step could land beyond the end of a coarse grid and
-#'   abort the run ("Tried to interpolate at time = ..., which is ... after the
-#'   last time"). None of the runs measured here did, but the cap costs nothing
-#'   measurable, so leave it at `1` unless you have a specific reason.
-#'
-#'   Keep `atol` at `1e-8`: the individual prophylaxis chain stages hold
-#'   occupancies of order `1e-6`, which a looser absolute tolerance lets dip
-#'   below zero.
+#' @param n_ph,n_phc stage counts for the post-treatment (`Ph`) and
+#'   chemoprevention (`Ph_c`) prophylaxis chains. `NULL` (default) matches the
+#'   chain to the drug's Weibull protection curve. A stage is left with a fixed
+#'   probability a day, so it lasts a geometric number of days, and `k` stages
+#'   match the protection's mean `M` and variance `V` at `M^2 / (V + M)` stages:
+#'   10 for SP-AQ as chemoprevention, 9 for DHA-PQP. `Ph` follows the treated
+#'   stage `Tr`, so its count matches the variance of the whole `Tr + Ph` sojourn
+#'   and its mean is the protection left after `Tr`: 9 stages for SP-AQ, 10 for
+#'   DHA-PQP, and 1 for AL, whose 10-day protection is already less variable
+#'   than `Tr` itself. A drug mixture is moment-matched as a mixture. A stage
+#'   lasts at least a day, and each day it also loses its ageing and mortality
+#'   fraction, so the default is held to what fits the shortest-protecting drug
+#'   on the schedule and capped at 20, and an explicit count that does not fit
+#'   is an error. The count is fixed for the run, sized at the seed's drug mix: a
+#'   first-line switch moves the chain's mean, not its shape.
+#' @param n_sub sub-steps per day of the mosquito model, integrated by an
+#'   exponential midpoint rule (second order, and stable however stiff the
+#'   larval equations get). Once a run is on its cycle the error falls
+#'   fourfold with each doubling. At the default of 32 a seasonal run's daily
+#'   EIR stays within 2.4e-4 of the converged solution at the seasonal trough
+#'   (5.5e-6 of its peak), comparable to the per-step tolerance
+#'   `malariasimulation` integrates its own mosquito model to
+#'   (`r_tol = a_tol = 1e-4`); 8 would leave it 3.6e-3 off, a slight shift in
+#'   the phase of the seasonal cycle. Annual means agree to about 4e-6 at 32 and
+#'   5e-5 at 8, and a run with no seasonality and no interventions is exact to
+#'   1e-11 at any count. The mosquito model is a small part of the day, so 32
+#'   costs 2 to 13% more than 8.
 #' @param odin_file optional path to an odin source to compile instead of the
-#'   generator built into the package (development use; needs 'odin2' and a C++
-#'   toolchain).
+#'   generator built into the package: a discrete-time model with the built-in
+#'   one's parameters and states (development use; needs 'odin2' and a C++
+#'   toolchain). The compiled model is cached by path for the session, so an
+#'   edit to the file needs a new session.
+#' @param ... the ODE solver's controls (`atol`, `rtol`, `step_size_max`) and the
+#'   Erlang lag stage counts (`n_eir`, `n_foim`, `n_eip`) are accepted with a
+#'   warning and ignored: the model advances one day at a time, with the IBM's
+#'   own delay lines, so there is no solver to control and no lag to discretise.
+#'   Any other name is an error.
 #' @return a `fleet_ode_tuning` list.
 #' @seealso [run_simulation_ode()]
 #' @examples
-#' ode_tuning()$atol
-#' # a faster long projection: the tolerance is the lever, not the step cap
-#' ode_tuning(rtol = 1e-6)$rtol
+#' ode_tuning()$n_sub
+#' # a finer age grid, to see how much of a severe-incidence level is the grid
+#' length(ode_tuning(age_lower = default_age_lower(n_group = 105))$age_lower)
 #' @export
-ode_tuning <- function(age_lower = default_age_lower(),
-                       n_eir = 10L, n_foim = 10L, n_eip = 20L,
-                       n_ph = NULL, n_phc = NULL,
-                       atol = 1e-8, rtol = 1e-8, step_size_max = 1,
-                       odin_file = NULL) {
+ode_tuning <- function(age_lower = default_age_lower(), n_ph = NULL, n_phc = NULL,
+                       n_sub = 32L, odin_file = NULL, ...) {
+  .retire_tuning_fields(...)
   pos_int <- function(x, nm, allow_null = FALSE) {
     if (allow_null && is.null(x)) return(invisible())
-    if (length(x) != 1L || is.na(x) || !is.numeric(x) || x < 1 || x != round(x)) {
+    if (length(x) != 1L || !is.numeric(x) || !is.finite(x) || x < 1 || x != round(x) ||
+        x > .Machine$integer.max) {
       stop(sprintf("`%s` must be a single positive whole number.", nm), call. = FALSE)
-    }
-  }
-  pos_num <- function(x, nm) {
-    if (length(x) != 1L || is.na(x) || !is.numeric(x) || x <= 0) {
-      stop(sprintf("`%s` must be a single positive number.", nm), call. = FALSE)
     }
   }
   ## age_lower is validated here rather than in build_inputs() because a bad grid
@@ -139,39 +115,65 @@ ode_tuning <- function(age_lower = default_age_lower(),
          " -- not a plausible human age. A grid supplied in days (for example ",
          "default_age_lower() * 365) is the usual cause; divide by 365.", call. = FALSE)
   }
-  for (nm in c("n_eir", "n_foim", "n_eip")) pos_int(get(nm), nm)
   for (nm in c("n_ph", "n_phc")) pos_int(get(nm), nm, allow_null = TRUE)
-  for (nm in c("atol", "rtol", "step_size_max")) pos_num(get(nm), nm)
+  pos_int(n_sub, "n_sub")
   if (!is.null(odin_file) && (length(odin_file) != 1L || !is.character(odin_file))) {
     stop("`odin_file` must be NULL or a single path.", call. = FALSE)
   }
   structure(
-    list(age_lower = age_lower, n_eir = n_eir, n_foim = n_foim, n_eip = n_eip,
-         n_ph = n_ph, n_phc = n_phc, atol = atol, rtol = rtol,
-         step_size_max = step_size_max, odin_file = odin_file),
+    list(age_lower = age_lower, n_ph = n_ph, n_phc = n_phc, n_sub = as.integer(n_sub),
+         odin_file = odin_file),
     class = "fleet_ode_tuning")
+}
+
+## Fields of the ODE solver fleet no longer has. A script written for it keeps
+## running -- each is ignored, and says so -- rather than failing on a setting
+## that no longer means anything.
+RETIRED_TUNING <- c("atol", "rtol", "step_size_max", "n_eir", "n_foim", "n_eip")
+
+#' @noRd
+.retire_tuning_fields <- function(...) {
+  if (...length() == 0L) return(invisible(NULL))
+  nm <- names(list(...))
+  if (is.null(nm) || !all(nzchar(nm))) {
+    stop("every `tuning` field must be named. Fields: ",
+         paste(setdiff(names(formals(ode_tuning)), "..."), collapse = ", "), call. = FALSE)
+  }
+  bad <- setdiff(nm, RETIRED_TUNING)
+  if (length(bad)) {
+    stop("unknown `tuning` field(s): ", paste(bad, collapse = ", "),
+         ".\nFields are: ", paste(setdiff(names(formals(ode_tuning)), "..."), collapse = ", "),
+         call. = FALSE)
+  }
+  warning("`tuning` field(s) ", paste0("`", nm, "`", collapse = ", "), " ignored: fleet ",
+          "advances one day at a time, as malariasimulation does, with the IBM's own ",
+          "delay lines, so there is no ODE solver to control and no lag chain to ",
+          "size. Drop ", if (length(nm) > 1) "them" else "it", ".", call. = FALSE)
+  invisible(NULL)
 }
 
 #' Coerce a partial named list to a full tuning object.
 #'
 #' Anything the caller left out keeps its default, and an unrecognised name is an
-#' error rather than a silently ignored field, because a mistyped `rtol` that quietly
-#' did nothing would look like the tolerance simply not mattering.
+#' error rather than a silently ignored field, because a mistyped `n_sub` that
+#' quietly did nothing would look like the setting simply not mattering.
 #' @noRd
 as_ode_tuning <- function(x) {
-  if (inherits(x, "fleet_ode_tuning")) return(x)
   if (is.null(x)) return(ode_tuning())
+  # A tuning object is re-validated rather than trusted: one saved by an older
+  # fleet, or edited by hand, goes through the same checks as a fresh one.
+  if (inherits(x, "fleet_ode_tuning")) x <- unclass(x)
   if (!is.list(x)) {
     stop("`tuning` must be an ode_tuning() object or a named list of its fields.",
          call. = FALSE)
   }
-  known <- names(formals(ode_tuning))
+  known <- setdiff(names(formals(ode_tuning)), "...")
   nm <- names(x)
   if (length(x) && (is.null(nm) || !all(nzchar(nm)))) {
     stop("every element of `tuning` must be named. Fields: ",
          paste(known, collapse = ", "), call. = FALSE)
   }
-  bad <- setdiff(nm, known)
+  bad <- setdiff(nm, c(known, RETIRED_TUNING))
   if (length(bad)) {
     stop("unknown `tuning` field(s): ", paste(bad, collapse = ", "),
          ".\nFields are: ", paste(known, collapse = ", "), call. = FALSE)
@@ -183,8 +185,7 @@ as_ode_tuning <- function(x) {
 ## to malariasimulation::run_simulation()'s. Caught by name and reported with the
 ## call that replaces them: R's own "unused argument" error names the argument
 ## but not where it went, and every one of these has moved somewhere specific.
-MOVED_TO_TUNING <- c("age_lower", "n_eir", "n_foim", "n_eip", "n_ph", "n_phc",
-                     "atol", "rtol", "step_size_max", "odin_file")
+MOVED_TO_TUNING <- c("age_lower", "n_ph", "n_phc", "n_sub", "odin_file")
 
 #' @noRd
 .reject_moved_args <- function(...) {
@@ -203,6 +204,13 @@ MOVED_TO_TUNING <- c("age_lower", "n_eir", "n_foim", "n_eip", "n_ph", "n_phc",
          if (length(moved) > 1) " are now fields " else " is now a field ",
          "of `tuning`:\n  run_simulation_ode(timesteps, parameters, ",
          "tuning = ode_tuning(", paste0(moved, " = ...", collapse = ", "), "))",
+         call. = FALSE)
+  }
+  retired <- intersect(nm, RETIRED_TUNING)
+  if (length(retired)) {
+    stop(paste0("`", retired, "`", collapse = ", "), " belonged to the ODE model, its ",
+         "solver and its Erlang lag chains, and fleet now advances one day at a time ",
+         "with the IBM's own delay lines: drop ", if (length(retired) > 1) "them." else "it.",
          call. = FALSE)
   }
   stop("unused argument(s): ", paste(nm[nzchar(nm)], collapse = ", "), call. = FALSE)
