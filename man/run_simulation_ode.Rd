@@ -17,16 +17,21 @@ run_simulation_ode(
 \verb{1..timesteps}, as malariasimulation's does: row \code{t} holds the state at the
 start of day \code{t} and the incidence during it, so row 1 is the seed.}
 
-\item{parameters}{a malariasimulation::get_parameters() list (falciparum),
-optionally with interventions layered on via the \verb{set_*} builders. The
-following are applied automatically from the list (no extra arguments):
-clinical treatment (time-varying), antimalarial resistance, bed nets, IRS,
+\item{parameters}{a malariasimulation::get_parameters() list, optionally
+with interventions layered on via the \verb{set_*} builders. The following are
+applied automatically from the list (no extra arguments): clinical
+treatment (time-varying), antimalarial resistance, bed nets, IRS,
 MDA/SMC/PMC, PEV (EPI + mass) and TBV vaccines, seasonality and flexible
 carrying capacity, and custom demography (\code{set_demography}: age-specific
-mortality and the resulting equilibrium age structure). P. vivax is rejected;
-the model is always compartmental (the individual-mosquito path does not
-apply). \code{vignette("using")} indexes the mean-field approximations and when
-each one matters.
+mortality and the resulting equilibrium age structure). The parasite is
+\code{parameters$parasite}, as in malariasimulation: a list from
+\code{get_parameters(parasite = "vivax")} runs the P. vivax model --
+hypnozoite batches and relapse, radical cure with liver-stage protection
+(\code{CQ_PQ_params_vivax}, \code{CQ_TQ_params_vivax}), no severe disease. MDA, SMC
+and PMC are refused under vivax because malariasimulation itself fails on
+them. The model is always compartmental (the individual-mosquito path does
+not apply). \code{vignette("using")} indexes the mean-field approximations and
+when each one matters.
 
 \strong{The target EIR is read from this list}, as \code{parameters$init_EIR}, which is
 where \code{malariasimulation} puts it and reads it from too. Seed it the same way
@@ -62,11 +67,23 @@ approaches one bite/person/day (seasonal peaks, high-\code{zeta} strata).
 Neither makes the \code{malariaEquilibrium} seed an exact fixed point:
 \code{vignette("model")} lists the departures from that solution in its
 initial-conditions section. Leave it at \code{1} for any scientific run.
-\item \code{acquired_immunity_offset} (default \code{0}): the IBM adds \code{+0.5} to
-positive acquired immunity inside the \code{b}/\code{phi}/\code{theta} Hill functions. That
-is a per-individual detail which does not carry over to a stratum mean; an
-A/B against the IBM ensemble mean favours \code{0}. Set \code{0.5} to reproduce the
-IBM's literal Hill calls.
+\item \code{acquired_immunity_offset} (default \code{0} for P. falciparum, \code{0.5} for
+P. vivax): the IBM adds \code{+0.5} to positive acquired immunity inside the
+\code{b}/\code{phi}/\code{theta} Hill functions. That is a per-individual detail. The
+falciparum model reads its curves at a stratum mean, where it does not
+carry over and an A/B against the IBM ensemble mean favours \code{0}; the vivax
+model reads them at quadrature nodes that stand for individuals (see
+\code{immunity_spread}), where it does, so it takes the IBM's \code{0.5}.
+\item \code{immunity_spread} (default \code{TRUE}; P. vivax only): model the spread
+of immunity among people who share an age, heterogeneity group and
+hypnozoite batch count. In the IBM they differ by their batch \emph{history},
+and the vivax immunity curves are steep enough that the mean probability
+of clinical disease can be several times the probability at the mean
+immunity. fleet carries each cell's second moment of immunity and averages
+the curves over a gamma with that mean and variance. \code{FALSE} evaluates
+them at the cell mean, which under-predicts clinical incidence in
+school-age children and young adults by up to 40\% once the IBM has built
+up its spread.
 \item \code{hold_init_EIR} (default \code{FALSE}): only matters with \code{set_demography()}.
 malariasimulation's \code{set_equilibrium()} sizes the mosquito population from
 the equilibrium under its \emph{default} exponential age structure, so under a
@@ -105,8 +122,8 @@ meanings, as far as a mean field carries them. Columns:
 \itemize{
 \item \code{timestep}: output day (1..timesteps), the row key.
 \item age-banded counts, one set per band in the parameter list's rendering
-lists and none for an empty list: \verb{n_detect_lm_*}, \verb{p_detect_lm_*} and
-\verb{n_detect_pcr_*} over \verb{prevalence_rendering_*}; \verb{n_inc_*} and \verb{p_inc_*}
+lists and none for an empty list: \verb{n_detect_lm_*}, \verb{p_detect_lm_*} (not
+for vivax) and \verb{n_detect_pcr_*} over \verb{prevalence_rendering_*}; \verb{n_inc_*} and \verb{p_inc_*}
 over \verb{incidence_rendering_*}; \verb{n_inc_clinical_*} and \verb{p_inc_clinical_*}
 over \verb{clinical_incidence_rendering_*}; \verb{n_inc_severe_*} and
 \verb{p_inc_severe_*} over \verb{severe_incidence_rendering_*}; and \verb{n_age_*}
@@ -136,9 +153,25 @@ age axis while \verb{0_1825} and \verb{1825_5475} share one day's cohort.
 \\item `n_infections` (new infections at all ages) and, when clinical
   treatment is deployed, `ft` (the fraction of clinical cases treated), as
   in the IBM.
+\\item P. vivax: `n_relapses` (the day's relapse infections) and
+  `n_with_hypnozoites` (people carrying at least one batch), and by age
+  `n_inc_relapse_*` over `incidence_relapse_rendering_*` and
+  `n_with_hypnozoites_*`, with the band's population as `n_*`, over
+  `n_with_hypnozoites_rendering_*`. A vivax `A` is LM-detectable by
+  definition, so `n_detect_lm_*` counts all of it, and the IBM renders no
+  `p_detect_lm_*` for vivax; a severe band on a vivax list renders, as
+  the IBM's does, as 0.
 \\item population totals by infection state, `S_count`, `A_count`,
   `D_count`, `U_count` and `Tr_count`, counted as the IBM counts them:
   someone a drug is protecting is uninfected, and so in `S_count`.
+\\item the immunity means over the population: `ica_mean`, `icm_mean`,
+  `ib_mean`, `iva_mean`, `ivm_mean` and `id_mean` for falciparum,
+  `ica_mean`, `icm_mean`, `iaa_mean`, `iam_mean` and `hypnozoites_mean`
+  (the mean batch count) for vivax; and each by age, `<name>_mean_*` with
+  the band's population as `n_*`, over its `<name>_rendering_*`. The IBM
+  seeds falciparum's maternal immunity from the equilibrium bin 0.1 years
+  older than each person, so for the first months its `icm_mean` and
+  `ivm_mean` sit below `fleet`'s, whose births take their mothers'.
 \\item three columns malariasimulation does not have: `EIR` (infectious
   bites per adult per year), `FOIM` (the force of infection on the first
   mosquito species) and `Ph_count` (how many of `S_count` a drug is
@@ -148,9 +181,10 @@ age axis while \verb{0_1825} and \verb{1825_5475} share one day's cohort.
 }
 malariasimulation columns this table does not carry: \code{n_bitten},
 \code{infectivity}, \verb{EIR_<species>}, \verb{FOIM_<species>}, \verb{mu_<species>}, the
-immunity means (\code{ica_mean} and the rest), the mosquito compartment counts and
-\verb{total_M_<species>}, \code{natural_deaths}, and the treatment and intervention
-tallies (\code{n_treated}, \code{n_smc_treated} and the rest).
+mosquito compartment counts and \verb{total_M_<species>}, \code{natural_deaths}, and
+the treatment and intervention tallies (\code{n_treated}, \code{n_smc_treated} and
+the rest). The IBM renders \verb{n_inc_relapse_*} only on days with a relapse in
+the band, and NA otherwise; a mean field's expected count is never zero.
 
 Incidence columns are per-day counts; do not thin rows before postie. The
 table can be passed directly to postie::get_rates() / postie::get_prevalence().

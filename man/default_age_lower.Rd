@@ -4,7 +4,7 @@
 \alias{default_age_lower}
 \title{Default (graded) age grid}
 \usage{
-default_age_lower(max_age = 80, n_group = 53L)
+default_age_lower(max_age = 80, n_group = 209L)
 }
 \arguments{
 \item{max_age}{oldest age-group lower edge, in \strong{years} (the absorbing top
@@ -12,9 +12,9 @@ group). Must be a single finite number \verb{>= 20}: below that the grid has too
 few anchors left to resolve the ages over which immunity develops.}
 
 \item{n_group}{total number of age groups, the absorbing top group included.
-The default is 53, which the error figures above were measured at.
-Raising it refines the whole grid while keeping its shape, which is what a
-grid-convergence check wants.}
+The default is 209. Changing it refines or coarsens the whole grid while
+keeping its shape, which is what a grid-convergence check wants; run time
+is in proportion.}
 }
 \value{
 numeric vector of age-group lower edges in years.
@@ -35,15 +35,16 @@ Log rather than linear width, because what the grid has to resolve is the
 rise of immunity with age, and that is far closer to a function of log age
 than of age. (Of \code{log(1 + age)} rather than \code{log(age)}, which is infinite
 over the first year. The offset is in years, so the allocation is not
-scale-free.) An equal-width grid at the same cost is four times as far from
-the converged solution as this one (rms over the age profile), and a grid of
+scale-free.) At 53 groups an equal-width grid is four times as far from the
+converged solution as this one (rms over the age profile), and a grid of
 fixed monthly / quarterly / yearly / 5-yearly sections, which over-resolves
 infancy and under-resolves everything above 15, nearly twice as far: the
-grading matters more than the count. On the default grid the largest departure of the EIR 20 age profile
-from \code{fleet}'s own converged one is 4.4\%, and the rms 3.0\%.
+grading matters more than the count.
 
-Refining removes that error: the departure from the converged profile halves
-with each doubling of \code{n_group}, first order. What refinement does \strong{not}
+The departure from \code{fleet}'s own converged profile halves with each doubling
+of \code{n_group}, first order. On the default 209 groups the largest departure of
+the EIR 20 clinical age profile from the converged one is 1.1\%, and the rms
+0.8\%; at 53 groups they are 4.4\% and 3.0\%. What refinement does \strong{not}
 remove is the mean-field approximation itself -- one immunity value per
 stratum, where the IBM holds a spread of infection histories at the same age
 -- so a persistent difference from the IBM is not evidence that the grid is
@@ -59,6 +60,6 @@ age targeting. Neither is snapped to the grid.
 default_age_lower()
 # coarser top of the grid
 default_age_lower(max_age = 60)
-# twice the resolution everywhere, same shape
-length(default_age_lower(n_group = 105))
+# a quarter of the resolution everywhere, same shape, four times as fast
+length(default_age_lower(n_group = 53))
 }

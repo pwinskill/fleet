@@ -32,16 +32,21 @@ get_generator <- function(odin_file = NULL) {
 #' @param timesteps number of days to simulate. Output has one row per day,
 #'   `1..timesteps`, as malariasimulation's does: row `t` holds the state at the
 #'   start of day `t` and the incidence during it, so row 1 is the seed.
-#' @param parameters a malariasimulation::get_parameters() list (falciparum),
-#'   optionally with interventions layered on via the `set_*` builders. The
-#'   following are applied automatically from the list (no extra arguments):
-#'   clinical treatment (time-varying), antimalarial resistance, bed nets, IRS,
+#' @param parameters a malariasimulation::get_parameters() list, optionally
+#'   with interventions layered on via the `set_*` builders. The following are
+#'   applied automatically from the list (no extra arguments): clinical
+#'   treatment (time-varying), antimalarial resistance, bed nets, IRS,
 #'   MDA/SMC/PMC, PEV (EPI + mass) and TBV vaccines, seasonality and flexible
 #'   carrying capacity, and custom demography (`set_demography`: age-specific
-#'   mortality and the resulting equilibrium age structure). P. vivax is rejected;
-#'   the model is always compartmental (the individual-mosquito path does not
-#'   apply). `vignette("using")` indexes the mean-field approximations and when
-#'   each one matters.
+#'   mortality and the resulting equilibrium age structure). The parasite is
+#'   `parameters$parasite`, as in malariasimulation: a list from
+#'   `get_parameters(parasite = "vivax")` runs the P. vivax model --
+#'   hypnozoite batches and relapse, radical cure with liver-stage protection
+#'   (`CQ_PQ_params_vivax`, `CQ_TQ_params_vivax`), no severe disease. MDA, SMC
+#'   and PMC are refused under vivax because malariasimulation itself fails on
+#'   them. The model is always compartmental (the individual-mosquito path does
+#'   not apply). `vignette("using")` indexes the mean-field approximations and
+#'   when each one matters.
 #'
 #'   **The target EIR is read from this list**, as `parameters$init_EIR`, which is
 #'   where `malariasimulation` puts it and reads it from too. Seed it the same way
@@ -77,11 +82,23 @@ get_generator <- function(odin_file = NULL) {
 #'       Neither makes the `malariaEquilibrium` seed an exact fixed point:
 #'       `vignette("model")` lists the departures from that solution in its
 #'       initial-conditions section. Leave it at `1` for any scientific run.
-#'     \item `acquired_immunity_offset` (default `0`): the IBM adds `+0.5` to
-#'       positive acquired immunity inside the `b`/`phi`/`theta` Hill functions. That
-#'       is a per-individual detail which does not carry over to a stratum mean; an
-#'       A/B against the IBM ensemble mean favours `0`. Set `0.5` to reproduce the
-#'       IBM's literal Hill calls.
+#'     \item `acquired_immunity_offset` (default `0` for P. falciparum, `0.5` for
+#'       P. vivax): the IBM adds `+0.5` to positive acquired immunity inside the
+#'       `b`/`phi`/`theta` Hill functions. That is a per-individual detail. The
+#'       falciparum model reads its curves at a stratum mean, where it does not
+#'       carry over and an A/B against the IBM ensemble mean favours `0`; the vivax
+#'       model reads them at quadrature nodes that stand for individuals (see
+#'       `immunity_spread`), where it does, so it takes the IBM's `0.5`.
+#'     \item `immunity_spread` (default `TRUE`; P. vivax only): model the spread
+#'       of immunity among people who share an age, heterogeneity group and
+#'       hypnozoite batch count. In the IBM they differ by their batch *history*,
+#'       and the vivax immunity curves are steep enough that the mean probability
+#'       of clinical disease can be several times the probability at the mean
+#'       immunity. fleet carries each cell's second moment of immunity and averages
+#'       the curves over a gamma with that mean and variance. `FALSE` evaluates
+#'       them at the cell mean, which under-predicts clinical incidence in
+#'       school-age children and young adults by up to 40% once the IBM has built
+#'       up its spread.
 #'     \item `hold_init_EIR` (default `FALSE`): only matters with `set_demography()`.
 #'       malariasimulation's `set_equilibrium()` sizes the mosquito population from
 #'       the equilibrium under its *default* exponential age structure, so under a
@@ -127,8 +144,8 @@ get_generator <- function(odin_file = NULL) {
 #'   \itemize{
 #'     \item `timestep`: output day (1..timesteps), the row key.
 #'     \item age-banded counts, one set per band in the parameter list's rendering
-#'       lists and none for an empty list: `n_detect_lm_*`, `p_detect_lm_*` and
-#'       `n_detect_pcr_*` over `prevalence_rendering_*`; `n_inc_*` and `p_inc_*`
+#'       lists and none for an empty list: `n_detect_lm_*`, `p_detect_lm_*` (not
+#'       for vivax) and `n_detect_pcr_*` over `prevalence_rendering_*`; `n_inc_*` and `p_inc_*`
 #'       over `incidence_rendering_*`; `n_inc_clinical_*` and `p_inc_clinical_*`
 #'       over `clinical_incidence_rendering_*`; `n_inc_severe_*` and
 #'       `p_inc_severe_*` over `severe_incidence_rendering_*`; and `n_age_*`
@@ -158,9 +175,25 @@ get_generator <- function(odin_file = NULL) {
 #'     \item `n_infections` (new infections at all ages) and, when clinical
 #'       treatment is deployed, `ft` (the fraction of clinical cases treated), as
 #'       in the IBM.
+#'     \item P. vivax: `n_relapses` (the day's relapse infections) and
+#'       `n_with_hypnozoites` (people carrying at least one batch), and by age
+#'       `n_inc_relapse_*` over `incidence_relapse_rendering_*` and
+#'       `n_with_hypnozoites_*`, with the band's population as `n_*`, over
+#'       `n_with_hypnozoites_rendering_*`. A vivax `A` is LM-detectable by
+#'       definition, so `n_detect_lm_*` counts all of it, and the IBM renders no
+#'       `p_detect_lm_*` for vivax; a severe band on a vivax list renders, as
+#'       the IBM's does, as 0.
 #'     \item population totals by infection state, `S_count`, `A_count`,
 #'       `D_count`, `U_count` and `Tr_count`, counted as the IBM counts them:
 #'       someone a drug is protecting is uninfected, and so in `S_count`.
+#'     \item the immunity means over the population: `ica_mean`, `icm_mean`,
+#'       `ib_mean`, `iva_mean`, `ivm_mean` and `id_mean` for falciparum,
+#'       `ica_mean`, `icm_mean`, `iaa_mean`, `iam_mean` and `hypnozoites_mean`
+#'       (the mean batch count) for vivax; and each by age, `<name>_mean_*` with
+#'       the band's population as `n_*`, over its `<name>_rendering_*`. The IBM
+#'       seeds falciparum's maternal immunity from the equilibrium bin 0.1 years
+#'       older than each person, so for the first months its `icm_mean` and
+#'       `ivm_mean` sit below `fleet`'s, whose births take their mothers'.
 #'     \item three columns malariasimulation does not have: `EIR` (infectious
 #'       bites per adult per year), `FOIM` (the force of infection on the first
 #'       mosquito species) and `Ph_count` (how many of `S_count` a drug is
@@ -168,9 +201,10 @@ get_generator <- function(odin_file = NULL) {
 #'   }
 #'   malariasimulation columns this table does not carry: `n_bitten`,
 #'   `infectivity`, `EIR_<species>`, `FOIM_<species>`, `mu_<species>`, the
-#'   immunity means (`ica_mean` and the rest), the mosquito compartment counts and
-#'   `total_M_<species>`, `natural_deaths`, and the treatment and intervention
-#'   tallies (`n_treated`, `n_smc_treated` and the rest).
+#'   mosquito compartment counts and `total_M_<species>`, `natural_deaths`, and
+#'   the treatment and intervention tallies (`n_treated`, `n_smc_treated` and
+#'   the rest). The IBM renders `n_inc_relapse_*` only on days with a relapse in
+#'   the band, and NA otherwise; a mean field's expected count is never zero.
 #'
 #'   Incidence columns are per-day counts; do not thin rows before postie. The
 #'   table can be passed directly to postie::get_rates() / postie::get_prevalence().
@@ -288,7 +322,18 @@ run_simulation_ode <- function(timesteps, parameters = NULL, correlations = NULL
 
 # odin output/aggregate variables recorded from each run (all of render_output's inputs)
 OUTPUT_VARS <- c("n_g", "det_lm_g", "det_pcr_g", "clin_g", "sev_g", "inc_g",
-                 "S_g", "D_g", "A_g", "U_g", "Tr_g", "Ph_g", "EIR_yr", "FOIM", "ft_out")
+                 "relapse_g", "hyp_g",
+                 "S_g", "D_g", "A_g", "U_g", "Tr_g", "Ph_g", "EIR_yr", "FOIM", "ft_out",
+                 "ica_g", "icm_g", "ib_g", "iva_g", "ivm_g", "id_g",
+                 "iaa_g", "iam_g", "hypk_g")
+
+## The immunities malariasimulation renders means of, per parasite
+## (processes.R imm_var_names), with the output each is summed in.
+IMMUNITY_VARS <- list(
+  falciparum = c(ica = "ica_g", icm = "icm_g", ib = "ib_g", iva = "iva_g",
+                 ivm = "ivm_g", id = "id_g"),
+  vivax = c(ica = "ica_g", icm = "icm_g", iaa = "iaa_g", iam = "iam_g",
+            hypnozoites = "hypk_g"))
 
 #' Simulate with chemoprevention pulses applied between segments.
 #'
@@ -357,7 +402,9 @@ simulate_with_pulses <- function(sys, times, events, meta, uidx, out_idx) {
 #' clinical and ~1.10x on severe incidence for a site::site_parameters() list.
 #' @noRd
 output_bands <- function(p, family = c("all", "prevalence", "incidence",
-                                       "clinical", "severe")) {
+                                       "clinical", "severe", "relapse", "n_hypnozoites",
+                                       "ica", "icm", "ib", "iva", "ivm", "id", "iaa",
+                                       "iam", "hypnozoites")) {
   family <- match.arg(family)
   gather <- function(stem) {
     lo <- p[[paste0(stem, "_min_ages")]]; hi <- p[[paste0(stem, "_max_ages")]]
@@ -369,8 +416,13 @@ output_bands <- function(p, family = c("all", "prevalence", "incidence",
   clin <- gather("clinical_incidence_rendering")
   sev  <- gather("severe_incidence_rendering")
   if (family != "all") {
+    # the vivax families and the immunity means render over their own lists and
+    # stay out of the n_age_* union, as in the IBM
     return(unique(switch(family, prevalence = prev, incidence = inc,
-                         clinical = clin, severe = sev)))
+                         clinical = clin, severe = sev,
+                         relapse = gather("incidence_relapse_rendering"),
+                         n_hypnozoites = gather("n_with_hypnozoites_rendering"),
+                         gather(paste0(family, "_rendering")))))
   }
   u <- unique(c(prev, inc, clin, sev, gather("age_group_rendering")))
   if (!length(u)) return(u)
@@ -514,13 +566,17 @@ render_output <- function(y, times, inp, uidx, out_idx) {
   band_sum <- function(m, b) colSums(m * band_wt(b)) * hp
 
   ## Columns in the order malariasimulation first renders them: the infection and
-  ## treatment tallies, the incidence families, the transmission scalars, the state
-  ## counts, the detection family, and n_age_* last.
+  ## treatment tallies, the incidence families, the transmission scalars, the
+  ## vivax relapse and hypnozoite families, the state counts, the detection
+  ## family, and n_age_* last.
+  vivax <- identical(meta$parasite, "vivax")
   out <- data.frame(timestep = times)
   out$n_infections <- colSums(inc_g) * hp
   # the IBM renders ft only when some clinical treatment coverage is non-zero
   # (populate_incidence_rendering_columns())
   if (sum(unlist(p$clinical_treatment_coverages)) > 0) out$ft <- get("ft_out", FALSE)
+  # relapse infections, which the IBM renders for every vivax run (default 0)
+  if (vivax) out$n_relapses <- colSums(get("relapse_g")) * hp
   ## Each incidence family is a count and, beside it, malariasimulation's p_*
   ## column: the sum of each person's probability of the event, the expectation
   ## the sampled count scatters around. A mean field carries expectations, so the
@@ -542,6 +598,23 @@ render_output <- function(y, times, inp, uidx, out_idx) {
   }
   out$EIR <- get("EIR_yr", FALSE)
   out$FOIM <- get("FOIM", FALSE)
+  ## P. vivax: relapses by age over incidence_relapse_rendering_*, the number of
+  ## people carrying at least one hypnozoite batch, and that number by age over
+  ## n_with_hypnozoites_rendering_* with the band's population beside it as
+  ## n_<lower>_<upper>, as create_n_with_hypnozoites_age_renderer_process()
+  ## renders it. The IBM renders n_inc_relapse_* only on days with a relapse in
+  ## the band, NA otherwise; a mean field's expected count is never zero.
+  if (vivax) {
+    relapse_g <- get("relapse_g"); hyp_g <- get("hyp_g")
+    for (b in output_bands(p, "relapse")) {
+      out[[paste0("n_inc_relapse_", tag_of(b))]] <- band_sum(relapse_g, b)
+    }
+    out$n_with_hypnozoites <- colSums(hyp_g) * hp
+    for (b in output_bands(p, "n_hypnozoites")) {
+      out[[paste0("n_", tag_of(b))]] <- band_sum(n_g, b)
+      out[[paste0("n_with_hypnozoites_", tag_of(b))]] <- band_sum(hyp_g, b)
+    }
+  }
   ## Population totals by state, as the IBM counts them. A drug-protected person is
   ## an uninfected person in state S there (prophylaxis is a timer, not a state),
   ## so the prophylaxis chains are part of S_count; Ph_count says how much of it.
@@ -552,20 +625,38 @@ render_output <- function(y, times, inp, uidx, out_idx) {
   out$U_count <- colSums(get("U_g")) * hp
   out$Tr_count <- colSums(get("Tr_g")) * hp
   out$Ph_count <- ph
+  ## Immunity means over the whole population, as create_variable_mean_renderer_
+  ## process() renders them: the falciparum six or the vivax five (with
+  ## hypnozoites, the mean batch count), each the population's total over its
+  ## size. A mean field's is the mean of the cell means, weighted by who is in
+  ## each cell.
+  imm <- IMMUNITY_VARS[[if (vivax) "vivax" else "falciparum"]]
+  n_tot <- colSums(n_g)
+  for (v in names(imm)) out[[paste0(v, "_mean")]] <- colSums(get(imm[[v]])) / n_tot
   ## Detection. The IBM's n_detect_lm_* samples each asymptomatic person's
   ## detection and p_detect_lm_* sums the probabilities instead: both are counts,
   ## and a mean field's expected count is both. Prevalence is n_detect_lm_* over
-  ## n_age_*, as postie computes it.
+  ## n_age_*, as postie computes it. A vivax A is LM-detectable by definition, so
+  ## there is nothing to sum and the IBM renders no p_detect_lm_* for vivax.
   for (b in output_bands(p, "prevalence")) {
     lm <- band_sum(det_lm_g, b)
     out[[paste0("n_detect_lm_", tag_of(b))]] <- lm
-    out[[paste0("p_detect_lm_", tag_of(b))]] <- lm
+    if (!vivax) out[[paste0("p_detect_lm_", tag_of(b))]] <- lm
     out[[paste0("n_detect_pcr_", tag_of(b))]] <- band_sum(det_pcr_g, b)
   }
   # n_age_* over the union, sorted as the IBM sorts it: postie derives every
   # denominator by matching these to each incidence/detection column's tag.
   union <- output_bands(p, "all")
   for (b in union) out[[paste0("n_age_", tag_of(b))]] <- band_sum(n_g, b)
+  ## ...and the immunity means by age, over each immunity's own
+  ## <name>_rendering_* list, each with its band's population as n_<lower>_<upper>
+  ## (create_age_variable_mean_renderer_process()).
+  for (v in names(imm)) {
+    for (b in output_bands(p, v)) {
+      out[[paste0("n_", tag_of(b))]] <- band_sum(n_g, b)
+      out[[paste0(v, "_mean_", tag_of(b))]] <- band_sum(get(imm[[v]]), b) / band_sum(n_g, b)
+    }
+  }
   spans <- lapply(union, function(b) ibm_band_span(b[1], b[2]))
   names(spans) <- vapply(union, tag_of, character(1))
   warn_top_group_edge(spans, n_g, age_lo)

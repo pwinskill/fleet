@@ -146,8 +146,10 @@ test_that("custom demography changes the equilibrium age structure", {
   expect_equal(inp$pars$mu_age_z[n, 1] * 365, 0.12, tolerance = 1e-8)
   expect_equal(prop[n] / prop[n - 1],
                inp$pars$r_age[n - 1] / inp$pars$mu_age_z[n, 1], tolerance = 1e-6)
-  # and the fit really is doing something in a 5-year-wide band
-  expect_lt(inp$pars$r_age[n - 1], 1 / (5 * 365))
+  # and the fit really is doing something: below the top group mortality is
+  # high, so the fitted rate is under 1 / width
+  w <- 365 * diff(default_age_lower())[n - 1]
+  expect_lt(inp$pars$r_age[n - 1], 1 / w)
   # default (constant hazard) still holds flat at equilibrium (offset 0 = least drift)
   pflat <- gp(); pflat$acquired_immunity_offset <- 0; pflat$bite_dedup <- 0
   o <- run_simulation_ode(400, eqm(pflat, 20))
@@ -187,7 +189,8 @@ test_that("invalid inputs error clearly", {
   # rejects one of its own before fleet sees it, so this is the path fleet owns
   p0 <- malariasimulation::get_parameters(); p0$init_EIR <- 0
   expect_error(run_simulation_ode(10, p0), "positive")
-  expect_error(run_simulation_ode(10, eqm(malariasimulation::get_parameters(parasite = "vivax"), 10)), "falciparum")
+  p1 <- eqm(malariasimulation::get_parameters(), 10); p1$parasite <- "ovale"
+  expect_error(run_simulation_ode(10, p1), "'falciparum' or 'vivax'")
 })
 
 test_that("the run signature mirrors run_simulation() and points at the replacement call", {
@@ -234,7 +237,8 @@ test_that("ode_tuning validates its fields and accepts a partial list", {
 test_that("an age group narrower than a day is refused", {
   skip_if_not_installed("malariasimulation")
   p <- eqm(malariasimulation::get_parameters(), 20)
-  narrow <- sort(c(default_age_lower(), 0.5, 0.5 + 0.5 / 365))  # a half-day group at 6 months
+  # a half-day group at 6 months (0.5 years is itself a group edge)
+  narrow <- sort(unique(c(default_age_lower(), 0.5, 0.5 + 0.5 / 365)))
   expect_error(run_simulation_ode(10, p, tuning = list(age_lower = narrow)), "too narrow")
 })
 

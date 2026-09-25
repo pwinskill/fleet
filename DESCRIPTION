@@ -4,19 +4,20 @@ Version: 0.0.0.9003
 Authors@R: c(
   person("Peter", "Winskill", role = c("aut", "cre", "cph"), email = "p.winskill@imperial.ac.uk"))
 Description: Provides a fast, deterministic mean-field counterpart to the
-  'malariasimulation' individual-based model of Plasmodium falciparum malaria,
-  advanced one day at a time on the individual-based model's own daily clock.
-  The human population is structured by age and biting heterogeneity with the
-  full acquired- and maternal-immunity model, coupled to a compartmental
-  larval-and-adult mosquito model and driven by the same intervention modules:
+  'malariasimulation' individual-based model of Plasmodium falciparum and
+  Plasmodium vivax malaria, advanced one day at a time on the individual-based
+  model's own daily clock. The human population is structured by age and biting
+  heterogeneity, and for vivax by hypnozoite batch, with the full acquired- and
+  maternal-immunity model, coupled to a compartmental larval-and-adult
+  mosquito model and driven by the same intervention modules:
   clinical treatment and antimalarial resistance, bed nets and indoor residual
   spraying, chemoprevention (MDA, SMC, PMC), pre-erythrocytic and
   transmission-blocking vaccines, seasonality, and custom demography. It
   accepts an unmodified 'malariasimulation' parameter list, is seeded at the
-  'malariaEquilibrium' solution, and returns 'malariasimulation'-style outputs
-  that feed directly into 'postie'. Built on the 'odin2' and 'dust2' stack, a
-  single multi-decade run completes in under a second, independent of
-  population size.
+  'malariaEquilibrium' or 'malariaEquilibriumVivax' solution, and returns
+  'malariasimulation'-style outputs that feed directly into 'postie'. Built on
+  the 'odin2' and 'dust2' stack, a multi-decade falciparum run completes in a
+  few seconds, independent of population size.
 License: MIT + file LICENSE
 SystemRequirements: C++17
 URL: https://pwinskill.github.io/fleet/, https://github.com/pwinskill/fleet
@@ -30,11 +31,13 @@ Remotes:
     mrc-ide/dust2,
     mrc-ide/monty,
     mrc-ide/malariaEquilibrium,
+    mrc-ide/malariaEquilibriumVivax,
     mrc-ide/malariasimulation,
     mrc-ide/postie
 Imports:
     dust2 (>= 0.3.28),
     malariaEquilibrium (>= 1.0.1),
+    malariaEquilibriumVivax (>= 1.0.1),
     stats,
     utils
 LinkingTo:
@@ -47,6 +50,7 @@ Suggests:
     postie (>= 1.1.0),
     knitr,
     rmarkdown,
+    statmod,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Config/Needs/website: pkgdown

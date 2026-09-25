@@ -5,7 +5,8 @@
 # meanings. These tests run the IBM itself beside fleet across rendering
 # configurations chosen to exercise the band rules -- the defaults, a site-style
 # partition, bands that share an edge, fractional and very large edges, single
-# days, overlapping families, a treated run -- and check the column sets exactly,
+# days, overlapping families, the immunity-mean bands, a treated run, and the
+# vivax families and treatments -- and check the column sets exactly,
 # fleet's own identities exactly, and the values against a larger IBM run
 # loosely: tight enough to catch a column that means something else, not a test
 # of level agreement, which is fleetcheck's job.
@@ -16,7 +17,6 @@ BAND_FAMILIES <- paste0("^(n_age|n_detect_lm|p_detect_lm|n_detect_pcr|n_inc|p_in
 
 ## malariasimulation columns fleet does not render, and fleet's three of its own
 IBM_ONLY <- c("n_bitten", "infectivity", "EIR_gamb", "FOIM_gamb", "mu_gamb",
-              "ica_mean", "icm_mean", "ib_mean", "iva_mean", "ivm_mean", "id_mean",
               "E_gamb_count", "L_gamb_count", "P_gamb_count", "Sm_gamb_count",
               "Pm_gamb_count", "Im_gamb_count", "total_M_gamb", "natural_deaths")
 IBM_ONLY_TREATED <- c("n_treated", "n_drug_efficacy_failures", "n_successfully_treated")
@@ -43,6 +43,13 @@ render_configs <- function() list(
   single_days = list(
     age_group_rendering_min_ages = c(0, 1, 364, 365),
     age_group_rendering_max_ages = c(0, 1, 364, 729)),
+  immunity_bands = list(
+    ica_rendering_min_ages = c(0, 1825), ica_rendering_max_ages = c(1824, 36499),
+    ib_rendering_min_ages = 0, ib_rendering_max_ages = 1824,
+    id_rendering_min_ages = c(730, 1825), id_rendering_max_ages = c(3650, 36499),
+    icm_rendering_min_ages = 0, icm_rendering_max_ages = 364,
+    iva_rendering_min_ages = 0, iva_rendering_max_ages = 36499,
+    ivm_rendering_min_ages = 0, ivm_rendering_max_ages = 364),
   overlapping = list(
     prevalence_rendering_min_ages = c(0, 730), prevalence_rendering_max_ages = c(1825, 3650),
     clinical_incidence_rendering_min_ages = c(0, 0, 1825),
@@ -67,6 +74,56 @@ test_that("fleet renders the IBM's columns, and only those, for every rendering 
                     grep(BAND_FAMILIES, names(ibm), value = TRUE))
     expect_setequal(setdiff(names(ibm), names(fl)),
                     c(IBM_ONLY, if (nm == "treated") IBM_ONLY_TREATED))
+    expect_setequal(setdiff(names(fl), names(ibm)), FLEET_ONLY)
+  }
+})
+
+## The vivax families: relapses and hypnozoite carriage over their own lists,
+## the vivax immunity means, and the shared families on a vivax list.
+render_configs_pv <- function() list(
+  defaults = list(),
+  families = list(
+    prevalence_rendering_min_ages = c(0, 730), prevalence_rendering_max_ages = c(729, 3650),
+    clinical_incidence_rendering_min_ages = c(0, 1825),
+    clinical_incidence_rendering_max_ages = c(1824, 36499),
+    incidence_rendering_min_ages = 0, incidence_rendering_max_ages = 36499,
+    age_group_rendering_min_ages = c(0, 365), age_group_rendering_max_ages = c(364, 1824),
+    incidence_relapse_rendering_min_ages = c(0, 1825),
+    incidence_relapse_rendering_max_ages = c(1824, 36499),
+    n_with_hypnozoites_rendering_min_ages = c(0, 1825),
+    n_with_hypnozoites_rendering_max_ages = c(1824, 36499),
+    iaa_rendering_min_ages = c(0, 1825), iaa_rendering_max_ages = c(1824, 36499),
+    iam_rendering_min_ages = 0, iam_rendering_max_ages = 364,
+    ica_rendering_min_ages = 1825, ica_rendering_max_ages = 36499,
+    hypnozoites_rendering_min_ages = c(0, 730), hypnozoites_rendering_max_ages = c(729, 36499)),
+  severe_band = list(
+    severe_incidence_rendering_min_ages = 0, severe_incidence_rendering_max_ages = 36499))
+
+test_that("fleet renders the IBM's vivax columns, and only those", {
+  skip_if_not_installed("malariasimulation")
+  cfgs <- render_configs_pv()
+  cfgs$treated <- cfgs$families
+  cfgs$radical_cure <- cfgs$families
+  for (nm in names(cfgs)) {
+    # large enough that every relapse band sees a relapse on some day: the IBM
+    # renders n_inc_relapse_* only on such days, so a band that never sees one
+    # would have no column
+    # set on the list rather than passed to get_parameters(), which does not
+    # know incidence_relapse_rendering_*: the IBM reads it all the same
+    p <- malariasimulation::get_parameters(list(human_population = 5000), parasite = "vivax")
+    p[names(cfgs[[nm]])] <- cfgs[[nm]]
+    if (nm %in% c("treated", "radical_cure")) {
+      drug <- if (nm == "treated") malariasimulation::CQ_params_vivax else
+        malariasimulation::CQ_PQ_params_vivax
+      p <- malariasimulation::set_drugs(p, list(drug))
+      p <- malariasimulation::set_clinical_treatment(p, drug = 1, timesteps = 1, coverages = 0.4)
+    }
+    p <- eqm(p, 10)
+    ibm <- malariasimulation::run_simulation(5, p)
+    fl <- run_simulation_ode(5, p)
+    expect_equal(fl$timestep, ibm$timestep, label = nm)
+    expect_setequal(setdiff(names(ibm), names(fl)),
+                    c(IBM_ONLY, if (nm %in% c("treated", "radical_cure")) IBM_ONLY_TREATED))
     expect_setequal(setdiff(names(fl), names(ibm)), FLEET_ONLY)
   }
 })
@@ -177,5 +234,60 @@ test_that("the banded counts agree with the IBM's in meaning", {
   expect_lt(abs(rel("n_infections")), 0.05)
   for (st in c("S_count", "A_count", "D_count", "U_count")) expect_lt(abs(rel(st)), 0.05, label = st)
   expect_lt(abs(rel("Tr_count")), 0.10)
+  expect_equal(fl$ft, ibm$ft)
+  ## the acquired immunity means start where the IBM's do, from the same
+  ## equilibrium, and barely move in a month. Not the maternal ones: the IBM
+  ## seeds falciparum from the equilibrium bin one step older than each person
+  ## (initial_immunity() takes which.max(age < lower edges)), so its infants start
+  ## with the maternal immunity of 0.1 years later, ~0.58 of their own. That
+  ## passes once the seeded infants age out; its births take their mothers'.
+  for (v in c("ica", "ib", "iva", "id"))
+    expect_lt(abs(rel(paste0(v, "_mean"))), 0.03, label = v)
+})
+
+test_that("the vivax counts agree with the IBM's in meaning", {
+  skip_if_not_installed("malariasimulation")
+  skip_on_cran()
+  p <- malariasimulation::get_parameters(list(
+    human_population = 5e4,
+    prevalence_rendering_min_ages = c(730, 0), prevalence_rendering_max_ages = c(3650, 36499),
+    clinical_incidence_rendering_min_ages = c(0, 1825),
+    clinical_incidence_rendering_max_ages = c(1824, 36499),
+    incidence_rendering_min_ages = 0, incidence_rendering_max_ages = 36499,
+    n_with_hypnozoites_rendering_min_ages = c(0, 1825),
+    n_with_hypnozoites_rendering_max_ages = c(1824, 36499)), parasite = "vivax")
+  p$incidence_relapse_rendering_min_ages <- c(0, 1825)
+  p$incidence_relapse_rendering_max_ages <- c(1824, 36499)
+  p <- malariasimulation::set_drugs(p, list(malariasimulation::CQ_PQ_params_vivax))
+  p <- malariasimulation::set_clinical_treatment(p, drug = 1, timesteps = 1, coverages = 0.4)
+  p <- eqm(p, 10)
+  set.seed(1)
+  ibm <- malariasimulation::run_simulation(30, p)
+  fl <- run_simulation_ode(30, p)
+  ## 30-day totals, as for falciparum. The IBM renders n_inc_relapse_* only on
+  ## days with a relapse in the band, NA otherwise: a day without one.
+  tot <- function(d, col) sum(d[[col]], na.rm = TRUE)
+  rel <- function(col, ibm_col = col) tot(fl, col) / tot(ibm, ibm_col) - 1
+  for (col in grep("^n_age_", names(ibm), value = TRUE)) expect_lt(abs(rel(col)), 0.03, label = col)
+  for (tag in c("730_3650", "0_36499")) {
+    expect_lt(abs(rel(paste0("n_detect_lm_", tag))), 0.05, label = tag)
+    expect_lt(abs(rel(paste0("n_detect_pcr_", tag))), 0.05, label = tag)
+  }
+  for (tag in c("0_1824", "1825_36499")) {
+    expect_lt(abs(rel(paste0("n_inc_clinical_", tag), paste0("p_inc_clinical_", tag))), 0.10,
+              label = tag)
+    expect_lt(abs(rel(paste0("n_inc_relapse_", tag))), 0.10, label = tag)
+    expect_lt(abs(rel(paste0("n_with_hypnozoites_", tag))), 0.05, label = tag)
+  }
+  for (col in c("n_infections", "n_relapses", "n_with_hypnozoites"))
+    expect_lt(abs(rel(col)), 0.05, label = col)
+  for (st in c("S_count", "A_count", "D_count", "U_count")) expect_lt(abs(rel(st)), 0.05, label = st)
+  expect_lt(abs(rel("Tr_count")), 0.10)
+  ## vivax seeds each person from their own bin (initial_state_vivax() compares
+  ## with the upper edges), so the maternal means agree from the start too, to
+  ## within the few mothers who set them
+  for (v in c("ica", "iaa", "hypnozoites"))
+    expect_lt(abs(rel(paste0(v, "_mean"))), 0.03, label = v)
+  for (v in c("icm", "iam")) expect_lt(abs(rel(paste0(v, "_mean"))), 0.08, label = v)
   expect_equal(fl$ft, ibm$ft)
 })

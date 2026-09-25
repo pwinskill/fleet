@@ -15,27 +15,22 @@
 #' change; anything left out keeps its default.
 #'
 #' @param age_lower age-group lower edges in **years**. The default is
-#'   [default_age_lower()], a 53-group grid log-spaced between pinned reporting
+#'   [default_age_lower()], a 209-group grid log-spaced between pinned reporting
 #'   ages. Must start at 0, increase strictly, and stay in years: a top edge
 #'   above 1000 is rejected as a grid supplied in days. Every group loses its
 #'   ageing and mortality fraction each day out of the same stock as its
 #'   infection and progression, so the narrowest group must be wide enough for
 #'   the two together, a few days: a grid finer than that is an error.
 #'
-#'   The default is **not** converged for severe disease or for clinical
-#'   incidence in young children at high transmission, both of which it puts a
-#'   few per cent low (severe 8% low at EIR 120). That bias is removable:
-#'   `fleet`'s profile converges at first order, so
-#'   `default_age_lower(n_group = 105)` roughly halves it and `n_group = 209`
-#'   halves it again, at a proportionate cost in run time; refined to 417 groups
-#'   `fleet` lands within about 1% of the IBM on clinical and severe incidence at
-#'   EIR 20 to 120. A result that rests on the *level* of severe incidence, or on
-#'   young children at high transmission, is worth re-running on a finer grid to
-#'   see how much of it is the grid. See the `age-profile-clinical` and
-#'   `severe-allage-eir` claims in `fleetcheck` for the measurements.
-#'
-#'   The default is left where it is because every published comparison is
-#'   stated on it; changing it moves every number.
+#'   `fleet`'s age profile converges at first order in the number of groups:
+#'   each doubling halves its distance from the converged profile. The default
+#'   puts clinical and severe incidence within about 1% of `fleet`'s own
+#'   converged answer at EIR 20 to 120, where 53 groups left severe incidence 8%
+#'   low at EIR 120. A coarser grid, `default_age_lower(n_group = 53)`, runs four
+#'   times as fast and is adequate where the level of severe incidence, or of
+#'   young children's incidence at high transmission, is not what a result rests
+#'   on. See the `age-profile-clinical` and `severe-allage-eir` claims in
+#'   `fleetcheck` for the measurements.
 #' @param n_ph,n_phc stage counts for the post-treatment (`Ph`) and
 #'   chemoprevention (`Ph_c`) prophylaxis chains. `NULL` (default) matches the
 #'   chain to the drug's Weibull protection curve. A stage is left with a fixed

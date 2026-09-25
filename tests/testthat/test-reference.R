@@ -21,7 +21,7 @@
 #     "tests/testthat/test-reference.R", package = "fleet", load_package = "installed")'
 #
 # against a fresh R CMD INSTALL (devtools::test() compiles a debug build into
-# src/, see CONTRIBUTING.md), which rewrites both reference CSVs from the current
+# src/, see CONTRIBUTING.md), which rewrites the reference CSVs from the current
 # model and then trivially passes. Do it deliberately, and read the CSV diff: it is the
 # record of exactly what the change did to the model's output. Never regenerate
 # to make a red test go green.
@@ -245,4 +245,80 @@ test_that("no intervention acts before the day it is deployed", {
   ## of infection on mosquitoes moves on row NET_DAY + 1
   nets <- run_simulation_ode(REF_INT_DAYS, eqm(reference_int_scenarios()$nets, 20))
   expect_false(isTRUE(all.equal(nets$FOIM[NET_DAY + 1], base$FOIM[NET_DAY + 1])))
+})
+
+
+## ---- P. vivax reference -----------------------------------------------------
+#
+# The same net for the vivax block, which neither CSV above can see: a vivax
+# list at low and moderate transmission, untreated, and one moving to radical
+# cure mid-run, pinned the same way (final day and whole-run sum, to 1e-6), in a
+# CSV of its own. Same regeneration switch.
+
+REF_PV_DAYS <- 730
+
+reference_pv_scenarios <- function() {
+  pv <- function() {
+    malariasimulation::get_parameters(list(
+      human_population = 10000,
+      clinical_incidence_rendering_min_ages = c(0, 0),
+      clinical_incidence_rendering_max_ages = c(1824, 36499),
+      age_group_rendering_min_ages = 0, age_group_rendering_max_ages = 36499),
+      parasite = "vivax")
+  }
+  rc <- pv()
+  rc <- malariasimulation::set_drugs(rc, list(malariasimulation::CQ_params_vivax,
+                                              malariasimulation::CQ_PQ_params_vivax))
+  rc <- malariasimulation::set_clinical_treatment(rc, drug = 1, timesteps = c(1, 365),
+                                                  coverages = c(0.3, 0))
+  rc <- malariasimulation::set_clinical_treatment(rc, drug = 2, timesteps = c(1, 365),
+                                                  coverages = c(0, 0.5))
+  list(eir1 = eqm(pv(), 1), eir10 = eqm(pv(), 10), radical_cure = eqm(rc, 10))
+}
+
+REF_PV_QUANTITIES <- c(
+  "n_detect_lm_730_3650", "n_detect_pcr_730_3650",
+  "n_inc_clinical_0_1824", "n_inc_clinical_0_36499",
+  "n_infections", "n_relapses", "n_with_hypnozoites", "FOIM", "EIR",
+  "S_count", "D_count", "A_count", "U_count", "Tr_count",
+  "iaa_mean", "ica_mean", "hypnozoites_mean", "n_age_0_36499")
+
+reference_pv_summary <- function() {
+  rows <- list()
+  scen <- reference_pv_scenarios()
+  for (nm in names(scen)) {
+    out <- run_simulation_ode(REF_PV_DAYS, scen[[nm]])
+    expect_true(all(REF_PV_QUANTITIES %in% names(out)))
+    for (q in REF_PV_QUANTITIES) {
+      v <- out[[q]]
+      rows[[length(rows) + 1]] <- data.frame(scenario = nm, quantity = q,
+                                             statistic = "final", value = v[length(v)])
+      rows[[length(rows) + 1]] <- data.frame(scenario = nm, quantity = q,
+                                             statistic = "sum", value = sum(v))
+    }
+  }
+  do.call(rbind, rows)
+}
+
+test_that("vivax output matches the committed reference values", {
+  skip_if_not_installed("malariasimulation")
+
+  got <- reference_pv_summary()
+
+  if (nzchar(Sys.getenv("FLEET_REGENERATE_REFERENCE"))) {
+    write.csv(transform(got, value = vapply(got$value, format, character(1), digits = 17)),
+              test_path("reference-vivax.csv"), row.names = FALSE, quote = FALSE)
+    message("FLEET_REGENERATE_REFERENCE: rewrote reference-vivax.csv")
+  }
+
+  ref <- utils::read.csv(test_path("reference-vivax.csv"))
+  key <- function(d) paste(d$scenario, d$quantity, d$statistic)
+  expect_setequal(key(ref), key(got))
+  ref <- ref[match(key(got), key(ref)), ]
+
+  for (i in seq_len(nrow(got))) {
+    expect_equal(got$value[i], ref$value[i], tolerance = 1e-6,
+                 label = sprintf("%s / %s [%s]", got$scenario[i], got$quantity[i],
+                                 got$statistic[i]))
+  }
 })
