@@ -40,8 +40,10 @@
 # an empty cell gives 0/pop_floor = 0, and in an occupied one it is an exact
 # no-op. Not `if (N > 0) ... else 0`: a branch in a loop that also computes exp or
 # log stops the compiler optimising it, and made a run 10x slower at the same
-# number of steps.
-pop_floor <- 1e-300
+# number of steps. Written, like every constant here that is not a short binary
+# fraction, as a quotient of whole numbers: odin2 prints a fractional literal at
+# 17 digits, which differs between platforms, and a whole number the same on all.
+pop_floor <- 1 / 1e300
 
 ## ---- dimensions -----------------------------------------------------------
 n_age <- parameter(constant = TRUE)
@@ -558,9 +560,9 @@ dim(ICMv, IAMv) <- c(n_age_v, n_het_v)
 mA[, , ] <- max(JAv[i, j, k] / (Npop_v[i, j, k] + pop_floor), 0)
 mC[, , ] <- max(JCv[i, j, k] / (Npop_v[i, j, k] + pop_floor), 0)
 cv2A[, , ] <- spread_on * min(max(KAv[i, j, k] / (Npop_v[i, j, k] + pop_floor) -
-  mA[i, j, k] * mA[i, j, k], 0) / (mA[i, j, k] * mA[i, j, k] + 1e-12), 9)
+  mA[i, j, k] * mA[i, j, k], 0) / (mA[i, j, k] * mA[i, j, k] + 1 / 1e12), 9)
 cv2C[, , ] <- spread_on * min(max(KCv[i, j, k] / (Npop_v[i, j, k] + pop_floor) -
-  mC[i, j, k] * mC[i, j, k], 0) / (mC[i, j, k] * mC[i, j, k] + 1e-12), 9)
+  mC[i, j, k] * mC[i, j, k], 0) / (mC[i, j, k] * mC[i, j, k] + 1 / 1e12), 9)
 whaA[, , ] <- 1 - cv2A[i, j, k] / 9
 whaC[, , ] <- 1 - cv2C[i, j, k] / 9
 whbA[, , ] <- sqrt(cv2A[i, j, k]) / 3

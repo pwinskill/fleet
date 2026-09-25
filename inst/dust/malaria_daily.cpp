@@ -834,7 +834,7 @@ public:
   }
   static shared_state build_shared(cpp11::list parameters) {
     shared_state::dim_type dim;
-    const real_type pop_floor = static_cast<real_type>(0.99999999999999947e-300);
+    const real_type pop_floor = static_cast<real_type>(1) / 1e+300;
     const int n_age = dust2::r::read_int(parameters, "n_age");
     const int n_het = dust2::r::read_int(parameters, "n_het");
     const int n_spp = dust2::r::read_int(parameters, "n_spp");
@@ -2423,14 +2423,14 @@ public:
     for (size_t i = 1; i <= shared.dim.mA.dim[0]; ++i) {
       for (size_t j = 1; j <= shared.dim.mA.dim[1]; ++j) {
         for (size_t k = 1; k <= shared.dim.mA.dim[2]; ++k) {
-          internal.cv2A[i - 1 + (j - 1) * shared.dim.mA.mult[1] + (k - 1) * shared.dim.mA.mult[2]] = shared.spread_on * monty::math::min<real_type>(monty::math::max<real_type>(KAv[i - 1 + (j - 1) * shared.dim.Sv.mult[1] + (k - 1) * shared.dim.Sv.mult[2]] / (internal.Npop_v[i - 1 + (j - 1) * shared.dim.Phv_tot.mult[1] + (k - 1) * shared.dim.Phv_tot.mult[2]] + shared.pop_floor) - internal.mA[i - 1 + (j - 1) * shared.dim.mA.mult[1] + (k - 1) * shared.dim.mA.mult[2]] * internal.mA[i - 1 + (j - 1) * shared.dim.mA.mult[1] + (k - 1) * shared.dim.mA.mult[2]], 0) / (internal.mA[i - 1 + (j - 1) * shared.dim.mA.mult[1] + (k - 1) * shared.dim.mA.mult[2]] * internal.mA[i - 1 + (j - 1) * shared.dim.mA.mult[1] + (k - 1) * shared.dim.mA.mult[2]] + static_cast<real_type>(1e-12)), 9);
+          internal.cv2A[i - 1 + (j - 1) * shared.dim.mA.mult[1] + (k - 1) * shared.dim.mA.mult[2]] = shared.spread_on * monty::math::min<real_type>(monty::math::max<real_type>(KAv[i - 1 + (j - 1) * shared.dim.Sv.mult[1] + (k - 1) * shared.dim.Sv.mult[2]] / (internal.Npop_v[i - 1 + (j - 1) * shared.dim.Phv_tot.mult[1] + (k - 1) * shared.dim.Phv_tot.mult[2]] + shared.pop_floor) - internal.mA[i - 1 + (j - 1) * shared.dim.mA.mult[1] + (k - 1) * shared.dim.mA.mult[2]] * internal.mA[i - 1 + (j - 1) * shared.dim.mA.mult[1] + (k - 1) * shared.dim.mA.mult[2]], 0) / (internal.mA[i - 1 + (j - 1) * shared.dim.mA.mult[1] + (k - 1) * shared.dim.mA.mult[2]] * internal.mA[i - 1 + (j - 1) * shared.dim.mA.mult[1] + (k - 1) * shared.dim.mA.mult[2]] + static_cast<real_type>(1) / 1e+12), 9);
         }
       }
     }
     for (size_t i = 1; i <= shared.dim.mA.dim[0]; ++i) {
       for (size_t j = 1; j <= shared.dim.mA.dim[1]; ++j) {
         for (size_t k = 1; k <= shared.dim.mA.dim[2]; ++k) {
-          internal.cv2C[i - 1 + (j - 1) * shared.dim.mA.mult[1] + (k - 1) * shared.dim.mA.mult[2]] = shared.spread_on * monty::math::min<real_type>(monty::math::max<real_type>(KCv[i - 1 + (j - 1) * shared.dim.Sv.mult[1] + (k - 1) * shared.dim.Sv.mult[2]] / (internal.Npop_v[i - 1 + (j - 1) * shared.dim.Phv_tot.mult[1] + (k - 1) * shared.dim.Phv_tot.mult[2]] + shared.pop_floor) - internal.mC[i - 1 + (j - 1) * shared.dim.mA.mult[1] + (k - 1) * shared.dim.mA.mult[2]] * internal.mC[i - 1 + (j - 1) * shared.dim.mA.mult[1] + (k - 1) * shared.dim.mA.mult[2]], 0) / (internal.mC[i - 1 + (j - 1) * shared.dim.mA.mult[1] + (k - 1) * shared.dim.mA.mult[2]] * internal.mC[i - 1 + (j - 1) * shared.dim.mA.mult[1] + (k - 1) * shared.dim.mA.mult[2]] + static_cast<real_type>(1e-12)), 9);
+          internal.cv2C[i - 1 + (j - 1) * shared.dim.mA.mult[1] + (k - 1) * shared.dim.mA.mult[2]] = shared.spread_on * monty::math::min<real_type>(monty::math::max<real_type>(KCv[i - 1 + (j - 1) * shared.dim.Sv.mult[1] + (k - 1) * shared.dim.Sv.mult[2]] / (internal.Npop_v[i - 1 + (j - 1) * shared.dim.Phv_tot.mult[1] + (k - 1) * shared.dim.Phv_tot.mult[2]] + shared.pop_floor) - internal.mC[i - 1 + (j - 1) * shared.dim.mA.mult[1] + (k - 1) * shared.dim.mA.mult[2]] * internal.mC[i - 1 + (j - 1) * shared.dim.mA.mult[1] + (k - 1) * shared.dim.mA.mult[2]], 0) / (internal.mC[i - 1 + (j - 1) * shared.dim.mA.mult[1] + (k - 1) * shared.dim.mA.mult[2]] * internal.mC[i - 1 + (j - 1) * shared.dim.mA.mult[1] + (k - 1) * shared.dim.mA.mult[2]] + static_cast<real_type>(1) / 1e+12), 9);
         }
       }
     }
