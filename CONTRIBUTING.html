@@ -57,7 +57,7 @@
 <code class="sourceCode R"><span><span class="fu">odin2</span><span class="fu">::</span><span class="fu"><a href="https://mrc-ide.github.io/odin2/reference/odin_package.html" class="external-link">odin_package</a></span><span class="op">(</span><span class="st">"."</span><span class="op">)</span></span></code></pre></div>
 <p>then commit the regenerated files alongside your change:</p>
 <pre><code>src/malaria_daily.cpp   src/cpp11.cpp   R/dust.R   R/cpp11.R   inst/dust/malaria_daily.cpp</code></pre>
-<p>CI enforces this: the <code>generated-code</code> job in <code>.github/workflows/R-CMD-check.yaml</code> regenerates and fails on any diff.</p>
+<p>CI enforces this: the <code>generated-code</code> job in <code>.github/workflows/R-CMD-check.yaml</code> regenerates and fails on any diff. It regenerates on Linux, and odin2 prints a fractional literal at 17 digits, which differs between platforms unless the number is a short binary fraction: 0.5 is safe, 1e-12 is not. Write any other constant as a quotient of whole numbers, <code>1 / 1e12</code>, which prints the same everywhere; <code>test-odin-literals.R</code> checks this locally.</p>
 <p><strong><code>devtools::load_all()</code> and <code>devtools::test()</code> compile the model with debug flags</strong> (<code>-O0</code>), which runs it about ten times slower, and they leave those object files in <code>src/</code>. <code>R CMD INSTALL</code> on the source directory then reuses them, so an install made after a <code>load_all()</code> is silently the slow build. Install with <code>R CMD INSTALL --preclean .</code> (or delete <code>src/*.o</code> first) before timing anything.</p>
 </div>
 <div class="section level2">

@@ -36,6 +36,11 @@ then commit the regenerated files alongside your change:
 
 CI enforces this: the `generated-code` job in
 `.github/workflows/R-CMD-check.yaml` regenerates and fails on any diff.
+It regenerates on Linux, and odin2 prints a fractional literal at 17
+digits, which differs between platforms unless the number is a short
+binary fraction: 0.5 is safe, 1e-12 is not. Write any other constant as
+a quotient of whole numbers, `1 / 1e12`, which prints the same
+everywhere; `test-odin-literals.R` checks this locally.
 
 **`devtools::load_all()` and `devtools::test()` compile the model with
 debug flags** (`-O0`), which runs it about ten times slower, and they
