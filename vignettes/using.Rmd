@@ -21,10 +21,10 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
 > `malariasimulation`, can be examined and argued with, not so that anyone can
 > rely on its numbers: the API is unstable and nothing here has been peer
 > reviewed. The known discrepancies against the IBM are open rather than
-> resolved: an excess on clinical and severe incidence across the 63-country
-> site files that is not yet explained, and, on the default age grid, clinical
-> and severe incidence a few per cent low at high transmission, the grid's own
-> discretisation error. The full statement
+> resolved: an excess on falciparum clinical and severe incidence across the
+> 63-country site files that is not yet explained; a larger excess on *P. vivax*
+> sites, not yet explained either; and, at school age, vivax LM prevalence and
+> clinical incidence a few per cent high. The full statement
 > is on the [package front page](https://pwinskill.github.io/fleet/); if you need
 > results you can defend today, use
 > [malariasimulation](https://github.com/mrc-ide/malariasimulation).
@@ -57,9 +57,13 @@ iteration.
 **Burn in before calibrating.** The seed is a close approximation, not the exact
 fixed point (§F): prevalence relaxes by under half a per cent, but incidence by
 a few per cent over the first years, more at high transmission (+6% for under-5
-clinical incidence at EIR 120). A treated run whose treatment starts at timestep
-1 starts untreated, as the IBM's does, and settles onto its treated state over
-the first months. A seasonal run needs ~10 years to settle onto its limit cycle,
+clinical incidence at EIR 120). A vivax run moves much further, as the IBM's
+does, because both build up a within-cell spread of immunity the seed does not
+have: its clinical incidence settles about 20% above the seed and its realised
+EIR 4 to 17% above `init_EIR` (more at lower EIR), within about eight years at
+EIR 3 but over two decades at EIR 0.3, so `init_EIR` is not the EIR a vivax run
+realises. A treated run whose treatment starts at timestep 1 starts untreated,
+as the IBM's does, and settles onto its treated state over the first months. A seasonal run needs ~10 years to settle onto its limit cycle,
 and its annual-mean EIR sits about 7% below the aseasonal `init_EIR` target
 through nonlinear averaging. Discard the transient.
 
@@ -108,12 +112,15 @@ the drug-protected part of `S_count`, so it is not added again.
 
 ## Things to leave alone
 
-**`acquired_immunity_offset`.** Leave it at 0. Setting 0.5 reproduces the IBM's
-literal per-individual offset but is a *worse* match to the IBM ensemble mean
-(§B.3).
+**`acquired_immunity_offset`.** Leave it unset. It defaults to 0 for
+falciparum, whose curves are read at a stratum mean, where the IBM's
+per-individual 0.5 is a *worse* match to the IBM ensemble mean (§B.3); to 0.5
+for vivax, whose curves are read at quadrature nodes that stand for people
+(§V.3); and to 0 for vivax with `immunity_spread = FALSE`, back at the cell mean.
 
-**`bite_dedup`.** Leave it at 1 for any scientific run. Setting 0 lets every
-bite infect independently, which the IBM does not do (§B.2).
+**`bite_dedup`.** Leave it at 1 for any scientific falciparum run. Setting 0
+lets every bite infect independently, which the IBM does not do for falciparum
+(§B.2). Vivax counts every bite, as the IBM does, and ignores it.
 
 **Mosquito sub-steps (`n_sub`).** The default of 32 integrates each day about
 as accurately as the IBM's own mosquito solver does, and the lags the model
@@ -128,38 +135,59 @@ default demography, as the IBM's own value under a custom one).
 
 ## Results to treat with caution
 
-### Severe incidence
+### Severe incidence, and the age grid
 
-On the default age grid `fleet` runs below the IBM here at moderate and high
-transmission, and DALYs derived from it inherit that; clinical incidence in young
-children runs low too, by less. The size of the gap is not quoted in this
-article on purpose: it moves whenever the model does, and a number written here
-would go stale silently. The measurements that are kept current are the
-`severe-allage-eir` and `age-profile-clinical` claims in
-[fleetcheck](https://pwinskill.github.io/fleetcheck/).
-
-Most of it is the age grid. $\theta$ sits out on the convex tail of its Hill
-function from early childhood (§B.3 has the numbers), and a group's severe
-incidence is evaluated at its mean immunity, so wherever immunity changes across
-a group, as it does fastest in the young groups where severe disease
-concentrates, the group returns too small a number. The error is first order in
-the group width: refined to 417 age groups `fleet` lands within about 1% of the
-IBM on severe and clinical incidence at EIR 20 to 120. The same convexity inside
-an (age, $\zeta$) stratum, where the IBM holds a spread of infection histories
-and the mean field one value, is a much smaller effect.
-
-So a result that rests on the level of severe incidence, or of clinical
-incidence in under-5s at high transmission, is worth re-running on a finer grid,
-at a proportionate cost in run time:
+Severe incidence is where the age grid shows most. $\theta$ sits out on the
+convex tail of its Hill function from early childhood (§B.3 has the numbers),
+and a group's severe incidence is evaluated at its mean immunity, so wherever
+immunity changes across a group, as it does fastest in the young groups where
+severe disease concentrates, the group returns too small a number. The error is
+first order in the group width. On the default 209 groups it is about 1% at EIR
+20 to 120; on 53 groups, a quarter of the cost, severe incidence runs 8% low at
+EIR 120 and clinical incidence in young children a few per cent low. So a
+result that rests on the level of severe incidence, or of clinical incidence in
+under-5s at high transmission, wants the default grid or a finer one, and a
+coarser grid is for everything else:
 
 ```r
-run_simulation_ode(t, p, tuning = list(age_lower = default_age_lower(n_group = 209)))
+run_simulation_ode(t, p, tuning = list(age_lower = default_age_lower(n_group = 53)))
 ```
+
+The same convexity inside an (age, $\zeta$) stratum, where the IBM holds a
+spread of infection histories and the mean field one value, is a much smaller
+effect for falciparum. The measurements, kept current as the model changes, are
+the `severe-allage-eir` and `age-profile-clinical` claims in
+[fleetcheck](https://pwinskill.github.io/fleetcheck/).
 
 $\theta$ is also a **post-hoc multiplier** — severe counts are $\theta$ times an
 infection count the state equations have already determined (§G) — so nothing
 downstream absorbs an error in it, where $\phi$ splits the infection inflow and
 feeds back through infectivity, treatment and immunity.
+
+### *P. vivax* where biteless days are common
+
+`malariasimulation` 3.0.0 evaluates vivax relapses only on days when at least
+one person is bitten, so wherever days without a bite are common the IBM loses
+relapses that `fleet` keeps, and runs below it, sometimes to elimination. That
+is a defect in the IBM, which `fleet` does not copy; comparing the two there
+compares `fleet` with the defect. The chance of a biteless day in the IBM is
+about $e^{-\text{EIR}_{\text{day}}\, \bar\psi\, N}$ for a daily EIR per adult,
+mean relative biting rate $\bar\psi$ and population $N$: in a 10,000-person
+run it passes 5% only below an EIR of about 0.14, and in 50,000 below about
+0.03. So it matters in small populations, at the lowest transmission, and where
+vector control drives the day's bites down. It does not explain `fleet`'s excess
+over the IBM on the vivax site files, whose 50,000-person runs almost never go a
+day without a bite; that excess is not yet explained.
+
+### *P. vivax* at school age
+
+The vivax immunity curves are steep, and the IBM's immunity-dependent
+transitions sort people within an age, heterogeneity and batch cell: those with
+more anti-parasite immunity clear sub-patent infections sooner, so the
+uninfected hold more of the immune, and the clinical draw takes the least immune.
+A mean field with one immunity distribution per cell does not carry that
+sorting (§V.7), and at EIR 10 its LM prevalence and clinical incidence in
+school-age children run 1–3% above the IBM's.
 
 ### Vector-control eras
 
@@ -253,4 +281,10 @@ Every 🟡 in `vignette("parameters")`, and when it matters. The first column li
 | Repeated campaigns: no `min_wait`, each round reaching people independently | [`set_mass_pev()`](parameters.html#set_mass_pev), [`set_tbv()`](parameters.html#set_tbv) | Repeated mass PEV or TBV rounds |
 | The absorbing top age group taken whole, or not at all, by a rendering band | [`set_epi_outputs()`](parameters.html#set_epi_outputs), §G | A band ending inside the top group (above 80 years on the default grid), which is given all of it |
 | Refractory boosting of $I_{CA}$, $I_D$, $I_{VA}$ as a quasi-steady closure | §B.5 | Exposure changing sharply within a week |
-| One immunity value per age group | [`default_age_lower()`](../reference/default_age_lower.html), §B.3 | Severe incidence, and clinical incidence in young children at high transmission, on the default grid (refine it) |
+| One immunity value per age group | [`default_age_lower()`](../reference/default_age_lower.html), §B.3 | Severe incidence, and clinical incidence in young children at high transmission, on a grid coarser than the default |
+| Vivax: one immunity distribution per age, heterogeneity and batch cell, shared by every disease state | §V.7 | School-age LM prevalence and clinical incidence, 1–3% high at EIR 10 |
+| Vivax: IAA's 44-day refractory window as four 11-day stages | §V.3 | Infants' IAA, 2.7% of itself; nothing else by more than 0.7% |
+| Vivax: prophylaxis chains protecting fully while they last, Tr included | [`set_drugs()`](parameters.html#set_drugs), §V.4–V.5 | The shape of liver-stage protection after radical cure; under a switch from primaquine to tafenoquine, tafenoquine's protection keeps its mean and widens its spread |
+| Vivax: the day's bites averaged before the competing draw | §V.2, §V.7 | D's infection probability 0.1–0.5% low, and the bite share of infections 0.2–1% low |
+| Vivax: refractory people infected at their cell's average rate, Tr included | §V.3, §V.7 | IAA boosts in young children under treatment, up to an estimated 1.6% too few |
+| Vivax: IAA's within-cell spread from a renewal closure | §V.3, §V.7 | Clinical incidence and LM prevalence where daily infection probabilities pass about 0.05, at high EIR |

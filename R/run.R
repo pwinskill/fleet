@@ -67,12 +67,13 @@ get_generator <- function(odin_file = NULL) {
 #'   calibration loop varies any of them, re-call `set_equilibrium()` each
 #'   iteration.
 #'
-#'   Three further optional fields tune how faithfully the mean field mirrors the
-#'   IBM. The first two are per-individual arithmetic, the third is a seeding
-#'   convention; all three default to the validated choice, so you normally leave
-#'   them alone:
+#'   Four further optional fields tune how faithfully the mean field mirrors the
+#'   IBM: two per-individual details of its arithmetic, the vivax immunity
+#'   closure, and a seeding convention. All four default to the validated choice,
+#'   so you normally leave them alone:
 #'   \itemize{
-#'     \item `bite_dedup` (default `1`): reproduce the IBM's per-timestep bite
+#'     \item `bite_dedup` (default `1`; P. falciparum only, since vivax counts
+#'       every bite, as the IBM does): reproduce the IBM's per-timestep bite
 #'       deduplication. malariasimulation collects the day's bitten individuals in a
 #'       bitset, so a person bitten repeatedly in one timestep is infected at most
 #'       once: the daily infection probability is `(1 - exp(-EPS)) * b`, which
@@ -88,7 +89,8 @@ get_generator <- function(odin_file = NULL) {
 #'       falciparum model reads its curves at a stratum mean, where it does not
 #'       carry over and an A/B against the IBM ensemble mean favours `0`; the vivax
 #'       model reads them at quadrature nodes that stand for individuals (see
-#'       `immunity_spread`), where it does, so it takes the IBM's `0.5`.
+#'       `immunity_spread`), where it does, so it takes the IBM's `0.5` -- and `0`
+#'       with `immunity_spread = FALSE`, back at the cell mean.
 #'     \item `immunity_spread` (default `TRUE`; P. vivax only): model the spread
 #'       of immunity among people who share an age, heterogeneity group and
 #'       hypnozoite batch count. In the IBM they differ by their batch *history*,
@@ -217,9 +219,9 @@ get_generator <- function(odin_file = NULL) {
 #' out <- run_simulation_ode(timesteps = 3650, parameters = p)
 #' head(out[, c("timestep", "n_age_730_3650", "n_detect_lm_730_3650", "EIR")])
 #'
-#' # the same run on an age grid twice as fine
-#' fine <- run_simulation_ode(3650, p,
-#'   tuning = list(age_lower = default_age_lower(n_group = 105)))
+#' # the same run on a coarser age grid: a quarter of the groups, four times as fast
+#' coarse <- run_simulation_ode(3650, p,
+#'   tuning = list(age_lower = default_age_lower(n_group = 53)))
 #' }
 #' @export
 run_simulation_ode <- function(timesteps, parameters = NULL, correlations = NULL,

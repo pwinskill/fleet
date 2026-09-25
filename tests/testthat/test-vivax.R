@@ -251,11 +251,54 @@ test_that("under a custom demography vivax sizes mosquitoes as set_equilibrium()
   expect_equal(build_inputs(pv_list(eir = 3), 3)$meta$eir_seed, 3)
 })
 
+test_that("with heterogeneity off, vivax is seeded and sized as the IBM seeds and sizes it", {
+  skip_if_not_installed("malariasimulation")
+  # create_variables() draws everyone from the heterogeneous equilibrium's first
+  # group, renormalised within each age, and set_equilibrium() sizes the
+  # mosquitoes from the whole of it: so the mosquitoes are those of the
+  # heterogeneous run, and the humans are its first group's.
+  mk <- function(het) eqm(malariasimulation::get_parameters(
+    list(human_population = 1000, enable_heterogeneity = het), parasite = "vivax"), 5)
+  on <- build_inputs(mk(TRUE), 5, timesteps = 10)
+  off <- build_inputs(mk(FALSE), 5, timesteps = 10)
+  expect_equal(dim(off$pars$Sv0)[2], 1L)
+  expect_equal(off$meta$total_M, on$meta$total_M, tolerance = 1e-12)
+  g1 <- function(x, nm) matrix(x[[nm]][, 1, ], nrow = dim(x[[nm]])[1])
+  st <- c("Sv0", "Dv0", "Av0", "Uv0", "Trv0")
+  tot1 <- function(x) Reduce(`+`, lapply(st, function(nm) rowSums(g1(x, nm))))
+  for (nm in st)
+    expect_equal(g1(off$pars, nm) / tot1(off$pars), g1(on$pars, nm) / tot1(on$pars),
+                 tolerance = 1e-12, label = nm)
+  o <- run_simulation_ode(365, mk(FALSE))
+  expect_false(anyNA(o))
+  expect_equal(o$n_age_0_36499[365], o$n_age_0_36499[1], tolerance = 1e-9)
+})
+
+test_that("a treated vivax run's mosquitoes are sized as set_equilibrium() sizes the IBM's", {
+  skip_if_not_installed("malariasimulation")
+  # malariaEquilibriumVivax at raw coverage, as set_equilibrium() calls it:
+  # within 1.5% of the IBM's total_M on fleet's grid (5% low at coverage x
+  # efficacy)
+  for (cov in c(0.4, 0.8)) for (eir in c(1, 5)) {
+    p <- malariasimulation::set_drugs(malariasimulation::get_parameters(parasite = "vivax"),
+                                      list(malariasimulation::CQ_params_vivax))
+    p <- malariasimulation::set_clinical_treatment(p, drug = 1, timesteps = 1, coverages = cov)
+    p <- eqm(p, eir)
+    expect_equal(build_inputs(p, eir, timesteps = 10)$meta$total_M, p$total_M,
+                 tolerance = 0.015, label = sprintf("CQ at %.1f, EIR %g", cov, eir))
+  }
+})
+
 test_that("vivax refuses the chemoprevention malariasimulation cannot run", {
   skip_if_not_installed("malariasimulation")
-  p <- malariasimulation::get_parameters(parasite = "vivax")
-  p$smc <- TRUE
-  expect_error(build_inputs(p, init_EIR = 20), "cannot be combined with SMC")
+  for (chemo in c("mda", "smc", "pmc")) {
+    p <- malariasimulation::get_parameters(parasite = "vivax")
+    p[[chemo]] <- TRUE
+    expect_error(build_inputs(p, init_EIR = 20), paste("cannot be combined with", toupper(chemo)))
+  }
   p <- malariasimulation::get_parameters(); p$parasite <- "ovale"
   expect_error(build_inputs(p, init_EIR = 20), "'falciparum' or 'vivax'")
+  # a falciparum list relabelled vivax is refused as such, before anything uses it
+  p <- malariasimulation::get_parameters(); p$parasite <- "vivax"
+  expect_error(build_inputs(p, init_EIR = 5), "vivax parameter")
 })

@@ -8,7 +8,7 @@
 #' band weight is 0 or 1, so an age profile is a sum of whole groups rather than
 #' a re-apportionment of partial ones. 21 is there for maternal immunity: the IBM
 #' draws a newborn's from a mother aged [20, 21) years (trunc(age / 365) == 20),
-#' and a group spanning exactly that band gives the mean field the same mothers.
+#' and edges at 20 and 21 give the mean field whole groups making up that year.
 #' @noRd
 AGE_ANCHORS <- c(0, 1, 2, 3, 5, 7, 10, 15, 20, 21, 30, 40, 60)
 
@@ -17,8 +17,8 @@ AGE_ANCHORS <- c(0, 1, 2, 3, 5, 7, 10, 15, 20, 21, 30, 40, 60)
 #' Lower edges (in years) of the age groups: fine in infancy, where immunity and
 #' maternal dynamics move fast, and coarse in adulthood. Group edges are pinned
 #' at the conventional reporting boundaries -- 0, 1, 2, 3, 5, 7, 10, 15, 20, 30,
-#' 40, 60 years -- and at 21, so that one group holds exactly the mothers the IBM
-#' draws maternal immunity from, [20, 21). The groups between two anchors are of
+#' 40, 60 years -- and at 21, so that whole groups make up exactly the year the
+#' IBM draws maternal immunity from, [20, 21). The groups between two anchors are of
 #' equal width, with
 #' the budget of groups spread across the anchors in proportion to the width in
 #' `log(1 + age)`. Each interval gets at least one group; the remainder is
@@ -302,6 +302,18 @@ VIVAX_WINDOW_STAGES <- 4L
 # (timestep - last_boosted) >= u, so the realised wait is ceil(u) days and
 # u_eff = ceil(u) - 1.
 vivax_scalars <- function(p) {
+  # checked under malariasimulation's own names, before anything is computed
+  # from them
+  src <- c("gammal", "f", "b", "philm_min", "philm_max", "alm50", "klm", "dpcr_min",
+           "dpcr_max", "apcr50", "kpcr", "ca", "ra", "ua")
+  bad <- src[!vapply(src, function(nm) {
+    x <- p[[nm]]
+    length(x) == 1 && is.numeric(x) && is.finite(x)
+  }, logical(1))]
+  if (length(bad))
+    stop("vivax parameter(s) missing or non-finite: ", paste(bad, collapse = ", "),
+         ". Build the list with malariasimulation::get_parameters(parasite = ",
+         "\"vivax\").", call. = FALSE)
   v <- list(gammal = p$gammal, ff = p$f, bv = p$b,
             philm_min = p$philm_min, philm_max = p$philm_max,
             alm50 = p$alm50, klm = p$klm,
@@ -309,12 +321,6 @@ vivax_scalars <- function(p) {
             apcr50 = p$apcr50, kpcr = p$kpcr,
             cA_v = p$ca, d_iaa = p$ra, ua_eff = max(0, ceiling(p$ua) - 1))
   stopifnot(setequal(names(v), VIVAX_SCALARS))
-  bad <- names(v)[!vapply(v, function(x) length(x) == 1 && is.numeric(x) && is.finite(x),
-                          logical(1))]
-  if (length(bad))
-    stop("vivax parameter(s) missing or non-finite: ", paste(bad, collapse = ", "),
-         ". Build the list with malariasimulation::get_parameters(parasite = ",
-         "\"vivax\").", call. = FALSE)
   v
 }
 
@@ -430,6 +436,18 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
            "itself fails on this combination (update_mass_drug_admin() reads the ",
            "falciparum-only `id` variable), so there is no IBM result to reproduce.",
            call. = FALSE)
+    # The vivax fields, checked before the seed and the guards below use them,
+    # so a list that is not a vivax list fails here, saying so.
+    invisible(vivax_scalars(p))
+    for (nm in c("kmax", "ua")) {
+      x <- p[[nm]]
+      if (length(x) != 1 || !is.numeric(x) || !is.finite(x) ||
+          (nm == "kmax" && (x < 1 || x != round(x))) || x < 0)
+        stop("parameters$", nm, " must be a single ",
+             if (nm == "kmax") "whole number >= 1" else "finite number >= 0",
+             ". Build the list with malariasimulation::get_parameters(parasite = \"vivax\").",
+             call. = FALSE)
+    }
   }
   # A single finite positive NUMBER. `is.na() || <= 0` alone let two values through
   # to die far downstream in messages that never mention init_EIR: Inf (reaches
@@ -546,9 +564,13 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
          "(the falciparum default) is the better match where the Hill curves are read ",
          "at a cell mean, 0.5 (the vivax default) is the IBM's literal per-person +0.5.",
          call. = FALSE)
-  # effective treated fraction = coverage * efficacy, for each of the two clocks
-  ft_seed <- ft * dser$seed$drug_eff
-  ft0_seed <- ft0 * dser$seed$drug_eff
+  # The seed takes raw coverage, as set_equilibrium() and create_variables()
+  # hand it to malariaEquilibrium and malariaEquilibriumVivax, which send that
+  # share of clinical cases to treatment. Efficacy acts in the run, so a treated
+  # seed relaxes onto the model's own treated state, as the IBM's does, among
+  # mosquitoes sized as the IBM sizes them.
+  ft_seed <- ft
+  ft0_seed <- ft0
 
   ## heterogeneity nodes
   n_het <- p$n_heterogeneity_groups
@@ -689,8 +711,8 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
   # chains, below, exit at n x rate. Both are checked against the narrowest group.
   res <- resistance_series(p, eqp)
   room <- 1 - max(leave)
-  too_narrow <- function(disease_exit, what = "infection and progression") {
-    g <- which.max(leave)
+  too_narrow <- function(disease_exit, what = "infection and progression",
+                         g = which.max(leave)) {
     stop("age group ", g, " ([", signif(age_days[g], 6), ", ", signif(age_days[g] + width[g], 6),
          ") days) is too narrow for the daily clock: it would lose ", signif(leave[g], 3),
          " of its people a day to ageing and death on top of up to ", signif(disease_exit, 3),
@@ -752,14 +774,18 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
   prop <- prop / sum(prop)
   mean_psi <- sum(prop * psi)
   resc <- prop / prop_ce           # rescale the constant-eta seed to this age structure
-  # Maternal immunity is inherited from mothers aged [20, 21) years:
-  # malariasimulation selects them with trunc(age / 365) == 20
-  # (mortality_processes.R:42). Pick the model group CONTAINING age 20, not the
-  # nearest midpoint: on the default grid 20 y is a band EDGE, so the midpoints
-  # 17.5 y and 22.5 y are exactly equidistant and which.min() silently took the
-  # FIRST, sourcing ICM/IVM from 15-20 year-olds and running them ~9-15% low.
-  age20 <- max(1L, findInterval(20 * 365, age_days))
-  mask20 <- numeric(n_age); mask20[age20] <- 1
+  # Maternal immunity is inherited from a mother aged [20, 21) years:
+  # sample_maternal_immunity() draws each newborn's mother uniformly among those
+  # with trunc(age / 365) == 20 in its heterogeneity group (mortality_processes.R),
+  # so a newborn inherits, in expectation, their population-weighted mean
+  # immunity. mask20 is each age group's share of that year -- the fraction of
+  # its width inside it, as band aggregation weighs a group -- and the model
+  # weights by the live population. The default grid pins edges at 20 and 21, so
+  # there it is 1 for the groups making up [20, 21) and 0 elsewhere; the open top
+  # group counts whole if the year reaches into it, as a rendering band's does.
+  lo20 <- age_days; hi20 <- c(age_days[-1], Inf)
+  ov20 <- pmax(0, pmin(hi20, 21 * 365) - pmax(lo20, 20 * 365))
+  mask20 <- ifelse(is.finite(hi20), ov20 / (hi20 - lo20), as.numeric(ov20 > 0))
 
   dm <- eqp[["dm"]]; dvm <- eqp[["dvm"]]
   icm_factor <- numeric(n_age); ivm_factor <- numeric(n_age)
@@ -843,20 +869,43 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
   ##     and heterogeneity group over (batch, state) is correct conditional on
   ##     them, so it is re-weighted onto fleet's stationary structure `prop` and
   ##     the quadrature weights, as resc does for falciparum.
+  ## With heterogeneity off, the IBM still solves the heterogeneous equilibrium:
+  ## set_equilibrium() sizes the mosquitoes from the whole of it, and
+  ## create_variables() draws everyone's state and batch count from its first
+  ## group (groups <- rep(1, size)), the least bitten. Both are replicated: the
+  ## humans come from group 1, renormalised within each age, and the mosquitoes
+  ## from the heterogeneous seed.
   seed_human_vivax <- function(EIR, ft_s) {
     e <- malariaEquilibriumVivax::vivax_equilibrium(
       EIR = EIR, ft = ft_s, p = translate_vivax_parameters(p), age = c(age_lower, VIVAX_TOP_AGE))
     st <- e$states
+    n_het_eq <- dim(st$S)[2]
+    if (n_het_eq == n_het) {
+      zeta_eq <- zeta; wt_eq <- het_wt
+    } else {
+      gq_eq <- malariaEquilibrium::gq_normal(n_het_eq)
+      zeta_eq <- exp(gq_eq$nodes * sqrt(eqp[["s2"]]) - eqp[["s2"]] / 2)
+      wt_eq <- gq_eq$weights
+    }
     tot <- apply(st$S + st$D + st$A + st$U + st$T, c(1, 2), sum)
-    rw <- function(x) sweep(x, c(1, 2), outer(prop, het_wt) / tot, `*`)
-    Sv0 <- rw(st$S); Uv0 <- rw(st$U); Av0 <- rw(st$A); Dv0 <- rw(st$D); Trv0 <- rw(st$T)
+    rw_eq <- function(x) sweep(x, c(1, 2), outer(prop, wt_eq) / tot, `*`)
     ## infectivity reaching mosquitoes and the mosquito sizing exactly as
     ## seed_human(), summed over the batch dimension; A carries the constant ca
-    inf0 <- apply(eqp[["cD"]] * Dv0 + p$ca * Av0 + eqp[["cU"]] * Uv0 + eqp[["cT"]] * Trv0,
-                  c(1, 2), sum)
-    Xf0 <- sum(outer(psi, zeta) * inf0) / (mean_psi * sum(het_wt * zeta))
-    foim0 <- a_spp * Xf0
+    xf <- function(D, A, U, Tr, z, w) {
+      inf0 <- apply(eqp[["cD"]] * D + p$ca * A + eqp[["cU"]] * U + eqp[["cT"]] * Tr, c(1, 2), sum)
+      sum(outer(psi, z) * inf0) / (mean_psi * sum(w * z))
+    }
+    foim0 <- a_spp * xf(rw_eq(st$D), rw_eq(st$A), rw_eq(st$U), rw_eq(st$T), zeta_eq, wt_eq)
     denom <- sum(a_spp * species_prop * foim0 * g_s / (foim0 + mum_v))
+    if (n_het_eq != n_het) {
+      grp1 <- function(x) x[, 1, , drop = FALSE]
+      st <- lapply(st, function(x) if (length(dim(x)) == 3L) grp1(x) else x)
+      tot <- tot[, 1, drop = FALSE]
+    }
+    rw <- function(x) sweep(x, c(1, 2), outer(prop, het_wt) / tot, `*`)
+    Sv0 <- rw(st$S); Uv0 <- rw(st$U); Av0 <- rw(st$A); Dv0 <- rw(st$D); Trv0 <- rw(st$T)
+    ## the humans' own infectivity, where the human-infectivity line starts
+    Xf0 <- xf(Dv0, Av0, Uv0, Trv0, zeta, het_wt)
     ## immunity as stocks (the model holds J = N * I): the equilibrium's mean per
     ## cell times its population. Everyone in a cell starts at its mean, as
     ## initial_immunity() starts the IBM, so the within-cell spread builds up from
@@ -933,23 +982,26 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
   total_M <- if (sub_threshold) total_M_ibm else hm$total_M
 
   ## The vivax counterpart of the too-narrow guard above. Each day a vivax cell
-  ## loses its ageing and death fraction, its batch clearance and the day's
-  ## competing event -- infection or progression, or a prophylaxis stage's exit
-  ## -- out of the same stock (the liver-stage clock acts on what is left).
+  ## loses its ageing and death fraction and the day's competing event --
+  ## infection or progression, or a prophylaxis stage's exit -- out of the same
+  ## stock; the batch clearance and the liver-stage clock act on what is left.
   ## Unlike falciparum's, whose deduplicated bites cap infection at b0, a vivax
   ## person's infection probability rises towards 1 with the EIR, so the bound
-  ## is checked at the seed's EIR in the most exposed stratum. A seasonal peak
-  ## can go above it.
+  ## is checked at the seed's EIR, for each age group at its own exposure in its
+  ## most exposed stratum: the narrowest groups are the youngest, whom mosquitoes
+  ## bite least. A seasonal peak can go above it.
   if (is_vivax) {
     # the seed's EPS (mpsi / mzp = 1 / sum(w zeta) on the stationary population)
-    eps_max <- eir_seed / 365 * max(zeta) * max(psi) / sum(het_wt * zeta)
-    i_max <- 1 - exp(-(p$b * eps_max + p$kmax * p$f))
-    ev_max <- max(1 - (1 - i_max) * (1 - max(eqp[["rA"]], eqp[["rD"]], 1 - exp(-1 / p$dpcr_min))),
-                  eqp[["rT"]], max(res$rT_slow), n_phv * max(dser$rP))
-    v_exit <- ev_max + (1 - exp(-p$kmax * p$gammal))
-    if (v_exit > room)
-      too_narrow(v_exit, paste0("infection, progression and hypnozoite clearance at EIR ",
-                                signif(eir_seed, 3)))
+    eps_g <- eir_seed / 365 * max(zeta) * psi / sum(het_wt * zeta)
+    i_g <- 1 - exp(-(p$b * eps_g + p$kmax * p$f))
+    ev_g <- pmax(1 - (1 - i_g) * (1 - max(eqp[["rA"]], eqp[["rD"]], 1 - exp(-1 / p$dpcr_min))),
+                 eqp[["rT"]], max(res$rT_slow), n_phv * max(dser$rP))
+    over <- leave + ev_g - 1
+    if (max(over) > 0) {
+      g <- which.max(over)
+      too_narrow(ev_g[g], paste0("infection and progression at EIR ", signif(eir_seed, 3)),
+                 g = g)
+    }
   }
 
   ## There is deliberately no het-integrated malariaEquilibrium solve here: the

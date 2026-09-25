@@ -71,15 +71,16 @@ refreshing **both**, and reading both diffs.
 
 | baseline | what it pins | regenerate with |
 |---|---|---|
-| `tests/testthat/reference-values.csv`<br>`tests/testthat/reference-interventions.csv` | absolute output levels, to 1e-6 | `FLEET_REGENERATE_REFERENCE=1 Rscript -e 'testthat::test_file("tests/testthat/test-reference.R", package = "fleet", load_package = "installed")'`, against a fresh `R CMD INSTALL` |
+| `tests/testthat/reference-values.csv`<br>`tests/testthat/reference-interventions.csv`<br>`tests/testthat/reference-vivax.csv`<br>`tests/testthat/reference-vivax-interventions.csv` | absolute output levels, to 1e-6 | `FLEET_REGENERATE_REFERENCE=1 Rscript -e 'testthat::test_file("tests/testthat/test-reference.R", package = "fleet", load_package = "installed")'`, against a fresh `R CMD INSTALL` |
 
 Agreement with the IBM is a separate repository,
 [fleetcheck](https://github.com/pwinskill/fleetcheck). A change that moves model
 output moves its numbers too, so refresh it in the same change: clone it beside
 this one and run `CMP_FLEET_ONLY=1 Rscript validations/02-scenarios/run.R`,
-then `validations/02-scenarios/render.R`. The IBM rows do not need re-running —
-nothing in `fleet` can affect them — which is why that takes under a minute rather
-than the hours a full sweep costs.
+then `validations/02-scenarios/render.R`; for a change that reaches the vivax
+block, the same again with `CMP_PARASITE=pv`, then `render_pv.R`. The IBM rows
+do not need re-running — nothing in `fleet` can affect them — which is why that
+takes minutes rather than the hours a full sweep costs.
 
 **Never regenerate a baseline to make a red test green.** The diff *is* the record of
 what your change did to the model. Read it, and put it in the pull request.

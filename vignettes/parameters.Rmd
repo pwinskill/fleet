@@ -21,10 +21,10 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
 > `malariasimulation`, can be examined and argued with, not so that anyone can
 > rely on its numbers: the API is unstable and nothing here has been peer
 > reviewed. The known discrepancies against the IBM are open rather than
-> resolved: an excess on clinical and severe incidence across the 63-country
-> site files that is not yet explained, and, on the default age grid, clinical
-> and severe incidence a few per cent low at high transmission, the grid's own
-> discretisation error. The full statement
+> resolved: an excess on falciparum clinical and severe incidence across the
+> 63-country site files that is not yet explained; a larger excess on *P. vivax*
+> sites, not yet explained either; and, at school age, vivax LM prevalence and
+> clinical incidence a few per cent high. The full statement
 > is on the [package front page](https://pwinskill.github.io/fleet/); if you need
 > results you can defend today, use
 > [malariasimulation](https://github.com/mrc-ide/malariasimulation).
@@ -79,14 +79,14 @@ Where a row carries two marks, the second is a caveat on the first.
 | Argument | malariasimulation meaning | `fleet` |
 | --- | --- | --- |
 | `overrides` | Named list overriding any default parameter | ✅ Passed through wholesale; see the group-by-group breakdown below |
-| `parasite` | `"falciparum"` or `"vivax"` | ✅ falciparum. ⛔ vivax: `build_inputs()` stops with an error |
+| `parasite` | `"falciparum"` or `"vivax"` | ✅ Both. `"vivax"` runs the *P. vivax* block (`vignette("model")`, §V); MDA, SMC and PMC are refused under vivax, as `malariasimulation` cannot run them |
 
 ### Breakdown of `overrides`
 
 | Group | Parameters | `fleet` |
 | --- | --- | --- |
 | Initial state proportions | `s_proportion`, `d_proportion`, `a_proportion`, `u_proportion`, `t_proportion` | ⛔ Ignored. `fleet` seeds at the `malariaEquilibrium` fixed point for `init_EIR` (or, under a custom demography, for the EIR the IBM's mosquito sizing supports, [`set_equilibrium()`](#set_equilibrium)), not at user-supplied proportions |
-| Initial immunity | `init_ib`, `init_ica`, `init_iva`, `init_icm`, `init_ivm`, `init_id` | ⛔ Ignored, same reason |
+| Initial immunity | `init_ib`, `init_ica`, `init_iva`, `init_icm`, `init_ivm`, `init_id`, and for vivax `init_iaa`, `init_iam`, `init_hyp` | ⛔ Ignored, same reason (vivax seeds at the `malariaEquilibriumVivax` solution) |
 | Population size | `human_population` | ✅ Scales output counts only; the model is per-capita, so run time is independent of it |
 | | `human_population_timesteps` | ⛔ Ignored. Population is conserved; no dynamic population size |
 | Baseline demography | `average_age` | ✅ → $\eta = 1/\text{average_age}$: the constant death hazard and the equilibrium age structure when `custom_demography = FALSE` |
@@ -94,7 +94,7 @@ Where a row carries two marks, the second is a caveat on the first.
 | Biting heterogeneity | `a0`, `rho` | ✅ $\psi_i = 1 - \rho e^{-a_i/a_0}$ |
 | | `sigma_squared` | ✅ Log-normal variance of $\zeta$ |
 | | `n_heterogeneity_groups` | ✅ Number of Gauss–Hermite nodes $n_z$. Must be a whole number $\geq 3$: fewer nodes than that are not a quadrature on the log-normal at all, they just move every human off it |
-| | `enable_heterogeneity` | ✅ `FALSE` collapses to a single node with $\zeta = 1$ |
+| | `enable_heterogeneity` | ✅ `FALSE` collapses to a single node with $\zeta = 1$. Under vivax the seed is the IBM's for this case: everyone from the heterogeneous equilibrium's first group, among mosquitoes sized from the whole of it (§V.6) |
 | Aquatic mosquito | `del`, `dl`, `dpl`, `me`, `ml`, `mup`, `gamma` | ✅ Used verbatim in the $E$/$L$/$P_L$ equations |
 | Adult mosquito | `mum`, `beta`, `total_M`, `blood_meal_rates`, `Q0`, `foraging_time`, `species`, `species_proportions` | ✅ Per-species; `total_M` is re-derived: from `init_EIR` under the default demography, as the IBM's own value under a custom one ([`set_equilibrium()`](#set_equilibrium)) |
 | | `init_foim` | ⛔ Ignored: `fleet` recomputes FOIM from its own seeded human infectivity, which must be self-consistent with its seed |
@@ -113,20 +113,22 @@ Where a row carries two marks, the second is a caveat on the first.
 | | `de`, `delay_gam`, `dem` | ✅ $\tau_E$, $\tau_l$, $\tau_M$ (the three delay lines, read as the IBM reads them) |
 | Vector-control shape | `phi_bednets`, `phi_indoors`, `k0` | ✅ Per species, in the $a(t)$/$\mu(t)$ algebra |
 | Output bands | `age_group_rendering_*`, `incidence_rendering_*`, `clinical_incidence_rendering_*`, `severe_incidence_rendering_*`, `prevalence_rendering_*` | ✅ Each drives its own output family, exactly as in `malariasimulation` (§G) |
-| | `ib_`/`id_`/`ica_`/`iva_`/`idm_`/`icm_`/`ivm_rendering_*` | ⛔ `fleet` does not render mean immunity by band |
+| | `ib_`/`id_`/`ica_`/`iva_`/`icm_`/`ivm_rendering_*`, and for vivax `iaa_`/`iam_`/`hypnozoites_rendering_*` | ✅ Mean immunity by band, `<name>_mean_*` with the band's population as `n_*`, as `malariasimulation` renders it. (`idm_rendering_*` names no immunity the IBM has, and renders nothing in either model) |
 | Metapopulation test-and-treat | `rdt_intercept`, `rdt_coeff` | ⛔ Ignored. They parameterise the PCR→RDT conversion used by `run_metapop_simulation()`'s mixing, which `fleet` does not support ([`Helpers and run functions`](#helpers)) |
 | Engine / solver | `mosquito_limit`, `individual_mosquitoes`, `r_tol`, `a_tol`, `ode_max_steps`, `progress_bar` | ⛔ Ignored: `fleet` is always compartmental, and advances one day at a time with no ODE solver to control |
-| Vivax-only | All hypnozoite parameters, `drug_hypnozoite_*`, `n_with_hypnozoites_rendering_*` | ⛔ Not applicable |
+| Vivax only | `b`, `f`, `gammal`, `kmax`, `philm_*`, `alm50`, `klm`, `dpcr_*`, `apcr50`, `kpcr`, `ca`, `ra`, `ua` | ✅ Under `parasite = "vivax"` (§V). 🟡 `ua`: IAA's 44-day refractory window runs as four 11-day stages (§V.3). The shared names -- `da`, `dd`, `dt`, `cd`, `cu`, `ct`, `rc`, `uc`, `rm`, `pcm`, `phi0`, `phi1`, `ic0`, `kc` -- carry the vivax values on a vivax list |
+| | `n_with_hypnozoites_rendering_*`, and `incidence_relapse_rendering_*` set on the list | ✅ `n_with_hypnozoites_*` with the band's population as `n_*`, and `n_inc_relapse_*` |
 
 ### `fleet`-only extension fields
 
-None of the three is a `malariasimulation` parameter; each may be added to the
+None of the four is a `malariasimulation` parameter; each may be added to the
 list, and each defaults to the validated choice.
 
 | Field | Default | Effect |
 | --- | --- | --- |
-| `bite_dedup` | `1` | `1` reproduces the IBM's per-timestep bite deduplication (saturating hazard, §B.2). `0` uses the linear $b\varepsilon$ that `malariaEquilibrium` assumes, which cuts the drift of prevalence off the seed from about 0.4% to about 0.1% at EIR 20 — but not to zero, since it gates only the hazard and not the boosting or sojourn forms. It is a switch: anything but 0 or 1 (`TRUE`/`FALSE` accepted) is an error |
-| `acquired_immunity_offset` | `0` | $\delta$ in the $b$/$\phi$/$\theta$ Hill functions. `0.5` reproduces the IBM's literal per-individual offset; `0` is the better mean-field match against the IBM ensemble mean. Must lie in $[0, 1]$ |
+| `bite_dedup` | `1` | *P. falciparum* only; vivax counts every bite, as the IBM does. `1` reproduces the IBM's per-timestep bite deduplication (saturating hazard, §B.2). `0` uses the linear $b\varepsilon$ that `malariaEquilibrium` assumes, which cuts the drift of prevalence off the seed from about 0.4% to about 0.1% at EIR 20 — but not to zero, since it gates only the hazard and not the boosting or sojourn forms. It is a switch: anything but 0 or 1 (`TRUE`/`FALSE` accepted) is an error |
+| `acquired_immunity_offset` | `0`, or `0.5` for vivax | $\delta$ in the $b$/$\phi$/$\theta$ Hill functions. The IBM adds 0.5 to each person's positive acquired immunity. Falciparum reads its curves at a stratum mean, where `0` is the better match against the IBM ensemble mean; the vivax curves are read at quadrature nodes that stand for people, and take the IBM's `0.5` (and `0` with `immunity_spread = FALSE`, back at the mean). Must lie in $[0, 1]$ |
+| `immunity_spread` | `TRUE` | *P. vivax* only. Carries each age, heterogeneity and batch cell's second moment of immunity and averages the immunity curves over a gamma with that mean and variance (§V.3); `FALSE` reads them at the cell mean, with no offset. Must be `TRUE` or `FALSE` |
 | `hold_init_EIR` | `FALSE` | Only has any effect under `set_demography()` ([`set_demography()`](#set_demography)). By default `fleet` matches the IBM's mosquito density rather than its nominal EIR, so the same list realises the same transmission in both models; `init_EIR` is then the EIR the IBM was sized at, not the one `fleet` realises. `TRUE` seeds at `init_EIR` directly. Must be `TRUE` or `FALSE` |
 
 ## `set_species(species, proportions)` {#set_species}
@@ -196,7 +198,7 @@ EIR instead.
 | &nbsp;&nbsp;`drug_efficacy` | Probability treatment clears the infection | ✅ Multiplies coverage into $f_t^{\text{eff}}$; also multiplies chemoprevention pulse fractions |
 | &nbsp;&nbsp;`drug_rel_c` | Infectivity of a treated case relative to `cd` | ✅ $c_T = c_d \times \text{rel_c}$, coverage-share-weighted across active drugs and time-varying |
 | &nbsp;&nbsp;`drug_prophylaxis_shape`, `drug_prophylaxis_scale` | Weibull prophylaxis survival | ✅ Both moments used, on the protected days a dose gives, $W(1), W(2), \dots$ The post-treatment chain carries the protected days left once out of $T$, $\sum_n (1-(1-r_T)^{n-1})W(n)$ (§B.4), and its length $k_P$ matches the variance of the whole $T + P$ sojourn: 9 stages for SP-AQ, 10 for DHA-PQP, 1 for AL (the chemoprevention chain, with no $T$ stage in front, matches the dose's own mean and variance: 10 / 9). No chain has more stages than its mean has days, and none more than 20. 🟡 A stage chain is not a Weibull, and it protects fully while it lasts where the IBM's protection is partial and fades; the $T$ stage adds variability the IBM's parallel clock does not have, so for AL the protection curve is reproduced in its integral, not its shape. `ode_tuning(n_ph =)` overrides the count |
-| &nbsp;&nbsp;`drug_hypnozoite_*` | *P. vivax* only | ⛔ Not applicable |
+| &nbsp;&nbsp;`drug_hypnozoite_efficacy`, `drug_hypnozoite_prophylaxis_shape`, `drug_hypnozoite_prophylaxis_scale` | *P. vivax* radical cure | ✅ The treated lose every batch with the hypnozoite efficacy, drawn independently of blood-stage clearance, and start liver-stage protection: a chain of levels matched to the protected days, $M^2/(V+M)$ stages (four for primaquine, eleven for tafenoquine) (§V.5). 🟡 A chain, protecting fully while it lasts |
 
 ## `set_clinical_treatment(drug, timesteps, coverages)` {#set_clinical_treatment}
 
@@ -372,7 +374,7 @@ single campaign is modelled faithfully.
 | --- | --- | --- |
 | `timesteps` | Vaccination dates | ✅ Antibody titre decays from each round's date; the IBM overwrites each person's vaccination date, and rounds combine as the most recent dose, as for mass PEV. 🟡 Each round reaches people independently of the last |
 | `coverages` | Fraction vaccinated | ✅ |
-| `ages` | Integer ages (years) vaccinated | ✅ Each year $y$ is the day interval $[365y, 365(y+1))$, matched by **fractional overlap** with the age groups, and the vaccinated then age, the year set moving up with them. It has to be fractional, because above age 15 the default grid puts its edges at 15, 16.67, 18.33 and 20, so a whole-year target lines up with no group: `18:20` spans parts of three of them. A set overlapping no group warns |
+| `ages` | Integer ages (years) vaccinated | ✅ Each year $y$ is the day interval $[365y, 365(y+1))$, matched by **fractional overlap** with the age groups, and the vaccinated then age, the year set moving up with them. It has to be fractional, because between its pinned ages the default grid puts edges wherever its group budget falls -- above 15, every 0.38 years -- so a whole-year target need not line up with any group edge. A set overlapping no group warns |
 
 Transmission-reducing activity is mapped to state-specific transmission-blocking
 activity via the IBM's own transform
@@ -391,8 +393,8 @@ infectivity. All the `tbv_*` shape constants (`tbv_tau`, `tbv_rho`, `tbv_ds`,
 | `clinical_incidence` | Bands for clinical incidence | ✅ → `n_inc_clinical_*`, `p_inc_clinical_*` |
 | `severe_incidence` | Bands for severe incidence | ✅ → `n_inc_severe_*`, `p_inc_severe_*` |
 | `prevalence` | Bands for prevalence | ✅ → `n_detect_lm_*`, `p_detect_lm_*` (the expected number detected, not a prevalence), `n_detect_pcr_*` |
-| `ica`, `icm`, `iva`, `ivm`, `id`, `ib` | Bands for mean immunity | ⛔ Not rendered by `fleet` |
-| `n_with_hypnozoites`, `hypnozoites`, `iaa`, `iam` | *P. vivax* only | ⛔ Not applicable |
+| `ica`, `icm`, `iva`, `ivm`, `id`, `ib` | Bands for mean immunity | ✅ → `<name>_mean_*`, and the band's population as `n_*` |
+| `n_with_hypnozoites`, `hypnozoites`, `iaa`, `iam` | *P. vivax* only | ✅ → `n_with_hypnozoites_*` and `<name>_mean_*`, each with the band's population as `n_*` |
 
 A family whose band list is empty renders nothing, as in the IBM: a bare
 `get_parameters()` leaves four of the five families empty and defaults the

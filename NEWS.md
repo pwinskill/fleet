@@ -1,10 +1,77 @@
 # fleet 0.0.0.9003
 
 `fleet` now advances one day at a time, in the order `malariasimulation`
-resolves a day, instead of integrating an ODE, and a run is several times
-faster: a 30-year run takes well under a second. Four mechanisms were brought
-into line with the IBM along the way, and the output table is now
-`malariasimulation`'s, column for column. Every model output moves.
+resolves a day, instead of integrating an ODE; it runs *P. vivax* as well as
+*P. falciparum*; and its default age grid is four times finer. Four falciparum
+mechanisms were brought into line with the IBM along the way, and the output
+table is now `malariasimulation`'s, column for column. Every model output moves.
+
+## *P. vivax*
+
+* **`run_simulation_ode()` runs *P. vivax*.** A list from
+  `malariasimulation::get_parameters(parasite = "vivax")` runs a vivax block in
+  the same daily model, dispatched on `parameters$parasite` as
+  `malariasimulation` does. It carries the hypnozoite-batch dimension (0 to
+  `kmax` batches, relapse at `k * f`, one batch lost a day with probability
+  `1 - exp(-k * gammal)`), radical cure with liver-stage protection
+  (`CQ_PQ_params_vivax`, `CQ_TQ_params_vivax`), and no severe disease. MDA, SMC
+  and PMC are refused under vivax, because `malariasimulation` itself fails on
+  them. `vignette("model")` §V specifies it.
+* Each day is the IBM's: every bite counts, relapse adds to the bite hazard and
+  PEV reduces both, and infection competes with each state's progression in
+  one draw a day. People who share an age, heterogeneity group and batch count
+  differ in immunity by their batch history, and the vivax curves are steep, so
+  each cell carries the second moment of immunity and the curves are averaged
+  over a gamma (`parameters$immunity_spread`, default `TRUE`).
+* **Refractory windows are carried as stocks, moved with the people.** A bite
+  boosts a person and moves them up a batch, into a cell whose relapse hazard
+  is higher, so a cell's newcomers are freshly boosted; a renewal rate
+  `p / (p u + 1)` cannot see that, and put young children's anti-parasite
+  immunity 10-11% above the IBM's. Against four 50,000-person IBM runs at EIR
+  10, IAA by age now agrees but for the age grid's share, and so does its
+  within-cell spread.
+* **The vivax clinical curve takes the IBM's per-person +0.5**, at quadrature
+  nodes that stand for people: `acquired_immunity_offset` defaults to 0.5 for
+  vivax, 0 for falciparum.
+* **A bite that forms a batch keeps the day's batch decay from happening.** The
+  IBM queues the decay first and the bite's new batch count later, and the later
+  update overwrites the earlier. The decay is taken after the day's other
+  events, from all but the day's batch-formers, so someone who relapses and
+  loses a batch on the same day ends a batch down, infected, as in the IBM.
+* **The radically cured carry the immunity of the nodes that fell ill**, the
+  less immune, rather than their cell's mean, and ICA's within-cell spread
+  gains the square of the day's boost probability, which makes it exact with no
+  refractory window.
+* **With heterogeneity off, vivax is seeded as the IBM seeds it**: everyone
+  from the heterogeneous equilibrium's first group, among mosquitoes sized from
+  the whole of it.
+* Against the same IBM runs, infections, relapses, clinical incidence, hypnozoite
+  carriage, the batch count, and LM and PCR prevalence agree by age to within
+  about 3%. School-age LM prevalence and clinical incidence run 1-3% high: the
+  IBM's immunity-dependent transitions sort people by immunity within a cell,
+  which one immunity distribution per cell does not carry.
+* A vivax run costs about 2 s per simulated year on the default grid, 3.4 s with
+  radical cure: the hypnozoite dimension and the immunity spread make it about
+  twenty times a falciparum run.
+* The output is the IBM's vivax table: `n_relapses`, `n_with_hypnozoites`,
+  `n_inc_relapse_*` and `n_with_hypnozoites_*` over their rendering lists, no
+  severe columns unless a severe band is set, and no `p_detect_lm_*`.
+
+## Output
+
+* **The immunity means are rendered**, as the IBM renders them: `ica_mean`,
+  `icm_mean`, `ib_mean`, `iva_mean`, `ivm_mean`, `id_mean` for falciparum,
+  `ica_mean`, `icm_mean`, `iaa_mean`, `iam_mean`, `hypnozoites_mean` for vivax,
+  and each by age over its `<name>_rendering_*` list.
+
+## The default age grid
+
+* **`default_age_lower()` now has 209 groups (was 53).** The age profile's
+  distance from `fleet`'s own converged profile halves with each doubling of the
+  groups: at EIR 20 the largest departure is 1.1% (was 4.4%), and severe
+  incidence at EIR 120 is 1% low where it was 8%. A run costs about four and a
+  half times as much: 3 s for 30 years of falciparum.
+  `default_age_lower(n_group = 53)` is the old grid.
 
 ## The daily model
 
@@ -82,10 +149,16 @@ into line with the IBM along the way, and the output table is now
   time does. The EPI group straddling the schedule's completion age is
   vaccinated in proportion to the part of it that is old enough.
 
+* **A treated run is seeded at raw treatment coverage**, as the IBM hands it to
+  `malariaEquilibrium` and `malariaEquilibriumVivax`, for both parasites. At
+  coverage times efficacy, a treated run's mosquitoes had been sized 2-5% below
+  the IBM's, and its transmission ran that much lower.
+
 * **Maternal immunity comes from mothers aged 20 to 21**, as in the IBM
   (`trunc(age / 365) == 20`), not from the 20-22.5 year group, which gave
-  newborns about 7% too much. `default_age_lower()` pins an edge at 21 years to
-  make that group; the grid keeps its 53 groups.
+  newborns about 7% too much. `default_age_lower()` pins an edge at 21 years,
+  and a newborn inherits the population-weighted mean immunity of the groups
+  making up [20, 21), as the IBM's uniform draw of a mother gives.
 
 * **A treated run starts where the IBM starts it.** `set_equilibrium()` sizes
   the mosquitoes under the treatment coverage in force at timestep 1, but the IBM
@@ -153,29 +226,26 @@ into line with the IBM along the way, and the output table is now
 
 ## Agreement with the IBM
 
-Re-measured in `fleetcheck` with the IBM rows unchanged, on the default
-53-group age grid. The model itself now agrees with the IBM more closely than
-before: refined to 417 age groups, it lands within 1.4% of the IBM median on
-under-5 and all-age clinical incidence, severe incidence and prevalence at EIR
-20, 50 and 120, where it had run about 4% high on under-5 clinical and severe.
-On the default grid that leaves the grid's own discretisation error -- first
-order, halving with each doubling of the groups -- as the largest departure,
-2 to 5% low on clinical and 5 to 8% low on severe incidence at EIR 50 and 120,
-no longer offset by the boosting error. So the default grid now sits outside
-the IBM band at 2 of 6 EIRs on clinical and 1 of 6 on severe incidence, and in
-6 of 25 clinical age bands; `ode_tuning(age_lower = default_age_lower(n_group
-= 209))` brings every one inside.
+Re-measured in `fleetcheck` with the IBM rows unchanged, on the default 209-group
+age grid. Falciparum tier 2 is inside the IBM replicate band throughout the
+transmission grid: prevalence, under-5 and all-age clinical and all-age severe
+incidence at 6 of 6 EIRs, within 2% of the IBM median, and the clinical and
+severe age profiles in 25 of 25 and 16 of 16 bands. Intervention impacts are
+outside the band in 3 of 72 cells, all bed nets, where the best of the IBM's own
+replicates is outside in 9.7%. `fleet` runs 24 times the IBM's speed per
+simulated year. On 53 groups, at a quarter of the cost, the grid's
+discretisation error puts clinical incidence 3 to 5% and severe incidence up to
+8% low at EIR 50 and 120, outside the band at 2 of 6 EIRs. Tier 1: an
+undisturbed run moves at most 0.35% off the seed.
 
-Tier 2 otherwise: prevalence inside the band at every EIR, severe age profile
-16 of 16, intervention impacts outside the band in 2 of 72 cells against 4
-before, and 140 times the IBM's speed per simulated year. Tier 1: an undisturbed
-run moves at most 0.36% off the seed. Tier 3: across the 63-country site files
-`fleet` runs every one of the 1,392 sub-sites with P. falciparum transmission;
-its excess over the IBM falls to 5.5% on clinical and 3.3% on severe incidence,
-from 7.4% and 6.5%, and r holds at 0.983 and 0.957, but the severe slope falls to
-0.890, outside the claim's 0.9 to 1.1: the unexplained excess at low
-transmission and the default grid's shortfall at high transmission now pull it
-the same way.
+For *P. vivax*, tier 2 is inside the IBM replicate band throughout the
+transmission grid, EIR 0.3 to 30: prevalence, under-5 and all-age clinical
+incidence, relapses and hypnozoite carriage at 5 of 5 EIRs, and the clinical age
+profile in 23 of 23 bands. Radical cure by either drug, treatment scale-up and
+bed nets above EIR 1 move every outcome as the IBM does; indoor residual spraying
+and bed nets at EIR 1 do not, largely the IBM's relapse defect. A vivax run costs
+0.4 times the IBM's per simulated year. Tier 1: a run settles, 2 to 14% above
+the seed on prevalence as the IBM's does.
 
 ## Testing
 
@@ -191,9 +261,23 @@ the same way.
   chemoprevention treated phase, the refractory closure against an independent
   implementation, the vaccinated cohort ageing, and the positivity guards.
 
+* `tests/testthat/test-vivax.R` pins the vivax block's set-up: the parameter
+  translation, the seed on `fleet`'s own age grid, the heterogeneity nodes the
+  IBM shares, conservation, radical cure, the column set, and the refusals.
+  `tests/testthat/test-vivax-mechanics.R` pins its daily mechanics one at a
+  time, as `test-daily-mechanics.R` does for falciparum: the infection and
+  relapse draw, PEV on relapses, the hypnozoite ladder, immunity decay, the
+  refractory windows and the boost that skips a day's decay, the liver-stage
+  clock and the delay lines. `test-output-parity.R` checks the vivax table
+  against `malariasimulation`'s.
+
 * `tests/testthat/reference-values.csv` and `reference-interventions.csv` are
-  regenerated, and the intervention reference is sampled on the days each
-  effect first reaches its quantity.
+  regenerated on the 209-group grid, and the intervention reference is sampled
+  on the days each effect first reaches its quantity. `reference-vivax.csv` and
+  `reference-vivax-interventions.csv` pin the vivax block the same way: its
+  output levels untreated and under radical cure by primaquine and by
+  tafenoquine, and the same three intervention probes on vivax's own delay
+  lines, with a check that none acts before its deployment day.
 
 # fleet 0.0.0.9002
 

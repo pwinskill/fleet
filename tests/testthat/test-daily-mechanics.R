@@ -236,7 +236,8 @@ test_that("refractory boosting follows where the boosted have got to", {
   qb <- 1 - exp(-outer(pr$psi, pr$zeta) * sum(pr$eir0) / sum(pr$het_wt * pr$zeta))
   b <- pr$b0 * (pr$b1 + (1 - pr$b1) / (1 + ((pr$IB_init + pr$acq_offset) / pr$ib0)^pr$kb))
   ICA0 <- pr$ICA_init
-  ICM <- pr$PM * outer(pr$icm_factor, colSums(ICA0 * pr$mask20))
+  N0 <- pr$S0 + pr$D0 + pr$A0 + pr$U0 + pr$Tr0 + apply(pr$Ph0, 1:2, sum) + apply(pr$Phc0, 1:2, sum)
+  ICM <- pr$PM * outer(pr$icm_factor, colSums(ICA0 * N0 * pr$mask20) / colSums(N0 * pr$mask20))
   phi <- pr$phi0 * (pr$phi1 + (1 - pr$phi1) / (1 + (((ICA0 + pr$acq_offset) + ICM) / pr$ic0)^pr$kc))
   hb <- -log(1 - b); hA <- -log(1 - pr$rA); hU <- -log(1 - pr$rU)
   iA <- qb * (1 - (1 - b) * (1 - pr$rA)) * hb / (hb + hA)
@@ -308,6 +309,22 @@ test_that("the positivity guards leave room for the day's ageing and deaths", {
   # a chain with no drug behind it is not checked
   expect_silent(build_inputs(eqm(malariasimulation::get_parameters(), 20), 20,
                              n_ph = 40, timesteps = 10))
+})
+
+test_that("a newborn's mother is drawn from the whole of [20, 21) years", {
+  skip_if_not_installed("malariasimulation")
+  # sample_maternal_immunity() draws a mother uniformly among those with
+  # trunc(age / 365) == 20, so the mask covers that year and no more: on the
+  # default grid, whose edges include 20 and 21, several whole groups
+  for (n in c(53L, 209L)) {
+    lower <- default_age_lower(n_group = n)
+    pr <- build_inputs(eqm(malariasimulation::get_parameters(), 20), 20,
+                       age_lower = lower, timesteps = 10)$pars
+    w <- diff(c(lower, Inf)) * 365
+    expect_equal(sum((pr$mask20 * w)[is.finite(w)]), 365, tolerance = 1e-9)
+    expect_true(all(pr$mask20[lower < 20 | lower >= 21] == 0))
+    expect_true(all(pr$mask20[lower >= 20 & lower < 21] == 1))
+  }
 })
 
 test_that("tuning is validated however it arrives", {

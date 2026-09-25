@@ -23,8 +23,8 @@ numeric vector of age-group lower edges in years.
 Lower edges (in years) of the age groups: fine in infancy, where immunity and
 maternal dynamics move fast, and coarse in adulthood. Group edges are pinned
 at the conventional reporting boundaries -- 0, 1, 2, 3, 5, 7, 10, 15, 20, 30,
-40, 60 years -- and at 21, so that one group holds exactly the mothers the IBM
-draws maternal immunity from, [20, 21). The groups between two anchors are of
+40, 60 years -- and at 21, so that whole groups make up exactly the year the
+IBM draws maternal immunity from, [20, 21). The groups between two anchors are of
 equal width, with
 the budget of groups spread across the anchors in proportion to the width in
 \code{log(1 + age)}. Each interval gets at least one group; the remainder is

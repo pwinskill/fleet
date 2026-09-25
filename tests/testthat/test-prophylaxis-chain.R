@@ -251,7 +251,10 @@ test_that("n_ph = 1 is the single-compartment seed; the chain seed conserves mas
 test_that("the chain seed adds no drift under treatment (Ph_count and EIR)", {
   skip_if_not_installed("malariasimulation")
   gp <- malariasimulation::get_parameters
-  p <- malariasimulation::set_drugs(gp(), list(malariasimulation::SP_AQ_params))
+  # at efficacy 1, so the raw coverage the seed takes is also the coverage the
+  # run clears (see test-equilibrium.R)
+  spaq <- malariasimulation::SP_AQ_params; spaq[1] <- 1
+  p <- malariasimulation::set_drugs(gp(), list(spaq))
   # treatment in force at timestep 0, so the humans are seeded treated (from
   # timestep 1 they start untreated, as the IBM's do)
   p <- malariasimulation::set_clinical_treatment(p, drug = 1, timesteps = 0, coverages = 0.5)

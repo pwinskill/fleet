@@ -27,7 +27,12 @@ test_that("model stays near the malariaEquilibrium seed with treatment in force 
   skip_if_not_installed("malariasimulation")
   p <- malariasimulation::get_parameters()
   p$acquired_immunity_offset <- 0; p$bite_dedup <- 0                    # test the machinery at the fixed point
-  p <- malariasimulation::set_drugs(p, list(malariasimulation::AL_params))
+  # The seed takes raw coverage, as the IBM's solver is given it, and efficacy
+  # acts in the run, so a drug short of full efficacy seeds more people treated
+  # than the run holds. At efficacy 1 the two agree, which isolates the treated
+  # machinery at its fixed point.
+  al <- malariasimulation::AL_params; al[1] <- 1
+  p <- malariasimulation::set_drugs(p, list(al))
   # from timestep 0, so the IBM's two seeding clocks agree (treatment from timestep
   # 1 starts the humans untreated, as the IBM does: see test-daily-mechanics.R)
   p <- malariasimulation::set_clinical_treatment(p, drug = 1, timesteps = 0,
@@ -37,6 +42,21 @@ test_that("model stays near the malariaEquilibrium seed with treatment in force 
   prev <- pfpr(out)
   expect_lt(max(abs(prev - prev[1])) / prev[1], 1e-2)
   expect_equal(out$ft[1], 0.4)
+})
+
+test_that("a treated run's mosquitoes are sized as set_equilibrium() sizes the IBM's", {
+  skip_if_not_installed("malariasimulation")
+  # set_equilibrium() sizes total_M from the equilibrium at raw coverage; fleet's
+  # own sizing, at the same raw coverage on its own age grid and daily rates,
+  # lands within 2% of it (it was 2-5% low at coverage x efficacy)
+  for (cov in c(0.4, 0.8)) for (eir in c(5, 20)) {
+    p <- malariasimulation::set_drugs(malariasimulation::get_parameters(),
+                                      list(malariasimulation::AL_params))
+    p <- malariasimulation::set_clinical_treatment(p, drug = 1, timesteps = 1, coverages = cov)
+    p <- eqm(p, eir)
+    expect_equal(build_inputs(p, eir, timesteps = 10)$meta$total_M, p$total_M,
+                 tolerance = 0.02, label = sprintf("AL at %.1f, EIR %g", cov, eir))
+  }
 })
 
 test_that("acquired-immunity offset toggle: default 0 holds flat, 0.5 shifts like the IBM Hill", {

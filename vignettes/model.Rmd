@@ -22,10 +22,10 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
 > `malariasimulation`, can be examined and argued with, not so that anyone can
 > rely on its numbers: the API is unstable and nothing here has been peer
 > reviewed. The known discrepancies against the IBM are open rather than
-> resolved: an excess on clinical and severe incidence across the 63-country
-> site files that is not yet explained, and, on the default age grid, clinical
-> and severe incidence a few per cent low at high transmission, the grid's own
-> discretisation error. The full statement
+> resolved: an excess on falciparum clinical and severe incidence across the
+> 63-country site files that is not yet explained; a larger excess on *P. vivax*
+> sites, not yet explained either; and, at school age, vivax LM prevalence and
+> clinical incidence a few per cent high. The full statement
 > is on the [package front page](https://pwinskill.github.io/fleet/); if you need
 > results you can defend today, use
 > [malariasimulation](https://github.com/mrc-ide/malariasimulation).
@@ -45,8 +45,9 @@ because this is a mean field and not the IBM, `vignette("using")`.
 ## 1. Scope and design
 
 `fleet` is a deterministic mean-field counterpart to the `malariasimulation`
-individual-based model (IBM) of *Plasmodium falciparum*, advanced one day at a
-time on the IBM's own clock.
+individual-based model (IBM) of *Plasmodium falciparum* and *P. vivax*, advanced
+one day at a time on the IBM's own clock. Sections A–H specify the falciparum
+model; §V specifies what the vivax model adds and changes.
 
 *Mean field* means the model tracks the **distribution of the population over
 states** rather than the people themselves: **the state must not carry
@@ -107,7 +108,7 @@ human population), which is why run time is independent of `human_population`.
 
 | Dimension | Symbol | Default size | Set by | What it indexes |
 | ------ | ------ | ---- | ---------- | -------------------------------------- |
-| Age group | $i = 1,\dots,n_a$ | 53 | `age_lower =` / `default_age_lower()` | Graded age grid, fine in infancy and coarse in adulthood. Group edges are pinned at the conventional reporting ages (0, 1, 2, 3, 5, 7, 10, 15, 20, 30, 40, 60 y), so output bands fall on group boundaries, and at 21 y, so that one group holds the mothers maternal immunity is drawn from (§B.3); between two anchors the groups are of equal width, with the budget of groups shared out in proportion to **log** width, because immunity rises with log age rather than with age. An absorbing top group runs from 80 y. Individuals age by a linear-chain (McKendrick) flow $r_i$ between adjacent groups. |
+| Age group | $i = 1,\dots,n_a$ | 209 | `age_lower =` / `default_age_lower()` | Graded age grid, fine in infancy and coarse in adulthood. Group edges are pinned at the conventional reporting ages (0, 1, 2, 3, 5, 7, 10, 15, 20, 30, 40, 60 y), so output bands fall on group boundaries, and at 21 y, so that whole groups make up the year maternal immunity's mothers are drawn from (§B.3); between two anchors the groups are of equal width, with the budget of groups shared out in proportion to **log** width, because immunity rises with log age rather than with age. An absorbing top group runs from 80 y. Individuals age by a linear-chain (McKendrick) flow $r_i$ between adjacent groups. |
 | Biting heterogeneity | $j = 1,\dots,n_z$ | 5 | `parameters$n_heterogeneity_groups`, `enable_heterogeneity` | Gauss–Hermite nodes $\zeta_j$ and weights $w_j$ of the log-normal relative-biting-rate distribution with variance $\sigma^2$ (`sigma_squared`); $\zeta_j = \exp(z_j\sigma - \sigma^2/2)$. Fixed at birth, never mixed: a person stays in their stratum for life, as in the IBM. |
 | Vector species | $s = 1,\dots,n_v$ | 1 | `set_species()` | Independent aquatic + adult mosquito populations, each with its own biting rate, mortality, carrying capacity and vector-control response, coupled only through the shared human population. |
 | EIR delay line | $1,\dots,\lfloor\tau_E\rfloor+1$ days | 13 | `de` | The last days of the per-species EIR $a_s I_{M,s}$, from which the lag $\tau_E$ is read, interpolating between two days when it is fractional (§B.2). |
@@ -149,12 +150,13 @@ Mosquito compartments, all $[n_v]$:
 | $E_M$ | Incubating (exposed) adults (odin `Em`) |
 | $I_M$ | Infectious adults |
 
-**Total state size.** With the defaults ($n_a = 53$, $n_z = 5$, $n_v = 1$) and
-no drugs, so that every chain has one stage, there are 4505 human states,
-$(14 + k_P + k_{P_c} + k_{P_{ct}})\,n_a n_z$, and 6 mosquito states per
+**Total state size.** With the defaults ($n_a = 209$, $n_z = 5$, $n_v = 1$) and
+no drugs, so that every chain has one stage, there are 17,765 falciparum human
+states, $(14 + k_P + k_{P_c} + k_{P_{ct}})\,n_a n_z$, and 6 mosquito states per
 species, plus the three delay lines (35 days of history) and the day's recorded
 outputs, which are carried as state because a daily update has nowhere else to
-keep them. Every extra prophylaxis stage adds $n_a n_z = 265$ states.
+keep them. Every extra prophylaxis stage adds $n_a n_z = 1045$ states. The
+vivax block (§V) multiplies its compartments by the eleven batch levels.
 
 ### 2.2 What is captured *without* a dimension
 
@@ -174,7 +176,7 @@ Each row is a dimension that was *not* added.
 | **TBV antibody titre** | Per-person, mapped to transmission-reducing activity | Four $[n_a \times n_t]$ infectivity multipliers, one per infectious state ($U$, $A$, $D$, $T$), because the IBM's TRA-to-TBA map is state-specific (§C) | Mean-field only |
 | **Immunity boosting refractory clock** | Per-person `last_boosted` timestep; a boost fires only if $\ge u$ days have passed | For bites ($I_B$), the renewal probability on the day's bite probability, with the wait rounded as the IBM rounds it; for infections ($I_{CA}$, $I_D$, $I_{VA}$), a quasi-steady closure for where the recently boosted have got to (§B.5) | The renewal form is exact for the mean inter-boost interval; the closure leaves out the refractory back in $S$ within the window, of order $10^{-3}$ of the refractory days in $A$ |
 | **Age-specific mortality / demographic transition** | Per-person death hazard by age band and year | $\mu_i(t)$, a constant-interpolated $[n_a \times n_t]$ series; its $t = 0$ row also sets the seed's age structure (§F) | Ages above the top `deathrate_agegroups` take the top rate (the IBM removes them); a warning fires |
-| **Maternal immunity** | Sampled from a mother aged 20 to 21 drawn at birth | Purely algebraic, from the mean acquired immunity of the 20-21 year group (§B.3) — **no state variable at all** | None beyond the mean-field average over mothers, on a grid with an edge at 21 years (the default's) |
+| **Maternal immunity** | Sampled from a mother aged 20 to 21 drawn at birth | Purely algebraic, from the population-weighted mean acquired immunity of those aged 20 to 21 (§B.3) — **no state variable at all** | None beyond the mean-field average over mothers |
 | **Seasonality** | Daily rainfall drives larval carrying capacity | $K_s(t)$ on a daily grid from the same truncated Fourier series, held at the day's start value across the day as the IBM holds it (§D) | None (identical functional form) |
 | **Repeated bites in one day** | Bitten individuals are collected in a set, so a person bitten several times counts once and can be infected at most once per day | The day's infection probability saturates, $1 - e^{-\varepsilon}$ bitten times $b$, rather than growing with every bite (§B.2) | None: it is the IBM's own daily probability |
 
@@ -187,7 +189,7 @@ applies a **state jump** (§E), then resumes.
 
 | Feature | Why | Behaviour |
 | --- | --- | --- |
-| *P. vivax* | A different model (hypnozoites, relapse) | Error at input |
+| MDA, SMC or PMC under *P. vivax* | `malariasimulation` itself fails on the combination (`update_mass_drug_admin()` reads the falciparum-only `id`) | Error at input |
 | Individual mosquitoes (`individual_mosquitoes = TRUE`) | `fleet` is always compartmental | Ignored |
 | Intervention correlation (`get_correlation_parameters()`, `run_simulation(correlations =)`) | Purely individual-level; the mean field assumes independence between interventions | Warned and ignored |
 | Per-individual stochastic variation | Deterministic model | By construction |
@@ -347,9 +349,11 @@ $$
 $q$ takes **no** offset, matching the IBM.
 
 **Maternal immunity** is algebraic, not a state. The IBM draws each newborn's
-mother from those aged $\lfloor \text{age}/365 \rfloor = 20$, and `fleet`
-takes it from the model age group containing 20 years, which on the default grid
-is exactly $[20, 21)$ years; it decays with age from birth:
+mother uniformly from those aged $\lfloor \text{age}/365 \rfloor = 20$ in its
+heterogeneity group, so a newborn inherits, in expectation, their
+population-weighted mean immunity; `fleet` weights each age group by its share
+$m_i$ of that year, which on the default grid, with edges at 20 and 21, is 1 for
+the groups making up $[20, 21)$ and 0 elsewhere. It decays with age from birth:
 
 $$
 \overline{I_{CA}}_{20,j} = \sum_i m_i I_{CA,ij},
@@ -423,13 +427,15 @@ explicitly (§2.1), so only the spread within an (age, $\zeta$) cell is lost, an
 that is small: refined to 417 age groups, `fleet` lands within 1% of the IBM
 on all-age severe incidence at EIR 20, 50 and 120.
 
-The shortfall on the default grid is the age grid's, with the same sign for the
-same reason one level up: a group's severe incidence is evaluated at its mean
+What is left on a coarser grid is the grid's, with the same sign for the same
+reason one level up: a group's severe incidence is evaluated at its mean
 immunity, and $\theta$ being convex, that under-counts wherever immunity
 changes across the group, which it does fastest in the young groups where severe
-disease concentrates. The error halves with each doubling of the groups: severe
-incidence at EIR 120 runs 8% low at 53 groups, 4% at 105 and 1% at 209.
-`vignette("using")` says what to do about it.
+disease concentrates. The error is first order in the group width: `fleet`'s
+own age profile halves its distance from the converged one with each doubling
+of the groups. Measured against the IBM median, severe incidence at EIR 120
+runs 8% low on 53 groups, 4% on 105 and 1% on 209, the default.
+`vignette("using")` says what a coarser grid costs.
 
 ### B.4 Disease-state equations
 
@@ -783,10 +789,12 @@ pulses over each dose-age band.
    set, not `R/translate_params.R`, supplying every shared constant.
 2. For each heterogeneity node $j$,
    `malariaEquilibrium::human_equilibrium_no_het()` is solved at
-   $\text{EIR} = \text{init_EIR}\times\zeta_j$ and the effective treated
-   fraction $f_t\cdot\text{eff}$, on the model age grid, with $f_t$ the
-   coverage in force at **timestep 0**, as the IBM draws its initial humans
-   (`calculate_eq()`). Its $\Lambda$, $\phi$,
+   $\text{EIR} = \text{init_EIR}\times\zeta_j$ and the treated fraction
+   $f_t$, on the model age grid, with $f_t$ the coverage in force at
+   **timestep 0**, as the IBM draws its initial humans (`calculate_eq()`). That
+   is raw coverage, as the IBM hands it to the solver, which sends that share
+   of clinical cases to treatment; efficacy acts in the run, so a treated seed
+   relaxes onto the model's own treated state, as the IBM's does. Its $\Lambda$, $\phi$,
    `prop`, $r$, `IB`, `ICA`, `ID`, `IVA` and `cA` columns are reused directly.
    The $S/T/D/A/U/P$ block is **re-solved** with a corrected prophylaxis aging
    recursion, $b_P = (r_T b_T + r_{i-1}P_{i-1})/\beta_P$ — upstream divides only
@@ -833,7 +841,6 @@ within five years: under-5 clinical incidence by -0.3% at EIR 1, +1.5% at EIR 20
 and +6% at EIR 120, severe by at most 2%. So burn a run in before reading its
 incidence. `malariasimulation` relaxes off its own `malariaEquilibrium` seed for
 the same reason, and by more, though the two seeds are not identical: the IBM
-passes the *raw* treated fraction $f_t$ rather than $f_t\cdot\text{eff}$,
 solves on a fixed 0–99.9 y grid with heterogeneity handled inside
 `human_equilibrium()`, and does not correct the prophylaxis recursion.
 
@@ -860,7 +867,10 @@ all as fractions of the total human population and multiplied by
 | `n_infections` | the day's new infections at all ages |
 | `ft` | $f_t(t)$, rendered only when clinical treatment is deployed, as in the IBM |
 | `S_count`, `A_count`, `D_count`, `U_count`, `Tr_count` | population totals by state as the IBM counts them: `S_count` is $S$ plus every prophylaxis chain, `Tr_count` all four treated compartments |
+| `ica_mean`, `icm_mean`, `ib_mean`, `iva_mean`, `ivm_mean`, `id_mean` | each immunity's mean over the population, $\sum_{ij} I_{ij} N_{ij} / \sum_{ij} N_{ij}$, and by age as `<name>_mean_*` with the band's population as `n_*`, over `<name>_rendering_*`. The IBM seeds its infants' maternal immunity from the equilibrium bin 0.1 years older than they are, so its `icm_mean` and `ivm_mean` run below these until the seeded infants age out |
 | `EIR`, `FOIM`, `Ph_count` | not in the IBM's table: $365\,\bar\varepsilon$, the EIR per adult per year biting humans today (the IBM's `EIR_<species>` is the same lagged quantity in total bites a day); $\Lambda^M_1$; and the prophylaxis chains, the drug-protected part of `S_count` |
+
+The vivax table differs where the IBM's does (§V.6).
 
 **How age groups map onto bands.** A band `[lower, upper]` holds the whole-day
 ages `lower` to `upper`, both ends included, as the IBM's `in_age_range()` does.
@@ -916,3 +926,232 @@ preserved, and two kinds of schedule meet the daily clock differently:
 The PEV, TBV, carrying-capacity and (constant-demography) mortality grids are
 built to extend a year past `timesteps`; the vector-control grid ends exactly at
 `timesteps`.
+
+## V. The *P. vivax* model
+
+A list from `get_parameters(parasite = "vivax")` runs a second human block in
+the same compiled model; the falciparum block is held empty, and under
+falciparum the vivax block collapses to one empty cell. The biting model (§B.2),
+the delay lines and the mosquito model (§D) are shared, fed by whichever block
+holds the population. A vivax list carries the falciparum names wherever the
+two parasites share a quantity -- `da`, `dd`, `dt`, `cd`, `cu`, `ct`, `rc`, `uc`,
+`rm`, `pcm` and the clinical curve `phi0`, `phi1`, `ic0`, `kc` -- so those reach
+the vivax block through the shared parameters. What the vivax block adds and
+changes:
+
+### V.1 The hypnozoite dimension
+
+`malariasimulation` gives each person an integer count of hypnozoite batches,
+$k \in \{0, \dots, k_{\max}\}$. Relapse is a hazard $k f$, so it is linear in
+$k$, but immunity, detectability and the U → S rate are not, and a mean count
+would not carry them. Every vivax compartment and immunity stock is therefore
+indexed $[i, j, \ell]$ -- age, heterogeneity, level -- where levels
+$1 \dots k_{\max}+1$ are the batch counts and, when a radical-cure drug is on
+the schedule, further levels hold people whose liver stage is still
+drug-protected (§V.5). Each day, everyone:
+
+- moves up one batch on an infection that came from a bite, capped at
+  $k_{\max}$, and stays put on a relapse. The bite share of a cell's infections
+  is $\lambda / (\lambda + k f)$, the IBM's `relative_rates`, with
+  $\lambda = b\,\varepsilon$ (§V.2);
+- loses a batch with probability $1 - e^{-k \gamma_L}$, whatever their disease
+  state (`hypnozoite_batch_decay_process`), unless a bite formed a batch that
+  day. The IBM queues the decay first and the bite's $\min(k + 1, k_{\max})$,
+  from the start-of-day $k$, later, and the later update overwrites the
+  earlier -- at the top batch too, where the bite writes $k_{\max}$ back.
+
+The decay is a draw of its own, independent of the day's infection and
+progression, so it is taken after them, from the day's outcome less its
+batch-formers: someone who relapses and loses a batch on the same day ends a
+batch down, infected, as in the IBM, and the dead, reset as newborns by a later
+update, do not decay at all.
+
+### V.2 The day, as the IBM resolves it
+
+The day's expected infectious bites per person, $\varepsilon$, are §B.2's,
+shared out over both blocks' population. Vivax counts every bite rather than
+deduplicating them: a person bitten $n$ times is infected with probability
+$1 - (1 - b)^n$, which averaged over Poisson bites is $1 - e^{-b\varepsilon}$.
+Relapse adds $k f$, and the total is reduced by PEV, as
+`calculate_vivax_infections()` does, so the vaccine blocks relapses too:
+
+$$
+\iota_S = \left(1 - e^{-(b\varepsilon + k f)}\right)(1 - \text{PEV}), \qquad
+h = -\log(1 - \iota_S).
+$$
+
+The IBM resolves infection and a person's own progression ($r$: A → U at
+$1/d_a$, D → A at $1/d_d$, U → S at $1/d_{\text{PCR}}(\text{IAA})$) in one
+competing draw a day: some event happens with probability $1 - e^{-(h + r)}$,
+and it is the infection with share $h / (h + r)$. So, per state,
+
+$$
+\iota_X = \left(1 - e^{-(h + r_X)}\right) \frac{h}{h + r_X}, \qquad
+\rho_X = \left(1 - e^{-(h + r_X)}\right) \frac{r_X}{h + r_X},
+$$
+
+with $r_S = 0$, and $d_{\text{PCR}}$ read at IAA + IAM. The bites are averaged
+before the draw: exact for S, whose infection has no competitor, but for D, A
+and U the IBM's per-person draw is nonlinear in the day's bite count (§V.7).
+Everyone in S, U, A and D can be infected; an infected D stays
+D. S and U pass through LM detectability $\phi_{LM}(\text{IAA} + \text{IAM})$
+first -- the rest of S go to U, the rest of U stay U -- then LM-detectable S and
+U, and all infected A, through the clinical draw $\phi_D(\text{ICA} +
+\text{ICM})$. Clinical cases are
+treated with coverage × efficacy exactly as for falciparum; the rest go to D.
+`A` is LM-detectable by definition, so LM prevalence counts D, Tr and all of A,
+and PCR adds U.
+
+### V.3 Immunity, its refractory windows and its spread
+
+IAA (anti-parasite: LM detectability and the U → S duration) and ICA (clinical)
+are boosted by infection once the refractory window since the last boost has
+passed -- 44 days for IAA, 4 for ICA -- and decay by $e^{-1/d}$ a day, a boosted
+person skipping the day's decay as in §B.5. Immunity is held as stocks
+$J = \sum I$ per cell, not means: the ladder has cells that are exactly empty,
+where a mean's inflows would divide by zero.
+
+Who is inside their window is carried too, as a refractory stock $R$ per cell,
+moved with the people like any other stock -- aged, dying, losing batches, moved
+up a batch by a bite, taken by radical cure -- and released when the window
+ends; a day's infections then boost in the share $1 - R/N$. A renewal rate
+$p/(pu + 1)$, the same in every cell, is right for someone whose infection risk
+has been steady for the whole window and wrong for vivax, because a bite both
+boosts a person and moves them up a batch into a cell whose relapse hazard is
+higher by $f$: a child moving to one batch relapses within IAA's window two
+times in three, inside the window of the bite that brought the batch. The
+renewal rate cannot see that a cell's newcomers are freshly boosted, and put
+young children's IAA 10-11% above the IBM's; the stock sees it. Each window is a
+chain of stages passed on with probability $n/u$ a day, on a clock applied after
+the day's other moves: ICA's runs exactly, a stage a day, and IAA's as four
+11-day stages (an exact 44-day chain moves infants' IAA by 2.7% of itself and no
+other output by more than 0.7%, at 2.4 times the cost).
+
+People who share a cell do not share an immunity: their batch *history*
+differs, and years with few batches mean far fewer infections. In the IBM at
+EIR 10 the coefficient of variation of IAA within a cell is 0.5 in infancy and
+0.13 by age 20, and the vivax curves are steep ($\kappa_C = 5.4$), so the mean
+clinical probability can be several times the probability at the mean immunity.
+Each cell therefore also carries $K = \sum I^2$, transported exactly as $J$ is
+-- exact, because nothing that moves a person between cells depends on their
+own immunity once their cell is known -- with a boost adding $2I + 1$ and decay
+multiplying $I^2$ by $e^{-2/d}$. The variance a boost injects is the refractory
+renewal process's, whose Fano factor $(1 - p)\,t^2$ ($t$ the share of infections
+that boost) is far below one for IAA's 44-day window. The curves are averaged
+over a gamma with each cell's mean and variance at five Gauss–Hermite nodes,
+through the Wilson–Hilferty map. Against the IBM's individuals at EIR 10 the
+gamma average of the LM-detection curve is within 1% of the true cell average at
+every age, where the curve at the mean is up to 10% off, and the within-cell
+variance of IAA is 0.96–1.01 times the IBM's from age 3 to 20. A boost also moves
+its person's mean, by the day's boost probability $pt$, which adds $(pt)^2$ to
+$I^2$ over and above the variance. ICA carries that term too: with it the
+injection is exactly a boost's worth per person-day with no window, and ICA's
+spread stays within 6% of the IBM's rule up to $p = 0.2$ a day. IAA's long
+window makes its boosts so regular that the term overshoots, and IAA keeps the
+renewal term alone; that holds at the daily infection probabilities of EIR 10
+and below and drifts from the IBM's spread above about $p = 0.05$, in either
+direction depending on how steady a cell's exposure has been, until at the
+highest EIRs a cell's computed variance can fall below zero and is read as none
+(§V.7). IAA and ICA share
+nodes: they are boosted by the same infections and correlate at 0.92–0.97 within
+a cell below age 40, so "LM-detectable *and* clinical" is averaged jointly. The
+nodes stand for people, so the clinical curve takes the IBM's per-person $+0.5$
+(`acquired_immunity_offset = 0.5`, the vivax default). `parameters$immunity_spread
+= FALSE` evaluates the curves at the cell mean, with no offset.
+
+Maternal immunity is algebraic, as in §B.3: IAM and ICM are $p_{cm}$ times the
+population-weighted mean IAA and ICA of those aged 20 to 21 in the same
+heterogeneity group, the mothers the IBM draws from, waning at $1/r_m$.
+
+### V.4 Treatment
+
+The treated leave Tr at $1 - e^{-1/d_t}$ a day into a post-treatment chain that
+carries the level dimension, since people keep losing batches while protected.
+Its stage count follows §B.4's daily rule: eight stages for chloroquine.
+
+### V.5 Radical cure
+
+Of everyone treated, `drug_hypnozoite_efficacy` lose every batch -- whether or
+not the blood stage cleared, since the IBM draws the two independently -- and
+start liver-stage protection, which blocks new batches (not infection) for a
+Weibull time from the dose. Protection is an attribute of the person, not of
+their disease state, so it sits on the level dimension as a chain of levels
+matched to the protected days, $M^2 / (V + M)$ stages: four for primaquine's
+4.7 days, eleven for tafenoquine's 27. The chain is sized for the
+shortest-protecting radical-cure drug on the schedule, so a switch from
+primaquine to tafenoquine keeps four stages: tafenoquine's mean protection is
+kept and its spread widened, a standard deviation of 12.5 days against the
+Weibull's 6.3. The last level returns to batch 0. A primaquine stage is left
+with probability 0.85 a day, faster than Tr is left (0.63), so the chain's clock
+acts on what the day leaves: someone who leaves Tr and moves a stage on the same
+day does both, and no cell can lose more than it holds. The day's radically
+cured join the first level after it, so a stage is left no earlier than the day
+after the dose. They take their immunity with them -- the immunity of the nodes
+that fell ill, since the clinical draw is taken node by node and the less immune
+fall ill more, not their cell's mean -- and the spread their boosts injected,
+and their refractory windows.
+
+### V.6 Seeding and outputs
+
+The seed is the IBM's own: `malariaEquilibriumVivax` on `malariasimulation`'s
+durations, solved on `fleet`'s age grid under the treatment coverage at
+timestep 0, with the mosquitoes sized under the coverage at timestep 1, as
+`set_equilibrium()` does -- raw coverage in both, as the IBM hands it to the
+solver. With heterogeneity off the IBM still solves the heterogeneous
+equilibrium, sizes the mosquitoes from the whole of it, and draws everyone from
+its first group, the least bitten; so does `fleet`. The IBM draws each person's state and batch count from
+the equilibrium's S, D, A, U and T within their age and heterogeneity group,
+leaving out its prophylaxis state, so nobody starts drug-protected; so does
+`fleet`. Every cell starts at its mean immunity (no spread), as
+`initial_immunity()` starts the IBM, and nobody starts inside a refractory
+window, as the IBM's `last_boosted` starts at -1. Neither model holds that
+state -- both build up a within-cell spread the equilibrium does not have -- so
+both relax from it together, and further than a falciparum run does. From EIR
+10 down to 0.3 a vivax run's LM prevalence settles 2 to 14% above the seed, its
+clinical incidence 15 to 21% above it and its realised EIR 4 to 17% above
+`init_EIR`, within about eight years at EIR 3 and over two decades at 0.3, where
+it overshoots first. The IBM moves as far: its realised EIR ends 18%, 13% and 8%
+above `init_EIR` at EIR 0.3, 1 and 3. With `immunity_spread = FALSE` `fleet`
+holds its seed to within 1.3%, so the spread is what moves them both. The
+infectivity lag is none: vivax has `delay_gam = 0`.
+
+The output table is the IBM's vivax table: no severe disease and no
+`p_detect_lm_*`, and in their place `n_relapses`, `n_with_hypnozoites`, the
+immunity means `ica_mean`, `icm_mean`, `iaa_mean`, `iam_mean` and
+`hypnozoites_mean`, and their age bands when `incidence_relapse_rendering_*`,
+`n_with_hypnozoites_rendering_*` and `<immunity>_rendering_*` are set (§G).
+
+### V.7 What the mean field leaves out
+
+- **Immunity is correlated with disease state within a cell.** The IBM's
+  immunity-dependent transitions sort people by immunity: clearance from U is
+  faster with more IAA, so S holds more of the immune, and the clinical draw
+  takes the least immune into D (their IAA 0.6–0.8 times their cell's mean from
+  age 5). A mean field with one immunity distribution per cell cannot carry
+  that sorting; carrying immunity per disease state would two or three times
+  the cost of a vivax run. At EIR 10 it leaves LM prevalence and clinical
+  incidence in school-age children 1–3% above the IBM's.
+- **Relapses on days without a bite.** `malariasimulation` 3.0.0 evaluates
+  relapses only on days when someone is bitten, so on a day with no infectious
+  bite anywhere the IBM loses every relapse, which `fleet` keeps. That is a
+  defect in the IBM, not replicated. Such a day comes with probability about
+  $e^{-\bar\varepsilon N}$, for $\bar\varepsilon$ the mean infectious bites per
+  person per day and $N$ the population: in a 10,000-person run it passes 5%
+  only below an EIR of about 0.14, and in 50,000 below about 0.03, unless
+  vector control drives the day's bites down further.
+- **The day's bite count is averaged before the competing draw.** The IBM's
+  infection-or-progression draw and its bite-or-relapse split are per person,
+  nonlinear in the day's bite count $n$; `fleet` gives everyone in a cell the
+  draw at the averaged hazard. That is exact for S and puts D's infection
+  probability 0.1–0.5% low, A's and U's by less, and the bite share of
+  infections 0.2–1% low.
+- **Refractory people are infected at their cell's average rate**, though those
+  in Tr and the drug-protected cannot be infected, so under treatment a cell's
+  infections fall inside a window a little too often: an estimate of up to 1.6%
+  too few IAA boosts under age 2 at 50% chloroquine coverage and EIR 10.
+- **IAA's within-cell spread at high transmission.** The renewal closure (§V.3)
+  is checked against the IBM at EIR 10 and below; above a daily infection
+  probability of about 0.05 it drifts from the IBM's spread, and at the highest
+  EIRs a cell's variance can compute below zero and is read as none.
+- Tr is fully protected, where the IBM's prophylaxis on the day after treatment
+  is $W(1)$, just below one for the vivax drugs.

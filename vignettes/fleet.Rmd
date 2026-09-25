@@ -25,28 +25,28 @@ knitr::opts_chunk$set(eval = can_run)
 > `malariasimulation`, can be examined and argued with, not so that anyone can
 > rely on its numbers: the API is unstable and nothing here has been peer
 > reviewed. The known discrepancies against the IBM are open rather than
-> resolved: an excess on clinical and severe incidence across the 63-country
-> site files that is not yet explained, and, on the default age grid, clinical
-> and severe incidence a few per cent low at high transmission, the grid's own
-> discretisation error. The full statement
+> resolved: an excess on falciparum clinical and severe incidence across the
+> 63-country site files that is not yet explained; a larger excess on *P. vivax*
+> sites, not yet explained either; and, at school age, vivax LM prevalence and
+> clinical incidence a few per cent high. The full statement
 > is on the [package front page](https://pwinskill.github.io/fleet/); if you need
 > results you can defend today, use
 > [malariasimulation](https://github.com/mrc-ide/malariasimulation).
 
 `fleet` is a fast, deterministic **mean-field twin** of the
 [malariasimulation](https://github.com/mrc-ide/malariasimulation) individual-based
-model of *Plasmodium falciparum* malaria. It reproduces the same age- and
-biting-heterogeneity-structured human model and compartmental mosquito model,
-advances them one day at a time in the IBM's own order, takes the **same
+model of *Plasmodium falciparum* and *P. vivax* malaria. It reproduces the same
+age- and biting-heterogeneity-structured human model and compartmental mosquito
+model, advances them one day at a time in the IBM's own order, takes the **same
 parameter list** as the IBM, and is seeded at the
-[malariaEquilibrium](https://github.com/mrc-ide/malariaEquilibrium) solution.
-A multi-decade run finishes in under a second, independent of population
-size. That speed is the point: the intended uses are calibration, sweeps and
+[malariaEquilibrium](https://github.com/mrc-ide/malariaEquilibrium) solution
+(for vivax, `malariaEquilibriumVivax`'s). A 30-year falciparum run takes a few
+seconds and a vivax run about a minute, independent of population size. That speed is the point: the intended uses are calibration, sweeps and
 quick scenario work, where a stochastic IBM would be too slow. It is not ready
 for those jobs yet (see the note above).
 
-Reach for the IBM (not this) when you need stochastic variation, individual
-heterogeneity beyond the mean field, or *P. vivax*.
+Reach for the IBM (not this) when you need stochastic variation or individual
+heterogeneity beyond the mean field.
 
 ## Install and load
 
@@ -104,8 +104,8 @@ range(pfpr)      # a ~0.4% relaxation over the first years
 ```
 
 Row 1 is day 1, whose state is the seed. Over these fifteen years LM prevalence
-in 2-10 year olds runs between 0.5489 (the seed) and 0.5469 (its low point, about
-a year and a half in), a spread of 0.36%, and is flat to 0.006% over the last
+in 2-10 year olds runs between 0.5495 (the seed) and 0.5475 (its low point, a
+little over a year in), a spread of 0.35%, and is flat to 0.008% over the last
 five years. EIR stays within 0.4% of its target throughout. Incidence relaxes
 further off the seed than prevalence does, a few per cent over the first years
 at this EIR and more at higher ones.
@@ -284,6 +284,32 @@ range(final_year$EIR)   # seasonal swing in the settled cycle
 mean(final_year$EIR)    # about 7% below the aseasonal target of 20
 ```
 
+## P. vivax
+
+A `get_parameters(parasite = "vivax")` list runs the *P. vivax* model:
+hypnozoite batches and relapse, radical cure with liver-stage protection, and no
+severe disease. The output is the IBM's vivax table, with relapses and
+hypnozoite carriage beside the familiar columns:
+
+```{r vivax}
+pv <- malariasimulation::get_parameters(list(
+  human_population = 1000,
+  clinical_incidence_rendering_min_ages = 0,
+  clinical_incidence_rendering_max_ages = 100 * 365 - 1),
+  parasite = "vivax")
+pv <- malariasimulation::set_drugs(pv, list(malariasimulation::CQ_PQ_params_vivax))
+pv <- malariasimulation::set_clinical_treatment(pv, drug = 1, timesteps = 1, coverages = 0.4)
+
+out_pv <- run_simulation_ode(5 * 365, malariasimulation::set_equilibrium(pv, init_EIR = 3))
+tail(out_pv[, c("timestep", "n_inc_clinical_0_36499", "n_relapses",
+                "n_with_hypnozoites", "iaa_mean")], 3)
+```
+
+Radical cure starts on day 1 here, from a seed without it, so these rows are
+still settling towards the treated state; a level worth comparing wants a
+burn-in first (`vignette("using")`). MDA, SMC and PMC are refused under vivax,
+because `malariasimulation` itself fails on them.
+
 ## Discretisation settings
 
 Every run above uses the default numerics, which live in `run_simulation_ode()`'s
@@ -292,17 +318,18 @@ just the fields you want to change. Nothing epidemiological sits there: model
 parameters, the target EIR included, stay on the parameter list. There are only
 three settings — the age grid, the prophylaxis chains' stage counts and the
 mosquito sub-steps per day — and every default is the validated choice. The one
-worth reaching for is the age grid: a result that rests on the *level* of severe
-incidence, or on adult bands, is worth re-running on a finer grid to see how
-much of it is the grid.
+worth reaching for is the age grid. The default, 209 groups, puts the age
+profile within about 1% of `fleet`'s own converged answer; a grid a quarter as
+fine runs four times as fast, and is adequate where a result does not rest on
+the level of severe incidence or on young children at high transmission:
 
 ```{r tuning}
-seas_fine <- run_simulation_ode(
+seas_coarse <- run_simulation_ode(
   20 * 365, malariasimulation::set_equilibrium(p_seas, init_EIR = 20),
-  tuning = list(age_lower = default_age_lower(n_group = 105)))
+  tuning = list(age_lower = default_age_lower(n_group = 53)))
 
 c(default = mean(final_year$EIR),
-  finer   = mean(seas_fine$EIR[(nrow(seas_fine) - 365 + 1):nrow(seas_fine)]))
+  coarse  = mean(seas_coarse$EIR[(nrow(seas_coarse) - 365 + 1):nrow(seas_coarse)]))
 ```
 
 `?ode_tuning` documents every field.
@@ -318,8 +345,9 @@ Four things to read before you trust a number from this model.
 | **`vignette("model")`** | The formal specification: the daily update, and what each state dimension carries as against what is captured *without* one. |
 | **`vignette("parameters")`** | Every `malariasimulation` `set_*()` function, argument by argument. |
 
-Scope: `fleet` is **P. falciparum only**. *P. vivax* parameter lists are rejected
-at input, and the model is always compartmental, so the individual-mosquito code
+Scope: `fleet` runs whichever parasite the list names, as `malariasimulation`
+does, except for chemoprevention under vivax, which `malariasimulation` itself
+cannot run. The model is always compartmental, so the individual-mosquito code
 path does not apply.
 
 ```{r session, eval = TRUE}

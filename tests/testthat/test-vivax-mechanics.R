@@ -1,8 +1,9 @@
 # The P. vivax block's daily mechanisms, each pinned on its own so that a
 # failure names the mechanism rather than only moving a reference value: the
 # day's infection and relapse draw, relapse blocked by PEV, the hypnozoite
-# ladder, immunity decay, the liver-stage clock after radical cure, and the
-# two vivax delay lines (de = 10, delay_gam = 0).
+# ladder and the bite that overwrites its decay, immunity decay, the refractory
+# windows and the boost that skips a day's decay, the liver-stage clock after
+# radical cure, and the two vivax delay lines (de = 10, delay_gam = 0).
 
 pv_bands <- function(overrides = list(), eir = 10) {
   p <- malariasimulation::get_parameters(utils::modifyList(list(
@@ -30,21 +31,16 @@ by_level <- function(st, x) {
   apply(N, 3, sum)
 }
 
-test_that("a vivax day infects and relapses at the IBM's probabilities", {
-  skip_if_not_installed("malariasimulation")
-  # Day 1 recomputed by hand from the seed. Every bite counts, so a person in
-  # S is infected with probability 1 - exp(-(b EPS + k f)); in A, D and U that
-  # hazard competes with the state's progression in one draw a day, U's at the
-  # immunity-dependent 1 / dpcr. At the seed nobody in a cell differs from its
-  # mean (K = J^2 / N), so the quadrature collapses onto the mean and the whole
-  # day can be written out.
-  p <- pv_bands()
-  inp <- build_inputs(p, 10, timesteps = 10)
-  x <- inp$pars
-  o <- run_simulation_ode(1, p)
+# Day 1's infections by cell, recomputed by hand from the seed of a build at
+# `eir`. Every bite counts, so a person in S is infected with probability
+# 1 - exp(-(b EPS + k f)); in A, D and U that hazard competes with the state's
+# progression in one draw a day, U's at the immunity-dependent 1 / dpcr. At the
+# seed nobody in a cell differs from its mean (K = J^2 / N), so the quadrature
+# collapses onto the mean and the whole day can be written out.
+seed_infections <- function(x, eir = 10) {
   d <- c(x$n_age, x$n_het, x$n_hyp)
   kk <- c(seq_len(x$n_bat) - 1, rep(0, x$n_hyp - x$n_bat))
-  EPS <- 10 / 365 * outer(x$psi, x$zeta) / sum(x$het_wt * x$zeta)
+  EPS <- eir / 365 * outer(x$psi, x$zeta) / sum(x$het_wt * x$zeta)
   rtot <- array(x$bv * EPS, d) + rep(kk * x$ff, each = x$n_age * x$n_het)
   iS <- 1 - exp(-rtot)
   hv <- rtot
@@ -59,11 +55,23 @@ test_that("a vivax day infects and relapses at the IBM's probabilities", {
   comp <- function(h) (1 - exp(-(hv + h))) * hv / (hv + h)
   inf <- iS * x$Sv0 + comp(-log(1 - x$rA)) * x$Av0 + comp(-log(1 - x$rD)) * x$Dv0 +
     comp(rU) * x$Uv0
+  list(inf = inf, rtot = rtot, kk = kk, N = N)
+}
+
+test_that("a vivax day infects and relapses at the IBM's probabilities", {
+  skip_if_not_installed("malariasimulation")
+  p <- pv_bands()
+  inp <- build_inputs(p, 10, timesteps = 10)
+  x <- inp$pars
+  o <- run_simulation_ode(1, p)
+  s <- seed_infections(x)
+  inf <- s$inf
   hp <- p$human_population
   expect_equal(o$n_infections[1], sum(inf) * hp, tolerance = 1e-10)
   # relapses are the relapse share of each cell's infections
-  rel <- inf * rep(kk * x$ff, each = x$n_age * x$n_het) / rtot
+  rel <- inf * rep(s$kk * x$ff, each = x$n_age * x$n_het) / s$rtot
   expect_equal(o$n_relapses[1], sum(rel) * hp, tolerance = 1e-10)
+  N <- s$N
   # and the force of infection on mosquitoes is today's infectivity (no lag for
   # vivax), weighted by zeta x psi over the live population
   infv <- x$cD * x$Dv0 + x$cA_v * x$Av0 + x$cU * x$Uv0 + x$cT_vals[1] * x$Trv0
@@ -119,9 +127,10 @@ test_that("with no infection the hypnozoite ladder clears exactly as the IBM's d
   skip_if_not_installed("malariasimulation")
   # hypnozoite_batch_decay_process: a carrier of k batches loses one a day with
   # probability 1 - exp(-k gammal). With no bites and no relapses nothing else
-  # moves a batch count, people die at the age-independent default rate and are
-  # born with none, so the population by level follows
-  #   N_k' = N_k (1 - p_k - mu) + N_{k+1} p_{k+1} + mu N delta_k0
+  # moves a batch count. People die at the age-independent default rate and the
+  # dead are replaced by newborns with none -- a reset the IBM queues after the
+  # decay, so it overwrites it -- and the population by level follows
+  #   N_k' = (1 - mu) (N_k (1 - p_k) + N_{k+1} p_{k+1}) + mu N delta_k0
   # exactly, whatever happens to their disease state.
   p <- pv_bands()
   x <- build_inputs(p, 10, timesteps = 400)$pars
@@ -131,10 +140,33 @@ test_that("with no infection the hypnozoite ladder clears exactly as the IBM's d
   pk <- 1 - exp(-x$gammal * (seq_len(x$n_bat) - 1))
   N <- by_level(state_at(x, 0), x)
   for (t in seq_len(365)) {
-    N <- N * (1 - pk - mu) + c(N[-1] * pk[-1], 0) + c(mu * sum(N), rep(0, x$n_bat - 1))
+    N <- (1 - mu) * (N * (1 - pk) + c(N[-1] * pk[-1], 0)) + c(mu * sum(N), rep(0, x$n_bat - 1))
   }
   expect_equal(by_level(state_at(x, 365), x), N, tolerance = 1e-10)
   expect_gt(sum(N[-1]), 0.1)                # a real ladder left to clear
+})
+
+test_that("a batch-forming bite overwrites the day's batch decay", {
+  skip_if_not_installed("malariasimulation")
+  # The decay is queued first and a bite's pmin(k + 1, kmax), taken from the
+  # start-of-day k, later, so it wins: the day's batch-formers move up, or stay
+  # at the top batch, without losing a batch, and everyone else decays. With no
+  # relapse every infection is a bite; with no ageing, death or treatment the
+  # population by level after day 1 is, for the start-of-day N_k and the day's
+  # bite-infected B_k (all of whom form a batch),
+  #   N_k' = N_k - B_k [k < kmax] + B_{k-1} - p_k (N_k - B_k) + p_{k+1} (N_{k+1} - B_{k+1})
+  x <- build_inputs(pv_bands(), 10, timesteps = 40)$pars
+  x$ff <- 0; x$r_age[] <- 0; x$mu_age_z[] <- 0
+  B <- apply(seed_infections(x)$inf, 3, sum)
+  N <- by_level(state_at(x, 0), x)
+  nb <- x$n_bat
+  pk <- 1 - exp(-x$gammal * (seq_len(nb) - 1))
+  move <- c(B[-nb], 0)                       # the top batch's bitten stay put
+  pre <- N - move + c(0, move[-nb])
+  dec <- pk * (N - B)
+  expect_equal(by_level(state_at(x, 1), x), pre - dec + c(dec[-1], 0), tolerance = 1e-12)
+  # decaying the bitten too, as a separate additive flow would, is measurably different
+  expect_gt(max(abs(pk * B)) / max(abs(dec)), 0.01)
 })
 
 test_that("vivax immunity decays by exp(-1/d) a day, and its spread by exp(-2/d)", {
@@ -149,6 +181,101 @@ test_that("vivax immunity decays by exp(-1/d) a day, and its spread by exp(-2/d)
   expect_equal(sum(s1$JAv), sum(s0$JAv) * (exp(-1 / x$d_iaa) - mu), tolerance = 1e-12)
   expect_equal(sum(s1$JCv), sum(s0$JCv) * (exp(-1 / x$d_ica) - mu), tolerance = 1e-12)
   expect_equal(sum(s1$KAv), sum(s0$KAv) * (exp(-2 / x$d_iaa) - mu), tolerance = 1e-12)
+})
+
+test_that("a refractory window is a stock that withholds the boost, and the boost skips decay", {
+  skip_if_not_installed("malariasimulation")
+  # boost_immunity() boosts only those whose last boost is at least u days old,
+  # and a boost replaces that day's decay. fleet carries the people inside each
+  # window as a stock per cell, RAv for IAA and RCv for ICA; a cell's infections
+  # boost in the share 1 - R / N.
+  x <- build_inputs(pv_bands(), 10, timesteps = 40)$pars
+  s <- seed_infections(x)
+  inf <- s$inf; N <- s$N
+  mu <- unique(as.vector(x$mu_age_z))
+  s1 <- state_at(x, 1)
+  # the IBM starts everyone's last boost at -1, so nobody is refractory on day 1:
+  # every infection boosts ICA, and the boosted skip the decay of what they carry
+  e <- exp(-1 / x$d_ica)
+  fr <- ifelse(N > 0, inf / N, 0)
+  expect_equal(sum(s1$JCv), sum(x$JCv0 * (e - mu) + inf + fr * x$JCv0 * (1 - e)),
+               tolerance = 1e-12)
+  # decay-then-boost (everyone decays, the boosted then gain 1) is measurably different
+  expect_gt(abs(sum(s1$JCv) - sum(x$JCv0 * (e - mu) + inf)) / sum(inf), 1e-3)
+  # and each of the day's infected opens a window, in the first stage of both stocks
+  RA <- array(s1$RAv, c(dim(N), x$n_ra)); RC <- array(s1$RCv, c(dim(N), x$n_rc))
+  expect_equal(sum(RA[, , , 1]), sum(inf), tolerance = 1e-12)
+  expect_equal(sum(RC[, , , 1]), sum(inf), tolerance = 1e-12)
+  expect_equal(sum(RA[, , , -1]), 0)
+  # A population entirely inside IAA's window takes no IAA boost, however many
+  # are infected, while ICA, whose window is its own, is boosted as before.
+  sys <- dust2::dust_system_create(get_generator(), pars = x, n_particles = 1, dt = 1)
+  dust2::dust_system_set_state_initial(sys)
+  idx <- dust2::dust_unpack_index(sys)
+  st <- dust2::dust_system_state(sys)
+  RA0 <- array(0, c(dim(N), x$n_ra)); RA0[, , , 1] <- N
+  st[idx$RAv] <- RA0
+  dust2::dust_system_set_state(sys, st)
+  dust2::dust_system_run_to_time(sys, 1)
+  r1 <- dust2::dust_unpack_state(sys, dust2::dust_system_state(sys))
+  expect_equal(sum(r1$JAv), sum(x$JAv0) * (exp(-1 / x$d_iaa) - mu), tolerance = 1e-12)
+  expect_equal(sum(r1$JCv), sum(s1$JCv), tolerance = 1e-12)
+  # And in between, each cell's infections boost in the share 1 - R / N of that
+  # cell, whatever the others hold: a share that differs from cell to cell
+  # pins the split cell by cell, not just its two ends.
+  f <- array((seq_len(length(N)) %% 5) / 5, dim(N))
+  RA0 <- array(0, c(dim(N), x$n_ra)); RA0[, , , 1] <- f * N
+  sys <- dust2::dust_system_create(get_generator(), pars = x, n_particles = 1, dt = 1)
+  dust2::dust_system_set_state_initial(sys)
+  st <- dust2::dust_system_state(sys)
+  st[idx$RAv] <- RA0
+  dust2::dust_system_set_state(sys, st)
+  dust2::dust_system_run_to_time(sys, 1)
+  h1 <- dust2::dust_unpack_state(sys, dust2::dust_system_state(sys))
+  e <- exp(-1 / x$d_iaa)
+  frA <- ifelse(N > 0, (1 - f) * inf / N, 0)
+  expect_equal(sum(h1$JAv), sum(x$JAv0 * (e - mu) + (1 - f) * inf + frA * x$JAv0 * (1 - e)),
+               tolerance = 1e-12)
+})
+
+test_that("a refractory window holds its people ceiling(u) - 1 days, as a chain of stages", {
+  skip_if_not_installed("malariasimulation")
+  # n stages, each passed on with probability n / u_eff a day, so someone
+  # boosted d days ago is still inside with probability P(Binomial(d, n / u_eff)
+  # < n): u_eff days on average, as the IBM's (timestep - last_boosted) >= u
+  # blocks the u_eff = ceiling(u) - 1 days after a boost. Nothing else moves
+  # here: no infection, ageing, death or batch loss.
+  p <- pv_bands()
+  x <- build_inputs(p, 10, timesteps = 400)$pars
+  expect_equal(x$ua_eff, ceiling(p$ua) - 1)
+  expect_equal(x$n_ra, min(x$ua_eff, 4))
+  x$bv <- 0; x$ff <- 0; x$gammal <- 0; x$r_age[] <- 0; x$mu_age_z[] <- 0
+  sys <- dust2::dust_system_create(get_generator(), pars = x, n_particles = 1, dt = 1)
+  dust2::dust_system_set_state_initial(sys)
+  idx <- dust2::dust_unpack_index(sys)
+  st <- dust2::dust_system_state(sys)
+  N <- x$Sv0 + x$Dv0 + x$Av0 + x$Uv0 + x$Trv0
+  RA0 <- array(0, c(dim(N), x$n_ra)); RA0[, , , 1] <- 0.5 * N
+  st[idx$RAv] <- RA0
+  dust2::dust_system_set_state(sys, st)
+  days <- 1:300
+  y <- dust2::dust_system_simulate(sys, days)
+  held <- colSums(y[idx$RAv, , drop = FALSE]) / (0.5 * sum(N))
+  pr <- x$n_ra / x$ua_eff
+  expect_equal(held, stats::pbinom(x$n_ra - 1, days, pr), tolerance = 1e-12)
+  expect_equal(1 + sum(held), x$ua_eff, tolerance = 1e-6)   # day 0 counts once
+  # ICA's window the same way; its few days fit whole stages, so it holds its
+  # people for exactly uc_eff days
+  sys <- dust2::dust_system_create(get_generator(), pars = x, n_particles = 1, dt = 1)
+  dust2::dust_system_set_state_initial(sys)
+  st <- dust2::dust_system_state(sys)
+  RC0 <- array(0, c(dim(N), x$n_rc)); RC0[, , , 1] <- 0.5 * N
+  st[idx$RCv] <- RC0
+  dust2::dust_system_set_state(sys, st)
+  y <- dust2::dust_system_simulate(sys, days)
+  heldC <- colSums(y[idx$RCv, , drop = FALSE]) / (0.5 * sum(N))
+  expect_equal(heldC, stats::pbinom(x$n_rc - 1, days, x$n_rc / x$uc_eff), tolerance = 1e-12)
+  expect_equal(1 + sum(heldC), x$uc_eff, tolerance = 1e-9)
 })
 
 test_that("radical cure delivers its people to the liver-stage clock, which starts the next day", {
@@ -173,8 +300,17 @@ test_that("radical cure delivers its people to the liver-stage clock, which star
   # the clock acts on what the day leaves, so no cell goes negative however fast
   # a stage empties beside a Tr stay (0.85 a day on top of Tr's 0.63)
   st <- state_at(x, 40)
-  for (nm in c("Sv", "Dv", "Av", "Uv", "Trv", "Trv_slow", "Phv", "JAv", "JCv", "KAv", "KCv"))
+  for (nm in c("Sv", "Dv", "Av", "Uv", "Trv", "Trv_slow", "Phv", "JAv", "JCv", "KAv", "KCv",
+               "RAv", "RCv"))
     expect_gte(min(st[[nm]]), -1e-15, label = nm)
+  # and a refractory stock never holds more people than its cell
+  d <- c(x$n_age, x$n_het, x$n_hyp)
+  Ncell <- array(st$Sv + st$Dv + st$Av + st$Uv + st$Trv + st$Trv_slow, d) +
+    apply(array(st$Phv, c(d, x$n_phv)), 1:3, sum)
+  for (nm in c("RAv", "RCv")) {
+    R <- apply(array(st[[nm]], c(d, dim(st[[nm]])[4])), 1:3, sum)
+    expect_lte(max(R - Ncell), 1e-15, label = nm)
+  }
 })
 
 test_that("the vivax delay lines are the IBM's: EIR lagged de = 10 days, infectivity not at all", {

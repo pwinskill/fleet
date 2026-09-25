@@ -24,9 +24,10 @@ the two together, a few days: a grid finer than that is an error.
 
 \code{fleet}'s age profile converges at first order in the number of groups:
 each doubling halves its distance from the converged profile. The default
-puts clinical and severe incidence within about 1\% of \code{fleet}'s own
-converged answer at EIR 20 to 120, where 53 groups left severe incidence 8\%
-low at EIR 120. A coarser grid, \code{default_age_lower(n_group = 53)}, runs four
+puts the EIR 20 clinical age profile within 1.1\% of \code{fleet}'s own converged
+answer, where 53 groups leave it 4.4\% away; measured against the IBM median,
+severe incidence at EIR 120 is 1\% low on the default and 8\% low on 53
+groups. A coarser grid, \code{default_age_lower(n_group = 53)}, runs four
 times as fast and is adequate where the level of severe incidence, or of
 young children's incidence at high transmission, is not what a result rests
 on. See the \code{age-profile-clinical} and \code{severe-allage-eir} claims in
@@ -85,7 +86,7 @@ change; anything left out keeps its default.
 \examples{
 ode_tuning()$n_sub
 # a finer age grid, to see how much of a severe-incidence level is the grid
-length(ode_tuning(age_lower = default_age_lower(n_group = 105))$age_lower)
+length(ode_tuning(age_lower = default_age_lower(n_group = 417))$age_lower)
 }
 \seealso{
 \code{\link[=run_simulation_ode]{run_simulation_ode()}}

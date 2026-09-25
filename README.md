@@ -19,10 +19,11 @@
 > - **The API is unstable.** `run_simulation_ode()`'s signature has already
 >   changed once and may change again without deprecation.
 >   **Known discrepancies against the IBM are open, not resolved.** Across the
->   63-country site-file comparison `fleet` runs above the IBM on clinical and
->   severe incidence, an excess that is **not** explained, and on the default
->   age grid clinical and severe incidence run a few per cent low at high
->   transmission, the grid's own discretisation error.
+>   63-country site-file comparison `fleet` runs above the IBM on falciparum
+>   clinical and severe incidence, an excess that is **not** explained. On
+>   *P. vivax* sites it runs further above the IBM, and that is not explained
+>   either; and at school age its vivax LM prevalence and clinical incidence run
+>   a few per cent high, a limit of the mean field.
 >   The current verdict on every claim, with the numbers behind it, is in
 >   *[fleetcheck](https://pwinskill.github.io/fleetcheck/)* — which is kept
 >   current, unlike any figure quoted here would be.
@@ -33,26 +34,26 @@
 > If you need results you can defend today, use
 > [malariasimulation](https://github.com/mrc-ide/malariasimulation).
 
-> A fast, deterministic **mean-field twin** of the [malariasimulation](https://github.com/mrc-ide/malariasimulation) individual-based model of *Plasmodium falciparum* malaria, run on its daily clock: same inputs, under a second per run, population-independent.
+> A fast, deterministic **mean-field twin** of the [malariasimulation](https://github.com/mrc-ide/malariasimulation) individual-based model of *Plasmodium falciparum* and *P. vivax* malaria, run on its daily clock: same inputs, same outputs, population-independent.
 
 ## What it is
 
-`fleet` reproduces the Griffin-style human model, structured by age and biting heterogeneity, coupled to the compartmental mosquito model. Like `malariasimulation`, it advances one day at a time: every day it applies immunity decay, biting, one competing draw per person between infection and progression, a day of the mosquito model, and deaths and births, in the IBM's order. It is written in [odin2](https://github.com/mrc-ide/odin2) / [dust2](https://github.com/mrc-ide/dust2).
+`fleet` reproduces the Griffin-style human model, structured by age and biting heterogeneity, coupled to the compartmental mosquito model, and for *P. vivax* the White-style model with its hypnozoite batches and relapse. Like `malariasimulation`, it advances one day at a time: every day it applies immunity decay, biting, one competing draw per person between infection and progression, a day of the mosquito model, and deaths and births, in the IBM's order. It is written in [odin2](https://github.com/mrc-ide/odin2) / [dust2](https://github.com/mrc-ide/dust2).
 
 | | |
 | --- | --- |
-| **Human states** | `S / D / A / U / Tr`, plus the post-treatment and chemoprevention prophylaxis chains and the chemoprevention treated phase |
-| **Immunity** | four acquired states `IB / ICA / ID / IVA`; two maternal terms `ICM / IVM`, algebraic rather than state variables |
+| **Human states** | `S / D / A / U / Tr`, plus the post-treatment and chemoprevention prophylaxis chains and the chemoprevention treated phase; for vivax each over 0 to 10 hypnozoite batches, with liver-stage protection after radical cure |
+| **Immunity** | falciparum: four acquired states `IB / ICA / ID / IVA` and two maternal terms `ICM / IVM`, algebraic rather than state variables; vivax: `IAA / ICA` with their within-cell spread and refractory windows, and maternal `IAM / ICM` |
 | **Mosquito, per species** | `E / L / P / Sm / Em / Im`, with the IBM's own delay lines for incubation, the EIR and human infectivity |
 
 It exists to give the malariasimulation ecosystem a **deterministic, Monte-Carlo-free companion** that:
 
-- **Takes the same inputs as the individual-based model (IBM).** `run_simulation_ode()` accepts a `malariasimulation::get_parameters()` list, with the usual `set_*` intervention builders layered on, unchanged. *P. falciparum only.*
-- **Is seeded where the IBM is seeded.** Initial conditions come from `malariaEquilibrium`, under the same treatment coverage the IBM seeds with. An undisturbed run's prevalence relaxes off that seed by under half a percent and then holds; incidence relaxes by a few per cent over the first years, more at high transmission, so burn in before comparing levels, as with the IBM.
+- **Takes the same inputs as the individual-based model (IBM).** `run_simulation_ode()` accepts a `malariasimulation::get_parameters()` list, with the usual `set_*` intervention builders layered on, unchanged, for either parasite: `get_parameters(parasite = "vivax")` runs the vivax model.
+- **Is seeded where the IBM is seeded.** Initial conditions come from `malariaEquilibrium`, or `malariaEquilibriumVivax` for vivax, under the same treatment coverage the IBM seeds with. An undisturbed falciparum run's prevalence relaxes off that seed by under half a percent and then holds, while incidence relaxes by a few per cent over the first years, more at high transmission. A vivax run moves further, as the IBM's does: its clinical incidence settles about 20% above the seed and its realised EIR 4 to 17% above `init_EIR`, taking up to two decades at the lowest EIRs. So burn in before comparing levels, as with the IBM.
 - **Returns malariasimulation's output table.** A parameter list gives the columns the IBM would give it, under the same names and with the same meanings, so a post-processing pipeline written for the IBM, postie included, works on a `fleet` run unchanged.
-- **Is fast and population-independent.** All compartments are per-capita densities, so a 30-year daily run takes under a second whether you model a thousand people or ten million.
+- **Is fast and population-independent.** All compartments are per-capita densities, so a run costs the same whether you model a thousand people or ten million: a 30-year falciparum run takes about 3 s on the default 209-group age grid (0.7 s on 53 groups), a vivax run, with its hypnozoite dimension, about a minute.
 
-Reach for the IBM instead when you need stochastic variation, individual heterogeneity beyond the mean field, or *P. vivax*.
+Reach for the IBM instead when you need stochastic variation or individual heterogeneity beyond the mean field.
 
 ## Install
 
@@ -63,7 +64,7 @@ Reach for the IBM instead when you need stochastic variation, individual heterog
 remotes::install_github("pwinskill/fleet")
 ```
 
-That also installs the GitHub-only hard dependencies (`dust2`, `monty` and `malariaEquilibrium`), which `DESCRIPTION` `Remotes` points at. It installs nothing from `Suggests`; the examples need two of those:
+That also installs the GitHub-only hard dependencies (`dust2`, `monty`, `malariaEquilibrium` and `malariaEquilibriumVivax`), which `DESCRIPTION` `Remotes` points at. It installs nothing from `Suggests`; the examples need two of those:
 
 ```r
 remotes::install_github(c("mrc-ide/malariasimulation", "mrc-ide/postie"))
@@ -93,7 +94,7 @@ postie::get_prevalence(out, diagnostic = "lm")$lm_prevalence_2_10
 postie::get_rates(out)[, c("time", "age_lower", "age_upper", "clinical", "severe", "dalys")]
 ```
 
-Layer interventions with the ordinary malariasimulation builders and re-run; everything is applied automatically from the parameter list, with no extra arguments:
+Layer interventions with the ordinary malariasimulation builders and re-run; everything is applied automatically from the parameter list, with no extra arguments. A vivax list runs the same way:
 
 ```r
 p <- malariasimulation::set_drugs(p, list(malariasimulation::AL_params))
@@ -104,6 +105,15 @@ p <- malariasimulation::set_bednets(
   rnm = matrix(0.24, 1, 1), gamman = 2.64 * 365)
 
 out <- run_simulation_ode(timesteps = 3650, parameters = malariasimulation::set_equilibrium(p, init_EIR = 20))
+
+# P. vivax, with radical cure: relapses and hypnozoite carriage come back as columns.
+# Radical cure starts on day 1 here, from a seed without it, so these rows are
+# still settling; burn in first for a level to compare.
+pv <- malariasimulation::get_parameters(parasite = "vivax")
+pv <- malariasimulation::set_drugs(pv, list(malariasimulation::CQ_PQ_params_vivax))
+pv <- malariasimulation::set_clinical_treatment(pv, drug = 1, timesteps = 1, coverages = 0.4)
+out_pv <- run_simulation_ode(timesteps = 3650, parameters = malariasimulation::set_equilibrium(pv, init_EIR = 3))
+tail(out_pv[, c("n_relapses", "n_with_hypnozoites", "iaa_mean")])
 ```
 
 Three exported functions: `run_simulation_ode()` runs the model, `ode_tuning()` holds the discretisation settings, and `default_age_lower()` gives the default graded age grid. Everything else comes off the parameter list. (The `ode` in two of the names is kept for compatibility: the model is a daily update, not an ODE.)

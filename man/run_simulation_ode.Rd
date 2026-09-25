@@ -52,12 +52,13 @@ real difference between the two models rather than a detail of this one.
 calibration loop varies any of them, re-call \code{set_equilibrium()} each
 iteration.
 
-Three further optional fields tune how faithfully the mean field mirrors the
-IBM. The first two are per-individual arithmetic, the third is a seeding
-convention; all three default to the validated choice, so you normally leave
-them alone:
+Four further optional fields tune how faithfully the mean field mirrors the
+IBM: two per-individual details of its arithmetic, the vivax immunity
+closure, and a seeding convention. All four default to the validated choice,
+so you normally leave them alone:
 \itemize{
-\item \code{bite_dedup} (default \code{1}): reproduce the IBM's per-timestep bite
+\item \code{bite_dedup} (default \code{1}; P. falciparum only, since vivax counts
+every bite, as the IBM does): reproduce the IBM's per-timestep bite
 deduplication. malariasimulation collects the day's bitten individuals in a
 bitset, so a person bitten repeatedly in one timestep is infected at most
 once: the daily infection probability is \code{(1 - exp(-EPS)) * b}, which
@@ -73,7 +74,8 @@ P. vivax): the IBM adds \code{+0.5} to positive acquired immunity inside the
 falciparum model reads its curves at a stratum mean, where it does not
 carry over and an A/B against the IBM ensemble mean favours \code{0}; the vivax
 model reads them at quadrature nodes that stand for individuals (see
-\code{immunity_spread}), where it does, so it takes the IBM's \code{0.5}.
+\code{immunity_spread}), where it does, so it takes the IBM's \code{0.5} -- and \code{0}
+with \code{immunity_spread = FALSE}, back at the cell mean.
 \item \code{immunity_spread} (default \code{TRUE}; P. vivax only): model the spread
 of immunity among people who share an age, heterogeneity group and
 hypnozoite batch count. In the IBM they differ by their batch \emph{history},
@@ -217,9 +219,9 @@ p <- malariasimulation::set_equilibrium(
 out <- run_simulation_ode(timesteps = 3650, parameters = p)
 head(out[, c("timestep", "n_age_730_3650", "n_detect_lm_730_3650", "EIR")])
 
-# the same run on an age grid twice as fine
-fine <- run_simulation_ode(3650, p,
-  tuning = list(age_lower = default_age_lower(n_group = 105)))
+# the same run on a coarser age grid: a quarter of the groups, four times as fast
+coarse <- run_simulation_ode(3650, p,
+  tuning = list(age_lower = default_age_lower(n_group = 53)))
 }
 }
 \seealso{

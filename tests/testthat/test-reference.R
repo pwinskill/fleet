@@ -145,11 +145,12 @@ NET_DAY <- 100
 ## cut the biting rate from day 101, and humans feel it de = 12 days later (row
 ## 113). TBV cuts onward infectivity from day 101; mosquitoes read it delay_gam
 ## later, incubate for 9 days, and their bites reach humans de after that (row
-## 135). Mass PEV protects nobody until its last primary dose, 60 days on (row 161).
+## 135). Mass PEV protects nobody until its last primary dose, pev_doses = 0, 45,
+## 90 days, so from row 191.
 REF_INT_DAYS_SAMPLED <- list(
   nets = c(before = NET_DAY, onset = NET_DAY + 13, after = NET_DAY + 18),
   tbv_offgrid = c(before = NET_DAY, onset = NET_DAY + 35, after = NET_DAY + 65),
-  mass_pev_split = c(before = NET_DAY, onset = NET_DAY + 61, after = NET_DAY + 106))
+  mass_pev_split = c(before = NET_DAY, onset = NET_DAY + 91, after = NET_DAY + 136))
 
 reference_int_scenarios <- function() {
   gp <- function() gp_bands()
@@ -245,15 +246,24 @@ test_that("no intervention acts before the day it is deployed", {
   ## of infection on mosquitoes moves on row NET_DAY + 1
   nets <- run_simulation_ode(REF_INT_DAYS, eqm(reference_int_scenarios()$nets, 20))
   expect_false(isTRUE(all.equal(nets$FOIM[NET_DAY + 1], base$FOIM[NET_DAY + 1])))
+  ## nor late: each probe's first effect on people lands on the onset day it is
+  ## sampled on
+  for (nm in names(reference_int_scenarios())) {
+    out <- run_simulation_ode(REF_INT_DAYS, eqm(reference_int_scenarios()[[nm]], 20))
+    q <- out$n_inc_clinical_730_3650; b <- base$n_inc_clinical_730_3650
+    expect_equal(which(abs(q - b) > 1e-9 * abs(b))[1], REF_INT_DAYS_SAMPLED[[nm]][["onset"]],
+                 label = sprintf("%s: first day clinical incidence moves", nm))
+  }
 })
 
 
 ## ---- P. vivax reference -----------------------------------------------------
 #
 # The same net for the vivax block, which neither CSV above can see: a vivax
-# list at low and moderate transmission, untreated, and one moving to radical
-# cure mid-run, pinned the same way (final day and whole-run sum, to 1e-6), in a
-# CSV of its own. Same regeneration switch.
+# list at low and moderate transmission, untreated, and two moving to radical
+# cure mid-run, by primaquine (four liver-stage levels) and by tafenoquine
+# (eleven), pinned the same way (final day and whole-run sum, to 1e-6), in a CSV
+# of its own. Same regeneration switch.
 
 REF_PV_DAYS <- 730
 
@@ -266,14 +276,17 @@ reference_pv_scenarios <- function() {
       age_group_rendering_min_ages = 0, age_group_rendering_max_ages = 36499),
       parasite = "vivax")
   }
-  rc <- pv()
-  rc <- malariasimulation::set_drugs(rc, list(malariasimulation::CQ_params_vivax,
-                                              malariasimulation::CQ_PQ_params_vivax))
-  rc <- malariasimulation::set_clinical_treatment(rc, drug = 1, timesteps = c(1, 365),
-                                                  coverages = c(0.3, 0))
-  rc <- malariasimulation::set_clinical_treatment(rc, drug = 2, timesteps = c(1, 365),
-                                                  coverages = c(0, 0.5))
-  list(eir1 = eqm(pv(), 1), eir10 = eqm(pv(), 10), radical_cure = eqm(rc, 10))
+  to_radical_cure <- function(rc_drug) {
+    rc <- pv()
+    rc <- malariasimulation::set_drugs(rc, list(malariasimulation::CQ_params_vivax, rc_drug))
+    rc <- malariasimulation::set_clinical_treatment(rc, drug = 1, timesteps = c(1, 365),
+                                                    coverages = c(0.3, 0))
+    malariasimulation::set_clinical_treatment(rc, drug = 2, timesteps = c(1, 365),
+                                              coverages = c(0, 0.5))
+  }
+  list(eir1 = eqm(pv(), 1), eir10 = eqm(pv(), 10),
+       radical_cure = eqm(to_radical_cure(malariasimulation::CQ_PQ_params_vivax), 10),
+       radical_cure_tq = eqm(to_radical_cure(malariasimulation::CQ_TQ_params_vivax), 10))
 }
 
 REF_PV_QUANTITIES <- c(
@@ -320,5 +333,119 @@ test_that("vivax output matches the committed reference values", {
     expect_equal(got$value[i], ref$value[i], tolerance = 1e-6,
                  label = sprintf("%s / %s [%s]", got$scenario[i], got$quantity[i],
                                  got$statistic[i]))
+  }
+})
+
+## ---- P. vivax intervention reference ------------------------------------------
+#
+# The vivax counterpart of reference-interventions.csv, in a CSV of its own: the
+# same three probes -- one net campaign, TBV on ages that straddle age groups, a
+# mass PEV campaign split across two bands -- on a vivax list at EIR 10, sampled
+# on the deployment day and on the first day each effect reaches the sampled
+# quantities. The days are vivax's own, because its delay lines are: humans feel
+# the EIR de = 10 days on, and mosquitoes feel human infectivity the same day
+# (delay_gam = 0). Nets cut the biting rate from day 101, which humans feel on
+# row 111; TBV's fewer infected mosquitoes leave incubation 9 days after day 101
+# and bite 10 days after that (row 120); mass PEV protects from its last primary
+# dose (row 191), and cuts relapses as well as bites.
+
+REF_PV_INT_DAYS_SAMPLED <- list(
+  nets = c(before = NET_DAY, onset = NET_DAY + 11, after = NET_DAY + 16),
+  tbv_offgrid = c(before = NET_DAY, onset = NET_DAY + 20, after = NET_DAY + 50),
+  mass_pev_split = c(before = NET_DAY, onset = NET_DAY + 91, after = NET_DAY + 136))
+
+pv_int_bands <- function() {
+  malariasimulation::get_parameters(list(
+    human_population = 10000,
+    clinical_incidence_rendering_min_ages = 730,
+    clinical_incidence_rendering_max_ages = 3650), parasite = "vivax")
+}
+
+reference_pv_int_scenarios <- function() {
+  list(
+    nets = malariasimulation::set_bednets(
+      pv_int_bands(), timesteps = NET_DAY, coverages = 0.8, retention = 5 * 365,
+      dn0 = matrix(0.387, 1, 1), rn = matrix(0.563, 1, 1),
+      rnm = matrix(0.24, 1, 1), gamman = 2.64 * 365),
+    tbv_offgrid = malariasimulation::set_tbv(
+      pv_int_bands(), timesteps = NET_DAY, coverages = 0.9, ages = c(18, 19, 20)),
+    mass_pev_split = malariasimulation::set_mass_pev(
+      pv_int_bands(), profile = malariasimulation::rtss_profile,
+      timesteps = NET_DAY, coverages = 1,
+      min_ages = c(0, 1195), max_ages = c(1195, 1825), min_wait = 0,
+      booster_spacing = round(12 * 30), booster_coverage = matrix(0.8, 1, 1),
+      booster_profile = list(malariasimulation::rtss_booster_profile)))
+}
+
+REF_PV_INT_QUANTITIES <- c("EIR", "n_detect_lm_730_3650", "n_inc_clinical_730_3650",
+                           "n_relapses")
+
+reference_pv_int_summary <- function() {
+  rows <- list()
+  scen <- reference_pv_int_scenarios()
+  for (nm in names(scen)) {
+    out <- run_simulation_ode(REF_INT_DAYS, eqm(scen[[nm]], 10))
+    expect_true(all(REF_PV_INT_QUANTITIES %in% names(out)))
+    for (q in REF_PV_INT_QUANTITIES) {
+      days <- REF_PV_INT_DAYS_SAMPLED[[nm]]
+      for (s in names(days)) {
+        rows[[length(rows) + 1]] <- data.frame(
+          scenario = nm, quantity = q, statistic = s,
+          value = out[[q]][out$timestep == days[[s]]])
+      }
+      rows[[length(rows) + 1]] <- data.frame(
+        scenario = nm, quantity = q, statistic = "final", value = out[[q]][nrow(out)])
+      rows[[length(rows) + 1]] <- data.frame(
+        scenario = nm, quantity = q, statistic = "sum", value = sum(out[[q]]))
+    }
+  }
+  do.call(rbind, rows)
+}
+
+test_that("vivax intervention output matches the committed reference values", {
+  skip_if_not_installed("malariasimulation")
+
+  got <- reference_pv_int_summary()
+
+  if (nzchar(Sys.getenv("FLEET_REGENERATE_REFERENCE"))) {
+    write.csv(transform(got, value = vapply(got$value, format, character(1), digits = 17)),
+              test_path("reference-vivax-interventions.csv"), row.names = FALSE, quote = FALSE)
+    message("FLEET_REGENERATE_REFERENCE: rewrote reference-vivax-interventions.csv")
+  }
+
+  ref <- utils::read.csv(test_path("reference-vivax-interventions.csv"))
+  key <- function(d) paste(d$scenario, d$quantity, d$statistic)
+  expect_setequal(key(ref), key(got))
+  ref <- ref[match(key(got), key(ref)), ]
+
+  for (i in seq_len(nrow(got))) {
+    expect_equal(got$value[i], ref$value[i], tolerance = 1e-6,
+                 label = sprintf("%s / %s [%s]", got$scenario[i], got$quantity[i],
+                                 got$statistic[i]))
+  }
+})
+
+test_that("no vivax intervention acts before the day it is deployed, nor late", {
+  skip_if_not_installed("malariasimulation")
+
+  ## As for falciparum: up to and including the deployment day every probe sits
+  ## on the no-intervention trajectory in every column. And each probe's first
+  ## effect on people -- the day's clinical cases and relapses -- lands on its
+  ## onset day, so the days above are the onsets they are said to be. (The EIR
+  ## follows PEV 20 days later, once fewer infections have reached mosquitoes and
+  ## come back.)
+  base <- run_simulation_ode(REF_INT_DAYS, eqm(pv_int_bands(), 10))
+  num <- setdiff(names(base), "timestep")
+  scen <- reference_pv_int_scenarios()
+  for (nm in names(scen)) {
+    out <- run_simulation_ode(REF_INT_DAYS, eqm(scen[[nm]], 10))
+    i <- which(out$timestep <= NET_DAY)
+    expect_equal(as.matrix(out[i, num]), as.matrix(base[i, num]), tolerance = 1e-9,
+                 label = sprintf("vivax %s up to the deployment day", nm))
+    onset <- REF_PV_INT_DAYS_SAMPLED[[nm]][["onset"]]
+    for (q in c("n_inc_clinical_730_3650", "n_relapses")) {
+      moved <- which(abs(out[[q]] - base[[q]]) > 1e-9 * abs(base[[q]]))
+      expect_equal(moved[1], onset, label = sprintf("vivax %s: first day %s moves", nm, q))
+    }
   }
 })

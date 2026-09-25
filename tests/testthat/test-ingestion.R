@@ -39,18 +39,23 @@ test_that("mass PEV protects every target age band, at every campaign", {
 test_that("chemoprevention age band uses fractional overlap (narrow band not dropped)", {
   skip_if_not_installed("malariasimulation")
   gp <- malariasimulation::get_parameters
-  # PMC dose at 15 months -> a 30-day band that contains no age-group midpoint on
-  # the default grid; overlap weighting must still clear a positive fraction.
-  p <- malariasimulation::set_drugs(gp(), list(malariasimulation::SP_AQ_params))
-  p <- malariasimulation::set_pmc(p, drug = 1, timesteps = 1, coverages = 0.9,
-                                  ages = round(1.25 * 365))
-  inp <- build_inputs(p, 20, timesteps = 3 * 365)
-  ev <- chemoprevention_events(p, 3 * 365)
-  e <- ev[[1]]
-  ov <- pmax(0, pmin(e$hi, inp$meta$age_hi) - pmax(e$lo, inp$meta$age_lo)) /
-        (inp$meta$age_hi - inp$meta$age_lo)
-  expect_gt(max(ov), 0)                            # some group overlaps (not silently dropped)
-  expect_lte(max(ov), 1 + 1e-9)
+  # A PMC dose at 405 days targets the 30-day band [405, 435). On the 53-group
+  # grid that band holds no age-group midpoint, so a midpoint rule would dose nobody;
+  # overlap weighting doses the groups it overlaps, in proportion, and the
+  # dosed band's clinical incidence falls.
+  lower <- default_age_lower(n_group = 53)
+  p0 <- malariasimulation::set_drugs(gp(list(clinical_incidence_rendering_min_ages = 365,
+                                             clinical_incidence_rendering_max_ages = 729)),
+                                     list(malariasimulation::SP_AQ_params))
+  p <- malariasimulation::set_pmc(p0, drug = 1, timesteps = 1, coverages = 0.9,
+                                  ages = 405)
+  e <- chemoprevention_events(p, 60)[[1]]
+  mid <- (utils::head(lower, -1) + utils::tail(lower, -1)) / 2 * 365
+  expect_false(any(mid >= e$lo & mid < e$hi))      # the premise: no midpoint inside
+  tn <- list(age_lower = lower)
+  on <- run_simulation_ode(60, eqm(p, 20), tuning = tn)
+  off <- run_simulation_ode(60, eqm(p0, 20), tuning = tn)
+  expect_lt(sum(on$n_inc_clinical_365_729[20:60]), 0.99 * sum(off$n_inc_clinical_365_729[20:60]))
 })
 
 test_that("IRS accumulates over rounds (closely-spaced rounds add protection)", {

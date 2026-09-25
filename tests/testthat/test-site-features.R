@@ -121,6 +121,6 @@ test_that("time-varying mortality drives the immunity ageing coefficient", {
   # itself more accurate, which shrank this transient from 6% to 4%.
   expect_gt(abs(o$EIR[n] / o$EIR[1] - 1), 0.03)
   expect_equal(pfpr(o)[1], 0.6518053202, tolerance = 1e-7)
-  expect_equal(pfpr(o)[n], 0.6481017453, tolerance = 1e-7)
-  expect_equal(o$EIR[n], 37.54058245, tolerance = 1e-7)
+  expect_equal(pfpr(o)[n], 0.6481013219, tolerance = 1e-7)
+  expect_equal(o$EIR[n], 37.54048994, tolerance = 1e-7)
 })
