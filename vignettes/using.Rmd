@@ -215,51 +215,72 @@ definition) as the noise `fleet` is not carrying.
 
 Seconds for one complete `run_simulation_ode()` call: building the inputs,
 seeding the equilibrium, stepping the days and rendering the outputs, which is
-what you actually pay. Single core, at the `ode_tuning()` defaults.
+what you actually pay. Single core, at the `ode_tuning()` defaults, on the
+default 209-group age grid. Falciparum at EIR 20, the SMC scenarios at 15:
 
 | Scenario | 5 years | 10 years | 30 years |
 | --- | --- | --- | --- |
-| No interventions | 0.10 s | 0.19 s | 0.57 s |
-| Seasonal | 0.11 s | 0.19 s | 0.61 s |
-| Seasonal + treatment (AL) | 0.10 s | 0.20 s | 0.61 s |
-| Seasonal + nets + IRS | 0.11 s | 0.20 s | 0.71 s |
-| Seasonal + SMC (4 rounds/yr) | 0.16 s | 0.26 s | 0.77 s |
-| All of the above + RTS,S | 0.17 s | 0.30 s | 0.92 s |
+| No interventions | 0.63 s | 1.16 s | 3.29 s |
+| Seasonal | 0.64 s | 1.21 s | 3.46 s |
+| Seasonal + treatment (AL) | 0.72 s | 1.32 s | 3.48 s |
+| Seasonal + nets + IRS | 0.64 s | 1.28 s | 3.72 s |
+| Seasonal + SMC (4 rounds/yr) | 0.88 s | 1.57 s | 4.36 s |
+| All of the above + RTS,S | 0.92 s | 1.57 s | 4.31 s |
 
 Three things to read off it.
 
 **Cost is proportional to the horizon.** Every day costs the same, so the
-no-intervention row is 0.019 s per simulated year on an intercept of a few
-milliseconds: building the inputs and solving the seed are not a meaningful
-fixed charge.
+no-intervention row is 0.11 s per simulated year on an intercept of about
+0.1 s: building the inputs and solving the seed are a small fixed charge
+next to the days.
 
-**Seasonality costs almost nothing**, 7% at 30 years. The update does the same
-work each day however fast the solution is moving; rainfall only changes the
-day's carrying capacity.
+**Seasonality costs almost nothing**, 5% at 30 years. The update does the
+same work each day however fast the solution is moving; rainfall only changes
+the day's carrying capacity.
 
-**Chemoprevention and vaccination are the dearer interventions**, SMC 26% over a
-seasonal run and everything together 51%. What they add is state -- the two
-chemoprevention protection chains and the treated phase, a few hundred states
-per stage, and the per-age vaccine series -- and each chemoprevention round
-pauses the run for its pulse.
+**Chemoprevention is the dearer intervention**, SMC 26% over a seasonal run,
+and everything together, vaccination included, 25%. What SMC adds is state
+-- the two chemoprevention protection chains and the treated phase, about a
+thousand states per stage on the default grid -- and each round pauses the run
+for its pulse.
+
+A vivax run costs about 19 times a falciparum one: every compartment carries
+the hypnozoite-batch dimension, eleven levels, and each cell carries its
+immunity's spread. At EIR 3, with 40% of clinical cases treated where a drug is
+named:
+
+| Scenario | 5 years | 10 years | 30 years |
+| --- | --- | --- | --- |
+| No interventions | 11.6 s | 24.4 s | 62.7 s |
+| Treatment (chloroquine) | 13.4 s | 25.4 s | 74.2 s |
+| Radical cure (CQ + primaquine) | 27.6 s | 52.1 s | 150 s |
+| Radical cure (CQ + tafenoquine) | 44.1 s | 86.0 s | 249 s |
+
+Radical cure is the dear vivax intervention: it adds the liver-stage-protected
+levels to the batch dimension, four for primaquine and eleven for tafenoquine, and
+the day's radical-cure transfers, 2.0 and 3.4 times the cost of treatment
+alone at 30 years.
 
 Population size is irrelevant, as it should be: the compartments are per-capita
 densities, and `human_population` only rescales the count columns on the way out.
 
 | Population | 1,000 | 10,000 | 100,000 | 1,000,000 | 10,000,000 |
 | --- | --- | --- | --- | --- | --- |
-| 30-year seasonal run | 0.61 s | 0.62 s | 0.62 s | 0.61 s | 0.62 s |
+| 30-year seasonal run | 3.06 s | 3.06 s | 3.06 s | 3.05 s | 3.08 s |
 
 Of the discretisation settings, the mosquito sub-steps barely move the cost,
 since the mosquito model is a small part of the day: a 30-year seasonal run
-takes 0.59 s at `n_sub = 8`, 0.61 s at the default 32 and 0.65 s at 64. The age
-grid is the setting that costs, in proportion to its number of groups, so a
-grid twice as fine takes about twice as long.
+takes 3.05 s at `n_sub = 8`, 3.09 s at the default 32 and 3.11 s at 64. The age
+grid is the setting that costs, a little more than in proportion to its number
+of groups: on the 53 groups of `default_age_lower(n_group = 53)` the same run
+takes 0.65 s.
 
-Measured as the minimum of five repeats, since contention can only add time, on
-R 4.5.2, `aarch64-w64-mingw32`. Treat them as indicative: one machine, one core,
-and a laptop under load will be slower. For how this compares with the IBM's
-cost, see the `speed` claim in
+Measured as the minimum of five repeats, two for vivax, since contention can
+only add time, on R 4.5.2, `aarch64-w64-mingw32`. Treat them as indicative: one
+machine, one core, and a laptop under load will be slower. The 30-year seasonal
+run appears three times above, at 3.05 to 3.46 s; that spread is the machine's,
+not the model's. For how this compares
+with the IBM's cost, see the `speed` claims in
 [fleetcheck](https://pwinskill.github.io/fleetcheck/).
 
 ## Index of approximations

@@ -50,9 +50,9 @@ table is now `malariasimulation`'s, column for column. Every model output moves.
   about 3%. School-age LM prevalence and clinical incidence run 1-3% high: the
   IBM's immunity-dependent transitions sort people by immunity within a cell,
   which one immunity distribution per cell does not carry.
-* A vivax run costs about 2 s per simulated year on the default grid, 3.4 s with
-  radical cure: the hypnozoite dimension and the immunity spread make it about
-  twenty times a falciparum run.
+* A vivax run costs about 2 s per simulated year on the default grid, 5 s with
+  primaquine radical cure and 8 s with tafenoquine: the hypnozoite dimension and
+  the immunity spread make it about twenty times a falciparum run.
 * The output is the IBM's vivax table: `n_relapses`, `n_with_hypnozoites`,
   `n_inc_relapse_*` and `n_with_hypnozoites_*` over their rendering lists, no
   severe columns unless a severe band is set, and no `p_detect_lm_*`.
@@ -236,7 +236,10 @@ replicates is outside in 9.7%. `fleet` runs 24 times the IBM's speed per
 simulated year. On 53 groups, at a quarter of the cost, the grid's
 discretisation error puts clinical incidence 3 to 5% and severe incidence up to
 8% low at EIR 50 and 120, outside the band at 2 of 6 EIRs. Tier 1: an
-undisturbed run moves at most 0.35% off the seed.
+undisturbed run moves at most 0.35% off the seed. Tier 3: across the 63-country
+site files `fleet` tracks the IBM inside the claim, r 0.984 and 0.958 on
+clinical and severe incidence with slopes 0.987 and 0.932, and runs 7% above
+it, the excess concentrated below EIR 1 and not explained.
 
 For *P. vivax*, tier 2 is inside the IBM replicate band throughout the
 transmission grid, EIR 0.3 to 30: prevalence, under-5 and all-age clinical
