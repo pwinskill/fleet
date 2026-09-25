@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">fleet</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.0.0.9002</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.0.0.9003</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -82,12 +82,13 @@
 comparison against <code>malariasimulation</code>, can be examined and
 argued with, not so that anyone can rely on its numbers: the API is
 unstable and nothing here has been peer reviewed. The known
-discrepancies against the IBM are open rather than resolved, the largest
-being all-age severe incidence, which runs about 4 to 6% below the IBM,
-alongside a roughly 9% excess on clinical and severe incidence across
-the 63-country site files that is not yet explained. The full statement
-is on the <a href="https://pwinskill.github.io/fleet/">package front
-page</a>; if you need results you can defend today, use <a href="https://github.com/mrc-ide/malariasimulation" class="external-link">malariasimulation</a>.</p>
+discrepancies against the IBM are open rather than resolved: an excess
+on falciparum clinical and severe incidence across the 63-country site
+files that is not yet explained; a larger excess on <em>P. vivax</em>
+sites, not yet explained either; and, at school age, vivax LM prevalence
+and clinical incidence a few per cent high. The full statement is on the
+<a href="https://pwinskill.github.io/fleet/">package front page</a>; if
+you need results you can defend today, use <a href="https://github.com/mrc-ide/malariasimulation" class="external-link">malariasimulation</a>.</p>
 </blockquote>
 <p>Every user-facing <code>malariasimulation</code> parameterisation
 function, argument by argument, as of
@@ -98,7 +99,7 @@ about it.</p>
 <p>Arguments named <code>parameters</code> are omitted throughout: they
 are the list being modified. For the system these arguments feed, see
 <code><a href="../articles/model.html">vignette("model")</a></code>; for what to do differently because it is
-an ODE, <code><a href="../articles/using.html">vignette("using")</a></code>.</p>
+a mean field, <code><a href="../articles/using.html">vignette("using")</a></code>.</p>
 <div class="section level2">
 <h2 id="legend">Legend<a class="anchor" aria-label="anchor" href="#legend"></a>
 </h2>
@@ -271,8 +272,9 @@ below</td>
 <td>
 <code>"falciparum"</code> or <code>"vivax"</code>
 </td>
-<td>✅ falciparum. ⛔ vivax: <code>build_inputs()</code> stops with an
-error</td>
+<td>✅ Both. <code>"vivax"</code> runs the <em>P. vivax</em> block
+(<code><a href="../articles/model.html">vignette("model")</a></code>, §V); MDA, SMC and PMC are refused under
+vivax, as <code>malariasimulation</code> cannot run them</td>
 </tr>
 </tbody>
 </table>
@@ -308,15 +310,18 @@ user-supplied proportions</td>
 <td>Initial immunity</td>
 <td>
 <code>init_ib</code>, <code>init_ica</code>, <code>init_iva</code>,
-<code>init_icm</code>, <code>init_ivm</code>, <code>init_id</code>
+<code>init_icm</code>, <code>init_ivm</code>, <code>init_id</code>, and
+for vivax <code>init_iaa</code>, <code>init_iam</code>,
+<code>init_hyp</code>
 </td>
-<td>⛔ Ignored, same reason</td>
+<td>⛔ Ignored, same reason (vivax seeds at the
+<code>malariaEquilibriumVivax</code> solution)</td>
 </tr>
 <tr class="odd">
 <td>Population size</td>
 <td><code>human_population</code></td>
-<td>✅ Scales output counts only; the ODE is per-capita, so run time is
-independent of it</td>
+<td>✅ Scales output counts only; the model is per-capita, so run time
+is independent of it</td>
 </tr>
 <tr class="even">
 <td></td>
@@ -367,8 +372,10 @@ they just move every human off it</td>
 <td></td>
 <td><code>enable_heterogeneity</code></td>
 <td>✅ <code>FALSE</code> collapses to a single node with
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ζ</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\zeta = 1</annotation></semantics></math>
-</td>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ζ</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\zeta = 1</annotation></semantics></math>.
+Under vivax the seed is the IBM’s for this case: everyone from the
+heterogeneous equilibrium’s first group, among mosquitoes sized from the
+whole of it (§V.6)</td>
 </tr>
 <tr class="odd">
 <td>Aquatic mosquito</td>
@@ -536,7 +543,7 @@ whenever clinical drugs are set</td>
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>τ</mi><mi>E</mi></msub><annotation encoding="application/x-tex">\tau_E</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>τ</mi><mi>l</mi></msub><annotation encoding="application/x-tex">\tau_l</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>τ</mi><mi>M</mi></msub><annotation encoding="application/x-tex">\tau_M</annotation></semantics></math>
-(the three Erlang chains)</td>
+(the three delay lines, read as the IBM reads them)</td>
 </tr>
 <tr class="odd">
 <td>Vector-control shape</td>
@@ -563,9 +570,14 @@ algebra</td>
 <tr class="odd">
 <td></td>
 <td>
-<code>ib_</code>/<code>id_</code>/<code>ica_</code>/<code>iva_</code>/<code>idm_</code>/<code>icm_</code>/<code>ivm_rendering_*</code>
+<code>ib_</code>/<code>id_</code>/<code>ica_</code>/<code>iva_</code>/<code>icm_</code>/<code>ivm_rendering_*</code>,
+and for vivax
+<code>iaa_</code>/<code>iam_</code>/<code>hypnozoites_rendering_*</code>
 </td>
-<td>⛔ <code>fleet</code> does not render mean immunity by band</td>
+<td>✅ Mean immunity by band, <code>&lt;name&gt;_mean_*</code> with the
+band’s population as <code>n_*</code>, as <code>malariasimulation</code>
+renders it. (<code>idm_rendering_*</code> names no immunity the IBM has,
+and renders nothing in either model)</td>
 </tr>
 <tr class="even">
 <td>Metapopulation test-and-treat</td>
@@ -583,17 +595,34 @@ does not support (<a href="#helpers"><code>Helpers and run functions</code></a>)
 <code>r_tol</code>, <code>a_tol</code>, <code>ode_max_steps</code>,
 <code>progress_bar</code>
 </td>
-<td>⛔ Ignored: <code>fleet</code> is always compartmental and exposes
-its own <code>atol</code>/<code>rtol</code>/<code>step_size_max</code>
-through <code><a href="../reference/ode_tuning.html">ode_tuning()</a></code>
-</td>
+<td>⛔ Ignored: <code>fleet</code> is always compartmental, and advances
+one day at a time with no ODE solver to control</td>
 </tr>
 <tr class="even">
-<td>Vivax-only</td>
-<td>All hypnozoite parameters, <code>drug_hypnozoite_*</code>,
-<code>n_with_hypnozoites_rendering_*</code>
+<td>Vivax only</td>
+<td>
+<code>b</code>, <code>f</code>, <code>gammal</code>,
+<code>kmax</code>, <code>philm_*</code>, <code>alm50</code>,
+<code>klm</code>, <code>dpcr_*</code>, <code>apcr50</code>,
+<code>kpcr</code>, <code>ca</code>, <code>ra</code>,
+<code>ua</code>
 </td>
-<td>⛔ Not applicable</td>
+<td>✅ Under <code>parasite = "vivax"</code> (§V). 🟡 <code>ua</code>:
+IAA’s 44-day refractory window runs as four 11-day stages (§V.3). The
+shared names – <code>da</code>, <code>dd</code>, <code>dt</code>,
+<code>cd</code>, <code>cu</code>, <code>ct</code>, <code>rc</code>,
+<code>uc</code>, <code>rm</code>, <code>pcm</code>, <code>phi0</code>,
+<code>phi1</code>, <code>ic0</code>, <code>kc</code> – carry the vivax
+values on a vivax list</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td>
+<code>n_with_hypnozoites_rendering_*</code>, and
+<code>incidence_relapse_rendering_*</code> set on the list</td>
+<td>✅ <code>n_with_hypnozoites_*</code> with the band’s population as
+<code>n_*</code>, and <code>n_inc_relapse_*</code>
+</td>
 </tr>
 </tbody>
 </table>
@@ -602,7 +631,7 @@ through <code><a href="../reference/ode_tuning.html">ode_tuning()</a></code>
 <h3 id="fleet-only-extension-fields">
 <code>fleet</code>-only extension fields<a class="anchor" aria-label="anchor" href="#fleet-only-extension-fields"></a>
 </h3>
-<p>None of the three is a <code>malariasimulation</code> parameter; each
+<p>None of the four is a <code>malariasimulation</code> parameter; each
 may be added to the list, and each defaults to the validated choice.</p>
 <table class="table">
 <colgroup>
@@ -620,38 +649,54 @@ may be added to the list, and each defaults to the validated choice.</p>
 <td><code>bite_dedup</code></td>
 <td><code>1</code></td>
 <td>
-<code>1</code> reproduces the IBM’s per-timestep bite deduplication
-(saturating hazard, §B.2). <code>0</code> uses the linear
+<em>P. falciparum</em> only; vivax counts every bite, as the IBM
+does. <code>1</code> reproduces the IBM’s per-timestep bite
+deduplication (saturating hazard, §B.2). <code>0</code> uses the linear
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>b</mi><mi>ε</mi></mrow><annotation encoding="application/x-tex">b\varepsilon</annotation></semantics></math>
-that <code>malariaEquilibrium</code> assumes, cutting the residual drift
-off the seed to well under 1% — but not to zero, since it gates only the
-hazard and not the boosting or sojourn forms. It is a switch: anything
-but 0 or 1 (<code>TRUE</code>/<code>FALSE</code> accepted) is an
-error</td>
+that <code>malariaEquilibrium</code> assumes, which cuts the drift of
+prevalence off the seed from about 0.4% to about 0.1% at EIR 20 — but
+not to zero, since it gates only the hazard and not the boosting or
+sojourn forms. It is a switch: anything but 0 or 1
+(<code>TRUE</code>/<code>FALSE</code> accepted) is an error</td>
 </tr>
 <tr class="even">
 <td><code>acquired_immunity_offset</code></td>
-<td><code>0</code></td>
+<td>
+<code>0</code>, or <code>0.5</code> for vivax</td>
 <td>
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>δ</mi><annotation encoding="application/x-tex">\delta</annotation></semantics></math>
 in the
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>/<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>/<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
-Hill functions. <code>0.5</code> reproduces the IBM’s literal
-per-individual offset; <code>0</code> is the better mean-field match
-against the IBM ensemble mean. Must lie in
+Hill functions. The IBM adds 0.5 to each person’s positive acquired
+immunity. Falciparum reads its curves at a stratum mean, where
+<code>0</code> is the better match against the IBM ensemble mean; the
+vivax curves are read at quadrature nodes that stand for people, and
+take the IBM’s <code>0.5</code> (and <code>0</code> with
+<code>immunity_spread = FALSE</code>, back at the mean). Must lie in
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">[0, 1]</annotation></semantics></math>
 </td>
 </tr>
 <tr class="odd">
+<td><code>immunity_spread</code></td>
+<td><code>TRUE</code></td>
+<td>
+<em>P. vivax</em> only. Carries each age, heterogeneity and batch
+cell’s second moment of immunity and averages the immunity curves over a
+gamma with that mean and variance (§V.3); <code>FALSE</code> reads them
+at the cell mean, with no offset. Must be <code>TRUE</code> or
+<code>FALSE</code>
+</td>
+</tr>
+<tr class="even">
 <td><code>hold_init_EIR</code></td>
 <td><code>FALSE</code></td>
 <td>Only has any effect under <code>set_demography()</code> (<a href="#set_demography"><code>set_demography()</code></a>). By default
 <code>fleet</code> matches the IBM’s mosquito density rather than its
 nominal EIR, so the same list realises the same transmission in both
-models and the seed stays a fixed point; <code>init_EIR</code> is then
-the EIR the IBM was sized at, not the one <code>fleet</code> realises.
-<code>TRUE</code> seeds at <code>init_EIR</code> directly. Must be
-<code>TRUE</code> or <code>FALSE</code>
+models; <code>init_EIR</code> is then the EIR the IBM was sized at, not
+the one <code>fleet</code> realises. <code>TRUE</code> seeds at
+<code>init_EIR</code> directly. Must be <code>TRUE</code> or
+<code>FALSE</code>
 </td>
 </tr>
 </tbody>
@@ -761,10 +806,12 @@ in one of two ways:</p>
 <strong>Default demography.</strong> <code>total_M</code> is chosen
 so that
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>s</mi></msub><msub><mi>a</mi><mi>s</mi></msub><msub><mi>I</mi><mrow><mi>M</mi><mo>,</mo><mi>s</mi></mrow></msub><mo>=</mo><mtext mathvariant="normal">init_EIR</mtext><mi>/</mi><mn>365</mn></mrow><annotation encoding="application/x-tex">\sum_s a_s I_{M,s} = \text{init_EIR}/365</annotation></semantics></math>
-holds exactly under <code>fleet</code>’s own seeded human infectivity,
-the IBM’s formula evaluated on <code>fleet</code>’s grid, so the two
-agree up to discretisation and <code>init_EIR</code> is the EIR
-realised.</li>
+holds exactly under the human infectivity of <code>fleet</code>’s own
+equilibrium at the treatment coverage in force at timestep 1, the IBM’s
+formula evaluated on <code>fleet</code>’s grid, so the two agree up to
+discretisation and <code>init_EIR</code> is the EIR the mosquitoes
+deliver. The humans themselves are seeded under the coverage at timestep
+0, as the IBM seeds them (§F).</li>
 <li>
 <strong>Custom demography</strong> (<code>set_demography()</code>).
 Holding <code>init_EIR</code> here would give the two models different
@@ -776,9 +823,10 @@ under the custom age structure and it drifts there. So
 call on the IBM’s 0–99.9 y grid and the same
 <code>equilibrium_total_M()</code> arithmetic) and root-finds the EIR at
 which its own equilibrium under the custom age structure has that
-density, seeding there. The seed is still a fixed point, so no burn-in
-is needed. <code>parameters$hold_init_EIR = TRUE</code> restores the
-previous behaviour (<code>init_EIR</code> as the realised EIR).</li>
+density, seeding there. <code>parameters$hold_init_EIR = TRUE</code>
+seeds at <code>init_EIR</code> instead. Either way the seed is the
+<code>malariaEquilibrium</code> solution at that EIR, so it relaxes
+slightly, as every seed does (§F).</li>
 </ul>
 <p>Calling <code>parameterise_total_M()</code> or
 <code>parameterise_mosquito_equilibrium()</code> directly is harmless
@@ -814,7 +862,8 @@ right-closed intervals, matching
 <td>✅ Knots of a <strong>constant</strong>-interpolated
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mu_i(t)</annotation></semantics></math>,
 so custom demography is time-varying (a demographic transition is
-modelled, not frozen)</td>
+modelled, not frozen). Each row applies from its own timestep, as the
+IBM reads it (§H)</td>
 </tr>
 <tr class="odd">
 <td><code>deathrates</code></td>
@@ -892,32 +941,40 @@ coverage-share-weighted across active drugs and time-varying</td>
 <code>drug_prophylaxis_scale</code>
 </td>
 <td>Weibull prophylaxis survival</td>
-<td>✅ Both moments used. The chain mean is
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>d</mi><mo accent="true">‾</mo></mover><mi>W</mi></msub><mo>−</mo><mo>∫</mo><msup><mi>e</mi><mrow><mi>−</mi><msub><mi>r</mi><mi>T</mi></msub><mi>t</mi></mrow></msup><mi>W</mi><mspace width="0.167em"></mspace><mi>d</mi><mi>t</mi></mrow><annotation encoding="application/x-tex">\bar{d}_W - \int e^{-r_T t}W\,dt</annotation></semantics></math>,
-the protection left after the
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
-sojourn (§B.4), and its length
+<td>✅ Both moments used, on the protected days a dose gives,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mi>W</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mi>…</mi></mrow><annotation encoding="application/x-tex">W(1), W(2), \dots</annotation></semantics></math>
+The post-treatment chain carries the protected days left once out of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>n</mi></msub><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>r</mi><mi>T</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo stretchy="false" form="postfix">)</mo><mi>W</mi><mo stretchy="false" form="prefix">(</mo><mi>n</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\sum_n (1-(1-r_T)^{n-1})W(n)</annotation></semantics></math>
+(§B.4), and its length
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>k</mi><mi>P</mi></msub><annotation encoding="application/x-tex">k_P</annotation></semantics></math>
 matches the variance of the whole
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>+</mo><mi>P</mi></mrow><annotation encoding="application/x-tex">T + P</annotation></semantics></math>
-sojourn: 16 stages for SP-AQ, 20 for DHA-PQP, 1 for AL (the
+sojourn: 9 stages for SP-AQ, 10 for DHA-PQP, 1 for AL (the
 chemoprevention chain, with no
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
-stage in front, uses
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><msubsup><mtext mathvariant="normal">CV</mtext><mi>W</mi><mn>2</mn></msubsup></mrow><annotation encoding="application/x-tex">1/\text{CV}_W^2</annotation></semantics></math>:
-14 / 15). Capped at 20. 🟡 An Erlang chain is not a Weibull, and the
-exponential
+stage in front, matches the dose’s own mean and variance: 10 / 9). No
+chain has more stages than its mean has days, and none more than 20. 🟡
+A stage chain is not a Weibull, and it protects fully while it lasts
+where the IBM’s protection is partial and fades; the
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
-stage adds variability the IBM’s parallel clock does not have; for AL
+stage adds variability the IBM’s parallel clock does not have, so for AL
 the protection curve is reproduced in its integral, not its shape.
 <code>ode_tuning(n_ph =)</code> overrides the count</td>
 </tr>
 <tr class="odd">
-<td>  <code>drug_hypnozoite_*</code>
+<td>  <code>drug_hypnozoite_efficacy</code>,
+<code>drug_hypnozoite_prophylaxis_shape</code>,
+<code>drug_hypnozoite_prophylaxis_scale</code>
 </td>
 <td>
-<em>P. vivax</em> only</td>
-<td>⛔ Not applicable</td>
+<em>P. vivax</em> radical cure</td>
+<td>✅ The treated lose every batch with the hypnozoite efficacy, drawn
+independently of blood-stage clearance, and start liver-stage
+protection: a chain of levels matched to the protected days,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>M</mi><mn>2</mn></msup><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mi>V</mi><mo>+</mo><mi>M</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">M^2/(V+M)</annotation></semantics></math>
+stages (four for primaquine, eleven for tafenoquine) (§V.5). 🟡 A chain,
+protecting fully while it lasts</td>
 </tr>
 </tbody>
 </table>
@@ -1230,11 +1287,10 @@ and survival
 derived from these are the <strong>same</strong> spray outcome per
 individual, so <code>fleet</code> forms the joint mean
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>r</mi><mi>s</mi></msub><mo stretchy="false" form="postfix">)</mo><msub><mi>s</mi><mi>s</mi></msub></mrow><mo accent="true">¯</mo></mover><annotation encoding="application/x-tex">\overline{(1-r_s)s_s}</annotation></semantics></math>
-rather than multiplying two independent averages. Because the IBM
-recomputes these every timestep,
+rather than multiplying two independent averages. The IBM recomputes
+these every timestep, and <code>fleet</code> reads
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>a</mi><mi>s</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">a_s(t)</annotation></semantics></math>/<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>s</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mu_s(t)</annotation></semantics></math>
-are linearly interpolated so within-round logistic decay is a ramp, not
-a step.</p>
+once a day from series that follow the within-round logistic decay.</p>
 </div>
 <div class="section level2">
 <h2 id="set_carrying_capacity">
@@ -1259,8 +1315,12 @@ a step.</p>
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>K</mi><mi>s</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">K_s(t)</annotation></semantics></math>,
 composed multiplicatively with seasonality.
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>K</mi><mi>s</mi></msub><annotation encoding="application/x-tex">K_s</annotation></semantics></math>
-is interpolated linearly, so the grid carries a knot the day before each
-change and the step is confined to a single day (§H)</td>
+is read at the start of each day, as the IBM reads it, so a change
+scheduled for timestep
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
+applies from day
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">t + 1</annotation></semantics></math>,
+as in the IBM (§D, §H)</td>
 </tr>
 <tr class="even">
 <td><code>carrying_capacity_scalers</code></td>
@@ -1286,9 +1346,10 @@ approached but not reproduced exactly</td>
 <code>set_smc()</code> has the identical signature and identical
 handling.</p>
 <p><strong>Module status: 🟡.</strong> A mass campaign is applied as a
-pulse rather than as per-individual events, and the brief
-treated-infectious phase of cleared cases is omitted (negligible for the
-fast-clearing drugs used).</p>
+pulse rather than as per-individual events, and its protection is all or
+nothing while it lasts. As in the IBM, the clinical and LM-detectable
+asymptomatic a round treats pass through the treated state first,
+detectable and infectious for the Tr stay.</p>
 <table class="table">
 <colgroup>
 <col width="33%">
@@ -1304,24 +1365,25 @@ fast-clearing drugs used).</p>
 <tr class="odd">
 <td><code>drug</code></td>
 <td>Drug administered</td>
-<td>✅ Its <code>drug_efficacy</code> scales the cleared fraction; its
-Weibull mean sets
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><msub><mi>P</mi><mi>c</mi></msub></msub><annotation encoding="application/x-tex">r_{P_c}</annotation></semantics></math>
-and its Weibull shape the chain length
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>k</mi><msub><mi>P</mi><mi>c</mi></msub></msub><annotation encoding="application/x-tex">k_{P_c}</annotation></semantics></math>.
-Antimalarial-resistance ETF on this drug reduces the cleared
-fraction</td>
+<td>✅ Its <code>drug_efficacy</code> scales the treated fraction; its
+Weibull protection sets the chains’ means and stage counts,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>=</mo><msup><mi>M</mi><mn>2</mn></msup><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mi>V</mi><mo>+</mo><mi>M</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">k = M^2/(V+M)</annotation></semantics></math>
+for the protection from the dose and the post-treatment rule for the
+protection left after the Tr stay (§B.4); its <code>drug_rel_c</code>
+scales the infectivity of the treated. Antimalarial-resistance ETF on
+this drug reduces the treated fraction, and SPC sends its share of the
+detectable to the slow-clearing treated state</td>
 </tr>
 <tr class="even">
 <td><code>timesteps</code></td>
 <td>Round dates</td>
-<td>✅ Integration is split at each; the pulse takes effect the day
-<strong>after</strong> the scheduled timestep</td>
+<td>✅ The run pauses after each round’s day; the pulse takes effect the
+day <strong>after</strong> the scheduled timestep</td>
 </tr>
 <tr class="odd">
 <td><code>coverages</code></td>
 <td>Fraction of the target band reached</td>
-<td>✅ Cleared fraction
+<td>✅ Treated fraction
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>=</mo><mtext mathvariant="normal">coverage</mtext><mo>×</mo><mtext mathvariant="normal">efficacy</mtext><mo>×</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mtext mathvariant="normal">ETF</mtext><mo stretchy="false" form="postfix">)</mo><mo>×</mo><msub><mi>o</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">= \text{coverage}\times\text{efficacy}\times(1-\text{ETF})\times o_i</annotation></semantics></math>.
 A zero-coverage round is a no-op</td>
 </tr>
@@ -1345,10 +1407,9 @@ one day narrower than the IBM — negligible except for very narrow
 </tr>
 </tbody>
 </table>
-<p>Co-deployed chemoprevention types (SMC + MDA + PMC) share the single
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mi>c</mi></msub><annotation encoding="application/x-tex">P_c</annotation></semantics></math>
-compartment. Its decay rate is the mean of their drugs’ protection
-durations, weighted by each type’s <strong>total scheduled
+<p>Co-deployed chemoprevention types (SMC + MDA + PMC) share the two
+chemoprevention chains, moment-matched to the mixture of their drugs’
+protection, each drug weighted by its type’s <strong>total scheduled
 coverage</strong> (the sum over all of its rounds), so a type with more
 rounds carries proportionally more weight regardless of its per-round
 coverage.</p>
@@ -1570,9 +1631,10 @@ yourself, e.g. via <code>peak_season_offset()</code>
 <p><code>set_mass_pev(parameters, profile, timesteps, coverages, min_ages, max_ages, min_wait, booster_spacing, booster_coverage, booster_profile)</code></p>
 <p><strong>Module status: 🟡.</strong> Repeated campaigns are the weak
 point: <code>min_wait</code> re-vaccination exclusion is not applied,
-campaigns combine as independent protections rather than
-most-recent-receipt, and the vaccinated cohort does not age out of its
-band. A single campaign is modelled faithfully.</p>
+and each campaign reaches people independently of the last. A campaign’s
+protection ages with the cohort it vaccinated, and campaigns combine as
+the most recent dose, as in the IBM. A single campaign is modelled
+faithfully.</p>
 <table class="table">
 <colgroup>
 <col width="33%">
@@ -1593,14 +1655,15 @@ band. A single campaign is modelled faithfully.</p>
 <tr class="even">
 <td><code>timesteps</code></td>
 <td>Campaign dates</td>
-<td>🟡 Every campaign contributes, combined as
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><msub><mo>∏</mo><mi>k</mi></msub><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>e</mi><mi>k</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">1-\prod_k(1-e_k)</annotation></semantics></math>.
-The IBM instead keeps only the <strong>most recent</strong> vaccination
-per person, so its population protection is a most-recent-receipt
-mixture
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>k</mi></msub><msub><mtext mathvariant="normal">cov</mtext><mi>k</mi></msub><msub><mo>∏</mo><mrow><mi>j</mi><mo>&gt;</mo><mi>k</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mtext mathvariant="normal">cov</mtext><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><msub><mi>e</mi><mi>k</mi></msub></mrow><annotation encoding="application/x-tex">\sum_k \text{cov}_k \prod_{j&gt;k}(1-\text{cov}_j)\,e_k</annotation></semantics></math>,
-the same structure <code>fleet</code> already uses for bed nets (<a href="#set_bednets"><code>set_bednets()</code></a>). The two agree for a
-single campaign and diverge when campaigns overlap</td>
+<td>✅ The IBM keeps only the <strong>most recent</strong> vaccination
+per person, so the population protection is a most-recent-dose mixture,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>k</mi></msub><msub><mi>c</mi><mi>k</mi></msub><msub><mi>w</mi><mi>k</mi></msub><msub><mo>∏</mo><mrow><mi>j</mi><mo>&gt;</mo><mi>k</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>c</mi><mi>j</mi></msub><msub><mi>w</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><msub><mi>e</mi><mi>k</mi></msub></mrow><annotation encoding="application/x-tex">\sum_k c_k w_k \prod_{j&gt;k}(1 - c_j w_j)\,e_k</annotation></semantics></math>
+over completed campaigns,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>w</mi><annotation encoding="application/x-tex">w</annotation></semantics></math>
+being each group’s share of a campaign’s cohort: the structure
+<code>fleet</code> uses for bed nets (<a href="#set_bednets"><code>set_bednets()</code></a>). 🟡 Reaching someone
+in one campaign does not make them likelier to be reached in the
+next</td>
 </tr>
 <tr class="odd">
 <td><code>coverages</code></td>
@@ -1616,11 +1679,12 @@ single campaign and diverge when campaigns overlap</td>
 campaign, each mapped onto the model age grid by <strong>fractional
 overlap</strong> as for MDA/SMC (<a href="#set_mda"><code>set_mda()</code> and <code>set_smc()</code></a>),
 so a band narrower than the groups it falls between still vaccinates its
-share instead of nobody. The bands of one campaign are one campaign:
-their weights <strong>add</strong> into a single covered fraction per
-group (capped at 1) before coverage is applied, and only
-<em>campaigns</em> combine as independent protections. A band
-overlapping no group warns</td>
+share instead of nobody. The vaccinated then age: at each later day the
+band has moved up by the time since the campaign, so protection stays
+with the cohort that received it and nobody born since shares it. The
+bands of one campaign are one campaign: their weights
+<strong>add</strong> into a single covered fraction per group (capped at
+1). A band overlapping no group warns</td>
 </tr>
 <tr class="odd">
 <td><code>min_wait</code></td>
@@ -1651,10 +1715,6 @@ over-vaccinate</td>
 </tr>
 </tbody>
 </table>
-<p>🟡 The vaccinated cohort does not age out of its target band:
-efficacy decays in place with time since vaccination, but the protected
-fraction stays attached to the age band rather than moving up the age
-grid with the cohort.</p>
 </div>
 <div class="section level2">
 <h2 id="set_tbv">
@@ -1675,23 +1735,32 @@ grid with the cohort.</p>
 <tr class="odd">
 <td><code>timesteps</code></td>
 <td>Vaccination dates</td>
-<td>🟡 Antibody titre decays from each campaign date; campaigns combine
-as
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><msub><mo>∏</mo><mi>k</mi></msub><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>e</mi><mi>k</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">1-\prod_k(1-e_k)</annotation></semantics></math>.
-As for mass PEV, the IBM overwrites each person’s vaccination date,
-giving a most-recent-receipt mixture instead. Identical for a single
-campaign; divergent when campaigns overlap</td>
+<td>✅ Antibody titre decays from each round’s date; the IBM overwrites
+each person’s vaccination date, and rounds combine as the most recent
+dose, as for mass PEV. 🟡 Each round reaches people independently of the
+last</td>
 </tr>
 <tr class="even">
 <td><code>coverages</code></td>
 <td>Fraction vaccinated</td>
 <td>✅</td>
 </tr>
+<tr class="odd">
+<td><code>ages</code></td>
+<td>Integer ages (years) vaccinated</td>
+<td>✅ Each year
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>
+is the day interval
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mn>365</mn><mi>y</mi><mo>,</mo><mn>365</mn><mo stretchy="false" form="prefix">(</mo><mi>y</mi><mo>+</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">[365y, 365(y+1))</annotation></semantics></math>,
+matched by <strong>fractional overlap</strong> with the age groups, and
+the vaccinated then age, the year set moving up with them. It has to be
+fractional, because between its pinned ages the default grid puts edges
+wherever its group budget falls – above 15, every 0.38 years – so a
+whole-year target need not line up with any group edge. A set
+overlapping no group warns</td>
+</tr>
 </tbody>
 </table>
-<p>It has to be fractional, because above age 15 the default grid puts
-its edges at 15, 16.67, 18.33 and 20, so a whole-year target lines up
-with no group: <code>18:20</code> spans parts of three of them.</p>
 <p>Transmission-reducing activity is mapped to state-specific
 transmission-blocking activity via the IBM’s own transform
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">TBA</mtext><mo stretchy="false" form="prefix">(</mo><msub><mi>m</mi><mi>x</mi></msub><mo>,</mo><mi>k</mi><mo>,</mo><mtext mathvariant="normal">TRA</mtext><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\text{TBA}(m_x, k, \text{TRA})</annotation></semantics></math>
@@ -1729,30 +1798,32 @@ infectivity. All the <code>tbv_*</code> shape constants
 <td><code>age_group</code></td>
 <td>Bands for population counts</td>
 <td>✅ → <code>n_age_*</code> (also emitted over the union of all other
-families’ bands, as <code>malariasimulation</code> does)</td>
+families’ bands, sorted, as <code>malariasimulation</code> does)</td>
 </tr>
 <tr class="even">
 <td><code>incidence</code></td>
 <td>Bands for all-infection incidence</td>
-<td>✅ → <code>n_inc_*</code>
-</td>
+<td>✅ → <code>n_inc_*</code>, <code>p_inc_*</code> (0, as
+<code>malariasimulation</code> 3.0.0 renders it)</td>
 </tr>
 <tr class="odd">
 <td><code>clinical_incidence</code></td>
 <td>Bands for clinical incidence</td>
-<td>✅ → <code>n_inc_clinical_*</code>
+<td>✅ → <code>n_inc_clinical_*</code>,
+<code>p_inc_clinical_*</code>
 </td>
 </tr>
 <tr class="even">
 <td><code>severe_incidence</code></td>
 <td>Bands for severe incidence</td>
-<td>✅ → <code>n_inc_severe_*</code>
+<td>✅ → <code>n_inc_severe_*</code>, <code>p_inc_severe_*</code>
 </td>
 </tr>
 <tr class="odd">
 <td><code>prevalence</code></td>
 <td>Bands for prevalence</td>
-<td>✅ → <code>n_detect_lm_*</code>, <code>p_detect_lm_*</code>,
+<td>✅ → <code>n_detect_lm_*</code>, <code>p_detect_lm_*</code> (the
+expected number detected, not a prevalence),
 <code>n_detect_pcr_*</code>
 </td>
 </tr>
@@ -1762,7 +1833,8 @@ families’ bands, as <code>malariasimulation</code> does)</td>
 <code>ivm</code>, <code>id</code>, <code>ib</code>
 </td>
 <td>Bands for mean immunity</td>
-<td>⛔ Not rendered by <code>fleet</code>
+<td>✅ → <code>&lt;name&gt;_mean_*</code>, and the band’s population as
+<code>n_*</code>
 </td>
 </tr>
 <tr class="odd">
@@ -1772,14 +1844,23 @@ families’ bands, as <code>malariasimulation</code> does)</td>
 </td>
 <td>
 <em>P. vivax</em> only</td>
-<td>⛔ Not applicable</td>
+<td>✅ → <code>n_with_hypnozoites_*</code> and
+<code>&lt;name&gt;_mean_*</code>, each with the band’s population as
+<code>n_*</code>
+</td>
 </tr>
 </tbody>
 </table>
-<p>When a family’s band list is empty, <code>fleet</code> falls back to
-the convenience bands 2–10 y and all-ages for that family only. A bare
-<code>get_parameters()</code> leaves four of the five families empty; it
-defaults the <strong>prevalence</strong> bands to 2–10 y.</p>
+<p>A family whose band list is empty renders nothing, as in the IBM: a
+bare <code>get_parameters()</code> leaves four of the five families
+empty and defaults the <strong>prevalence</strong> bands to 2–10 y, so
+it renders the 2-10 prevalence columns and no incidence. A band
+<code>[lower, upper]</code> holds the whole-day ages <code>lower</code>
+to <code>upper</code>, both ends included, and its tag is formatted as
+the IBM formats it (<code>n_age_182.5_1825.5</code>,
+<code>n_inc_clinical_1e.05_2e.05</code>). Every
+<code>n_*</code>/<code>p_*</code> pair is the IBM’s sampled count and
+its expectation; a mean field’s expected count is both.</p>
 </div>
 <div class="section level2">
 <h2 id="set_parameter_draw">
@@ -1839,9 +1920,9 @@ schedules</td>
 <td>✅
 <code>run_simulation_ode(timesteps, parameters, correlations, tuning)</code>
 mirrors the first three arguments exactly; <code>tuning</code> carries
-the ODE-only settings, so nothing epidemiological sits outside the
+the discretisation settings, so nothing epidemiological sits outside the
 parameter list. A non-<code>NULL</code> <code>correlations</code> is
-<strong>warned and ignored</strong>: the ODE assumes independence
+<strong>warned and ignored</strong>: the model assumes independence
 between interventions</td>
 </tr>
 <tr class="even">

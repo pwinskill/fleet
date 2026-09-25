@@ -3,15 +3,17 @@
 Lower edges (in years) of the age groups: fine in infancy, where
 immunity and maternal dynamics move fast, and coarse in adulthood. Group
 edges are pinned at the conventional reporting boundaries – 0, 1, 2, 3,
-5, 7, 10, 15, 20, 30, 40, 60 years – and the groups between two anchors
-are of equal width, with the budget of groups spread across the anchors
-in proportion to the width in `log(1 + age)`. Each interval gets at
-least one group; the remainder is shared out largest-remainder.
+5, 7, 10, 15, 20, 30, 40, 60 years – and at 21, so that whole groups
+make up exactly the year the IBM draws maternal immunity from, \[20,
+21). The groups between two anchors are of equal width, with the budget
+of groups spread across the anchors in proportion to the width in
+`log(1 + age)`. Each interval gets at least one group; the remainder is
+shared out largest-remainder.
 
 ## Usage
 
 ``` r
-default_age_lower(max_age = 80, n_group = 53L)
+default_age_lower(max_age = 80, n_group = 209L)
 ```
 
 ## Arguments
@@ -25,10 +27,9 @@ default_age_lower(max_age = 80, n_group = 53L)
 - n_group:
 
   total number of age groups, the absorbing top group included. The
-  default, 53, is one more than the 52 the old grid used, and is what
-  the error figures above were measured at. Raising it refines the whole
-  grid while keeping its shape, which is what a grid-convergence check
-  wants.
+  default is 209. Changing it refines or coarsens the whole grid while
+  keeping its shape, which is what a grid-convergence check wants; run
+  time is in proportion.
 
 ## Value
 
@@ -40,24 +41,21 @@ Log rather than linear width, because what the grid has to resolve is
 the rise of immunity with age, and that is far closer to a function of
 log age than of age. (Of `log(1 + age)` rather than `log(age)`, which is
 infinite over the first year. The offset is in years, so the allocation
-is not scale-free.) An equal-width grid at the same cost is four times
-as far from the converged solution as this one, so the grading matters
-more than the count.
+is not scale-free.) At 53 groups an equal-width grid is four times as
+far from the converged solution as this one (rms over the age profile),
+and a grid of fixed monthly / quarterly / yearly / 5-yearly sections,
+which over-resolves infancy and under-resolves everything above 15,
+nearly twice as far: the grading matters more than the count.
 
-This replaced a grid of fixed monthly / quarterly / yearly / 5-yearly
-sections, halving the discretisation error at the same number of groups:
-the largest departure across age bands falls from 10.7% to 4.5% and the
-rms from 5.4% to 3.2%. The old grid over-resolved infancy (12 of its 52
-groups in the first year, against 7 here) and under-resolved everything
-above 15.
-
-Refining removes that error: the departure from the converged profile
-halves with each doubling of `n_group`, first order. What refinement
-does **not** remove is the mean-field approximation itself – one
-immunity value per stratum, where the IBM holds a spread of infection
-histories at the same age – so a persistent difference from the IBM is
-not evidence that the grid is too coarse. `validations/age-grid/run.R`
-in `fleetcheck` measures both.
+The departure from `fleet`'s own converged profile halves with each
+doubling of `n_group`, first order. On the default 209 groups the
+largest departure of the EIR 20 clinical age profile from the converged
+one is 1.1%, and the rms 0.8%; at 53 groups they are 4.4% and 3.0%. What
+refinement does **not** remove is the mean-field approximation itself –
+one immunity value per stratum, where the IBM holds a spread of
+infection histories at the same age – so a persistent difference from
+the IBM is not evidence that the grid is too coarse.
+`validations/age-grid/run.R` in `fleetcheck` measures both.
 
 Band aggregation weights each age group by the exact fraction of its own
 width that falls inside the band, so a band edge landing inside a group
@@ -69,25 +67,74 @@ of intervention age targeting. Neither is snapped to the grid.
 
 ``` r
 default_age_lower()
-#>  [1]  0.0000000  0.1428571  0.2857143  0.4285714  0.5714286  0.7142857
-#>  [7]  0.8571429  1.0000000  1.2000000  1.4000000  1.6000000  1.8000000
-#> [13]  2.0000000  2.2500000  2.5000000  2.7500000  3.0000000  3.4000000
-#> [19]  3.8000000  4.2000000  4.6000000  5.0000000  5.5000000  6.0000000
-#> [25]  6.5000000  7.0000000  7.7500000  8.5000000  9.2500000 10.0000000
-#> [31] 11.2500000 12.5000000 13.7500000 15.0000000 16.6666667 18.3333333
-#> [37] 20.0000000 22.5000000 25.0000000 27.5000000 30.0000000 33.3333333
-#> [43] 36.6666667 40.0000000 44.0000000 48.0000000 52.0000000 56.0000000
-#> [49] 60.0000000 65.0000000 70.0000000 75.0000000 80.0000000
+#>   [1]  0.000000  0.031250  0.062500  0.093750  0.125000  0.156250  0.187500
+#>   [8]  0.218750  0.250000  0.281250  0.312500  0.343750  0.375000  0.406250
+#>  [15]  0.437500  0.468750  0.500000  0.531250  0.562500  0.593750  0.625000
+#>  [22]  0.656250  0.687500  0.718750  0.750000  0.781250  0.812500  0.843750
+#>  [29]  0.875000  0.906250  0.937500  0.968750  1.000000  1.052632  1.105263
+#>  [36]  1.157895  1.210526  1.263158  1.315789  1.368421  1.421053  1.473684
+#>  [43]  1.526316  1.578947  1.631579  1.684211  1.736842  1.789474  1.842105
+#>  [50]  1.894737  1.947368  2.000000  2.071429  2.142857  2.214286  2.285714
+#>  [57]  2.357143  2.428571  2.500000  2.571429  2.642857  2.714286  2.785714
+#>  [64]  2.857143  2.928571  3.000000  3.105263  3.210526  3.315789  3.421053
+#>  [71]  3.526316  3.631579  3.736842  3.842105  3.947368  4.052632  4.157895
+#>  [78]  4.263158  4.368421  4.473684  4.578947  4.684211  4.789474  4.894737
+#>  [85]  5.000000  5.142857  5.285714  5.428571  5.571429  5.714286  5.857143
+#>  [92]  6.000000  6.142857  6.285714  6.428571  6.571429  6.714286  6.857143
+#>  [99]  7.000000  7.200000  7.400000  7.600000  7.800000  8.000000  8.200000
+#> [106]  8.400000  8.600000  8.800000  9.000000  9.200000  9.400000  9.600000
+#> [113]  9.800000 10.000000 10.277778 10.555556 10.833333 11.111111 11.388889
+#> [120] 11.666667 11.944444 12.222222 12.500000 12.777778 13.055556 13.333333
+#> [127] 13.611111 13.888889 14.166667 14.444444 14.722222 15.000000 15.384615
+#> [134] 15.769231 16.153846 16.538462 16.923077 17.307692 17.692308 18.076923
+#> [141] 18.461538 18.846154 19.230769 19.615385 20.000000 20.333333 20.666667
+#> [148] 21.000000 21.562500 22.125000 22.687500 23.250000 23.812500 24.375000
+#> [155] 24.937500 25.500000 26.062500 26.625000 27.187500 27.750000 28.312500
+#> [162] 28.875000 29.437500 30.000000 30.769231 31.538462 32.307692 33.076923
+#> [169] 33.846154 34.615385 35.384615 36.153846 36.923077 37.692308 38.461538
+#> [176] 39.230769 40.000000 41.052632 42.105263 43.157895 44.210526 45.263158
+#> [183] 46.315789 47.368421 48.421053 49.473684 50.526316 51.578947 52.631579
+#> [190] 53.684211 54.736842 55.789474 56.842105 57.894737 58.947368 60.000000
+#> [197] 61.538462 63.076923 64.615385 66.153846 67.692308 69.230769 70.769231
+#> [204] 72.307692 73.846154 75.384615 76.923077 78.461538 80.000000
 # coarser top of the grid
 default_age_lower(max_age = 60)
-#>  [1]  0.00000  0.12500  0.25000  0.37500  0.50000  0.62500  0.75000  0.87500
-#>  [9]  1.00000  1.20000  1.40000  1.60000  1.80000  2.00000  2.25000  2.50000
-#> [17]  2.75000  3.00000  3.40000  3.80000  4.20000  4.60000  5.00000  5.50000
-#> [25]  6.00000  6.50000  7.00000  7.75000  8.50000  9.25000 10.00000 11.00000
-#> [33] 12.00000 13.00000 14.00000 15.00000 16.66667 18.33333 20.00000 22.00000
-#> [41] 24.00000 26.00000 28.00000 30.00000 32.50000 35.00000 37.50000 40.00000
-#> [49] 44.00000 48.00000 52.00000 56.00000 60.00000
-# twice the resolution everywhere, same shape
-length(default_age_lower(n_group = 105))
-#> [1] 105
+#>   [1]  0.00000000  0.02941176  0.05882353  0.08823529  0.11764706  0.14705882
+#>   [7]  0.17647059  0.20588235  0.23529412  0.26470588  0.29411765  0.32352941
+#>  [13]  0.35294118  0.38235294  0.41176471  0.44117647  0.47058824  0.50000000
+#>  [19]  0.52941176  0.55882353  0.58823529  0.61764706  0.64705882  0.67647059
+#>  [25]  0.70588235  0.73529412  0.76470588  0.79411765  0.82352941  0.85294118
+#>  [31]  0.88235294  0.91176471  0.94117647  0.97058824  1.00000000  1.05000000
+#>  [37]  1.10000000  1.15000000  1.20000000  1.25000000  1.30000000  1.35000000
+#>  [43]  1.40000000  1.45000000  1.50000000  1.55000000  1.60000000  1.65000000
+#>  [49]  1.70000000  1.75000000  1.80000000  1.85000000  1.90000000  1.95000000
+#>  [55]  2.00000000  2.06666667  2.13333333  2.20000000  2.26666667  2.33333333
+#>  [61]  2.40000000  2.46666667  2.53333333  2.60000000  2.66666667  2.73333333
+#>  [67]  2.80000000  2.86666667  2.93333333  3.00000000  3.10000000  3.20000000
+#>  [73]  3.30000000  3.40000000  3.50000000  3.60000000  3.70000000  3.80000000
+#>  [79]  3.90000000  4.00000000  4.10000000  4.20000000  4.30000000  4.40000000
+#>  [85]  4.50000000  4.60000000  4.70000000  4.80000000  4.90000000  5.00000000
+#>  [91]  5.13333333  5.26666667  5.40000000  5.53333333  5.66666667  5.80000000
+#>  [97]  5.93333333  6.06666667  6.20000000  6.33333333  6.46666667  6.60000000
+#> [103]  6.73333333  6.86666667  7.00000000  7.18750000  7.37500000  7.56250000
+#> [109]  7.75000000  7.93750000  8.12500000  8.31250000  8.50000000  8.68750000
+#> [115]  8.87500000  9.06250000  9.25000000  9.43750000  9.62500000  9.81250000
+#> [121] 10.00000000 10.26315789 10.52631579 10.78947368 11.05263158 11.31578947
+#> [127] 11.57894737 11.84210526 12.10526316 12.36842105 12.63157895 12.89473684
+#> [133] 13.15789474 13.42105263 13.68421053 13.94736842 14.21052632 14.47368421
+#> [139] 14.73684211 15.00000000 15.35714286 15.71428571 16.07142857 16.42857143
+#> [145] 16.78571429 17.14285714 17.50000000 17.85714286 18.21428571 18.57142857
+#> [151] 18.92857143 19.28571429 19.64285714 20.00000000 20.33333333 20.66666667
+#> [157] 21.00000000 21.50000000 22.00000000 22.50000000 23.00000000 23.50000000
+#> [163] 24.00000000 24.50000000 25.00000000 25.50000000 26.00000000 26.50000000
+#> [169] 27.00000000 27.50000000 28.00000000 28.50000000 29.00000000 29.50000000
+#> [175] 30.00000000 30.71428571 31.42857143 32.14285714 32.85714286 33.57142857
+#> [181] 34.28571429 35.00000000 35.71428571 36.42857143 37.14285714 37.85714286
+#> [187] 38.57142857 39.28571429 40.00000000 41.00000000 42.00000000 43.00000000
+#> [193] 44.00000000 45.00000000 46.00000000 47.00000000 48.00000000 49.00000000
+#> [199] 50.00000000 51.00000000 52.00000000 53.00000000 54.00000000 55.00000000
+#> [205] 56.00000000 57.00000000 58.00000000 59.00000000 60.00000000
+# a quarter of the resolution everywhere, same shape, four times as fast
+length(default_age_lower(n_group = 53))
+#> [1] 53
 ```

@@ -3,19 +3,19 @@
 ## Run the model
 
 Simulate malaria transmission dynamics with the deterministic mean-field
-ODE model.
+model, one day at a time.
 
 - [`run_simulation_ode()`](https://pwinskill.github.io/fleet/reference/run_simulation_ode.md)
-  : Run the mean-field (ODE) malaria model.
+  : Run the mean-field malaria model.
 
-## Solver settings
+## Discretisation settings
 
-Numerical tolerances and the discretisation of the age grid, the Erlang
-lag chains and the prophylaxis compartments. Every default is the
-validated choice: change one only when you have a reason to.
+The age grid, the prophylaxis chains’ stage counts and the mosquito
+sub-steps per day. Every default is the validated choice: change one
+only when you have a reason to.
 
 - [`ode_tuning()`](https://pwinskill.github.io/fleet/reference/ode_tuning.md)
-  : ODE solver and discretisation settings.
+  : Discretisation settings.
 
 ## Age grid
 
@@ -30,4 +30,4 @@ Background, scope, and pointers to the mean-field approximations.
 
 - [`fleet`](https://pwinskill.github.io/fleet/reference/fleet-package.md)
   [`fleet-package`](https://pwinskill.github.io/fleet/reference/fleet-package.md)
-  : fleet: a mean-field (ODE) twin of malariasimulation
+  : fleet: a mean-field twin of malariasimulation

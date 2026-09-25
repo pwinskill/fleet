@@ -1,16 +1,18 @@
-# fleet: a mean-field (ODE) twin of malariasimulation
+# fleet: a mean-field twin of malariasimulation
 
-A fast, deterministic mean-field (ODE) counterpart to the
-malariasimulation individual-based model of *Plasmodium falciparum*
-malaria, built on the odin2 / dust2 stack. It reproduces the age- and
+A fast, deterministic mean-field counterpart to the malariasimulation
+individual-based model of *Plasmodium falciparum* malaria, built on the
+odin2 / dust2 stack and advanced one day at a time on the
+individual-based model's own clock. It reproduces the age- and
 biting-heterogeneity-structured human model (states S/D/A/U/Tr plus
 treatment and chemoprevention prophylaxis, and the six immunity
 functions) coupled to the compartmental mosquito model, and honours the
 same intervention modules. It accepts an unmodified
 [`malariasimulation::get_parameters()`](https://rdrr.io/pkg/malariasimulation/man/get_parameters.html)
-list, is seeded at the malariaEquilibrium fixed point, and returns
+list, is seeded at the malariaEquilibrium solution, and returns
 malariasimulation-style outputs that feed straight into postie. A
-multi-decade run completes in seconds, independent of population size.
+multi-decade run completes in under a second, independent of population
+size.
 
 ## Getting started
 
@@ -21,7 +23,7 @@ multi-decade run completes in seconds, independent of population size.
   the default graded age grid.
 
 - [`ode_tuning()`](https://pwinskill.github.io/fleet/reference/ode_tuning.md):
-  solver and discretisation settings, passed as `tuning =`.
+  discretisation settings, passed as `tuning =`.
 
 The count table is malariasimulation-shaped, so post-process it with
 postie exactly as you would an IBM run: `postie::get_rates(out)` and
@@ -29,9 +31,9 @@ postie exactly as you would an IBM run: `postie::get_rates(out)` and
 [`vignette("fleet")`](https://pwinskill.github.io/fleet/articles/fleet.md)
 for a worked tour and
 [`vignette("using")`](https://pwinskill.github.io/fleet/articles/using.md)
-for where and how much the ODE departs from the IBM and what to do about
-it. The measured agreement behind those claims is a separate project,
-[fleetcheck](https://pwinskill.github.io/fleetcheck/).
+for where and how much the mean field departs from the IBM and what to
+do about it. The measured agreement behind those claims is a separate
+project, [fleetcheck](https://pwinskill.github.io/fleetcheck/).
 
 ## See also
 

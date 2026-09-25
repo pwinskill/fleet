@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">fleet</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.0.0.9002</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.0.0.9003</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,20 +44,21 @@
 
 <div id="contributing-to-fleet" class="section level1">
 
-<p>Thanks for your interest. <code>fleet</code> is a deterministic mean-field (ODE) twin of the <a href="https://github.com/mrc-ide/malariasimulation" class="external-link">malariasimulation</a> individual-based model. That framing drives almost every rule below: where the two models can be made to agree, they should agree <em>by construction</em>, not by fitting.</p>
+<p>Thanks for your interest. <code>fleet</code> is a deterministic mean-field twin of the <a href="https://github.com/mrc-ide/malariasimulation" class="external-link">malariasimulation</a> individual-based model, advanced one day at a time on the IBM’s own clock. That framing drives almost every rule below: where the two models can be made to agree, they should agree <em>by construction</em>, not by fitting.</p>
 <blockquote>
 <p><code>fleet</code> is a work in progress and is not ready for real use. See the warning at the top of the <a href="https://github.com/pwinskill/fleet#not-ready-for-real-use" class="external-link">README</a>.</p>
 </blockquote>
 <div class="section level2">
 <h2 id="the-one-thing-that-will-catch-you-out">The one thing that will catch you out<a class="anchor" aria-label="anchor" href="#the-one-thing-that-will-catch-you-out"></a></h2>
-<p><strong><code>inst/odin/malaria_ode.R</code> is the model. <code>src/malaria_ode.cpp</code> is what actually runs.</strong></p>
+<p><strong><code>inst/odin/malaria_daily.R</code> is the model. <code>src/malaria_daily.cpp</code> is what actually runs.</strong></p>
 <p>The C++ is generated from the odin source and is committed to the repository. If you edit the odin file and do not regenerate, everything passes: <code>R CMD check</code> compiles the old model, the tests exercise the old model, and the drift check reports “nothing moved”, which reads as <em>my change was numerically inert</em> rather than <em>my change was never compiled</em>.</p>
-<p>After any edit to <code>inst/odin/malaria_ode.R</code>:</p>
+<p>After any edit to <code>inst/odin/malaria_daily.R</code>:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">odin2</span><span class="fu">::</span><span class="fu"><a href="https://mrc-ide.github.io/odin2/reference/odin_package.html" class="external-link">odin_package</a></span><span class="op">(</span><span class="st">"."</span><span class="op">)</span></span></code></pre></div>
 <p>then commit the regenerated files alongside your change:</p>
-<pre><code>src/malaria_ode.cpp   src/cpp11.cpp   R/dust.R   R/cpp11.R   inst/dust/malaria_ode.cpp</code></pre>
+<pre><code>src/malaria_daily.cpp   src/cpp11.cpp   R/dust.R   R/cpp11.R   inst/dust/malaria_daily.cpp</code></pre>
 <p>CI enforces this: the <code>generated-code</code> job in <code>.github/workflows/R-CMD-check.yaml</code> regenerates and fails on any diff.</p>
+<p><strong><code>devtools::load_all()</code> and <code>devtools::test()</code> compile the model with debug flags</strong> (<code>-O0</code>), which runs it about ten times slower, and they leave those object files in <code>src/</code>. <code>R CMD INSTALL</code> on the source directory then reuses them, so an install made after a <code>load_all()</code> is silently the slow build. Install with <code>R CMD INSTALL --preclean .</code> (or delete <code>src/*.o</code> first) before timing anything.</p>
 </div>
 <div class="section level2">
 <h2 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a></h2>
@@ -74,16 +75,18 @@
 </div>
 <div class="section level2">
 <h2 id="changing-the-model">Changing the model<a class="anchor" aria-label="anchor" href="#changing-the-model"></a></h2>
-<p>Two committed baselines pin <code>fleet</code>’s numbers. A deliberate model change means refreshing <strong>both</strong>, and reading both diffs.</p>
+<p>Two committed baselines pin <code>fleet</code>’s numbers: this repository’s reference values, and <code>fleetcheck</code>’s committed fleet rows. A deliberate model change means refreshing <strong>both</strong>, and reading both diffs.</p>
 <table class="table"><colgroup><col width="33%"><col width="33%"><col width="33%"></colgroup><thead><tr><th>baseline</th>
 <th>what it pins</th>
 <th>regenerate with</th>
 </tr></thead><tbody><tr><td>
-<code>tests/testthat/reference-values.csv</code><br><code>tests/testthat/reference-interventions.csv</code>
+<code>tests/testthat/reference-values.csv</code><br><code>tests/testthat/reference-interventions.csv</code><br><code>tests/testthat/reference-vivax.csv</code><br><code>tests/testthat/reference-vivax-interventions.csv</code>
 </td>
 <td>absolute output levels, to 1e-6</td>
-<td><code>FLEET_REGENERATE_REFERENCE=1 Rscript -e 'devtools::test(filter = "reference")'</code></td>
-</tr></tbody></table><p>Agreement with the IBM is a separate repository, <a href="https://github.com/pwinskill/fleetcheck" class="external-link">fleetcheck</a>. A change that moves model output moves its numbers too, so refresh it in the same change: clone it beside this one and run <code>CMP_FLEET_ONLY=1 Rscript validations/02-scenarios/run.R</code>, then <code>validations/02-scenarios/render.R</code>. The IBM rows do not need re-running — nothing in <code>fleet</code> can affect them — which is why that takes minutes rather than the twenty-five a full sweep costs.</p>
+<td>
+<code>FLEET_REGENERATE_REFERENCE=1 Rscript -e 'testthat::test_file("tests/testthat/test-reference.R", package = "fleet", load_package = "installed")'</code>, against a fresh <code>R CMD INSTALL</code>
+</td>
+</tr></tbody></table><p>Agreement with the IBM is a separate repository, <a href="https://github.com/pwinskill/fleetcheck" class="external-link">fleetcheck</a>. A change that moves model output moves its numbers too, so refresh it in the same change: clone it beside this one and run <code>CMP_FLEET_ONLY=1 Rscript validations/02-scenarios/run.R</code>, then <code>validations/02-scenarios/render.R</code>; for a change that reaches the vivax block, the same again with <code>CMP_PARASITE=pv</code>, then <code>render_pv.R</code>. The IBM rows do not need re-running — nothing in <code>fleet</code> can affect them — which is why that takes minutes rather than the hours a full sweep costs.</p>
 <p><strong>Never regenerate a baseline to make a red test green.</strong> The diff <em>is</em> the record of what your change did to the model. Read it, and put it in the pull request.</p>
 <div class="section level3">
 <h3 id="house-rules-for-the-model-itself">House rules for the model itself<a class="anchor" aria-label="anchor" href="#house-rules-for-the-model-itself"></a></h3>
@@ -101,7 +104,7 @@
 <h2 id="pull-requests">Pull requests<a class="anchor" aria-label="anchor" href="#pull-requests"></a></h2>
 <ul><li>Branch from <code>main</code>; keep changes focused.</li>
 <li>Say what moved. If output numbers changed, include the baseline diff and explain it.</li>
-<li>New behaviour needs a test that fails without the change. For anything touching model output, that means an absolute assertion, not only a relation: a test that checks “intervention-on is below intervention-off” survives multiplying the whole output by a constant, and two real mutations once passed the entire suite that way.</li>
+<li>New behaviour needs a test that fails without the change. For anything touching model output, that means an absolute assertion, not only a relation: a test that checks “intervention-on is below intervention-off” survives multiplying the whole output by a constant.</li>
 <li>Documentation counts as part of the change. If you falsify a claim in the README or a vignette, fix it in the same pull request.</li>
 </ul></div>
 <div class="section level2">

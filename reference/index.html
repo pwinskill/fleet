@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">fleet</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.0.0.9002</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.0.0.9003</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,7 +44,7 @@
     <div class="section level2">
       <h2 id="run-the-model">Run the model<a class="anchor" aria-label="anchor" href="#run-the-model"></a></h2>
 
-      <div class="section-desc"><p>Simulate malaria transmission dynamics with the deterministic mean-field ODE model.</p></div>
+      <div class="section-desc"><p>Simulate malaria transmission dynamics with the deterministic mean-field model, one day at a time.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -56,11 +56,11 @@
           <code><a href="run_simulation_ode.html">run_simulation_ode()</a></code>
 
         </dt>
-        <dd>Run the mean-field (ODE) malaria model.</dd>
+        <dd>Run the mean-field malaria model.</dd>
       </dl></div><div class="section level2">
-      <h2 id="solver-settings">Solver settings<a class="anchor" aria-label="anchor" href="#solver-settings"></a></h2>
+      <h2 id="discretisation-settings">Discretisation settings<a class="anchor" aria-label="anchor" href="#discretisation-settings"></a></h2>
 
-      <div class="section-desc"><p>Numerical tolerances and the discretisation of the age grid, the Erlang lag chains and the prophylaxis compartments. Every default is the validated choice: change one only when you have a reason to.</p></div>
+      <div class="section-desc"><p>The age grid, the prophylaxis chains’ stage counts and the mosquito sub-steps per day. Every default is the validated choice: change one only when you have a reason to.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -72,7 +72,7 @@
           <code><a href="ode_tuning.html">ode_tuning()</a></code>
 
         </dt>
-        <dd>ODE solver and discretisation settings.</dd>
+        <dd>Discretisation settings.</dd>
       </dl></div><div class="section level2">
       <h2 id="age-grid">Age grid<a class="anchor" aria-label="anchor" href="#age-grid"></a></h2>
 
@@ -104,7 +104,7 @@
           <code><a href="fleet-package.html">fleet</a></code> <code><a href="fleet-package.html">fleet-package</a></code>
 
         </dt>
-        <dd>fleet: a mean-field (ODE) twin of malariasimulation</dd>
+        <dd>fleet: a mean-field twin of malariasimulation</dd>
       </dl></div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
