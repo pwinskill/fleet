@@ -124,7 +124,7 @@
 <li>
 <strong>Returns malariasimulation’s output table.</strong> A parameter list gives the columns the IBM would give it, under the same names and with the same meanings, so a post-processing pipeline written for the IBM, postie included, works on a <code>fleet</code> run unchanged.</li>
 <li>
-<strong>Is fast and population-independent.</strong> All compartments are per-capita densities, so a run costs the same whether you model a thousand people or ten million: a 30-year falciparum run takes about 3 s on the default 209-group age grid (0.7 s on 53 groups), a vivax run, with its hypnozoite dimension, about a minute.</li>
+<strong>Is fast and population-independent.</strong> All compartments are per-capita densities, so a run costs the same whether you model a thousand people or ten million: a 30-year falciparum run takes about 1.7 s on the default 118-group age grid (0.7 s on 53 groups), a vivax run, with its hypnozoite dimension, about 26 s.</li>
 </ul>
 <p>Reach for the IBM instead when you need stochastic variation or individual heterogeneity beyond the mean field.</p>
 </div>

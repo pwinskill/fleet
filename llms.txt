@@ -91,9 +91,9 @@ Monte-Carlo-free companion** that:
   postie included, works on a `fleet` run unchanged.
 - **Is fast and population-independent.** All compartments are
   per-capita densities, so a run costs the same whether you model a
-  thousand people or ten million: a 30-year falciparum run takes about 3
-  s on the default 209-group age grid (0.7 s on 53 groups), a vivax run,
-  with its hypnozoite dimension, about a minute.
+  thousand people or ten million: a 30-year falciparum run takes about
+  1.7 s on the default 118-group age grid (0.7 s on 53 groups), a vivax
+  run, with its hypnozoite dimension, about 26 s.
 
 Reach for the IBM instead when you need stochastic variation or
 individual heterogeneity beyond the mean field.

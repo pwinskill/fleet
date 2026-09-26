@@ -217,9 +217,9 @@ sits out on the convex tail of its Hill function from early childhood
 its mean immunity, so wherever immunity changes across a group, as it
 does fastest in the young groups where severe disease concentrates, the
 group returns too small a number. The error is first order in the group
-width. On the default 209 groups it is about 1% at EIR 20 to 120; on 53
-groups, a quarter of the cost, severe incidence runs 8% low at EIR 120
-and clinical incidence in young children a few per cent low. So a result
+width. On the default 118 groups severe incidence at EIR 120 is 2% below
+the IBM median; on 53 groups, under half the cost, it runs 7% below, and
+clinical incidence in young children a few per cent low. So a result
 that rests on the level of severe incidence, or of clinical incidence in
 under-5s at high transmission, wants the default grid or a finer one,
 and a coarser grid is for everything else:</p>
@@ -310,7 +310,7 @@ noise <code>fleet</code> is not carrying.</p>
 <p>Seconds for one complete <code><a href="../reference/run_simulation_ode.html">run_simulation_ode()</a></code> call:
 building the inputs, seeding the equilibrium, stepping the days and
 rendering the outputs, which is what you actually pay. Single core, at
-the <code><a href="../reference/ode_tuning.html">ode_tuning()</a></code> defaults, on the default 209-group age
+the <code><a href="../reference/ode_tuning.html">ode_tuning()</a></code> defaults, on the default 118-group age
 grid. Falciparum at EIR 20, the SMC scenarios at 15:</p>
 <table class="table">
 <thead><tr class="header">
@@ -322,59 +322,59 @@ grid. Falciparum at EIR 20, the SMC scenarios at 15:</p>
 <tbody>
 <tr class="odd">
 <td>No interventions</td>
-<td>0.63 s</td>
-<td>1.16 s</td>
-<td>3.29 s</td>
+<td>0.30 s</td>
+<td>0.59 s</td>
+<td>1.65 s</td>
 </tr>
 <tr class="even">
 <td>Seasonal</td>
-<td>0.64 s</td>
-<td>1.21 s</td>
-<td>3.46 s</td>
+<td>0.31 s</td>
+<td>0.60 s</td>
+<td>1.67 s</td>
 </tr>
 <tr class="odd">
 <td>Seasonal + treatment (AL)</td>
-<td>0.72 s</td>
-<td>1.32 s</td>
-<td>3.48 s</td>
+<td>0.33 s</td>
+<td>0.62 s</td>
+<td>1.75 s</td>
 </tr>
 <tr class="even">
 <td>Seasonal + nets + IRS</td>
-<td>0.64 s</td>
-<td>1.28 s</td>
-<td>3.72 s</td>
+<td>0.31 s</td>
+<td>0.61 s</td>
+<td>1.79 s</td>
 </tr>
 <tr class="odd">
 <td>Seasonal + SMC (4 rounds/yr)</td>
-<td>0.88 s</td>
-<td>1.57 s</td>
-<td>4.36 s</td>
+<td>0.42 s</td>
+<td>0.75 s</td>
+<td>2.15 s</td>
 </tr>
 <tr class="even">
 <td>All of the above + RTS,S</td>
-<td>0.92 s</td>
-<td>1.57 s</td>
-<td>4.31 s</td>
+<td>0.43 s</td>
+<td>0.81 s</td>
+<td>2.34 s</td>
 </tr>
 </tbody>
 </table>
 <p>Three things to read off it.</p>
 <p><strong>Cost is proportional to the horizon.</strong> Every day costs
-the same, so the no-intervention row is 0.11 s per simulated year on an
-intercept of about 0.1 s: building the inputs and solving the seed are a
-small fixed charge next to the days.</p>
-<p><strong>Seasonality costs almost nothing</strong>, 5% at 30 years.
+the same, so the no-intervention row is 0.05 s per simulated year on an
+intercept of a few hundredths of a second: building the inputs and
+solving the seed are a small fixed charge next to the days.</p>
+<p><strong>Seasonality costs almost nothing</strong>, 1% at 30 years.
 The update does the same work each day however fast the solution is
 moving; rainfall only changes the day’s carrying capacity.</p>
-<p><strong>Chemoprevention is the dearer intervention</strong>, SMC 26%
-over a seasonal run, and everything together, vaccination included, 25%.
+<p><strong>Chemoprevention is the dearer intervention</strong>, SMC 29%
+over a seasonal run, and everything together, vaccination included, 40%.
 What SMC adds is state – the two chemoprevention protection chains and
-the treated phase, about a thousand states per stage on the default grid
-– and each round pauses the run for its pulse.</p>
-<p>A vivax run costs about 19 times a falciparum one: every compartment
-carries the hypnozoite-batch dimension, eleven levels, and each cell
-carries its immunity’s spread. At EIR 3, with 40% of clinical cases
-treated where a drug is named:</p>
+the treated phase, about six hundred states per stage on the default
+grid – and each round pauses the run for its pulse.</p>
+<p>A vivax run costs about sixteen times a falciparum one: every
+compartment carries the hypnozoite-batch dimension, eleven levels, and
+each cell carries its immunity’s spread. At EIR 3, with 40% of clinical
+cases treated where a drug is named:</p>
 <table class="table">
 <thead><tr class="header">
 <th>Scenario</th>
@@ -385,34 +385,34 @@ treated where a drug is named:</p>
 <tbody>
 <tr class="odd">
 <td>No interventions</td>
-<td>11.6 s</td>
-<td>24.4 s</td>
-<td>62.7 s</td>
+<td>4.7 s</td>
+<td>8.8 s</td>
+<td>25.8 s</td>
 </tr>
 <tr class="even">
 <td>Treatment (chloroquine)</td>
-<td>13.4 s</td>
-<td>25.4 s</td>
-<td>74.2 s</td>
+<td>5.5 s</td>
+<td>9.9 s</td>
+<td>27.2 s</td>
 </tr>
 <tr class="odd">
 <td>Radical cure (CQ + primaquine)</td>
-<td>27.6 s</td>
-<td>52.1 s</td>
-<td>150 s</td>
+<td>10.9 s</td>
+<td>20.4 s</td>
+<td>58.5 s</td>
 </tr>
 <tr class="even">
 <td>Radical cure (CQ + tafenoquine)</td>
-<td>44.1 s</td>
-<td>86.0 s</td>
-<td>249 s</td>
+<td>19.8 s</td>
+<td>38.4 s</td>
+<td>107 s</td>
 </tr>
 </tbody>
 </table>
 <p>Radical cure is the dear vivax intervention: it adds the
 liver-stage-protected levels to the batch dimension, four for primaquine
-and eleven for tafenoquine, and the day’s radical-cure transfers, 2.0
-and 3.4 times the cost of treatment alone at 30 years.</p>
+and eleven for tafenoquine, and the day’s radical-cure transfers, 2.1
+and 3.9 times the cost of treatment alone at 30 years.</p>
 <p>Population size is irrelevant, as it should be: the compartments are
 per-capita densities, and <code>human_population</code> only rescales
 the count columns on the way out.</p>
@@ -427,25 +427,25 @@ the count columns on the way out.</p>
 </tr></thead>
 <tbody><tr class="odd">
 <td>30-year seasonal run</td>
-<td>3.06 s</td>
-<td>3.06 s</td>
-<td>3.06 s</td>
-<td>3.05 s</td>
-<td>3.08 s</td>
+<td>1.74 s</td>
+<td>1.73 s</td>
+<td>1.70 s</td>
+<td>1.72 s</td>
+<td>1.70 s</td>
 </tr></tbody>
 </table>
 <p>Of the discretisation settings, the mosquito sub-steps barely move
 the cost, since the mosquito model is a small part of the day: a 30-year
-seasonal run takes 3.05 s at <code>n_sub = 8</code>, 3.09 s at the
-default 32 and 3.11 s at 64. The age grid is the setting that costs, a
+seasonal run takes 1.70 s at <code>n_sub = 8</code>, 1.72 s at the
+default 32 and 1.75 s at 64. The age grid is the setting that costs, a
 little more than in proportion to its number of groups: on the 53 groups
-of <code>default_age_lower(n_group = 53)</code> the same run takes 0.65
+of <code>default_age_lower(n_group = 53)</code> the same run takes 0.70
 s.</p>
 <p>Measured as the minimum of five repeats, two for vivax, since
 contention can only add time, on R 4.5.2,
 <code>aarch64-w64-mingw32</code>. Treat them as indicative: one machine,
 one core, and a laptop under load will be slower. The 30-year seasonal
-run appears three times above, at 3.05 to 3.46 s; that spread is the
+run appears three times above, at 1.67 to 1.75 s; that spread is the
 machine’s, not the model’s. For how this compares with the IBM’s cost,
 see the <code>speed</code> claims in <a href="https://pwinskill.github.io/fleetcheck/">fleetcheck</a>.</p>
 </div>

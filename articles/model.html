@@ -289,19 +289,20 @@ of the total human population), which is why run time is independent of
 <tr class="odd">
 <td>Age group</td>
 <td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi><mo>=</mo><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>n</mi><mi>a</mi></msub></mrow><annotation encoding="application/x-tex">i = 1,\dots,n_a</annotation></semantics></math></td>
-<td>209</td>
+<td>118</td>
 <td>
 <code>age_lower =</code> / <code><a href="../reference/default_age_lower.html">default_age_lower()</a></code>
 </td>
-<td>Graded age grid, fine in infancy and coarse in adulthood. Group
+<td>Graded age grid, fine in childhood and coarse in adulthood. Group
 edges are pinned at the conventional reporting ages (0, 1, 2, 3, 5, 7,
 10, 15, 20, 30, 40, 60 y), so output bands fall on group boundaries, and
 at 21 y, so that whole groups make up the year maternal immunity’s
 mothers are drawn from (§B.3); between two anchors the groups are of
 equal width, with the budget of groups shared out in proportion to
 <strong>log</strong> width, because immunity rises with log age rather
-than with age. An absorbing top group runs from 80 y. Individuals age by
-a linear-chain (McKendrick) flow
+than with age, weighted 1.25 below 5 y and 0.5 from 21 y, where the
+grid’s error does and does not arise. An absorbing top group runs from
+80 y. Individuals age by a linear-chain (McKendrick) flow
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mi>i</mi></msub><annotation encoding="application/x-tex">r_i</annotation></semantics></math>
 between adjacent groups.</td>
 </tr>
@@ -568,17 +569,17 @@ on emergence is a sex ratio and not a loss</td>
 </tbody>
 </table>
 <p><strong>Total state size.</strong> With the defaults
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>a</mi></msub><mo>=</mo><mn>209</mn></mrow><annotation encoding="application/x-tex">n_a = 209</annotation></semantics></math>,
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>a</mi></msub><mo>=</mo><mn>118</mn></mrow><annotation encoding="application/x-tex">n_a = 118</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>z</mi></msub><mo>=</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">n_z = 5</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>v</mi></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">n_v = 1</annotation></semantics></math>)
-and no drugs, so that every chain has one stage, there are 17,765
+and no drugs, so that every chain has one stage, there are 10,030
 falciparum human states,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>14</mn><mo>+</mo><msub><mi>k</mi><mi>P</mi></msub><mo>+</mo><msub><mi>k</mi><msub><mi>P</mi><mi>c</mi></msub></msub><mo>+</mo><msub><mi>k</mi><msub><mi>P</mi><mrow><mi>c</mi><mi>t</mi></mrow></msub></msub><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><msub><mi>n</mi><mi>a</mi></msub><msub><mi>n</mi><mi>z</mi></msub></mrow><annotation encoding="application/x-tex">(14 + k_P + k_{P_c} + k_{P_{ct}})\,n_a n_z</annotation></semantics></math>,
 and 6 mosquito states per species, plus the three delay lines (35 days
 of history) and the day’s recorded outputs, which are carried as state
 because a daily update has nowhere else to keep them. Every extra
 prophylaxis stage adds
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>a</mi></msub><msub><mi>n</mi><mi>z</mi></msub><mo>=</mo><mn>1045</mn></mrow><annotation encoding="application/x-tex">n_a n_z = 1045</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>a</mi></msub><msub><mi>n</mi><mi>z</mi></msub><mo>=</mo><mn>590</mn></mrow><annotation encoding="application/x-tex">n_a n_z = 590</annotation></semantics></math>
 states. The vivax block (§V) multiplies its compartments by the eleven
 batch levels.</p>
 </div>
@@ -1389,9 +1390,9 @@ group, which it does fastest in the young groups where severe disease
 concentrates. The error is first order in the group width:
 <code>fleet</code>’s own age profile halves its distance from the
 converged one with each doubling of the groups. Measured against the IBM
-median, severe incidence at EIR 120 runs 8% low on 53 groups, 4% on 105
-and 1% on 209, the default. <code><a href="../articles/using.html">vignette("using")</a></code> says what a
-coarser grid costs.</p>
+median, severe incidence at EIR 120 runs 7% low on 53 groups and 2% on
+118, the default. <code><a href="../articles/using.html">vignette("using")</a></code> says what a coarser
+grid costs.</p>
 </div>
 <div class="section level3">
 <h3 id="b-4-disease-state-equations">B.4 Disease-state equations<a class="anchor" aria-label="anchor" href="#b-4-disease-state-equations"></a>

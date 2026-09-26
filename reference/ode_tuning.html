@@ -74,22 +74,25 @@ change; anything left out keeps its default.</p>
 
 <dl><dt id="arg-age-lower">age_lower<a class="anchor" aria-label="anchor" href="#arg-age-lower"></a></dt>
 <dd><p>age-group lower edges in <strong>years</strong>. The default is
-<code><a href="default_age_lower.html">default_age_lower()</a></code>, a 209-group grid log-spaced between pinned reporting
-ages. Must start at 0, increase strictly, and stay in years: a top edge
-above 1000 is rejected as a grid supplied in days. Every group loses its
-ageing and mortality fraction each day out of the same stock as its
-infection and progression, so the narrowest group must be wide enough for
-the two together, a few days: a grid finer than that is an error.</p>
+<code><a href="default_age_lower.html">default_age_lower()</a></code>, a 118-group grid log-spaced between pinned reporting
+ages and weighted towards the under-fives. Must start at 0, increase
+strictly, and stay in years: a top edge above 1000 is rejected as a grid
+supplied in days. Every group loses its ageing and mortality fraction each
+day out of the same stock as its infection and progression, so the
+narrowest group must be wide enough for the two together, a few days: a grid
+finer than that is an error.</p>
 <p><code>fleet</code>'s age profile converges at first order in the number of groups:
 each doubling halves its distance from the converged profile. The default
-puts the EIR 20 clinical age profile within 1.1% of <code>fleet</code>'s own converged
-answer, where 53 groups leave it 4.4% away; measured against the IBM median,
-severe incidence at EIR 120 is 1% low on the default and 8% low on 53
-groups. A coarser grid, <code>default_age_lower(n_group = 53)</code>, runs four
-times as fast and is adequate where the level of severe incidence, or of
+is the smallest grid on which every falciparum claim in <code>fleetcheck</code> passes.
+It puts the EIR 20 clinical age profile within 3.2% of <code>fleet</code>'s own
+converged answer, where 53 groups leave it 6.1% away; measured against the
+IBM median, severe incidence at EIR 120 is 2% low on the default and 7% low
+on 53 groups. A coarser grid, <code>default_age_lower(n_group = 53)</code>, runs over
+twice as fast and is adequate where the level of severe incidence, or of
 young children's incidence at high transmission, is not what a result rests
-on. See the <code>age-profile-clinical</code> and <code>severe-allage-eir</code> claims in
-<code>fleetcheck</code> for the measurements.</p></dd>
+on; a finer one, <code>default_age_lower(n_group = 236)</code>, halves the grid's error
+for twice the cost. See the <code>age-profile-clinical</code> and <code>severe-allage-eir</code>
+claims in <code>fleetcheck</code> for the measurements.</p></dd>
 
 
 <dt id="arg-n-ph-n-phc">n_ph, n_phc<a class="anchor" aria-label="anchor" href="#arg-n-ph-n-phc"></a></dt>

@@ -98,11 +98,11 @@ biting-heterogeneity-structured human model and compartmental mosquito
 model, advances them one day at a time in the IBM’s own order, takes the
 <strong>same parameter list</strong> as the IBM, and is seeded at the <a href="https://github.com/mrc-ide/malariaEquilibrium" class="external-link">malariaEquilibrium</a>
 solution (for vivax, <code>malariaEquilibriumVivax</code>’s). A 30-year
-falciparum run takes a few seconds and a vivax run about a minute,
-independent of population size. That speed is the point: the intended
-uses are calibration, sweeps and quick scenario work, where a stochastic
-IBM would be too slow. It is not ready for those jobs yet (see the note
-above).</p>
+falciparum run takes under two seconds and a vivax run under half a
+minute, independent of population size. That speed is the point: the
+intended uses are calibration, sweeps and quick scenario work, where a
+stochastic IBM would be too slow. It is not ready for those jobs yet
+(see the note above).</p>
 <p>Reach for the IBM (not this) when you need stochastic variation or
 individual heterogeneity beyond the mean field.</p>
 <div class="section level2">
@@ -141,9 +141,9 @@ the default 2-10 prevalence band.</p>
 <span><span class="va">out</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"timestep"</span>, <span class="st">"n_age_730_3650"</span>, <span class="st">"n_detect_lm_730_3650"</span>,</span>
 <span>           <span class="st">"n_inc_clinical_0_1824"</span>, <span class="st">"EIR"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;   timestep n_age_730_3650 n_detect_lm_730_3650 n_inc_clinical_0_1824 EIR</span></span>
-<span><span class="co">#&gt; 1        1       288.1847             158.3495             0.8742316  20</span></span>
-<span><span class="co">#&gt; 2        2       288.1847             158.3383             0.8744227  20</span></span>
-<span><span class="co">#&gt; 3        3       288.1847             158.3278             0.8745811  20</span></span></code></pre></div>
+<span><span class="co">#&gt; 1        1       288.1847             158.3112             0.8722185  20</span></span>
+<span><span class="co">#&gt; 2        2       288.1847             158.3001             0.8724063  20</span></span>
+<span><span class="co">#&gt; 3        3       288.1847             158.2896             0.8725619  20</span></span></code></pre></div>
 <p>The return value is <code>malariasimulation</code>’s daily table,
 with the columns the IBM would give this parameter list, under the same
 names and with the same meanings. Column tags carry the age band
@@ -161,9 +161,9 @@ still:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pfpr</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">n_detect_lm_730_3650</span> <span class="op">/</span> <span class="va">out</span><span class="op">$</span><span class="va">n_age_730_3650</span>   <span class="co"># LM prevalence, 2-10y</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">out</span><span class="op">$</span><span class="va">EIR</span><span class="op">)</span>   <span class="co"># ~20 throughout</span></span>
-<span><span class="co">#&gt; [1] 19.92165 20.00000</span></span>
+<span><span class="co">#&gt; [1] 19.92115 20.00000</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">pfpr</span><span class="op">)</span>      <span class="co"># a ~0.4% relaxation over the first years</span></span>
-<span><span class="co">#&gt; [1] 0.5475345 0.5494722</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 0.5473898 0.5493395</span></span></code></pre></div>
 <p>Row 1 is day 1, whose state is the seed. Over these fifteen years LM
 prevalence in 2-10 year olds runs between 0.5495 (the seed) and 0.5475
 (its low point, a little over a year in), a spread of 0.35%, and is flat
@@ -192,9 +192,9 @@ wrapper in between.</p>
 <span><span class="va">prevalence</span> <span class="op">&lt;-</span> <span class="fu">postie</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/postie/man/get_prevalence.html" class="external-link">get_prevalence</a></span><span class="op">(</span><span class="va">out</span>, diagnostic <span class="op">=</span> <span class="st">"lm"</span><span class="op">)</span></span>
 <span><span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">tail</a></span><span class="op">(</span><span class="va">prevalence</span><span class="op">[</span><span class="st">"lm_prevalence_2_10"</span><span class="op">]</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      lm_prevalence_2_10</span></span>
-<span><span class="co">#&gt; 5473          0.5480399</span></span>
-<span><span class="co">#&gt; 5474          0.5480399</span></span>
-<span><span class="co">#&gt; 5475          0.5480399</span></span>
+<span><span class="co">#&gt; 5473          0.5478469</span></span>
+<span><span class="co">#&gt; 5474          0.5478469</span></span>
+<span><span class="co">#&gt; 5475          0.5478469</span></span>
 <span></span>
 <span><span class="co"># rates: clinical / severe incidence, mortality and DALYs by age band</span></span>
 <span><span class="va">rates</span> <span class="op">&lt;-</span> <span class="fu">postie</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/postie/man/get_rates.html" class="external-link">get_rates</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span></span>
@@ -207,12 +207,12 @@ wrapper in between.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 6</span></span></span>
 <span><span class="co">#&gt;    time age_lower age_upper clinical    severe    dalys</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> <span style="text-decoration: underline;">2</span>000          0      5.00  0.004<span style="text-decoration: underline;">13</span> 0.000<span style="text-decoration: underline;">139</span>  0.001<span style="text-decoration: underline;">32</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> <span style="text-decoration: underline;">2</span>000          0    100.0   0.001<span style="text-decoration: underline;">85</span> 0.000<span style="text-decoration: underline;">032</span>9 0.000<span style="text-decoration: underline;">177</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> <span style="text-decoration: underline;">2</span>000.         0      5.00  0.004<span style="text-decoration: underline;">13</span> 0.000<span style="text-decoration: underline;">139</span>  0.001<span style="text-decoration: underline;">32</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> <span style="text-decoration: underline;">2</span>000.         0    100.0   0.001<span style="text-decoration: underline;">85</span> 0.000<span style="text-decoration: underline;">032</span>9 0.000<span style="text-decoration: underline;">177</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> <span style="text-decoration: underline;">2</span>000.         0      5.00  0.004<span style="text-decoration: underline;">13</span> 0.000<span style="text-decoration: underline;">139</span>  0.001<span style="text-decoration: underline;">32</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> <span style="text-decoration: underline;">2</span>000.         0    100.0   0.001<span style="text-decoration: underline;">85</span> 0.000<span style="text-decoration: underline;">032</span>9 0.000<span style="text-decoration: underline;">177</span></span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> <span style="text-decoration: underline;">2</span>000          0      5.00  0.004<span style="text-decoration: underline;">12</span> 0.000<span style="text-decoration: underline;">138</span>  0.001<span style="text-decoration: underline;">31</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> <span style="text-decoration: underline;">2</span>000          0    100.0   0.001<span style="text-decoration: underline;">84</span> 0.000<span style="text-decoration: underline;">032</span>7 0.000<span style="text-decoration: underline;">176</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> <span style="text-decoration: underline;">2</span>000.         0      5.00  0.004<span style="text-decoration: underline;">12</span> 0.000<span style="text-decoration: underline;">138</span>  0.001<span style="text-decoration: underline;">31</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> <span style="text-decoration: underline;">2</span>000.         0    100.0   0.001<span style="text-decoration: underline;">84</span> 0.000<span style="text-decoration: underline;">032</span>7 0.000<span style="text-decoration: underline;">176</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> <span style="text-decoration: underline;">2</span>000.         0      5.00  0.004<span style="text-decoration: underline;">12</span> 0.000<span style="text-decoration: underline;">138</span>  0.001<span style="text-decoration: underline;">31</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> <span style="text-decoration: underline;">2</span>000.         0    100.0   0.001<span style="text-decoration: underline;">84</span> 0.000<span style="text-decoration: underline;">032</span>7 0.000<span style="text-decoration: underline;">176</span></span></span></code></pre></div>
 <p>Use <code>diagnostic = "pcr"</code> for PCR prevalence, and postie’s
 own arguments (<code>scaler</code>, <code>treatment_scaler</code>,
 <code>life_expectancy</code>, …) as you normally would. This means a
@@ -268,7 +268,7 @@ examples follow.</p>
 <span><span class="va">pfpr_nets</span> <span class="op">&lt;-</span> <span class="va">nets</span><span class="op">$</span><span class="va">n_detect_lm_730_3650</span> <span class="op">/</span> <span class="va">nets</span><span class="op">$</span><span class="va">n_age_730_3650</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>baseline <span class="op">=</span> <span class="va">pfpr_nets</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, trough <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">pfpr_nets</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  baseline    trough </span></span>
-<span><span class="co">#&gt; 0.5494722 0.1812362</span></span></code></pre></div>
+<span><span class="co">#&gt; 0.5493395 0.1810560</span></span></code></pre></div>
 <p>Prevalence falls after deployment and then relaxes as the nets decay.
 Both exponential (log-uniform) and logistic net retention are supported,
 and repeated distributions accumulate correctly (net usage is the full
@@ -294,7 +294,7 @@ rounds in under-5s:</p>
 <span><span class="va">pfpr_smc</span> <span class="op">&lt;-</span> <span class="va">smc</span><span class="op">$</span><span class="va">n_detect_lm_91_1825</span> <span class="op">/</span> <span class="va">smc</span><span class="op">$</span><span class="va">n_age_91_1825</span>   <span class="co"># the 0.25-5y target band</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>baseline <span class="op">=</span> <span class="va">pfpr_smc</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, trough <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">pfpr_smc</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   baseline     trough </span></span>
-<span><span class="co">#&gt; 0.47105430 0.02289532</span></span></code></pre></div>
+<span><span class="co">#&gt; 0.47085538 0.02299911</span></span></code></pre></div>
 <p>SMC, MDA and PMC rounds are applied between days, as the IBM applies
 them: of the target band, a fraction (coverage x drug efficacy) is
 treated. The clinical and LM-detectable asymptomatic among them pass
@@ -317,7 +317,7 @@ matched to the drug’s Weibull protection curve.</p>
 <span><span class="va">pfpr_pev</span> <span class="op">&lt;-</span> <span class="va">pev</span><span class="op">$</span><span class="va">n_detect_lm_730_3650</span> <span class="op">/</span> <span class="va">pev</span><span class="op">$</span><span class="va">n_age_730_3650</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>baseline <span class="op">=</span> <span class="va">pfpr_pev</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, year12 <span class="op">=</span> <span class="va">pfpr_pev</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">pev</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  baseline    year12 </span></span>
-<span><span class="co">#&gt; 0.5494722 0.5111858</span></span></code></pre></div>
+<span><span class="co">#&gt; 0.5493395 0.5109142</span></span></code></pre></div>
 <p>PEV reduces the infection hazard by a per-age, per-time factor.
 Efficacy is averaged over the per-individual antibody distribution the
 IBM samples (a 4-D Gauss-Hermite rule over
@@ -375,9 +375,9 @@ the seasonal annual-mean EIR sits about 7% below the aseasonal
 <span><span class="va">seas</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_simulation_ode.html">run_simulation_ode</a></span><span class="op">(</span><span class="fl">20</span> <span class="op">*</span> <span class="fl">365</span>, <span class="fu">malariasimulation</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/malariasimulation/man/set_equilibrium.html" class="external-link">set_equilibrium</a></span><span class="op">(</span><span class="va">p_seas</span>, init_EIR <span class="op">=</span> <span class="fl">20</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">final_year</span> <span class="op">&lt;-</span> <span class="va">seas</span><span class="op">[</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">seas</span><span class="op">)</span> <span class="op">-</span> <span class="fl">365</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">seas</span><span class="op">)</span>, <span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">final_year</span><span class="op">$</span><span class="va">EIR</span><span class="op">)</span>   <span class="co"># seasonal swing in the settled cycle</span></span>
-<span><span class="co">#&gt; [1]  0.04853958 57.95626518</span></span>
+<span><span class="co">#&gt; [1]  0.04853132 57.94258994</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">final_year</span><span class="op">$</span><span class="va">EIR</span><span class="op">)</span>    <span class="co"># about 7% below the aseasonal target of 20</span></span>
-<span><span class="co">#&gt; [1] 18.54894</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 18.54437</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="p--vivax">P. vivax<a class="anchor" aria-label="anchor" href="#p--vivax"></a>
@@ -400,9 +400,9 @@ familiar columns:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">tail</a></span><span class="op">(</span><span class="va">out_pv</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"timestep"</span>, <span class="st">"n_inc_clinical_0_36499"</span>, <span class="st">"n_relapses"</span>,</span>
 <span>                <span class="st">"n_with_hypnozoites"</span>, <span class="st">"iaa_mean"</span><span class="op">)</span><span class="op">]</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      timestep n_inc_clinical_0_36499 n_relapses n_with_hypnozoites iaa_mean</span></span>
-<span><span class="co">#&gt; 1823     1823              0.7993368   7.605528           185.8308 9.225299</span></span>
-<span><span class="co">#&gt; 1824     1824              0.7994789   7.605244           185.8232 9.224550</span></span>
-<span><span class="co">#&gt; 1825     1825              0.7996210   7.604962           185.8157 9.223802</span></span></code></pre></div>
+<span><span class="co">#&gt; 1823     1823              0.8002892   7.645336           186.6042 9.237516</span></span>
+<span><span class="co">#&gt; 1824     1824              0.8004321   7.645060           186.5968 9.236775</span></span>
+<span><span class="co">#&gt; 1825     1825              0.8005750   7.644786           186.5895 9.236034</span></span></code></pre></div>
 <p>Radical cure starts on day 1 here, from a seed without it, so these
 rows are still settling towards the treated state; a level worth
 comparing wants a burn-in first (<code><a href="../articles/using.html">vignette("using")</a></code>). MDA,
@@ -420,10 +420,10 @@ parameters, the target EIR included, stay on the parameter list. There
 are only three settings — the age grid, the prophylaxis chains’ stage
 counts and the mosquito sub-steps per day — and every default is the
 validated choice. The one worth reaching for is the age grid. The
-default, 209 groups, puts the age profile within about 1% of
-<code>fleet</code>’s own converged answer; a grid a quarter as fine runs
-four times as fast, and is adequate where a result does not rest on the
-level of severe incidence or on young children at high transmission:</p>
+default, 118 groups, is the smallest on which every falciparum claim in
+<code>fleetcheck</code> passes; a grid under half as fine runs over
+twice as fast, and is adequate where a result does not rest on the level
+of severe incidence or on young children at high transmission:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">seas_coarse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_simulation_ode.html">run_simulation_ode</a></span><span class="op">(</span></span>
 <span>  <span class="fl">20</span> <span class="op">*</span> <span class="fl">365</span>, <span class="fu">malariasimulation</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/malariasimulation/man/set_equilibrium.html" class="external-link">set_equilibrium</a></span><span class="op">(</span><span class="va">p_seas</span>, init_EIR <span class="op">=</span> <span class="fl">20</span><span class="op">)</span>,</span>
@@ -432,7 +432,7 @@ level of severe incidence or on young children at high transmission:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>default <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">final_year</span><span class="op">$</span><span class="va">EIR</span><span class="op">)</span>,</span>
 <span>  coarse  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">seas_coarse</span><span class="op">$</span><span class="va">EIR</span><span class="op">[</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">seas_coarse</span><span class="op">)</span> <span class="op">-</span> <span class="fl">365</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">seas_coarse</span><span class="op">)</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  default   coarse </span></span>
-<span><span class="co">#&gt; 18.54894 18.53350</span></span></code></pre></div>
+<span><span class="co">#&gt; 18.54437 18.53354</span></span></code></pre></div>
 <p><code><a href="../reference/ode_tuning.html">?ode_tuning</a></code> documents every field.</p>
 </div>
 <div class="section level2">

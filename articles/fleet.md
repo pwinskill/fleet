@@ -23,10 +23,10 @@ time in the IBM’s own order, takes the **same parameter list** as the
 IBM, and is seeded at the
 [malariaEquilibrium](https://github.com/mrc-ide/malariaEquilibrium)
 solution (for vivax, `malariaEquilibriumVivax`’s). A 30-year falciparum
-run takes a few seconds and a vivax run about a minute, independent of
-population size. That speed is the point: the intended uses are
-calibration, sweeps and quick scenario work, where a stochastic IBM
-would be too slow. It is not ready for those jobs yet (see the note
+run takes under two seconds and a vivax run under half a minute,
+independent of population size. That speed is the point: the intended
+uses are calibration, sweeps and quick scenario work, where a stochastic
+IBM would be too slow. It is not ready for those jobs yet (see the note
 above).
 
 Reach for the IBM (not this) when you need stochastic variation or
@@ -73,9 +73,9 @@ out <- run_simulation_ode(timesteps = 15 * 365, parameters = malariasimulation::
 out[1:3, c("timestep", "n_age_730_3650", "n_detect_lm_730_3650",
            "n_inc_clinical_0_1824", "EIR")]
 #>   timestep n_age_730_3650 n_detect_lm_730_3650 n_inc_clinical_0_1824 EIR
-#> 1        1       288.1847             158.3495             0.8742316  20
-#> 2        2       288.1847             158.3383             0.8744227  20
-#> 3        3       288.1847             158.3278             0.8745811  20
+#> 1        1       288.1847             158.3112             0.8722185  20
+#> 2        2       288.1847             158.3001             0.8724063  20
+#> 3        3       288.1847             158.2896             0.8725619  20
 ```
 
 The return value is `malariasimulation`’s daily table, with the columns
@@ -96,9 +96,9 @@ still:
 
 pfpr <- out$n_detect_lm_730_3650 / out$n_age_730_3650   # LM prevalence, 2-10y
 range(out$EIR)   # ~20 throughout
-#> [1] 19.92165 20.00000
+#> [1] 19.92115 20.00000
 range(pfpr)      # a ~0.4% relaxation over the first years
-#> [1] 0.5475345 0.5494722
+#> [1] 0.5473898 0.5493395
 ```
 
 Row 1 is day 1, whose state is the seed. Over these fifteen years LM
@@ -130,9 +130,9 @@ would make on an IBM run, with no fleet-specific wrapper in between.
 prevalence <- postie::get_prevalence(out, diagnostic = "lm")
 utils::tail(prevalence["lm_prevalence_2_10"], 3)
 #>      lm_prevalence_2_10
-#> 5473          0.5480399
-#> 5474          0.5480399
-#> 5475          0.5480399
+#> 5473          0.5478469
+#> 5474          0.5478469
+#> 5475          0.5478469
 
 # rates: clinical / severe incidence, mortality and DALYs by age band
 rates <- postie::get_rates(out)
@@ -145,12 +145,12 @@ utils::head(rates[, c("time", "age_lower", "age_upper",
 #> # A tibble: 6 × 6
 #>    time age_lower age_upper clinical    severe    dalys
 #>   <dbl>     <dbl>     <dbl>    <dbl>     <dbl>    <dbl>
-#> 1 2000          0      5.00  0.00413 0.000139  0.00132 
-#> 2 2000          0    100.0   0.00185 0.0000329 0.000177
-#> 3 2000.         0      5.00  0.00413 0.000139  0.00132 
-#> 4 2000.         0    100.0   0.00185 0.0000329 0.000177
-#> 5 2000.         0      5.00  0.00413 0.000139  0.00132 
-#> 6 2000.         0    100.0   0.00185 0.0000329 0.000177
+#> 1 2000          0      5.00  0.00412 0.000138  0.00131 
+#> 2 2000          0    100.0   0.00184 0.0000327 0.000176
+#> 3 2000.         0      5.00  0.00412 0.000138  0.00131 
+#> 4 2000.         0    100.0   0.00184 0.0000327 0.000176
+#> 5 2000.         0      5.00  0.00412 0.000138  0.00131 
+#> 6 2000.         0    100.0   0.00184 0.0000327 0.000176
 ```
 
 Use `diagnostic = "pcr"` for PCR prevalence, and postie’s own arguments
@@ -207,7 +207,7 @@ nets <- run_simulation_ode(12 * 365, malariasimulation::set_equilibrium(p_nets, 
 pfpr_nets <- nets$n_detect_lm_730_3650 / nets$n_age_730_3650
 c(baseline = pfpr_nets[1], trough = min(pfpr_nets))
 #>  baseline    trough 
-#> 0.5494722 0.1812362
+#> 0.5493395 0.1810560
 ```
 
 Prevalence falls after deployment and then relaxes as the nets decay.
@@ -235,7 +235,7 @@ smc <- run_simulation_ode(3 * 365, malariasimulation::set_equilibrium(p_smc, ini
 pfpr_smc <- smc$n_detect_lm_91_1825 / smc$n_age_91_1825   # the 0.25-5y target band
 c(baseline = pfpr_smc[1], trough = min(pfpr_smc))
 #>   baseline     trough 
-#> 0.47105430 0.02289532
+#> 0.47085538 0.02299911
 ```
 
 SMC, MDA and PMC rounds are applied between days, as the IBM applies
@@ -260,7 +260,7 @@ pev <- run_simulation_ode(12 * 365, malariasimulation::set_equilibrium(p_pev, in
 pfpr_pev <- pev$n_detect_lm_730_3650 / pev$n_age_730_3650
 c(baseline = pfpr_pev[1], year12 = pfpr_pev[nrow(pev)])
 #>  baseline    year12 
-#> 0.5494722 0.5111858
+#> 0.5493395 0.5109142
 ```
 
 PEV reduces the infection hazard by a per-age, per-time factor. Efficacy
@@ -319,9 +319,9 @@ p_seas <- malariasimulation::get_parameters(list(
 seas <- run_simulation_ode(20 * 365, malariasimulation::set_equilibrium(p_seas, init_EIR = 20))
 final_year <- seas[(nrow(seas) - 365 + 1):nrow(seas), ]
 range(final_year$EIR)   # seasonal swing in the settled cycle
-#> [1]  0.04853958 57.95626518
+#> [1]  0.04853132 57.94258994
 mean(final_year$EIR)    # about 7% below the aseasonal target of 20
-#> [1] 18.54894
+#> [1] 18.54437
 ```
 
 ## P. vivax
@@ -345,9 +345,9 @@ out_pv <- run_simulation_ode(5 * 365, malariasimulation::set_equilibrium(pv, ini
 tail(out_pv[, c("timestep", "n_inc_clinical_0_36499", "n_relapses",
                 "n_with_hypnozoites", "iaa_mean")], 3)
 #>      timestep n_inc_clinical_0_36499 n_relapses n_with_hypnozoites iaa_mean
-#> 1823     1823              0.7993368   7.605528           185.8308 9.225299
-#> 1824     1824              0.7994789   7.605244           185.8232 9.224550
-#> 1825     1825              0.7996210   7.604962           185.8157 9.223802
+#> 1823     1823              0.8002892   7.645336           186.6042 9.237516
+#> 1824     1824              0.8004321   7.645060           186.5968 9.236775
+#> 1825     1825              0.8005750   7.644786           186.5895 9.236034
 ```
 
 Radical cure starts on day 1 here, from a seed without it, so these rows
@@ -368,11 +368,11 @@ Nothing epidemiological sits there: model parameters, the target EIR
 included, stay on the parameter list. There are only three settings —
 the age grid, the prophylaxis chains’ stage counts and the mosquito
 sub-steps per day — and every default is the validated choice. The one
-worth reaching for is the age grid. The default, 209 groups, puts the
-age profile within about 1% of `fleet`’s own converged answer; a grid a
-quarter as fine runs four times as fast, and is adequate where a result
-does not rest on the level of severe incidence or on young children at
-high transmission:
+worth reaching for is the age grid. The default, 118 groups, is the
+smallest on which every falciparum claim in `fleetcheck` passes; a grid
+under half as fine runs over twice as fast, and is adequate where a
+result does not rest on the level of severe incidence or on young
+children at high transmission:
 
 ``` r
 
@@ -383,7 +383,7 @@ seas_coarse <- run_simulation_ode(
 c(default = mean(final_year$EIR),
   coarse  = mean(seas_coarse$EIR[(nrow(seas_coarse) - 365 + 1):nrow(seas_coarse)]))
 #>  default   coarse 
-#> 18.54894 18.53350
+#> 18.54437 18.53354
 ```
 
 [`?ode_tuning`](https://pwinskill.github.io/fleet/reference/ode_tuning.md)
