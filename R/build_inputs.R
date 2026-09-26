@@ -14,34 +14,45 @@ AGE_ANCHORS <- c(0, 1, 2, 3, 5, 7, 10, 15, 20, 21, 30, 40, 60)
 
 #' Default (graded) age grid
 #'
-#' Lower edges (in years) of the age groups: fine in infancy, where immunity and
+#' Lower edges (in years) of the age groups: fine in childhood, where immunity and
 #' maternal dynamics move fast, and coarse in adulthood. Group edges are pinned
 #' at the conventional reporting boundaries -- 0, 1, 2, 3, 5, 7, 10, 15, 20, 30,
 #' 40, 60 years -- and at 21, so that whole groups make up exactly the year the
-#' IBM draws maternal immunity from, [20, 21). The groups between two anchors are of
-#' equal width, with
-#' the budget of groups spread across the anchors in proportion to the width in
-#' `log(1 + age)`. Each interval gets at least one group; the remainder is
+#' IBM draws maternal immunity from, [20, 21). The groups between two anchors are
+#' of equal width. The budget of groups is spread across the anchor intervals in
+#' proportion to their width in `log(1 + age)`, weighted 1.25 below 5 years and
+#' 0.5 from 21 years; each interval gets at least one group, and the remainder is
 #' shared out largest-remainder.
 #'
 #' Log rather than linear width, because what the grid has to resolve is the
 #' rise of immunity with age, and that is far closer to a function of log age
 #' than of age. (Of `log(1 + age)` rather than `log(age)`, which is infinite
 #' over the first year. The offset is in years, so the allocation is not
-#' scale-free.) At 53 groups an equal-width grid is four times as far from the
-#' converged solution as this one (rms over the age profile), and a grid of
-#' fixed monthly / quarterly / yearly / 5-yearly sections, which over-resolves
-#' infancy and under-resolves everything above 15, nearly twice as far: the
-#' grading matters more than the count.
+#' scale-free.) The grading matters more than the count: at 53 groups an
+#' equal-width grid is four times as far from the converged solution as a
+#' log-graded one (rms over the age profile), and a grid of fixed monthly /
+#' quarterly / yearly / 5-yearly sections, which over-resolves infancy and
+#' under-resolves everything above 15, 1.7 times as far. The weights move
+#' groups to where the grid's error comes from. It is largest in clinical and
+#' severe incidence among young children at high transmission, each age band's
+#' error comes from the groups inside it, and the groups above 21 years move no
+#' child's incidence measurably. Weighted, the grid matches the unweighted one's
+#' accuracy with about a quarter fewer groups.
 #'
-#' The departure from `fleet`'s own converged profile halves with each doubling
-#' of `n_group`, first order. On the default 209 groups the largest departure of
-#' the EIR 20 clinical age profile from the converged one is 1.1%, and the rms
-#' 0.8%; at 53 groups they are 4.4% and 3.0%. What refinement does **not**
-#' remove is the mean-field approximation itself -- one immunity value per
-#' stratum, where the IBM holds a spread of infection histories at the same age
-#' -- so a persistent difference from the IBM is not evidence that the grid is
-#' too coarse. `validations/age-grid/run.R` in `fleetcheck` measures both.
+#' The default, 118 groups, is the smallest at which every falciparum claim in
+#' `fleetcheck` passes: the one that decides it is the clinical age profile's
+#' 3-5 year band at EIR 120, which needs 14 groups between 3 and 5 years. It is
+#' the smallest grid that passes, not the most accurate. The departure from
+#' `fleet`'s own converged profile is fleet-low and halves with each doubling of
+#' `n_group`, first order. On the default the largest departure of the EIR 20
+#' clinical age profile from the converged one is 3.2%, in the oldest band,
+#' which the weights coarsen, and the rms 1.6%; at 53 groups they are 6.1% and
+#' 3.2%. Measured against the IBM median, severe incidence at EIR 120 is 2% low.
+#' What refinement does **not** remove is the mean-field approximation itself --
+#' one immunity value per stratum, where the IBM holds a spread of infection
+#' histories at the same age -- so a persistent difference from the IBM is not
+#' evidence that the grid is too coarse. `validations/age-grid/run.R` in
+#' `fleetcheck` measures both.
 #'
 #' Band aggregation weights each age group by the exact fraction of its own width
 #' that falls inside the band, so a band edge landing inside a group (as one
@@ -53,18 +64,18 @@ AGE_ANCHORS <- c(0, 1, 2, 3, 5, 7, 10, 15, 20, 21, 30, 40, 60)
 #'   group). Must be a single finite number `>= 20`: below that the grid has too
 #'   few anchors left to resolve the ages over which immunity develops.
 #' @param n_group total number of age groups, the absorbing top group included.
-#'   The default is 209. Changing it refines or coarsens the whole grid while
+#'   The default is 118. Changing it refines or coarsens the whole grid while
 #'   keeping its shape, which is what a grid-convergence check wants; run time
-#'   is in proportion.
+#'   is roughly in proportion.
 #' @return numeric vector of age-group lower edges in years.
 #' @examples
 #' default_age_lower()
 #' # coarser top of the grid
 #' default_age_lower(max_age = 60)
-#' # a quarter of the resolution everywhere, same shape, four times as fast
+#' # under half the resolution everywhere, same shape, over twice as fast
 #' length(default_age_lower(n_group = 53))
 #' @export
-default_age_lower <- function(max_age = 80, n_group = 209L) {
+default_age_lower <- function(max_age = 80, n_group = 118L) {
   if (length(max_age) != 1L || !is.numeric(max_age) || !is.finite(max_age) ||
       max_age < 20) {
     stop("`max_age` must be a single finite number >= 20 (years). Below that ",
@@ -86,24 +97,27 @@ default_age_lower <- function(max_age = 80, n_group = 209L) {
          "integer range died inside as.integer() saying nothing about age grids.",
          call. = FALSE)
   }
-  # one group per interval, then the remainder shared out by log width. Largest
-  # remainder rather than rounding, so the groups allocated always sum to the
-  # budget exactly -- rounding each share independently loses or gains one.
+  # one group per interval, then the remainder shared out by weighted log width:
+  # 1.25 below 5 years, 0.5 from 21 (see above). Largest remainder rather than
+  # rounding, so the groups allocated always sum to the budget exactly --
+  # rounding each share independently loses or gains one.
   lo <- anchors[-length(anchors)]; hi <- anchors[-1]
+  lw <- (log1p(hi) - log1p(lo)) * ifelse(hi <= 5, 1.25, 1) * ifelse(lo >= 21, 0.5, 1)
   spare <- as.integer(n_group) - 1L - n_iv
   cnt <- rep(1L, n_iv)
   if (spare > 0L) {
-    share <- (log1p(hi) - log1p(lo)) / sum(log1p(hi) - log1p(lo)) * spare
+    share <- lw / sum(lw) * spare
     cnt <- cnt + as.integer(floor(share))
     short <- spare - sum(as.integer(floor(share)))
     if (short > 0L) {
-      # Rounded before ordering, because several intervals have mathematically
-      # IDENTICAL log widths -- log1p(3)-log1p(2) and log1p(7)-log1p(5) are the
-      # same number -- and their computed remainders differ only in the last
-      # bits. Ordering on that noise let a different libm return a different
-      # grid, silently, for roughly one n_group in twelve. Rounding makes true
-      # ties exact so order()'s stable index tie-break decides them, which
-      # favours the younger interval and is reproducible everywhere.
+      # Rounded before ordering, because some intervals have mathematically
+      # IDENTICAL weighted log widths -- log1p(2)-log1p(1) and log1p(5)-log1p(3)
+      # are the same number, under the same weight -- and their computed
+      # remainders differ only in the last bits. Ordering on that noise let a
+      # different libm return a different grid, silently, for some n_group.
+      # Rounding makes true ties exact so order()'s stable index tie-break
+      # decides them, which favours the younger interval and is reproducible
+      # everywhere.
       top <- order(round(share - floor(share), 12), seq_len(n_iv),
                    decreasing = c(TRUE, FALSE), method = "radix")[seq_len(short)]
       cnt[top] <- cnt[top] + 1L

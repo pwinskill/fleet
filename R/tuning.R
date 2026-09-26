@@ -15,23 +15,26 @@
 #' change; anything left out keeps its default.
 #'
 #' @param age_lower age-group lower edges in **years**. The default is
-#'   [default_age_lower()], a 209-group grid log-spaced between pinned reporting
-#'   ages. Must start at 0, increase strictly, and stay in years: a top edge
-#'   above 1000 is rejected as a grid supplied in days. Every group loses its
-#'   ageing and mortality fraction each day out of the same stock as its
-#'   infection and progression, so the narrowest group must be wide enough for
-#'   the two together, a few days: a grid finer than that is an error.
+#'   [default_age_lower()], a 118-group grid log-spaced between pinned reporting
+#'   ages and weighted towards the under-fives. Must start at 0, increase
+#'   strictly, and stay in years: a top edge above 1000 is rejected as a grid
+#'   supplied in days. Every group loses its ageing and mortality fraction each
+#'   day out of the same stock as its infection and progression, so the
+#'   narrowest group must be wide enough for the two together, a few days: a grid
+#'   finer than that is an error.
 #'
 #'   `fleet`'s age profile converges at first order in the number of groups:
 #'   each doubling halves its distance from the converged profile. The default
-#'   puts the EIR 20 clinical age profile within 1.1% of `fleet`'s own converged
-#'   answer, where 53 groups leave it 4.4% away; measured against the IBM median,
-#'   severe incidence at EIR 120 is 1% low on the default and 8% low on 53
-#'   groups. A coarser grid, `default_age_lower(n_group = 53)`, runs four
-#'   times as fast and is adequate where the level of severe incidence, or of
+#'   is the smallest grid on which every falciparum claim in `fleetcheck` passes.
+#'   It puts the EIR 20 clinical age profile within 3.2% of `fleet`'s own
+#'   converged answer, where 53 groups leave it 6.1% away; measured against the
+#'   IBM median, severe incidence at EIR 120 is 2% low on the default and 7% low
+#'   on 53 groups. A coarser grid, `default_age_lower(n_group = 53)`, runs over
+#'   twice as fast and is adequate where the level of severe incidence, or of
 #'   young children's incidence at high transmission, is not what a result rests
-#'   on. See the `age-profile-clinical` and `severe-allage-eir` claims in
-#'   `fleetcheck` for the measurements.
+#'   on; a finer one, `default_age_lower(n_group = 236)`, halves the grid's error
+#'   for twice the cost. See the `age-profile-clinical` and `severe-allage-eir`
+#'   claims in `fleetcheck` for the measurements.
 #' @param n_ph,n_phc stage counts for the post-treatment (`Ph`) and
 #'   chemoprevention (`Ph_c`) prophylaxis chains. `NULL` (default) matches the
 #'   chain to the drug's Weibull protection curve. A stage is left with a fixed

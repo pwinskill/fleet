@@ -15,23 +15,26 @@ ode_tuning(
 }
 \arguments{
 \item{age_lower}{age-group lower edges in \strong{years}. The default is
-\code{\link[=default_age_lower]{default_age_lower()}}, a 209-group grid log-spaced between pinned reporting
-ages. Must start at 0, increase strictly, and stay in years: a top edge
-above 1000 is rejected as a grid supplied in days. Every group loses its
-ageing and mortality fraction each day out of the same stock as its
-infection and progression, so the narrowest group must be wide enough for
-the two together, a few days: a grid finer than that is an error.
+\code{\link[=default_age_lower]{default_age_lower()}}, a 118-group grid log-spaced between pinned reporting
+ages and weighted towards the under-fives. Must start at 0, increase
+strictly, and stay in years: a top edge above 1000 is rejected as a grid
+supplied in days. Every group loses its ageing and mortality fraction each
+day out of the same stock as its infection and progression, so the
+narrowest group must be wide enough for the two together, a few days: a grid
+finer than that is an error.
 
 \code{fleet}'s age profile converges at first order in the number of groups:
 each doubling halves its distance from the converged profile. The default
-puts the EIR 20 clinical age profile within 1.1\% of \code{fleet}'s own converged
-answer, where 53 groups leave it 4.4\% away; measured against the IBM median,
-severe incidence at EIR 120 is 1\% low on the default and 8\% low on 53
-groups. A coarser grid, \code{default_age_lower(n_group = 53)}, runs four
-times as fast and is adequate where the level of severe incidence, or of
+is the smallest grid on which every falciparum claim in \code{fleetcheck} passes.
+It puts the EIR 20 clinical age profile within 3.2\% of \code{fleet}'s own
+converged answer, where 53 groups leave it 6.1\% away; measured against the
+IBM median, severe incidence at EIR 120 is 2\% low on the default and 7\% low
+on 53 groups. A coarser grid, \code{default_age_lower(n_group = 53)}, runs over
+twice as fast and is adequate where the level of severe incidence, or of
 young children's incidence at high transmission, is not what a result rests
-on. See the \code{age-profile-clinical} and \code{severe-allage-eir} claims in
-\code{fleetcheck} for the measurements.}
+on; a finer one, \code{default_age_lower(n_group = 236)}, halves the grid's error
+for twice the cost. See the \code{age-profile-clinical} and \code{severe-allage-eir}
+claims in \code{fleetcheck} for the measurements.}
 
 \item{n_ph, n_phc}{stage counts for the post-treatment (\code{Ph}) and
 chemoprevention (\code{Ph_c}) prophylaxis chains. \code{NULL} (default) matches the

@@ -4,7 +4,7 @@
 \alias{default_age_lower}
 \title{Default (graded) age grid}
 \usage{
-default_age_lower(max_age = 80, n_group = 209L)
+default_age_lower(max_age = 80, n_group = 118L)
 }
 \arguments{
 \item{max_age}{oldest age-group lower edge, in \strong{years} (the absorbing top
@@ -12,22 +12,22 @@ group). Must be a single finite number \verb{>= 20}: below that the grid has too
 few anchors left to resolve the ages over which immunity develops.}
 
 \item{n_group}{total number of age groups, the absorbing top group included.
-The default is 209. Changing it refines or coarsens the whole grid while
+The default is 118. Changing it refines or coarsens the whole grid while
 keeping its shape, which is what a grid-convergence check wants; run time
-is in proportion.}
+is roughly in proportion.}
 }
 \value{
 numeric vector of age-group lower edges in years.
 }
 \description{
-Lower edges (in years) of the age groups: fine in infancy, where immunity and
+Lower edges (in years) of the age groups: fine in childhood, where immunity and
 maternal dynamics move fast, and coarse in adulthood. Group edges are pinned
 at the conventional reporting boundaries -- 0, 1, 2, 3, 5, 7, 10, 15, 20, 30,
 40, 60 years -- and at 21, so that whole groups make up exactly the year the
-IBM draws maternal immunity from, [20, 21). The groups between two anchors are of
-equal width, with
-the budget of groups spread across the anchors in proportion to the width in
-\code{log(1 + age)}. Each interval gets at least one group; the remainder is
+IBM draws maternal immunity from, [20, 21). The groups between two anchors are
+of equal width. The budget of groups is spread across the anchor intervals in
+proportion to their width in \code{log(1 + age)}, weighted 1.25 below 5 years and
+0.5 from 21 years; each interval gets at least one group, and the remainder is
 shared out largest-remainder.
 }
 \details{
@@ -35,20 +35,31 @@ Log rather than linear width, because what the grid has to resolve is the
 rise of immunity with age, and that is far closer to a function of log age
 than of age. (Of \code{log(1 + age)} rather than \code{log(age)}, which is infinite
 over the first year. The offset is in years, so the allocation is not
-scale-free.) At 53 groups an equal-width grid is four times as far from the
-converged solution as this one (rms over the age profile), and a grid of
-fixed monthly / quarterly / yearly / 5-yearly sections, which over-resolves
-infancy and under-resolves everything above 15, nearly twice as far: the
-grading matters more than the count.
+scale-free.) The grading matters more than the count: at 53 groups an
+equal-width grid is four times as far from the converged solution as a
+log-graded one (rms over the age profile), and a grid of fixed monthly /
+quarterly / yearly / 5-yearly sections, which over-resolves infancy and
+under-resolves everything above 15, 1.7 times as far. The weights move
+groups to where the grid's error comes from. It is largest in clinical and
+severe incidence among young children at high transmission, each age band's
+error comes from the groups inside it, and the groups above 21 years move no
+child's incidence measurably. Weighted, the grid matches the unweighted one's
+accuracy with about a quarter fewer groups.
 
-The departure from \code{fleet}'s own converged profile halves with each doubling
-of \code{n_group}, first order. On the default 209 groups the largest departure of
-the EIR 20 clinical age profile from the converged one is 1.1\%, and the rms
-0.8\%; at 53 groups they are 4.4\% and 3.0\%. What refinement does \strong{not}
-remove is the mean-field approximation itself -- one immunity value per
-stratum, where the IBM holds a spread of infection histories at the same age
--- so a persistent difference from the IBM is not evidence that the grid is
-too coarse. \code{validations/age-grid/run.R} in \code{fleetcheck} measures both.
+The default, 118 groups, is the smallest at which every falciparum claim in
+\code{fleetcheck} passes: the one that decides it is the clinical age profile's
+3-5 year band at EIR 120, which needs 14 groups between 3 and 5 years. It is
+the smallest grid that passes, not the most accurate. The departure from
+\code{fleet}'s own converged profile is fleet-low and halves with each doubling of
+\code{n_group}, first order. On the default the largest departure of the EIR 20
+clinical age profile from the converged one is 3.2\%, in the oldest band,
+which the weights coarsen, and the rms 1.6\%; at 53 groups they are 6.1\% and
+3.2\%. Measured against the IBM median, severe incidence at EIR 120 is 2\% low.
+What refinement does \strong{not} remove is the mean-field approximation itself --
+one immunity value per stratum, where the IBM holds a spread of infection
+histories at the same age -- so a persistent difference from the IBM is not
+evidence that the grid is too coarse. \code{validations/age-grid/run.R} in
+\code{fleetcheck} measures both.
 
 Band aggregation weights each age group by the exact fraction of its own width
 that falls inside the band, so a band edge landing inside a group (as one
@@ -60,6 +71,6 @@ age targeting. Neither is snapped to the grid.
 default_age_lower()
 # coarser top of the grid
 default_age_lower(max_age = 60)
-# a quarter of the resolution everywhere, same shape, four times as fast
+# under half the resolution everywhere, same shape, over twice as fast
 length(default_age_lower(n_group = 53))
 }

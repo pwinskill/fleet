@@ -315,8 +315,8 @@ test_that("a newborn's mother is drawn from the whole of [20, 21) years", {
   skip_if_not_installed("malariasimulation")
   # sample_maternal_immunity() draws a mother uniformly among those with
   # trunc(age / 365) == 20, so the mask covers that year and no more: on the
-  # default grid, whose edges include 20 and 21, several whole groups
-  for (n in c(53L, 209L)) {
+  # default grid and a coarser one, whose edges include 20 and 21, whole groups
+  for (n in c(53L, 118L)) {
     lower <- default_age_lower(n_group = n)
     pr <- build_inputs(eqm(malariasimulation::get_parameters(), 20), 20,
                        age_lower = lower, timesteps = 10)$pars

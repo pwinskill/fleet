@@ -108,7 +108,7 @@ human population), which is why run time is independent of `human_population`.
 
 | Dimension | Symbol | Default size | Set by | What it indexes |
 | ------ | ------ | ---- | ---------- | -------------------------------------- |
-| Age group | $i = 1,\dots,n_a$ | 209 | `age_lower =` / `default_age_lower()` | Graded age grid, fine in infancy and coarse in adulthood. Group edges are pinned at the conventional reporting ages (0, 1, 2, 3, 5, 7, 10, 15, 20, 30, 40, 60 y), so output bands fall on group boundaries, and at 21 y, so that whole groups make up the year maternal immunity's mothers are drawn from (§B.3); between two anchors the groups are of equal width, with the budget of groups shared out in proportion to **log** width, because immunity rises with log age rather than with age. An absorbing top group runs from 80 y. Individuals age by a linear-chain (McKendrick) flow $r_i$ between adjacent groups. |
+| Age group | $i = 1,\dots,n_a$ | 118 | `age_lower =` / `default_age_lower()` | Graded age grid, fine in childhood and coarse in adulthood. Group edges are pinned at the conventional reporting ages (0, 1, 2, 3, 5, 7, 10, 15, 20, 30, 40, 60 y), so output bands fall on group boundaries, and at 21 y, so that whole groups make up the year maternal immunity's mothers are drawn from (§B.3); between two anchors the groups are of equal width, with the budget of groups shared out in proportion to **log** width, because immunity rises with log age rather than with age, weighted 1.25 below 5 y and 0.5 from 21 y, where the grid's error does and does not arise. An absorbing top group runs from 80 y. Individuals age by a linear-chain (McKendrick) flow $r_i$ between adjacent groups. |
 | Biting heterogeneity | $j = 1,\dots,n_z$ | 5 | `parameters$n_heterogeneity_groups`, `enable_heterogeneity` | Gauss–Hermite nodes $\zeta_j$ and weights $w_j$ of the log-normal relative-biting-rate distribution with variance $\sigma^2$ (`sigma_squared`); $\zeta_j = \exp(z_j\sigma - \sigma^2/2)$. Fixed at birth, never mixed: a person stays in their stratum for life, as in the IBM. |
 | Vector species | $s = 1,\dots,n_v$ | 1 | `set_species()` | Independent aquatic + adult mosquito populations, each with its own biting rate, mortality, carrying capacity and vector-control response, coupled only through the shared human population. |
 | EIR delay line | $1,\dots,\lfloor\tau_E\rfloor+1$ days | 13 | `de` | The last days of the per-species EIR $a_s I_{M,s}$, from which the lag $\tau_E$ is read, interpolating between two days when it is fractional (§B.2). |
@@ -150,12 +150,12 @@ Mosquito compartments, all $[n_v]$:
 | $E_M$ | Incubating (exposed) adults (odin `Em`) |
 | $I_M$ | Infectious adults |
 
-**Total state size.** With the defaults ($n_a = 209$, $n_z = 5$, $n_v = 1$) and
-no drugs, so that every chain has one stage, there are 17,765 falciparum human
+**Total state size.** With the defaults ($n_a = 118$, $n_z = 5$, $n_v = 1$) and
+no drugs, so that every chain has one stage, there are 10,030 falciparum human
 states, $(14 + k_P + k_{P_c} + k_{P_{ct}})\,n_a n_z$, and 6 mosquito states per
 species, plus the three delay lines (35 days of history) and the day's recorded
 outputs, which are carried as state because a daily update has nowhere else to
-keep them. Every extra prophylaxis stage adds $n_a n_z = 1045$ states. The
+keep them. Every extra prophylaxis stage adds $n_a n_z = 590$ states. The
 vivax block (§V) multiplies its compartments by the eleven batch levels.
 
 ### 2.2 What is captured *without* a dimension
@@ -434,7 +434,7 @@ changes across the group, which it does fastest in the young groups where severe
 disease concentrates. The error is first order in the group width: `fleet`'s
 own age profile halves its distance from the converged one with each doubling
 of the groups. Measured against the IBM median, severe incidence at EIR 120
-runs 8% low on 53 groups, 4% on 105 and 1% on 209, the default.
+runs 7% low on 53 groups and 2% on 118, the default.
 `vignette("using")` says what a coarser grid costs.
 
 ### B.4 Disease-state equations

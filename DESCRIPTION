@@ -16,8 +16,8 @@ Description: Provides a fast, deterministic mean-field counterpart to the
   accepts an unmodified 'malariasimulation' parameter list, is seeded at the
   'malariaEquilibrium' or 'malariaEquilibriumVivax' solution, and returns
   'malariasimulation'-style outputs that feed directly into 'postie'. Built on
-  the 'odin2' and 'dust2' stack, a multi-decade falciparum run completes in a
-  few seconds, independent of population size.
+  the 'odin2' and 'dust2' stack, a multi-decade falciparum run completes in
+  about two seconds, independent of population size.
 License: MIT + file LICENSE
 SystemRequirements: C++17
 URL: https://pwinskill.github.io/fleet/, https://github.com/pwinskill/fleet

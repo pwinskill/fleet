@@ -50,9 +50,10 @@ table is now `malariasimulation`'s, column for column. Every model output moves.
   about 3%. School-age LM prevalence and clinical incidence run 1-3% high: the
   IBM's immunity-dependent transitions sort people by immunity within a cell,
   which one immunity distribution per cell does not carry.
-* A vivax run costs about 2 s per simulated year on the default grid, 5 s with
-  primaquine radical cure and 8 s with tafenoquine: the hypnozoite dimension and
-  the immunity spread make it about twenty times a falciparum run.
+* A vivax run costs about 0.9 s per simulated year on the default grid, 2 s
+  with primaquine radical cure and 3.6 s with tafenoquine: the hypnozoite
+  dimension and the immunity spread make it about sixteen times a falciparum
+  run.
 * The output is the IBM's vivax table: `n_relapses`, `n_with_hypnozoites`,
   `n_inc_relapse_*` and `n_with_hypnozoites_*` over their rendering lists, no
   severe columns unless a severe band is set, and no `p_detect_lm_*`.
@@ -66,12 +67,16 @@ table is now `malariasimulation`'s, column for column. Every model output moves.
 
 ## The default age grid
 
-* **`default_age_lower()` now has 209 groups (was 53).** The age profile's
-  distance from `fleet`'s own converged profile halves with each doubling of the
-  groups: at EIR 20 the largest departure is 1.1% (was 4.4%), and severe
-  incidence at EIR 120 is 1% low where it was 8%. A run costs about four and a
-  half times as much: 3 s for 30 years of falciparum.
-  `default_age_lower(n_group = 53)` is the old grid.
+* **`default_age_lower()` now has 118 groups (was 53), weighted towards the
+  under-fives.** The groups are still shared across the anchor intervals by log
+  width, now weighted 1.25 below 5 years and 0.5 from 21: the grid's error comes
+  from young children at high transmission, and groups above 21 years move no
+  child's incidence measurably. 118 is the smallest grid on which every
+  falciparum claim in `fleetcheck` passes; the clinical age profile's 3-5 year
+  band at EIR 120 decides it. Severe incidence at EIR 120 is 2% below the IBM
+  median, where it was 8%, and a 30-year falciparum run costs about 1.7 s, where
+  it cost 0.65 s. `default_age_lower(n_group = 53)` has the new weights, so it is
+  not the old grid.
 
 ## The daily model
 
@@ -226,29 +231,33 @@ table is now `malariasimulation`'s, column for column. Every model output moves.
 
 ## Agreement with the IBM
 
-Re-measured in `fleetcheck` with the IBM rows unchanged, on the default 209-group
+Re-measured in `fleetcheck` with the IBM rows unchanged, on the default 118-group
 age grid. Falciparum tier 2 is inside the IBM replicate band throughout the
 transmission grid: prevalence, under-5 and all-age clinical and all-age severe
-incidence at 6 of 6 EIRs, within 2% of the IBM median, and the clinical and
-severe age profiles in 25 of 25 and 16 of 16 bands. Intervention impacts are
-outside the band in 3 of 72 cells, all bed nets, where the best of the IBM's own
-replicates is outside in 9.7%. `fleet` runs 24 times the IBM's speed per
-simulated year. On 53 groups, at a quarter of the cost, the grid's
-discretisation error puts clinical incidence 3 to 5% and severe incidence up to
-8% low at EIR 50 and 120, outside the band at 2 of 6 EIRs. Tier 1: an
-undisturbed run moves at most 0.35% off the seed. Tier 3: across the 63-country
-site files `fleet` tracks the IBM inside the claim, r 0.984 and 0.958 on
-clinical and severe incidence with slopes 0.987 and 0.932, and runs 7% above
-it, the excess concentrated below EIR 1 and not explained.
+incidence at 6 of 6 EIRs, within 2.2% of the IBM median, and the clinical and
+severe age profiles in 25 of 25 and 16 of 16 bands, the clinical profile's
+3-5 year band at EIR 120 by 0.04 replicate SD. Intervention impacts are outside
+the band in 2 of 72 cells, both bed nets, where the best of the IBM's own
+replicates is outside in 9.7%. `fleet` runs 44 times the IBM's speed per
+simulated year. On 53 groups, at under half the cost, the grid's discretisation
+error puts clinical incidence 3 to 4% and severe incidence up to 7% low at EIR
+50 and 120, outside the band at 2 of 6 EIRs. Tier 1: an undisturbed run moves at
+most 0.35% off the seed. Tier 3: across the 63-country site files `fleet` tracks
+the IBM inside the claim, r 0.983 and 0.958 on clinical and severe incidence
+with slopes 0.983 and 0.927, and runs 7% above it, the excess concentrated below
+EIR 1 and not explained.
 
 For *P. vivax*, tier 2 is inside the IBM replicate band throughout the
 transmission grid, EIR 0.3 to 30: prevalence, under-5 and all-age clinical
-incidence, relapses and hypnozoite carriage at 5 of 5 EIRs, and the clinical age
-profile in 23 of 23 bands. Radical cure by either drug, treatment scale-up and
-bed nets above EIR 1 move every outcome as the IBM does; indoor residual spraying
-and bed nets at EIR 1 do not, largely the IBM's relapse defect. A vivax run costs
-0.4 times the IBM's per simulated year. Tier 1: a run settles, 2 to 14% above
-the seed on prevalence as the IBM's does.
+incidence, relapses and hypnozoite carriage at 5 of 5 EIRs. The clinical age
+profile is inside in 22 of 23 bands: 3-5 years at EIR 10 sits 0.02 replicate SD
+above the band, the mean field's school-age offset plus 0.3% from the default
+grid, which the falciparum claims set. Radical cure by either drug, treatment
+scale-up and bed nets above EIR 1 move every outcome as the IBM does; indoor
+residual spraying and bed nets at EIR 1 do not, largely the IBM's relapse
+defect. A vivax run costs about what an IBM run does per simulated year, 1.07
+times its speed. Tier 1: a run settles, 3 to 15% above the seed on prevalence as
+the IBM's does.
 
 ## Testing
 
