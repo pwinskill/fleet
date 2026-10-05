@@ -478,6 +478,15 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
   # IBM parameter names.
   if (!is.null(p$eq_params)) {
     eqp_stored <- as.list(p$eq_params)
+    # IV0 is the one constant malariasimulation never freezes. Its back-translation
+    # table has that entry the wrong way round (R/compatibility.R: `IV0 = 'iv0'`,
+    # where every other line reads ibm_name = 'eq_name'), so set_equilibrium()
+    # leaves malariaEquilibrium's default in eq_params whatever iv0 is -- a
+    # set_parameter_draw() draw's included -- while the IBM's severe disease reads
+    # the live iv0 (human_infection.R:1027). So fleet takes it from the live list
+    # as well. It enters no equilibrium state, only the severe probability, so the
+    # seed is unaffected.
+    eqp_stored$IV0 <- NULL
     # eq_params wins, which means set_equilibrium() FREEZES every translated
     # biological constant at the value it had when it was called: an edit to the
     # live list afterwards (p$du <- 10) is a silent no-op. That contract stands --
