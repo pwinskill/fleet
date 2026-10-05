@@ -142,6 +142,17 @@ column. Every model output moves.
 
 ### Mechanisms brought into line with the IBM
 
+- **Severe incidence follows a parameter draw’s `iv0`.** `fleet` took
+  the scale of severe-disease immunity from `set_equilibrium()`’s stored
+  copy, which never carries `iv0`: `malariasimulation`’s
+  back-translation table has that entry the wrong way round, so the copy
+  keeps `malariaEquilibrium`’s default. The IBM’s severe disease reads
+  the live `iv0`, so under `set_parameter_draw()` `fleet`’s severe
+  incidence ran from 45% low to 63% high across the middle 90% of draws.
+  It reads the live value now, as the IBM does; at the median draw
+  nothing changes. `tests/testthat/test-parameter-draws.R` checks that
+  every parameter a draw sets reaches `fleet`’s inputs.
+
 - **Refractory boosting of clinical, detection and severe immunity.**
   The IBM boosts ICA, ID and IVA on an infection only once the
   refractory window since the last boost has passed. `fleet` applied the

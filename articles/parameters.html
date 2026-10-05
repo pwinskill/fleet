@@ -1882,8 +1882,12 @@ its expectation; a mean field’s expected count is both.</p>
 <td>Index 1–1000 into the fitted posterior draws</td>
 <td>✅ <code>malariasimulation</code> overwrites the immunity/disease
 constants in the parameter list in place; they then flow through
-<code>fleet</code>’s back-translation like any other parameter. Must be
-called before <code>set_equilibrium()</code>, as in the IBM</td>
+<code>fleet</code>’s back-translation like any other parameter.
+<code>iv0</code> is read from the live list:
+<code>set_equilibrium()</code>’s stored copy never carries it, because
+<code>malariasimulation</code>’s back-translation table has that entry
+the wrong way round, and the IBM’s severe disease reads the live value.
+Must be called before <code>set_equilibrium()</code>, as in the IBM</td>
 </tr></tbody>
 </table>
 </div>
