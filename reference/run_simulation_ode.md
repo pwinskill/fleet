@@ -240,6 +240,13 @@ years are a transient onto the cycle and the seasonal annual-mean EIR
 sits about 7% below the aseasonal `init_EIR` target (nonlinear
 averaging). Use a burned-in window for calibration and comparison.
 
+A run in which any compartment falls below zero stops with an error
+naming the day and the age group. Each day an age group loses its ageing
+and mortality fraction out of the same stock as its infections, and
+several consecutive groups a day or two wide can lose more than they
+hold at an EIR in the hundreds; widen them in `age_lower`
+([`ode_tuning()`](https://pwinskill.github.io/fleet/reference/ode_tuning.md)).
+
 ## See also
 
 [`ode_tuning()`](https://pwinskill.github.io/fleet/reference/ode_tuning.md)

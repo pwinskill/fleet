@@ -13,7 +13,7 @@ deaths replaced by births. See vignette("model").'><meta property="og:image" con
 
     <a class="navbar-brand me-2" href="../index.html">fleet</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.0.0.9004</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.0.0.9005</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -262,6 +262,11 @@ equilibrium, so the first ~10 years are a transient onto the cycle and the
 seasonal annual-mean EIR sits about 7% below the aseasonal <code>init_EIR</code>
 target (nonlinear averaging). Use a burned-in window for calibration and
 comparison.</p>
+<p>A run in which any compartment falls below zero stops with an error naming
+the day and the age group. Each day an age group loses its ageing and
+mortality fraction out of the same stock as its infections, and several
+consecutive groups a day or two wide can lose more than they hold at an EIR
+in the hundreds; widen them in <code>age_lower</code> (<code><a href="ode_tuning.html">ode_tuning()</a></code>).</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

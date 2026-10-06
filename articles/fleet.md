@@ -429,7 +429,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] fleet_0.0.0.9004
+#> [1] fleet_0.0.0.9005
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] jsonlite_2.0.0                dplyr_1.2.1                  

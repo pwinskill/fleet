@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">fleet</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.0.0.9004</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.0.0.9005</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,6 +42,13 @@
       <small>Source: <a href="https://github.com/pwinskill/fleet/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.0.9005" id="fleet-0009005">fleet 0.0.0.9005<a class="anchor" aria-label="anchor" href="#fleet-0009005"></a></h2>
+<ul><li>
+<strong>A parameter draw with <code>b0</code> near 1 runs.</strong> The check that no age group can lose more people in a day than it holds bounded a day’s infections by <code>b0</code>, as if everyone were bitten every day. The default grid’s 16.6-day infant groups lose 0.06 of their people a day to ageing and death, so it refused any <code>b0</code> above 0.94: <code>set_parameter_draw()</code> draws 410 and 464 (<code>b0</code> 0.959 and 0.990) on the default grid, 9 draws on 209 groups and 43 on 300. None of those runs goes negative, at EIR 20 or 120, nor draws 410 and 464 at a seasonal EIR of 400 or an aseasonal 673: the people ageing into a group every day make good what its infections take. The check before the run now covers only what does not depend on transmission: a group narrower than about a day, progression and clearance, and the prophylaxis chains. The vivax check, which bounds infection at the seed’s EIR, is unchanged.</li>
+<li>
+<strong>Positivity is checked as the run goes.</strong> Each day the model finds its smallest human compartment, and <code><a href="../reference/run_simulation_ode.html">run_simulation_ode()</a></code> stops with an error giving the first day one fell below -1e-12 of the population, its value and its age group. It takes several consecutive groups a day or two wide at an EIR in the hundreds: ten 1.3-day groups from birth go negative from EIR 300, and not at 120. The check adds no output column and no measurable time: over seven runs of each build, a 30-year falciparum run took 1.80 s on average with it and without, and a 10-year vivax run 9.74 s against 9.75 s at the median, inside the runs’ own spread of about 4%. Every output of a run that ran before is bit-identical to 0.0.0.9004’s.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.0.9004" id="fleet-0009004">fleet 0.0.0.9004<a class="anchor" aria-label="anchor" href="#fleet-0009004"></a></h2>
 <ul><li>
