@@ -1,6 +1,6 @@
 Package: fleet
 Title: Mean-Field Twin of the 'malariasimulation' Malaria Model
-Version: 0.0.0.9004
+Version: 0.0.0.9005
 Authors@R: c(
   person("Peter", "Winskill", role = c("aut", "cre", "cph"), email = "p.winskill@imperial.ac.uk"))
 Description: Provides a fast, deterministic mean-field counterpart to the

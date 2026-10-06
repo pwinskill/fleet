@@ -132,6 +132,12 @@ get_generator <- function(odin_file = NULL) {
 #'   seasonal annual-mean EIR sits about 7% below the aseasonal `init_EIR`
 #'   target (nonlinear averaging). Use a burned-in window for calibration and
 #'   comparison.
+#'
+#'   A run in which any compartment falls below zero stops with an error naming
+#'   the day and the age group. Each day an age group loses its ageing and
+#'   mortality fraction out of the same stock as its infections, and several
+#'   consecutive groups a day or two wide can lose more than they hold at an EIR
+#'   in the hundreds; widen them in `age_lower` ([ode_tuning()]).
 #' @param tuning discretisation settings, from [ode_tuning()]. A plain named
 #'   list of the fields you want to change is also accepted; every field left out
 #'   keeps its default. These are numerical-approximation knobs, not model
@@ -280,7 +286,38 @@ run_simulation_ode <- function(timesteps, parameters = NULL, correlations = NULL
   } else {
     y <- simulate_with_pulses(sys, times, events, inp$meta, uidx, out_idx)
   }
+  check_positivity(sys, uidx, inp$meta)
   render_output(y, times, inp, uidx, out_idx)
+}
+
+## The smallest a human compartment may fall to, as a fraction of the population,
+## before a run stops. No run measured has a compartment below zero at all, not
+## by rounding; this keeps rounding in a near-empty cell from stopping one, and is
+## far below where the check catches a group the daily clock overdraws, at -3e-10
+## to -3e-7 in the grids built to make one.
+NEG_TOL <- 1e-12
+
+#' Stop a run that drove a compartment negative.
+#'
+#' build_inputs() refuses before the run an age grid on which the exits that do
+#' not depend on transmission could take more than a group holds in a day.
+#' Infection is checked as the run goes instead: the model keeps the first day its
+#' smallest human compartment fell below `-NEG_TOL`, with the value and the age
+#' group, and a run that got there stops here rather than return numbers made
+#' from it. The model's own state carries the check, so nothing is added to the
+#' recorded output.
+#' @noRd
+check_positivity <- function(sys, uidx, meta) {
+  if (is.null(uidx$neg_day)) return(invisible())   # an `odin_file` without the check
+  st <- dust2::dust_system_state(sys, index_state = c(uidx$neg_day, uidx$neg_val, uidx$neg_age))
+  if (st[1] == 0) return(invisible())
+  g <- st[3]
+  stop("age group ", g, " ([", signif(meta$age_lo[g], 6), ", ", signif(meta$age_hi[g], 6),
+       ") days) is too narrow for the daily clock at this transmission: on day ", st[1],
+       " one of its compartments fell to ", signif(st[2], 3), " of the population, as ",
+       "the day's infections, ageing and deaths took more of its people than it held. ",
+       if (meta$age_hi[g] <= 365) "Widen the infant age groups" else "Widen it",
+       " in `age_lower`.", call. = FALSE)
 }
 
 #' Describe a bad argument compactly, for an error message.

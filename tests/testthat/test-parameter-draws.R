@@ -44,3 +44,20 @@ test_that("a run under a parameter draw holds its seed, with no frozen-copy warn
     expect_lt(max(abs(prev / prev[1] - 1)), 1e-2)
   }
 })
+
+test_that("draws with b0 near 1 run on the default grid, and nothing in them goes negative", {
+  skip_if_not_installed("malariasimulation")
+  # Draws 410 and 464 have b0 0.959 and 0.990. The default grid's 16.6-day infant
+  # groups lose 0.06 of their people a day to ageing and death, so a check that
+  # bounded a day's infections by b0, as if everyone were bitten every day,
+  # refused both; but the people ageing into a group every day make good what its
+  # infections take. They run, and the whole state stays non-negative every day.
+  for (d in c(410, 464)) {
+    for (eir in c(20, 120)) {
+      p <- eqm(malariasimulation::set_parameter_draw(malariasimulation::get_parameters(), d), eir)
+      expect_gt(p$b0, 0.95)
+      expect_no_error(run_simulation_ode(365, p))
+      expect_gte(scan_positivity(365, p)$lowest, 0)
+    }
+  }
+})

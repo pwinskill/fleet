@@ -19,9 +19,14 @@
 #'   ages and weighted towards the under-fives. Must start at 0, increase
 #'   strictly, and stay in years: a top edge above 1000 is rejected as a grid
 #'   supplied in days. Every group loses its ageing and mortality fraction each
-#'   day out of the same stock as its infection and progression, so the
-#'   narrowest group must be wide enough for the two together, a few days: a grid
-#'   finer than that is an error.
+#'   day out of the same stock as the day's other exits, so the narrowest group
+#'   must be wide enough to hold them together. Progression and clearance do not
+#'   depend on transmission, and a grid with a group too narrow for them, a
+#'   little over a day, is an error before the run. Infection is checked as the
+#'   run goes: a run in which any compartment falls below zero stops with an
+#'   error naming the day and the age group. That takes several consecutive
+#'   groups a day or two wide at an EIR in the hundreds; the default grid's
+#'   narrowest groups are 16.6 days wide.
 #'
 #'   `fleet`'s age profile converges at first order in the number of groups:
 #'   each doubling halves its distance from the converged profile. The default

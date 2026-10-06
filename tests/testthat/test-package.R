@@ -234,12 +234,75 @@ test_that("ode_tuning validates its fields and accepts a partial list", {
   expect_error(ode_tuning(age_lower = c(0, 2, 1)), "increasing")
 })
 
-test_that("an age group narrower than a day is refused", {
+test_that("an age group narrower than a day is refused before the run", {
   skip_if_not_installed("malariasimulation")
   p <- eqm(malariasimulation::get_parameters(), 20)
-  # a half-day group at 6 months (0.5 years is itself a group edge)
+  # a half-day group at 6 months (0.5 years is itself a group edge): ageing and
+  # death alone take twice what it holds
   narrow <- sort(unique(c(default_age_lower(), 0.5, 0.5 + 0.5 / 365)))
-  expect_error(run_simulation_ode(10, p, tuning = list(age_lower = narrow)), "too narrow")
+  expect_error(run_simulation_ode(10, p, tuning = list(age_lower = narrow)),
+               "too narrow for the daily clock: it would lose 2 of its people a day to ageing and death, more")
+  # a 1.1-day group: ageing and death take 0.91 a day, too little room left for
+  # recovery from clinical disease (rD = 0.18)
+  narrow <- sort(unique(c(default_age_lower(), 0.5, 0.5 + 1.1 / 365)))
+  expect_error(run_simulation_ode(10, p, tuning = list(age_lower = narrow)),
+               "on top of up to 0.181 to progression and clearance")
+})
+
+test_that("a run that goes negative stops, naming the day, the age group and the value", {
+  skip_if_not_installed("malariasimulation")
+  # Ten 1.3-day groups from birth pass the pre-run check: ageing and death take
+  # 0.77 of each a day, which leaves room for progression and clearance. At an
+  # EIR of 2000 infection takes up to b0 of a group a day on top of that, more
+  # than it holds; the seed, solved with a continuous force of infection, starts
+  # an oscillation from day to day that each narrow group passes on larger, and
+  # within days a compartment goes negative.
+  narrow <- sort(unique(c((0:9) * 1.3 / 365, default_age_lower()[default_age_lower() > 15 / 365])))
+  p <- eqm(malariasimulation::get_parameters(), 2000)
+  expect_no_error(build_inputs(p, 2000, narrow, timesteps = 30))
+  scan <- scan_positivity(30, p, list(age_lower = narrow))
+  expect_lt(scan$lowest, -1e-6)
+  err <- tryCatch(run_simulation_ode(30, p, tuning = list(age_lower = narrow)),
+                  error = conditionMessage)
+  # the model's check reports what the state itself shows
+  edges <- signif(narrow[scan$age + 0:1] * 365, 6)
+  expect_match(err, paste0("age group ", scan$age, " ([", edges[1], ", ", edges[2], ") days) ",
+                           "is too narrow for the daily clock at this transmission: on day ",
+                           scan$day, " one of its compartments fell to ", signif(scan$value, 3),
+                           " of the population"), fixed = TRUE)
+  expect_match(err, "Widen the infant age groups in `age_lower`.", fixed = TRUE)
+  # and at an EIR of 20 the same grid runs, and nothing in it goes negative
+  p <- eqm(malariasimulation::get_parameters(), 20)
+  expect_no_error(run_simulation_ode(365, p, tuning = list(age_lower = narrow)))
+  expect_gte(scan_positivity(365, p, list(age_lower = narrow))$lowest, 0)
+})
+
+test_that("the positivity check sees every human compartment, under both parasites", {
+  skip_if_not_installed("malariasimulation")
+  # One compartment at a time, one cell of age group 7 is set negative at the
+  # seed: the first day's check must find it, whichever compartment it is in.
+  g <- 7L
+  for (parasite in c("falciparum", "vivax")) {
+    p <- eqm(malariasimulation::get_parameters(parasite = parasite), 20)
+    inp <- build_inputs(p, 20, timesteps = 30)
+    for (nm in if (parasite == "vivax") PV_COMPARTMENTS else PF_COMPARTMENTS) {
+      sys <- dust2::dust_system_create(get_generator(), pars = inp$pars, n_particles = 1, dt = 1)
+      dust2::dust_system_set_state_initial(sys)
+      uidx <- dust2::dust_unpack_index(sys)
+      s <- dust2::dust_system_state(sys)
+      s[uidx[[nm]][g]] <- -1e-6
+      dust2::dust_system_set_state(sys, s)
+      dust2::dust_system_run_to_time(sys, 1)
+      expect_error(check_positivity(sys, uidx, inp$meta),
+                   paste0("age group ", g, " .* on day 1 one of its compartments fell to -1e-06 "),
+                   info = paste(parasite, nm))
+    }
+    # and with nothing negative it passes
+    sys <- dust2::dust_system_create(get_generator(), pars = inp$pars, n_particles = 1, dt = 1)
+    dust2::dust_system_set_state_initial(sys)
+    dust2::dust_system_run_to_time(sys, 30)
+    expect_no_error(check_positivity(sys, dust2::dust_unpack_index(sys), inp$meta))
+  }
 })
 
 test_that("IRS reduces prevalence; zero-coverage IRS == baseline", {

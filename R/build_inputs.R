@@ -727,27 +727,30 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
   # of the group, so it cannot reach 1: a group narrower than about a day would
   # empty more than completely and every compartment in it would go negative.
   leave <- r_age + apply(mu_age_z, 1, max)
-  # ...and it loses that out of the same stock as its own exit probability, so the
-  # two together cannot exceed 1 either. The disease exits are bounded by the
-  # largest infection probability, b0 (an infection moves someone out of S, A or
-  # U), together with the progression and clearance probabilities; the prophylaxis
-  # chains, below, exit at n x rate. Both are checked against the narrowest group.
   res <- resistance_series(p, eqp)
   room <- 1 - max(leave)
-  too_narrow <- function(disease_exit, what = "infection and progression",
-                         g = which.max(leave)) {
+  too_narrow <- function(exit = 0, what = NULL, g = which.max(leave)) {
     stop("age group ", g, " ([", signif(age_days[g], 6), ", ", signif(age_days[g] + width[g], 6),
          ") days) is too narrow for the daily clock: it would lose ", signif(leave[g], 3),
-         " of its people a day to ageing and death on top of up to ", signif(disease_exit, 3),
-         " to ", what, ", more than it holds. Widen it in `age_lower`.",
-         call. = FALSE)
+         " of its people a day to ageing and death",
+         if (exit > 0) paste0(" on top of up to ", signif(exit, 3), " to ", what),
+         ", more than it holds. Widen it in `age_lower`.", call. = FALSE)
   }
-  # (The vivax counterpart depends on the EIR, and is checked once the seed EIR
-  # is known, below.)
+  if (max(leave) >= 1) too_narrow()
+  # A group loses that out of the same stock as its own exit probability, so the
+  # two together cannot exceed 1 either. The exits that do not depend on
+  # transmission are checked here against the narrowest group: progression and
+  # clearance, and the prophylaxis chains' n x rate, below. Infection is not. The
+  # people ageing into a group every day make good what its infections take, and a
+  # bound on infection would have to assume everyone is bitten every day, which
+  # refuses runs that never go negative: set_parameter_draw() draws with b0 above
+  # 0.94 on the default grid. The model checks its compartments as the run goes
+  # instead, and run_simulation_ode() stops if one falls below -NEG_TOL. (The
+  # vivax bound depends on the EIR, and is checked once the seed EIR is known,
+  # below.)
   if (!is_vivax) {
-    disease_exit <- max(1 - (1 - eqp[["b0"]]) * (1 - max(eqp[["rA"]], eqp[["rU"]])),
-                        eqp[["rD"]], eqp[["rT"]], max(res$rT_slow))
-    if (disease_exit > room) too_narrow(disease_exit)
+    disease_exit <- max(eqp[["rA"]], eqp[["rU"]], eqp[["rD"]], eqp[["rT"]], max(res$rT_slow))
+    if (disease_exit > room) too_narrow(disease_exit, "progression and clearance")
   }
   # Stage counts of the two prophylaxis chains. The defaults are sized at the
   # seed's drug mix and then held to what the shortest-protecting mix on the
@@ -1008,11 +1011,11 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
   ## loses its ageing and death fraction and the day's competing event --
   ## infection or progression, or a prophylaxis stage's exit -- out of the same
   ## stock; the batch clearance and the liver-stage clock act on what is left.
-  ## Unlike falciparum's, whose deduplicated bites cap infection at b0, a vivax
-  ## person's infection probability rises towards 1 with the EIR, so the bound
-  ## is checked at the seed's EIR, for each age group at its own exposure in its
-  ## most exposed stratum: the narrowest groups are the youngest, whom mosquitoes
-  ## bite least. A seasonal peak can go above it.
+  ## Unlike falciparum's, it bounds infection too. A vivax person's infection
+  ## probability rises towards 1 with the EIR, so the bound is checked at the
+  ## seed's EIR, for each age group at its own exposure in its most exposed
+  ## stratum: the narrowest groups are the youngest, whom mosquitoes bite least.
+  ## A seasonal peak can go above it, which the check made as the run goes covers.
   if (is_vivax) {
     # the seed's EPS (mpsi / mzp = 1 / sum(w zeta) on the stationary population)
     eps_g <- eir_seed / 365 * max(zeta) * psi / sum(het_wt * zeta)
@@ -1139,7 +1142,9 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
     S0 = S0, D0 = D0, A0 = A0, U0 = U0, Tr0 = Tr0, Ph0 = Ph0, Phc0 = Phc0,
     IB_init = IB_init, ICA_init = ICA_init, ID_init = ID_init, IVA_init = IVA_init,
     ME0 = ME0, ML0 = ML0, MP0 = MP0, Sm0 = Sm0, Em0 = Em0, Im0 = Im0,
-    eir0 = eir0, inc0 = inc0, inf0 = Xf0
+    eir0 = eir0, inc0 = inc0, inf0 = Xf0,
+    # the positivity check's tolerance, a fraction of the population (run.R)
+    neg_tol = NEG_TOL
   )
   pars <- c(pars, if (is_vivax) {
     stopifnot(dim(hs$Sv0)[3] == p$kmax + 1)

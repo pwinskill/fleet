@@ -1,3 +1,28 @@
+# fleet 0.0.0.9005
+
+* **A parameter draw with `b0` near 1 runs.** The check that no age group can
+  lose more people in a day than it holds bounded a day's infections by `b0`, as
+  if everyone were bitten every day. The default grid's 16.6-day infant groups
+  lose 0.06 of their people a day to ageing and death, so it refused any `b0`
+  above 0.94: `set_parameter_draw()` draws 410 and 464 (`b0` 0.959 and 0.990) on
+  the default grid, 9 draws on 209 groups and 43 on 300. None of those runs goes
+  negative, at EIR 20 or 120, nor draws 410 and 464 at a seasonal EIR of 400 or
+  an aseasonal 673: the people ageing into a group every day make good what its
+  infections take. The check before the run now covers only what does not depend
+  on transmission: a group narrower than about a day, progression and clearance,
+  and the prophylaxis chains. The vivax check, which bounds infection at the
+  seed's EIR, is unchanged.
+* **Positivity is checked as the run goes.** Each day the model finds its
+  smallest human compartment, and `run_simulation_ode()` stops with an error
+  giving the first day one fell below -1e-12 of the population, its value and
+  its age group. It takes several consecutive groups a day or two wide at an EIR
+  in the hundreds: ten 1.3-day groups from birth go negative from EIR 300, and
+  not at 120. The check adds no output column and no measurable time: over
+  seven runs of each build, a 30-year falciparum run took 1.80 s on average with
+  it and without, and a 10-year vivax run 9.74 s against 9.75 s at the median,
+  inside the runs' own spread of about 4%. Every output of a run that ran before
+  is bit-identical to 0.0.0.9004's.
+
 # fleet 0.0.0.9004
 
 * **Severe incidence follows a parameter draw's `iv0`.** `fleet` took the scale

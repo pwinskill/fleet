@@ -1346,6 +1346,40 @@ dim(n_g, det_lm_g, det_pcr_g, clin_g, sev_g, inc_g, relapse_g, hyp_g) <- n_age
 dim(S_g, D_g, A_g, U_g, Tr_g, Ph_g) <- n_age
 dim(ica_g, icm_g, ib_g, iva_g, ivm_g, id_g, iaa_g, iam_g, hypk_g) <- n_age
 
+## ---- positivity, checked as the run goes -------------------------------------------------
+# Each day an age group loses its ageing and death fraction out of the same stock
+# as the day's events. build_inputs() refuses before the run a grid on which the
+# exits that do not depend on transmission -- progression, clearance and the
+# prophylaxis chains -- could take more than a group holds. Infection is not
+# bounded there: the people ageing into a group every day make good what the
+# day's infections take, and a bound would have to assume everyone is bitten
+# every day, which refuses runs that never go negative. So the day's smallest
+# human compartment is found here, and the first day it falls below -neg_tol is
+# kept with its value and age group, for run_simulation_ode() to report. It reads
+# the start-of-day state, the state each output row reports. The vivax block holds
+# one empty cell under falciparum, and the falciparum block is empty under vivax.
+neg_tol <- parameter()
+pos_f[, ] <- min(min(min(S[i, j], D[i, j]), min(A[i, j], U[i, j])),
+  min(min(Tr[i, j], Tr_slow[i, j]), min(Tr_c[i, j], Tr_cs[i, j])))
+pos_v[, , ] <- min(min(min(Sv[i, j, k], Dv[i, j, k]), min(Av[i, j, k], Uv[i, j, k])),
+  min(Trv[i, j, k], Trv_slow[i, j, k]))
+dim(pos_f) <- c(n_age, n_het)
+dim(pos_v) <- c(n_age_v, n_het_v, n_hyp)
+pos_gv[] <- min(min(pos_v[i, , ]), min(Phv[i, , , ]))
+dim(pos_gv) <- n_age_v
+pos_g[] <- min(min(min(min(pos_f[i, ]), min(Ph[i, , ])), min(min(Ph_c[i, , ]), min(Ph_ct[i, , ]))),
+  if (i <= n_age_v) pos_gv[i] else 0)
+pos_min <- min(pos_g)
+# the youngest age group holding it
+pos_at[] <- if (pos_g[i] <= pos_min) as.numeric(i) else n_age
+dim(pos_g, pos_at) <- n_age
+pos_age <- min(pos_at)
+# The update from time t - 1 to t is day t, the output row whose state this is.
+neg_new <- if (neg_day == 0 && pos_min < -neg_tol) 1 else 0
+update(neg_day) <- if (neg_new == 1) time + 1 else neg_day
+update(neg_val) <- if (neg_new == 1) pos_min else neg_val
+update(neg_age) <- if (neg_new == 1) pos_age else neg_age
+
 ## ---- initial conditions ---------------------------------------------------
 S0 <- parameter(); D0 <- parameter(); A0 <- parameter()
 U0 <- parameter(); Tr0 <- parameter(); Ph0 <- parameter(); Phc0 <- parameter()
@@ -1433,3 +1467,6 @@ initial(id_g[]) <- 0
 initial(iaa_g[]) <- 0
 initial(iam_g[]) <- 0
 initial(hypk_g[]) <- 0
+initial(neg_day) <- 0
+initial(neg_val) <- 0
+initial(neg_age) <- 0
