@@ -404,7 +404,7 @@ mean field’s expected count is both.
 
 | Argument | malariasimulation meaning | `fleet` |
 |----|----|----|
-| `draw` | Index 1–1000 into the fitted posterior draws | ✅ `malariasimulation` overwrites the immunity/disease constants in the parameter list in place; they then flow through `fleet`’s back-translation like any other parameter. `iv0` is read from the live list: `set_equilibrium()`’s stored copy never carries it, because `malariasimulation`’s back-translation table has that entry the wrong way round, and the IBM’s severe disease reads the live value. Must be called before `set_equilibrium()`, as in the IBM |
+| `draw` | Index 1–1000 into the fitted posterior draws | ✅ `malariasimulation` overwrites the immunity/disease constants in the parameter list in place; they then flow through `fleet`’s back-translation like any other parameter. `iv0` is read from the live list: `set_equilibrium()`’s stored copy holds `malariaEquilibrium`’s default whatever the draw, because `malariasimulation`’s back-translation table has that entry the wrong way round, and the IBM’s severe disease reads the live value. Must be called before `set_equilibrium()`, as in the IBM |
 
 ## Helpers and run functions
 

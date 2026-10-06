@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">fleet</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.0.0.9003</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.0.0.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -1884,7 +1884,8 @@ its expectation; a mean field’s expected count is both.</p>
 constants in the parameter list in place; they then flow through
 <code>fleet</code>’s back-translation like any other parameter.
 <code>iv0</code> is read from the live list:
-<code>set_equilibrium()</code>’s stored copy never carries it, because
+<code>set_equilibrium()</code>’s stored copy holds
+<code>malariaEquilibrium</code>’s default whatever the draw, because
 <code>malariasimulation</code>’s back-translation table has that entry
 the wrong way round, and the IBM’s severe disease reads the live value.
 Must be called before <code>set_equilibrium()</code>, as in the IBM</td>
