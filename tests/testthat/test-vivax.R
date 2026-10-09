@@ -57,9 +57,10 @@ test_that("a vivax list reaches the shared parameters under the falciparum names
   expect_equal(c(x$cD, x$cU), c(p$cd, p$cu))
   expect_equal(c(x$d_iaa, x$ua_eff, x$cA_v, x$bv, x$ff, x$gammal),
                c(p$ra, ceiling(p$ua) - 1, p$ca, p$b, p$f, p$gammal))
-  # the vivax block at full size, the falciparum one empty
+  # the vivax block at full size -- eight batch levels for kmax = 10 -- and the
+  # falciparum one empty
   expect_equal(c(x$pf_on, x$pv_on, x$n_age_v, x$n_het_v, x$n_bat),
-               c(0, 1, x$n_age, x$n_het, p$kmax + 1))
+               c(0, 1, x$n_age, x$n_het, 8))
   expect_true(all(c(x$S0, x$D0, x$A0, x$U0, x$Tr0) == 0))
   # and the reverse under falciparum: one inert vivax cell
   y <- build_inputs(eqm(malariasimulation::get_parameters(), 3), 3, timesteps = 30)$pars
@@ -133,10 +134,14 @@ test_that("the vivax seed is the IBM's: nobody drug-protected, renormalised by s
   N <- x$Sv0 + x$Dv0 + x$Av0 + x$Uv0 + x$Trv0
   expect_equal(apply(N, c(1, 2), sum), outer(inp$meta$prop, x$het_wt), tolerance = 1e-12)
   expect_gt(sum(x$Trv0), 0)                     # treated at timestep 0: some in Tr
-  # the second moments start with no spread: K = J^2 / N in every occupied cell
-  occ <- N > 1e-12
-  expect_equal(x$KCv0[occ], x$JCv0[occ]^2 / N[occ], tolerance = 1e-10)
-  expect_equal(x$KAv0[occ], x$JAv0[occ]^2 / N[occ], tolerance = 1e-10)
+  # the second moments start with no spread within a batch count: K = J^2 / N
+  # in every occupied cell of the ladder with a level per count. (A pair's K is
+  # its two counts' sum, so it carries the difference between their means.)
+  y <- build_inputs(eqm(p, 10), 10, timesteps = 30, batch_bins = FALSE)$pars
+  N1 <- y$Sv0 + y$Dv0 + y$Av0 + y$Uv0 + y$Trv0
+  occ <- N1 > 1e-12
+  expect_equal(y$KCv0[occ], y$JCv0[occ]^2 / N1[occ], tolerance = 1e-10)
+  expect_equal(y$KAv0[occ], y$JAv0[occ]^2 / N1[occ], tolerance = 1e-10)
 })
 
 test_that("a vivax run conserves population and relaxes gently off the IBM's seed", {
@@ -181,15 +186,21 @@ test_that("with no spread assumed, every node is the cell mean", {
 test_that("radical cure clears batches and fills liver-stage protection", {
   skip_if_not_installed("malariasimulation")
   cq <- pv_list(malariasimulation::CQ_params_vivax)
+  pq <- pv_list(malariasimulation::CQ_PQ_params_vivax)
   tq <- pv_list(malariasimulation::CQ_TQ_params_vivax)
-  # the protected levels exist only when a radical-cure drug is on the schedule,
-  # a chain matched to the protected days on the daily clock (tafenoquine's
-  # Weibull(5, 30): mean 27.0 days, variance 39.9 -> 11 stages)
+  # the protected levels exist only when a radical-cure drug's liver-stage
+  # protection outlasts the blood-stage chain given with it, a chain matched to
+  # the protected days on the daily clock (tafenoquine's Weibull(5, 30): mean
+  # 27.0 days, variance 39.9 -> 11 stages). Primaquine's 4.7 days end inside
+  # chloroquine's 16, so it radically cures with no protected levels.
   x_cq <- build_inputs(cq, init_EIR = 10, timesteps = 365)$pars
+  x_pq <- build_inputs(pq, init_EIR = 10, timesteps = 365)$pars
   x_tq <- build_inputs(tq, init_EIR = 10, timesteps = 365)$pars
   pd <- .protection_days(5, 30)
   expect_equal(x_cq$n_hyp, x_cq$n_bat)
   expect_equal(x_cq$rc_on, 0)
+  expect_lt(x_pq$mean_ls_vals, 1 / x_pq$rP_vals)
+  expect_equal(c(x_pq$rc_on, x_pq$n_hyp), c(1, x_pq$n_bat))
   expect_equal(x_tq$rc_on, 1)
   expect_equal(x_tq$n_hyp, x_tq$n_bat + erlang_stages(pd$mean, pd$var))
   expect_equal(x_tq$n_hyp - x_tq$n_bat, 11)
@@ -207,6 +218,60 @@ test_that("radical cure clears batches and fills liver-stage protection", {
   expect_lt(o_tq$n_with_hypnozoites[last], 0.95 * o_cq$n_with_hypnozoites[last])
   expect_lt(o_tq$n_relapses[last], o_cq$n_relapses[last])
   expect_lt(o_tq$n_detect_pcr_730_3650[last], o_cq$n_detect_pcr_730_3650[last])
+})
+
+test_that("batch counts 4 to kmax - 1 share levels in pairs", {
+  expect_equal(vivax_batch_levels(10L),
+               list(0L, 1L, 2L, 3L, 4:5, 6:7, 8:9, 10L))
+  expect_equal(vivax_batch_levels(10L, paired = FALSE), as.list(0:10))
+  # the last of an odd run alone; too small a kmax for a pair leaves none
+  expect_equal(vivax_batch_levels(9L), list(0L, 1L, 2L, 3L, 4:5, 6:7, 8L, 9L))
+  expect_equal(vivax_batch_levels(5L), as.list(0:5))
+  expect_equal(vivax_batch_levels(0L), list(0L))
+  # what the model reads: each pair's neighbouring levels and their counts, and
+  # the placeholder pair that every level discards where there is none
+  b <- batch_level_pars(vivax_batch_levels(10L), 2L)
+  expect_equal(b$n_pair, 3L)
+  expect_equal(b$k_lo, c(0, 1, 2, 3, 4, 6, 8, 10, 0, 0))
+  expect_equal(b$pair, c(0, 0, 0, 0, 1, 1, 1, 0, 0, 0))
+  expect_equal(b$pair_ix, c(1L, 1L, 1L, 1L, 1L, 2L, 3L, 1L, 1L, 1L))
+  expect_equal(b[c("pr_dn", "pr_up")], list(pr_dn = 4:6, pr_up = 6:8))
+  expect_equal(b[c("pr_a", "pr_c", "pr_wa", "pr_wc", "pr_dk", "pr_top")],
+               list(pr_a = c(3, 4, 6), pr_c = c(6, 8, 10), pr_wa = c(0, 1, 1),
+                    pr_wc = c(1, 1, 0), pr_dk = c(3, 4, 4), pr_top = c(5, 7, 9)))
+  expect_equal(b$pr_lf, lfactorial(c(6, 8, 10)) - lfactorial(c(3, 4, 6)))
+  none <- batch_level_pars(as.list(0:5), 0L)
+  expect_equal(c(none$n_pair, none$pr_up, none$pr_dn, sum(none$pair)), c(1, 1, 1, 0))
+})
+
+test_that("the paired ladder follows the one with a level per batch count", {
+  skip_if_not_installed("malariasimulation")
+  # The seed is the equilibrium's, summed onto the levels: the same people and
+  # the same immunity, held on eight levels rather than eleven.
+  p <- pv_list(eir = 3)
+  x <- build_inputs(p, 3, timesteps = 30)$pars
+  y <- build_inputs(p, 3, timesteps = 30, batch_bins = FALSE)$pars
+  expect_equal(c(x$n_bat, y$n_bat), c(8, 11))
+  for (nm in c("Sv0", "Dv0", "Av0", "Uv0", "Trv0", "JAv0", "JCv0", "KAv0", "KCv0"))
+    expect_equal(x[[nm]], sum_levels(y[[nm]], vivax_batch_levels(10L)),
+                 tolerance = 1e-14, label = nm)
+  # And the run: a Poisson inside each pair, its rate fitted to the levels
+  # either side, keeps every output within 0.3% of one level per count, off the
+  # seed and settling, with and without radical cure.
+  cmp <- function(q) {
+    a <- run_simulation_ode(5 * 365, q)
+    b <- run_simulation_ode(5 * 365, q, tuning = list(batch_bins = FALSE))
+    last <- a$timestep > 4 * 365
+    for (v in c("n_detect_lm_730_3650", "n_inc_clinical_0_36499", "n_relapses",
+                "n_with_hypnozoites", "hypnozoites_mean", "iaa_mean"))
+      expect_equal(mean(a[[v]][last]), mean(b[[v]][last]), tolerance = 0.003, label = v)
+    expect_lt(max(abs(pop_total(a) - 10000)) / 10000, 1e-9)
+  }
+  cmp(pv_list(eir = 3, clinical_incidence_rendering_min_ages = 0,
+              clinical_incidence_rendering_max_ages = 36499))
+  cmp(pv_list(malariasimulation::CQ_PQ_params_vivax, eir = 3,
+              clinical_incidence_rendering_min_ages = 0,
+              clinical_incidence_rendering_max_ages = 36499))
 })
 
 test_that("vivax has no severe disease, and its own columns hold together", {

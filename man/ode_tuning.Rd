@@ -10,7 +10,8 @@ ode_tuning(
   n_phc = NULL,
   n_sub = 32L,
   odin_file = NULL,
-  ...
+  ...,
+  batch_bins = TRUE
 )
 }
 \arguments{
@@ -81,6 +82,17 @@ Erlang lag stage counts (\code{n_eir}, \code{n_foim}, \code{n_eip}) are accepted
 warning and ignored: the model advances one day at a time, with the IBM's
 own delay lines, so there is no solver to control and no lag to discretise.
 Any other name is an error.}
+
+\item{batch_bins}{under \emph{P. vivax}, whether hypnozoite batch counts share
+levels. \code{malariasimulation} gives each person a count of hypnozoite batches,
+0 to \code{kmax}, and \code{fleet} holds every vivax compartment and immunity stock at
+each level of that ladder, so its length is most of a vivax run's cost. With
+\code{TRUE} (default), counts 0 to 3 and \code{kmax} have a level each and the counts
+between share levels in pairs, the people inside a pair spread as a Poisson
+fitted to the levels either side: eight levels for the default \code{kmax = 10},
+which run a fifth faster than eleven and move no output of the \code{fleetcheck}
+vivax suite by more than 0.4\%. \code{FALSE} gives every count its own level.
+Ignored under \emph{P. falciparum}.}
 }
 \value{
 a \code{fleet_ode_tuning} list.

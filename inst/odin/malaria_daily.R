@@ -76,8 +76,9 @@ pf_on <- parameter(constant = TRUE)    # 1 under falciparum, 0 under vivax
 pv_on <- parameter(constant = TRUE)    # 1 under vivax, 0 under falciparum
 n_age_v <- parameter(constant = TRUE)  # n_age under vivax, 1 otherwise
 n_het_v <- parameter(constant = TRUE)  # n_het under vivax, 1 otherwise
-n_bat <- parameter(constant = TRUE)    # batch levels: kmax + 1 under vivax, 1 otherwise
+n_bat <- parameter(constant = TRUE)    # batch levels: 8 for kmax = 10 under vivax, 1 otherwise
 n_hyp <- parameter(constant = TRUE)    # all levels: n_bat plus liver-stage protection
+n_pair <- parameter(constant = TRUE)   # batch levels holding two counts (at least 1)
 n_phv <- parameter(constant = TRUE)    # vivax post-treatment prophylaxis stages
 n_q <- parameter(constant = TRUE)      # quadrature nodes for vivax immunity spread
 
@@ -426,16 +427,34 @@ dim(IB, ICA, ID, IVA) <- c(n_age, n_het)
 # A mean-field model cannot hold only the mean count: the relapse hazard is
 # linear in k, but immunity, detectability and the U->S rate are not, and
 # malariaEquilibriumVivax returns every state as [age, het, batch] for the same
-# reason. kk[k] is the batch count at level k, so kk = 0 at the first level.
+# reason. People who carry many batches relapse often, so they are more immune
+# and more often inside a refractory window than their cell's average: giving
+# every count its cell's pooled immunity puts clinical incidence 28% high at EIR 3.
 #
-# Levels 1..n_bat are the batch counts 0..kmax. Levels after n_bat hold people
-# with no batches whose liver stage is still drug-protected after radical cure:
-# a chain of stages from the dose, left for level 1. Liver-stage protection is a
-# property of the person, not of their disease state, so it has to sit on the
-# dimension every compartment and immunity stock already carries. On those
-# levels kk = 0 (no relapse, nothing to clear) and a bite infects but forms no
-# batch, which is what ls_prophylaxis does in the IBM. Without a radical-cure
-# drug there are no such levels and n_hyp = n_bat.
+# Levels 1..n_bat hold the batch counts 0..kmax. Counts 0 to 3 and kmax have a
+# level each, and the counts between share levels in pairs -- {4, 5}, {6, 7},
+# {8, 9} for kmax = 10, eight levels for eleven counts (ode_tuning(batch_bins =
+# FALSE) gives every count its own). Inside a pair the people are taken to
+# follow a Poisson, the shape the count takes in a cell -- batches arrive at the
+# bite rate and each is lost at gammal, and the cap at kmax truncates the shape
+# without changing the ratio of one count to the next -- with its rate fitted to
+# the levels either side of the pair (below). That puts the share ftop2 of a
+# pair's people at its top count, where a bite moves them up a level, and the
+# rest at its bottom count, where a lost batch moves them down one; kk is the
+# mean count of a level's people, so kk = 0 at the first level. The fit to the
+# neighbours, rather than a rate read off counts 0 and 1, holds under radical
+# cure, which empties the high counts into 0.
+#
+# Levels after n_bat hold people with no batches whose liver stage is still
+# drug-protected after radical cure: a chain of stages from the dose, left for
+# level 1. Liver-stage protection is a property of the person, not of their
+# disease state, so it has to sit on the dimension every compartment and
+# immunity stock already carries. On those levels kk = 0 (no relapse, nothing to
+# clear) and a bite infects but forms no batch, which is what ls_prophylaxis does
+# in the IBM. Without a radical-cure drug there are no such levels and n_hyp =
+# n_bat, and none either when the liver-stage protection ends inside the
+# blood-stage protection given with it (build_inputs()), as primaquine's does
+# inside chloroquine's: no bite infects a person in Tr or Phv, so no batch forms.
 #
 # Boundaries are handled with `if` guards on the index, not with index ranges:
 # at n_hyp = 1 -- the falciparum collapse -- the batch-1 and batch-n_hyp
@@ -461,18 +480,64 @@ spread_on <- parameter()
 qz <- parameter(); qw <- parameter()
 dim(qz, qw) <- n_q
 
-kk[] <- if (i <= n_bat) as.numeric(i) - 1 else 0
-shmask[] <- if (i < n_bat) 1 else 0       # a bite here moves the person up a batch
+# k_lo is the lowest count a level holds (0 on the liver-stage levels), pair is
+# 1 on a level holding two, and pair_ix says which pair that is (any pair on
+# the other levels, where pair = 0 discards it)
+k_lo <- parameter(); pair <- parameter()
+pair_ix <- parameter(type = "integer")
+dim(k_lo, pair, pair_ix) <- n_hyp
+shmask[] <- if (i < n_bat) 1 else 0       # a bite here can move the person up a level
 lsmask[] <- if (i > n_bat) 1 else 0       # liver-stage-protected levels
-dim(kk, shmask, lsmask) <- n_hyp
+dim(shmask, lsmask) <- n_hyp
 k_rc <- if (n_hyp > n_bat) n_bat + 1 else 1   # where radical cure puts people
 rls_k <- (n_hyp - n_bat) / mean_ls            # per-stage exit of the liver-stage chain
 rPk_v <- rP * n_phv                           # rP is the vivax drug's under vivax
+
+## A pair's Poisson rate theta is the one under which the levels either side of
+## it hold what they do. With S_X(theta) the sum of theta^k / k! over the counts
+## of level X, N_up / N_down = S_up(theta) / S_down(theta); for neighbours whose
+## lowest counts are a (below) and c (above), each holding one count or two
+## (pr_wa, pr_wc), with pr_lf = log(c! / a!) and pr_dk = c - a, that is
+##   dk log(theta) = log(N_up / N_down) + lf
+##                   - log((1 + wc theta / (c + 1)) / (1 + wa theta / (a + 1))).
+## Three fixed-point steps from the first two terms solve it: the last term
+## moves by less than one per unit of log(theta), so each step shrinks the
+## error dk-fold, and dk is 3 or more. The pair's top count then holds
+## theta / (theta + top) of its people. Every term is a log or an exp, so the
+## pairs are reached through index arrays (pr_up, pr_dn) rather than guarded
+## (see pop_floor); an empty neighbour reads pop_floor, which puts the pair's
+## people at the end nearer the occupied one. Where there is no pair -- under
+## falciparum, or a kmax too small for one -- n_pair = 1 with both neighbours
+## at level 1, which gives theta = 1 for pair = 0 to discard.
+pr_up <- parameter(type = "integer"); pr_dn <- parameter(type = "integer")
+pr_a <- parameter(); pr_c <- parameter(); pr_wa <- parameter(); pr_wc <- parameter()
+pr_lf <- parameter(); pr_dk <- parameter(); pr_top <- parameter()
+dim(pr_up, pr_dn, pr_a, pr_c, pr_wa, pr_wc, pr_lf, pr_dk, pr_top) <- n_pair
+lr_p[, , ] <- log((Npop_v[i, j, pr_up[k]] + pop_floor) / (Npop_v[i, j, pr_dn[k]] + pop_floor)) +
+  pr_lf[k]
+th0_p[, , ] <- exp(lr_p[i, j, k] / pr_dk[k])
+th1_p[, , ] <- exp((lr_p[i, j, k] - log((1 + pr_wc[k] * th0_p[i, j, k] / (pr_c[k] + 1)) /
+  (1 + pr_wa[k] * th0_p[i, j, k] / (pr_a[k] + 1)))) / pr_dk[k])
+th2_p[, , ] <- exp((lr_p[i, j, k] - log((1 + pr_wc[k] * th1_p[i, j, k] / (pr_c[k] + 1)) /
+  (1 + pr_wa[k] * th1_p[i, j, k] / (pr_a[k] + 1)))) / pr_dk[k])
+th3_p[, , ] <- exp((lr_p[i, j, k] - log((1 + pr_wc[k] * th2_p[i, j, k] / (pr_c[k] + 1)) /
+  (1 + pr_wa[k] * th2_p[i, j, k] / (pr_a[k] + 1)))) / pr_dk[k])
+ftop_p[, , ] <- th3_p[i, j, k] / (th3_p[i, j, k] + pr_top[k])
+dim(lr_p, th0_p, th1_p, th2_p, th3_p, ftop_p) <- c(n_age_v, n_het_v, n_pair)
+## per level: the share of its people at a pair's top count (0 on a level of
+## one count); the share of its bitten that a bite moves up a level (all of them
+## on a level of one count, below the top); and their mean count
+ftop2[, , ] <- pair[k] * ftop_p[i, j, pair_ix[k]]
+fup[, , ] <- 1 - pair[k] + ftop2[i, j, k]
+kk[, , ] <- k_lo[k] + ftop2[i, j, k]
 # hypnozoite_batch_decay_process: a carrier of k batches loses one today with
-# probability rate_to_prob(k * gammal); create_exponential_decay_process
-# multiplies immunity by exp(-1/d) a day, so its square by exp(-2/d)
-pbl[] <- 1 - exp(-gammal * kk[i])
-dim(pbl) <- n_hyp
+# probability rate_to_prob(k * gammal), which moves them down a level from a
+# level's bottom count only; create_exponential_decay_process multiplies
+# immunity by exp(-1/d) a day, so its square by exp(-2/d)
+pbl0[] <- 1 - exp(-gammal * k_lo[i])
+dim(pbl0) <- n_hyp
+pbl[, , ] <- (1 - ftop2[i, j, k]) * pbl0[k]
+dim(ftop2, fup, kk, pbl) <- c(n_age_v, n_het_v, n_hyp)
 e1_iaa <- exp(-1 / d_iaa); e2_iaa <- exp(-2 / d_iaa)
 e1_ica <- exp(-1 / d_ica); e2_ica <- exp(-2 / d_ica)
 
@@ -571,20 +636,23 @@ dim(mA, mC, cv2A, cv2C, whaA, whaC, whbA, whbC) <- c(n_age_v, n_het_v, n_hyp)
 
 ## Infection. Vivax counts every bite, 1 - (1 - b)^n, rather than deduplicating
 ## them; for Poisson bites at rate EPS that averages to 1 - exp(-b EPS). Relapse
-## adds k ff. Both are summed and THEN reduced by PEV, as in
-## calculate_vivax_infections(), so the vaccine blocks relapses too; iS_v is the
-## day's infection probability, and hv = -log(1 - iS_v) the infection rate that
-## function hands to the competing hazards. Only an infection that came from a
-## bite forms a new batch, which is what the relative_rates draw in
-## relapse_bite_infection_hazard_resolution() decides; sh_v is that bite share
-## wherever a batch can form -- below the top batch, which stays at kmax
-## (pmin(k + 1, kmax)), and outside liver-stage protection.
+## adds k ff, at the level's mean count kk (on a pair, the probability at the
+## mean count is within ff^2 / 8 of the mean of the two counts' probabilities).
+## Both are summed and THEN reduced by PEV, as in calculate_vivax_infections(),
+## so the vaccine blocks relapses too; iS_v is the day's infection probability,
+## and hv = -log(1 - iS_v) the infection rate that function hands to the
+## competing hazards. Only an infection that came from a bite forms a new batch,
+## which is what the relative_rates draw in
+## relapse_bite_infection_hazard_resolution() decides; sh_v is the share of the
+## infected that a bite moves up a level -- the bite share, wherever a batch can
+## form below the top batch, which stays at kmax (pmin(k + 1, kmax)), and
+## outside liver-stage protection, taken on a pair at its top count (fup).
 lam_bv[, ] <- bv * EPS[i, j]
 dim(lam_bv) <- c(n_age_v, n_het_v)
-r_tot_v[, , ] <- lam_bv[i, j] + kk[k] * ff
+r_tot_v[, , ] <- lam_bv[i, j] + kk[i, j, k] * ff
 iS_v[, , ] <- (1 - exp(-r_tot_v[i, j, k])) * pev_factor[i]
 hv[, , ] <- -log(1 - iS_v[i, j, k])
-sh_v[, , ] <- shmask[k] * lam_bv[i, j] / (r_tot_v[i, j, k] + pop_floor)
+sh_v[, , ] <- shmask[k] * fup[i, j, k] * lam_bv[i, j] / (r_tot_v[i, j, k] + pop_floor)
 dim(r_tot_v, iS_v, hv, sh_v) <- c(n_age_v, n_het_v, n_hyp)
 
 ## The day, as malariasimulation resolves it. Each person faces infection (hv)
@@ -679,9 +747,11 @@ dim(arr_U, arr_A, arr_C, arr_D) <- c(n_age_v, n_het_v, n_hyp)
 ## back without moving anyone up. Everyone else's batch decay is a draw of its
 ## own, independent of the day's other events, so it is taken after them, from
 ## the day's outcome less its batch-formers (below). ex_* are the batch-formers
-## among each flux's arrivals: bitten one level down, and at the top batch
-## bitten in place.
-shu_v[, , ] <- if (k == n_bat) lam_bv[i, j] / (r_tot_v[i, j, k] + pop_floor) else 0
+## among each flux's arrivals: bitten one level down, and bitten in place -- at
+## the top batch, and on a pair at its bottom count, which a bite moves to the
+## top count of the same level (shu_v).
+shu_v[, , ] <- (if (k == n_bat) 1 else shmask[k] * (1 - fup[i, j, k])) * lam_bv[i, j] /
+  (r_tot_v[i, j, k] + pop_floor)
 ex_U[, , ] <- (if (k > 1) sh_v[i, j, k - 1] * toU_n[i, j, k - 1] else 0) +
   shu_v[i, j, k] * toU_n[i, j, k]
 ex_A[, , ] <- (if (k > 1) sh_v[i, j, k - 1] * toA_n[i, j, k - 1] else 0) +
@@ -771,9 +841,10 @@ qPh[, , , ] <- Phv[i, j, k, l] +
 dim(qS, qU, qA, qD, qT, qTs) <- c(n_age_v, n_het_v, n_hyp)
 dim(qPh) <- c(n_age_v, n_het_v, n_hyp, n_phv)
 
-## Then the day's batch decay, which moves everyone down a level whatever their
+## Then the day's batch decay, which moves everyone down a batch whatever their
 ## disease state -- hypnozoites die in the liver regardless of the blood -- at
-## their start-of-day level's probability, but for the day's batch-formers: in
+## their start-of-day count's probability, and so down a level from a level's
+## bottom count (pbl), but for the day's batch-formers: in
 ## D and in treatment, the clinical arrivals' batch-forming share (fex_C) of
 ## what stays. The dead were taken above and the radically cured leave for
 ## k_rc, which the IBM's later updates also write over the decay.
@@ -784,19 +855,19 @@ eT_x[, , ] <- fex_C[i, j, k] * (1 - spc) *
 eTs_x[, , ] <- fex_C[i, j, k] * spc *
   (if (rc_on == 1) trt_keep * arr_C[i, j, k] else trt_v[i, j, k])
 dim(eD_x, eT_x, eTs_x) <- c(n_age_v, n_het_v, n_hyp)
-pS[, , ] <- qS[i, j, k] * (1 - pbl[k]) + (if (k < n_hyp) pbl[k + 1] * qS[i, j, k + 1] else 0)
-pU[, , ] <- qU[i, j, k] - pbl[k] * (qU[i, j, k] - ex_U[i, j, k]) +
-  (if (k < n_hyp) pbl[k + 1] * (qU[i, j, k + 1] - ex_U[i, j, k + 1]) else 0)
-pA[, , ] <- qA[i, j, k] - pbl[k] * (qA[i, j, k] - ex_A[i, j, k]) +
-  (if (k < n_hyp) pbl[k + 1] * (qA[i, j, k + 1] - ex_A[i, j, k + 1]) else 0)
-pD[, , ] <- qD[i, j, k] - pbl[k] * (qD[i, j, k] - eD_x[i, j, k]) +
-  (if (k < n_hyp) pbl[k + 1] * (qD[i, j, k + 1] - eD_x[i, j, k + 1]) else 0)
-pT[, , ] <- qT[i, j, k] - pbl[k] * (qT[i, j, k] - eT_x[i, j, k]) +
-  (if (k < n_hyp) pbl[k + 1] * (qT[i, j, k + 1] - eT_x[i, j, k + 1]) else 0)
-pTs[, , ] <- qTs[i, j, k] - pbl[k] * (qTs[i, j, k] - eTs_x[i, j, k]) +
-  (if (k < n_hyp) pbl[k + 1] * (qTs[i, j, k + 1] - eTs_x[i, j, k + 1]) else 0)
-pPh[, , , ] <- qPh[i, j, k, l] * (1 - pbl[k]) +
-  (if (k < n_hyp) pbl[k + 1] * qPh[i, j, k + 1, l] else 0)
+pS[, , ] <- qS[i, j, k] * (1 - pbl[i, j, k]) + (if (k < n_hyp) pbl[i, j, k + 1] * qS[i, j, k + 1] else 0)
+pU[, , ] <- qU[i, j, k] - pbl[i, j, k] * (qU[i, j, k] - ex_U[i, j, k]) +
+  (if (k < n_hyp) pbl[i, j, k + 1] * (qU[i, j, k + 1] - ex_U[i, j, k + 1]) else 0)
+pA[, , ] <- qA[i, j, k] - pbl[i, j, k] * (qA[i, j, k] - ex_A[i, j, k]) +
+  (if (k < n_hyp) pbl[i, j, k + 1] * (qA[i, j, k + 1] - ex_A[i, j, k + 1]) else 0)
+pD[, , ] <- qD[i, j, k] - pbl[i, j, k] * (qD[i, j, k] - eD_x[i, j, k]) +
+  (if (k < n_hyp) pbl[i, j, k + 1] * (qD[i, j, k + 1] - eD_x[i, j, k + 1]) else 0)
+pT[, , ] <- qT[i, j, k] - pbl[i, j, k] * (qT[i, j, k] - eT_x[i, j, k]) +
+  (if (k < n_hyp) pbl[i, j, k + 1] * (qT[i, j, k + 1] - eT_x[i, j, k + 1]) else 0)
+pTs[, , ] <- qTs[i, j, k] - pbl[i, j, k] * (qTs[i, j, k] - eTs_x[i, j, k]) +
+  (if (k < n_hyp) pbl[i, j, k + 1] * (qTs[i, j, k + 1] - eTs_x[i, j, k + 1]) else 0)
+pPh[, , , ] <- qPh[i, j, k, l] * (1 - pbl[i, j, k]) +
+  (if (k < n_hyp) pbl[i, j, k + 1] * qPh[i, j, k + 1, l] else 0)
 dim(pS, pU, pA, pD, pT, pTs) <- c(n_age_v, n_het_v, n_hyp)
 dim(pPh) <- c(n_age_v, n_het_v, n_hyp, n_phv)
 ## The immunity and refractory stocks lose a batch with their people: the
@@ -959,8 +1030,8 @@ qJA[, , ] <- JAv[i, j, k] + bstA_in[i, j, k] +
   (if (k > 1) upA_v[i, j, k - 1] else 0) - upA_v[i, j, k] -
   (if (rc_on == 1) rcJA_v[i, j, k] else 0) -
   (1 - fbA_v[i, j, k]) * JAv[i, j, k] * (1 - e1_iaa)
-pJAv[, , ] <- qJA[i, j, k] * (1 - pbl[k] * fdec_v[i, j, k]) +
-  (if (k < n_hyp) pbl[k + 1] * fdec_v[i, j, k + 1] * qJA[i, j, k + 1] else 0)
+pJAv[, , ] <- qJA[i, j, k] * (1 - pbl[i, j, k] * fdec_v[i, j, k]) +
+  (if (k < n_hyp) pbl[i, j, k + 1] * fdec_v[i, j, k + 1] * qJA[i, j, k + 1] else 0)
 update(JAv[, , ]) <- pJAv[i, j, k] * (1 - rls_k * lsmask[k]) +
   (if (k > n_bat + 1) rls_k * pJAv[i, j, k - 1] else 0) +
   (if (k == 1) rls_k * lsmask[n_hyp] * pJAv[i, j, n_hyp] else 0) +
@@ -970,8 +1041,8 @@ qJC[, , ] <- JCv[i, j, k] + bstC_in[i, j, k] +
   (if (k > 1) upC_v[i, j, k - 1] else 0) - upC_v[i, j, k] -
   (if (rc_on == 1) rcJC_v[i, j, k] else 0) -
   (1 - fbC_v[i, j, k]) * JCv[i, j, k] * (1 - e1_ica)
-pJCv[, , ] <- qJC[i, j, k] * (1 - pbl[k] * fdec_v[i, j, k]) +
-  (if (k < n_hyp) pbl[k + 1] * fdec_v[i, j, k + 1] * qJC[i, j, k + 1] else 0)
+pJCv[, , ] <- qJC[i, j, k] * (1 - pbl[i, j, k] * fdec_v[i, j, k]) +
+  (if (k < n_hyp) pbl[i, j, k + 1] * fdec_v[i, j, k + 1] * qJC[i, j, k + 1] else 0)
 update(JCv[, , ]) <- pJCv[i, j, k] * (1 - rls_k * lsmask[k]) +
   (if (k > n_bat + 1) rls_k * pJCv[i, j, k - 1] else 0) +
   (if (k == 1) rls_k * lsmask[n_hyp] * pJCv[i, j, n_hyp] else 0) +
@@ -1014,10 +1085,10 @@ mRC[, , , ] <- RCv[i, j, k, l] +
   (if (k > 1) upRC[i, j, k - 1, l] else 0) - upRC[i, j, k, l] - cRC[i, j, k, l]
 qRA[, , , ] <- mRA[i, j, k, l] * (1 - p_ra) + (if (l > 1) p_ra * mRA[i, j, k, l - 1] else 0)
 qRC[, , , ] <- mRC[i, j, k, l] * (1 - p_rc) + (if (l > 1) p_rc * mRC[i, j, k, l - 1] else 0)
-dRA[, , , ] <- qRA[i, j, k, l] * (1 - pbl[k] * fdec_v[i, j, k]) +
-  (if (k < n_hyp) pbl[k + 1] * fdec_v[i, j, k + 1] * qRA[i, j, k + 1, l] else 0)
-dRC[, , , ] <- qRC[i, j, k, l] * (1 - pbl[k] * fdec_v[i, j, k]) +
-  (if (k < n_hyp) pbl[k + 1] * fdec_v[i, j, k + 1] * qRC[i, j, k + 1, l] else 0)
+dRA[, , , ] <- qRA[i, j, k, l] * (1 - pbl[i, j, k] * fdec_v[i, j, k]) +
+  (if (k < n_hyp) pbl[i, j, k + 1] * fdec_v[i, j, k + 1] * qRA[i, j, k + 1, l] else 0)
+dRC[, , , ] <- qRC[i, j, k, l] * (1 - pbl[i, j, k] * fdec_v[i, j, k]) +
+  (if (k < n_hyp) pbl[i, j, k + 1] * fdec_v[i, j, k + 1] * qRC[i, j, k + 1, l] else 0)
 # the radically cured refractory arrive at k_rc after the liver-stage clock, as
 # the people do, their windows having run on through the day
 wcRA[, , ] <- cRA_tot[i, j, k] * (1 - p_ra) + (if (k > 1) p_ra * cRA_tot[i, j, k - 1] else 0)
@@ -1110,8 +1181,8 @@ qKA[, , ] <- KAv[i, j, k] + bKA_in[i, j, k] +
   (if (k > 1) upKA_v[i, j, k - 1] else 0) - upKA_v[i, j, k] -
   (if (rc_on == 1) rcKA_v[i, j, k] else 0) -
   (1 - fbA_v[i, j, k]) * KAv[i, j, k] * (1 - e2_iaa)
-pKAv[, , ] <- qKA[i, j, k] * (1 - pbl[k] * fdec_v[i, j, k]) +
-  (if (k < n_hyp) pbl[k + 1] * fdec_v[i, j, k + 1] * qKA[i, j, k + 1] else 0)
+pKAv[, , ] <- qKA[i, j, k] * (1 - pbl[i, j, k] * fdec_v[i, j, k]) +
+  (if (k < n_hyp) pbl[i, j, k + 1] * fdec_v[i, j, k + 1] * qKA[i, j, k + 1] else 0)
 update(KAv[, , ]) <- pKAv[i, j, k] * (1 - rls_k * lsmask[k]) +
   (if (k > n_bat + 1) rls_k * pKAv[i, j, k - 1] else 0) +
   (if (k == 1) rls_k * lsmask[n_hyp] * pKAv[i, j, n_hyp] else 0) +
@@ -1121,8 +1192,8 @@ qKC[, , ] <- KCv[i, j, k] + bKC_in[i, j, k] +
   (if (k > 1) upKC_v[i, j, k - 1] else 0) - upKC_v[i, j, k] -
   (if (rc_on == 1) rcKC_v[i, j, k] else 0) -
   (1 - fbC_v[i, j, k]) * KCv[i, j, k] * (1 - e2_ica)
-pKCv[, , ] <- qKC[i, j, k] * (1 - pbl[k] * fdec_v[i, j, k]) +
-  (if (k < n_hyp) pbl[k + 1] * fdec_v[i, j, k + 1] * qKC[i, j, k + 1] else 0)
+pKCv[, , ] <- qKC[i, j, k] * (1 - pbl[i, j, k] * fdec_v[i, j, k]) +
+  (if (k < n_hyp) pbl[i, j, k + 1] * fdec_v[i, j, k + 1] * qKC[i, j, k + 1] else 0)
 update(KCv[, , ]) <- pKCv[i, j, k] * (1 - rls_k * lsmask[k]) +
   (if (k > n_bat + 1) rls_k * pKCv[i, j, k - 1] else 0) +
   (if (k == 1) rls_k * lsmask[n_hyp] * pKCv[i, j, n_hyp] else 0) +
@@ -1282,7 +1353,7 @@ hypmask[] <- if (i > 1 && i <= n_bat) 1 else 0     # levels holding at least one
 dim(hypmask) <- n_hyp
 detlm_v[, , ] <- Dv[i, j, k] + Trv[i, j, k] + Trv_slow[i, j, k] + Av[i, j, k]
 detpcr_v[, , ] <- detlm_v[i, j, k] + Uv[i, j, k]
-rel_v[, , ] <- inf_n[i, j, k] * kk[k] * ff / (r_tot_v[i, j, k] + pop_floor)
+rel_v[, , ] <- inf_n[i, j, k] * kk[i, j, k] * ff / (r_tot_v[i, j, k] + pop_floor)
 hyp_v[, , ] <- hypmask[k] * Npop_v[i, j, k]
 dim(detlm_v, detpcr_v, rel_v, hyp_v) <- c(n_age_v, n_het_v, n_hyp)
 dlm_va[] <- sum(detlm_v[i, , ])
@@ -1331,7 +1402,7 @@ dim(imm_ica, imm_icm, imm_ib, imm_iva, imm_ivm, imm_id) <- c(n_age, n_het)
 imm_iamv[, ] <- IAMv[i, j] * Nv_ij[i, j]
 imm_icmv[, ] <- ICMv[i, j] * Nv_ij[i, j]
 dim(imm_iamv, imm_icmv) <- c(n_age_v, n_het_v)
-hypk_v[, , ] <- kk[k] * Npop_v[i, j, k]
+hypk_v[, , ] <- kk[i, j, k] * Npop_v[i, j, k]
 dim(hypk_v) <- c(n_age_v, n_het_v, n_hyp)
 update(ica_g[]) <- sum(imm_ica[i, ]) + (if (i <= n_age_v) sum(JCv[i, , ]) else 0)
 update(icm_g[]) <- sum(imm_icm[i, ]) + (if (i <= n_age_v) sum(imm_icmv[i, ]) else 0)

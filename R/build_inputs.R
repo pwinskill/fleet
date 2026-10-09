@@ -258,8 +258,9 @@ ibm_total_M_vivax <- function(p, init_EIR, ft_raw) {
 inert_vivax_block <- function() {
   z <- array(0, c(1L, 1L, 1L))
   c(list(pf_on = 1, pv_on = 0, n_age_v = 1L, n_het_v = 1L, n_bat = 1L, n_hyp = 1L,
-         n_phv = 1L, rc_on = 0, n_ra = 1L, n_rc = 1L,
-         Sv0 = z, Dv0 = z, Av0 = z, Uv0 = z, Trv0 = z, JAv0 = z, JCv0 = z,
+         n_phv = 1L, rc_on = 0, n_ra = 1L, n_rc = 1L),
+    batch_level_pars(list(0L), 0L),
+    list(Sv0 = z, Dv0 = z, Av0 = z, Uv0 = z, Trv0 = z, JAv0 = z, JCv0 = z,
          KAv0 = z, KCv0 = z, spread_on = 0, n_q = 1L, qz = 0, qw = 1,
          Phv0 = array(0, c(1L, 1L, 1L, 1L))),
     as.list(stats::setNames(rep(1, length(VIVAX_SCALARS)), VIVAX_SCALARS)))
@@ -299,6 +300,56 @@ pad_levels <- function(x, n) {
   out <- array(0, replace(d, 3, d[3] + n))
   idx <- lapply(d, seq_len)
   do.call(`[<-`, c(list(out), idx, list(value = x)))
+}
+
+# The batch counts 0..kmax each level of the hypnozoite ladder holds (see the
+# top of the vivax block in the odin model): 0 to 3 and kmax one each, the counts
+# between in pairs -- {4, 5}, {6, 7}, {8, 9} at kmax = 10 -- and the last of an
+# odd run alone. Eight levels for eleven counts take a quarter less time than one
+# level per count, and move no output of the vivax suite by more than 0.4%; a pair
+# lower down, {2, 3}, moves under-five clinical incidence at EIR 30 by 0.9%,
+# against a replicate band 2.3% either side of the IBM's median. `paired = FALSE`
+# gives every count its own.
+vivax_batch_levels <- function(kmax, paired = TRUE) {
+  kmax <- as.integer(kmax)
+  if (!paired || kmax < 6L) return(as.list(seq.int(0L, kmax)))
+  mid <- seq.int(4L, kmax - 1L)
+  c(as.list(0:3), unname(split(mid, (seq_along(mid) + 1L) %/% 2L)), list(kmax))
+}
+
+# The odin model's description of the ladder: per level its lowest count, whether
+# it holds two, and which pair; per pair its neighbouring levels and what the
+# Poisson fit needs of them (the odin model, at pr_up). `n_ls` liver-stage levels
+# follow the batch levels, holding count 0. With no pair, one placeholder whose
+# neighbours are both level 1, which every level discards.
+batch_level_pars <- function(levels, n_ls) {
+  lo <- vapply(levels, min, integer(1))
+  two <- lengths(levels) == 2L
+  pr <- which(two)
+  if (!length(pr)) {
+    pp <- list(pr_up = 1L, pr_dn = 1L, pr_a = 0, pr_c = 0, pr_wa = 0, pr_wc = 0,
+               pr_lf = 0, pr_dk = 1, pr_top = 1)
+  } else {
+    a <- lo[pr - 1L]; cc <- lo[pr + 1L]
+    pp <- list(pr_up = as.integer(pr + 1L), pr_dn = as.integer(pr - 1L),
+               pr_a = as.numeric(a), pr_c = as.numeric(cc),
+               pr_wa = as.numeric(two[pr - 1L]), pr_wc = as.numeric(two[pr + 1L]),
+               pr_lf = lfactorial(cc) - lfactorial(a), pr_dk = as.numeric(cc - a),
+               pr_top = as.numeric(lo[pr] + 1L))
+  }
+  ix <- rep(1L, length(levels)); ix[pr] <- seq_along(pr)
+  c(list(n_pair = max(1L, length(pr)),
+         k_lo = c(as.numeric(lo), rep(0, n_ls)), pair = c(as.numeric(two), rep(0, n_ls)),
+         pair_ix = c(ix, rep(1L, n_ls))),
+    pp)
+}
+
+# The seed's [age, het, count] array summed onto the ladder's levels.
+sum_levels <- function(x, levels) {
+  out <- array(0, c(dim(x)[1:2], length(levels)))
+  for (b in seq_along(levels))
+    out[, , b] <- rowSums(x[, , levels[[b]] + 1L, drop = FALSE], dims = 2)
+  out
 }
 
 # Stages in each chain the vivax refractory windows are carried as (see the
@@ -421,10 +472,13 @@ check_unsupported <- function(p) {
 #' @param timesteps simulation horizon in days. Used only to size the
 #'   intervention time-series grids (vector control, PEV, TBV, carrying
 #'   capacity), which are built to extend past `timesteps`.
+#' @param batch_bins under vivax, whether the hypnozoite batch counts between 4
+#'   and kmax - 1 share levels in pairs (`vivax_batch_levels()`).
 #' @return list with `pars` (odin parameter list) and `meta` (grid metadata).
 #' @noRd
 build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
-                         n_ph = NULL, n_phc = NULL, n_sub = 32L, timesteps = 3650) {
+                         n_ph = NULL, n_phc = NULL, n_sub = 32L, timesteps = 3650,
+                         batch_bins = TRUE) {
   p <- parameters
   # One parasite per run, as in malariasimulation. Much of what follows is shared
   # unchanged, because a vivax list carries the falciparum names wherever the two
@@ -784,12 +838,20 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
   # other transitions, so it needs only that a stage pass on at most everyone:
   # n_ls / mean_ls <= 1 for the shortest-protecting radical-cure mix on the
   # schedule.
+  #
+  # Liver-stage protection only matters while a bite can infect, and nobody in
+  # Tr or Phv is infected, so protection that ends inside the blood-stage chain
+  # given with it protects only the few whose blood stage the drug did not
+  # clear. That is primaquine's: 4.7 days of it against chloroquine's 16 days
+  # after Tr. Its four levels would add half again to every vivax compartment
+  # for an output change below 0.2%, so there are none; tafenoquine's 27 days
+  # outlast the chain and keep theirs.
   n_phv <- 1L
   n_ls <- 0L
   if (is_vivax) {
     n_phv <- n_ph
     n_ph <- 1L; n_phc <- 1L; n_phct <- 1L
-    if (dser$n_ls > 0)
+    if (dser$n_ls > 0 && max(dser$mean_ls) > min(1 / dser$rP))
       n_ls <- min(dser$n_ls, max(1L, as.integer(floor(min(dser$mean_ls)))))
   }
 
@@ -1146,19 +1208,22 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
     # the positivity check's tolerance, a fraction of the population (run.R)
     neg_tol = NEG_TOL
   )
+  # the batch counts each level of the hypnozoite ladder holds
+  lev <- if (is_vivax) vivax_batch_levels(p$kmax, batch_bins) else list(0L)
   pars <- c(pars, if (is_vivax) {
     stopifnot(dim(hs$Sv0)[3] == p$kmax + 1)
     # rc_on sizes the radical-cure transfers: full size only if some drug on
     # the schedule gives radical cure, one inert cell otherwise
-    n_bat <- as.integer(p$kmax) + 1L
-    pl <- function(x) pad_levels(x, n_ls)
+    n_bat <- length(lev)
+    pl <- function(x) pad_levels(sum_levels(x, lev), n_ls)
     ua_eff <- max(0, ceiling(p$ua) - 1); uc_eff <- u_eff[["uc"]]
     c(list(pf_on = 0, pv_on = 1, n_age_v = n_age, n_het_v = n_het,
            n_bat = n_bat, n_hyp = n_bat + n_ls, n_phv = n_phv,
            rc_on = as.numeric(any(dser$hyp > 0)),
            n_ra = as.integer(max(1, min(ua_eff, VIVAX_WINDOW_STAGES))),
-           n_rc = as.integer(max(1, min(uc_eff, VIVAX_WINDOW_STAGES))),
-           Sv0 = pl(hs$Sv0), Dv0 = pl(hs$Dv0), Av0 = pl(hs$Av0), Uv0 = pl(hs$Uv0),
+           n_rc = as.integer(max(1, min(uc_eff, VIVAX_WINDOW_STAGES)))),
+      batch_level_pars(lev, n_ls),
+      list(Sv0 = pl(hs$Sv0), Dv0 = pl(hs$Dv0), Av0 = pl(hs$Av0), Uv0 = pl(hs$Uv0),
            Trv0 = pl(hs$Trv0), Phv0 = array(0, c(n_age, n_het, n_bat + n_ls, n_phv)),
            JAv0 = pl(hs$JAv0), JCv0 = pl(hs$JCv0), KAv0 = pl(hs$KAv0), KCv0 = pl(hs$KCv0)),
       immunity_spread_rule(p),
@@ -1177,6 +1242,7 @@ build_inputs <- function(parameters, init_EIR, age_lower = default_age_lower(),
       total_M = total_M, total_M_ibm = total_M_ibm, ft = ft,
       human_population = hp, parameters = p, eqp = eqp, parasite = if (is_vivax) "vivax" else "falciparum",
       n_ph = n_ph, n_phc = n_phc, n_phct = n_phct, n_phv = n_phv, n_ls = n_ls,
+      batch_levels = lev,
       # what a chemoprevention pulse needs to find the LM-detectable asymptomatic
       # and their infectivity (the model's q and cA)
       detect = list(d1 = eqp[["d1"]], id0 = eqp[["ID0"]], kd = eqp[["kd"]],

@@ -67,6 +67,16 @@
 #'   5e-5 at 8, and a run with no seasonality and no interventions is exact to
 #'   1e-11 at any count. The mosquito model is a small part of the day, so 32
 #'   costs 2 to 13% more than 8.
+#' @param batch_bins under *P. vivax*, whether hypnozoite batch counts share
+#'   levels. `malariasimulation` gives each person a count of hypnozoite batches,
+#'   0 to `kmax`, and `fleet` holds every vivax compartment and immunity stock at
+#'   each level of that ladder, so its length is most of a vivax run's cost. With
+#'   `TRUE` (default), counts 0 to 3 and `kmax` have a level each and the counts
+#'   between share levels in pairs, the people inside a pair spread as a Poisson
+#'   fitted to the levels either side: eight levels for the default `kmax = 10`,
+#'   which take a quarter less time than eleven and move no output of the
+#'   `fleetcheck` vivax suite by more than 0.4%. `FALSE` gives every count its
+#'   own level. Ignored under *P. falciparum*.
 #' @param odin_file optional path to an odin source to compile instead of the
 #'   generator built into the package: a discrete-time model with the built-in
 #'   one's parameters and states (development use; needs 'odin2' and a C++
@@ -85,7 +95,7 @@
 #' length(ode_tuning(age_lower = default_age_lower(n_group = 417))$age_lower)
 #' @export
 ode_tuning <- function(age_lower = default_age_lower(), n_ph = NULL, n_phc = NULL,
-                       n_sub = 32L, odin_file = NULL, ...) {
+                       n_sub = 32L, odin_file = NULL, ..., batch_bins = TRUE) {
   .retire_tuning_fields(...)
   pos_int <- function(x, nm, allow_null = FALSE) {
     if (allow_null && is.null(x)) return(invisible())
@@ -121,11 +131,15 @@ ode_tuning <- function(age_lower = default_age_lower(), n_ph = NULL, n_phc = NUL
   }
   for (nm in c("n_ph", "n_phc")) pos_int(get(nm), nm, allow_null = TRUE)
   pos_int(n_sub, "n_sub")
+  if (!(is.logical(batch_bins) && length(batch_bins) == 1L && !is.na(batch_bins))) {
+    stop("`batch_bins` must be TRUE or FALSE.", call. = FALSE)
+  }
   if (!is.null(odin_file) && (length(odin_file) != 1L || !is.character(odin_file))) {
     stop("`odin_file` must be NULL or a single path.", call. = FALSE)
   }
   structure(
     list(age_lower = age_lower, n_ph = n_ph, n_phc = n_phc, n_sub = as.integer(n_sub),
+         batch_bins = batch_bins,
          odin_file = odin_file),
     class = "fleet_ode_tuning")
 }

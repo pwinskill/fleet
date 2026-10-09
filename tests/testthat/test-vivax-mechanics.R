@@ -1,9 +1,12 @@
 # The P. vivax block's daily mechanisms, each pinned on its own so that a
 # failure names the mechanism rather than only moving a reference value: the
 # day's infection and relapse draw, relapse blocked by PEV, the hypnozoite
-# ladder and the bite that overwrites its decay, immunity decay, the refractory
-# windows and the boost that skips a day's decay, the liver-stage clock after
-# radical cure, and the two vivax delay lines (de = 10, delay_gam = 0).
+# ladder and the bite that overwrites its decay, the pairs of batch counts that
+# share a level, immunity decay, the refractory windows and the boost that skips
+# a day's decay, the liver-stage clock after radical cure, and the two vivax
+# delay lines (de = 10, delay_gam = 0). The IBM's per-count rules are pinned on
+# the ladder with a level per count (batch_bins = FALSE), where they hold
+# exactly; the pairs are pinned against their own rule.
 
 pv_bands <- function(overrides = list(), eir = 10) {
   p <- malariasimulation::get_parameters(utils::modifyList(list(
@@ -61,9 +64,9 @@ seed_infections <- function(x, eir = 10) {
 test_that("a vivax day infects and relapses at the IBM's probabilities", {
   skip_if_not_installed("malariasimulation")
   p <- pv_bands()
-  inp <- build_inputs(p, 10, timesteps = 10)
+  inp <- build_inputs(p, 10, timesteps = 10, batch_bins = FALSE)
   x <- inp$pars
-  o <- run_simulation_ode(1, p)
+  o <- run_simulation_ode(1, p, tuning = list(batch_bins = FALSE))
   s <- seed_infections(x)
   inf <- s$inf
   hp <- p$human_population
@@ -133,7 +136,7 @@ test_that("with no infection the hypnozoite ladder clears exactly as the IBM's d
   #   N_k' = (1 - mu) (N_k (1 - p_k) + N_{k+1} p_{k+1}) + mu N delta_k0
   # exactly, whatever happens to their disease state.
   p <- pv_bands()
-  x <- build_inputs(p, 10, timesteps = 400)$pars
+  x <- build_inputs(p, 10, timesteps = 400, batch_bins = FALSE)$pars
   x$bv <- 0; x$ff <- 0
   mu <- unique(as.vector(x$mu_age_z))
   expect_length(mu, 1)
@@ -155,7 +158,7 @@ test_that("a batch-forming bite overwrites the day's batch decay", {
   # population by level after day 1 is, for the start-of-day N_k and the day's
   # bite-infected B_k (all of whom form a batch),
   #   N_k' = N_k - B_k [k < kmax] + B_{k-1} - p_k (N_k - B_k) + p_{k+1} (N_{k+1} - B_{k+1})
-  x <- build_inputs(pv_bands(), 10, timesteps = 40)$pars
+  x <- build_inputs(pv_bands(), 10, timesteps = 40, batch_bins = FALSE)$pars
   x$ff <- 0; x$r_age[] <- 0; x$mu_age_z[] <- 0
   B <- apply(seed_infections(x)$inf, 3, sum)
   N <- by_level(state_at(x, 0), x)
@@ -167,6 +170,72 @@ test_that("a batch-forming bite overwrites the day's batch decay", {
   expect_equal(by_level(state_at(x, 1), x), pre - dec + c(dec[-1], 0), tolerance = 1e-12)
   # decaying the bitten too, as a separate additive flow would, is measurably different
   expect_gt(max(abs(pk * B)) / max(abs(dec)), 0.01)
+})
+
+# people by [age, het, level], summed over every state
+by_cell <- function(st, x) {
+  d <- c(x$n_age_v, x$n_het_v, x$n_hyp)
+  N <- Reduce(`+`, lapply(c("Sv", "Dv", "Av", "Uv", "Trv", "Trv_slow"),
+                          function(nm) array(st[[nm]], d)))
+  N + apply(array(st$Phv, c(d, x$n_phv)), 1:3, sum)
+}
+# The share of each cell's people at a pair's top count, as the model fits it:
+# the Poisson whose rate puts the levels either side of the pair at what they
+# hold (the odin model, at pr_up). 0 on a level of one count.
+pair_top <- function(N, x) {
+  f <- array(0, dim(N))
+  for (b in which(x$pair == 1)) {
+    q <- x$pair_ix[b]
+    lr <- log((N[, , x$pr_up[q]] + 1e-300) / (N[, , x$pr_dn[q]] + 1e-300)) + x$pr_lf[q]
+    th <- exp(lr / x$pr_dk[q])
+    for (it in 1:3)
+      th <- exp((lr - log((1 + x$pr_wc[q] * th / (x$pr_c[q] + 1)) /
+                            (1 + x$pr_wa[q] * th / (x$pr_a[q] + 1)))) / x$pr_dk[q])
+    f[, , b] <- th / (th + x$pr_top[q])
+  }
+  f
+}
+# shift an [age, het, level] array one level up (from b - 1 to b) or down
+lv_up <- function(a) { o <- 0 * a; o[, , -1] <- a[, , -dim(a)[3]]; o }
+lv_down <- function(a) { o <- 0 * a; o[, , -dim(a)[3]] <- a[, , -1]; o }
+
+test_that("a pair loses batches from its bottom count, and bites move its top count up", {
+  skip_if_not_installed("malariasimulation")
+  # Inside a pair the people follow the Poisson fitted to its neighbours: the
+  # share f at the top count, where a bite moves them up a level -- the bitten
+  # at the bottom count stay, a batch up on the same level -- and 1 - f at the
+  # bottom count, the only one a lost batch moves down a level. With no relapse,
+  # ageing or death, cell by cell, day 1 is
+  #   N_b' = N_b - u_b + u_{b-1} - p_b (N_b - B_b) + p_{b+1} (N_{b+1} - B_{b+1})
+  # for the day's bite-infected B_b, of whom u_b = g_b B_b move up (g_b = f on a
+  # pair, 1 on a level of one count below the top, 0 at the top), and p_b = (1 -
+  # f) (1 - exp(-gammal lo_b)), lo_b the level's bottom count. The immunity
+  # spread is off, so that seed_infections() is the model's day 1 on a pair too,
+  # whose seed carries the spread between its two counts' immunity.
+  x <- build_inputs(pv_bands(), 10, timesteps = 400)$pars
+  expect_equal(c(x$n_bat, x$n_pair), c(8, 3))
+  x$ff <- 0; x$r_age[] <- 0; x$mu_age_z[] <- 0; x$spread_on <- 0
+  nb <- x$n_bat
+  lo <- array(rep(x$k_lo, each = x$n_age * x$n_het), c(x$n_age, x$n_het, nb))
+  two <- array(rep(x$pair, each = x$n_age * x$n_het), c(x$n_age, x$n_het, nb))
+  pk <- 1 - exp(-x$gammal * lo)
+  N <- by_cell(state_at(x, 0), x)
+  B <- seed_infections(x)$inf
+  f <- pair_top(N, x)
+  u <- (1 - two + f) * B; u[, , nb] <- 0
+  dec <- (1 - f) * pk * (N - B)
+  expect_equal(by_cell(state_at(x, 1), x), N - u + lv_up(u) - dec + lv_down(dec),
+               tolerance = 1e-12)
+  # the pairs are occupied, and split unevenly between their two counts
+  expect_gt(min(apply(N, 3, sum)[two[1, 1, ] == 1]), 0.01)
+  expect_gt(max(abs(f[, , two[1, 1, ] == 1] - 0.5)), 0.1)
+  # and with no infection at all a year of losses follows the same rule
+  x$bv <- 0
+  for (t in seq_len(365)) {
+    dec <- (1 - pair_top(N, x)) * pk * N
+    N <- N - dec + lv_down(dec)
+  }
+  expect_equal(by_cell(state_at(x, 365), x), N, tolerance = 1e-10)
 })
 
 test_that("vivax immunity decays by exp(-1/d) a day, and its spread by exp(-2/d)", {
@@ -189,7 +258,7 @@ test_that("a refractory window is a stock that withholds the boost, and the boos
   # and a boost replaces that day's decay. fleet carries the people inside each
   # window as a stock per cell, RAv for IAA and RCv for ICA; a cell's infections
   # boost in the share 1 - R / N.
-  x <- build_inputs(pv_bands(), 10, timesteps = 40)$pars
+  x <- build_inputs(pv_bands(), 10, timesteps = 40, batch_bins = FALSE)$pars
   s <- seed_infections(x)
   inf <- s$inf; N <- s$N
   mu <- unique(as.vector(x$mu_age_z))
@@ -281,12 +350,16 @@ test_that("a refractory window holds its people ceiling(u) - 1 days, as a chain 
 test_that("radical cure delivers its people to the liver-stage clock, which starts the next day", {
   skip_if_not_installed("malariasimulation")
   p <- malariasimulation::get_parameters(list(human_population = 10000), parasite = "vivax")
-  p <- malariasimulation::set_drugs(p, list(malariasimulation::CQ_PQ_params_vivax))
+  # primaquine's liver-stage protection, Weibull(10, 5.5): 4.7 protected days,
+  # four stages, each passed on with probability 0.85 a day. Given with a
+  # blood-stage drug whose protection after Tr, 3.5 days, is shorter than that,
+  # where chloroquine's is 16, so that the liver stage keeps its levels.
+  drug <- malariasimulation::CQ_PQ_params_vivax
+  drug[4] <- 6                               # drug_prophylaxis_scale
+  p <- malariasimulation::set_drugs(p, list(drug))
   p <- malariasimulation::set_clinical_treatment(p, drug = 1, timesteps = 10, coverages = 0.8)
   x <- build_inputs(eqm(p, 10), 10, timesteps = 40)$pars
   n_ls <- x$n_hyp - x$n_bat
-  # primaquine's Weibull(10, 5.5): 4.7 protected days, four stages, each passed
-  # on with probability 0.85 a day
   expect_equal(n_ls, 4)
   lv <- function(t) by_level(state_at(x, t), x)
   ls <- x$n_bat + seq_len(n_ls)

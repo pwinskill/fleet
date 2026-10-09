@@ -29,7 +29,7 @@ PV_COMPARTMENTS <- c("Sv", "Dv", "Av", "Uv", "Trv", "Trv_slow", "Phv")
 scan_positivity <- function(timesteps, p, tuning = ode_tuning()) {
   tn <- as_ode_tuning(tuning)
   inp <- build_inputs(p, p$init_EIR, tn$age_lower, n_ph = tn$n_ph, n_phc = tn$n_phc,
-                      n_sub = tn$n_sub, timesteps = timesteps)
+                      n_sub = tn$n_sub, timesteps = timesteps, batch_bins = tn$batch_bins)
   sys <- dust2::dust_system_create(get_generator(), pars = inp$pars, n_particles = 1, dt = 1)
   dust2::dust_system_set_state_initial(sys)
   uidx <- dust2::dust_unpack_index(sys)

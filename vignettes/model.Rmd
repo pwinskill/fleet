@@ -156,7 +156,8 @@ states, $(14 + k_P + k_{P_c} + k_{P_{ct}})\,n_a n_z$, and 6 mosquito states per
 species, plus the three delay lines (35 days of history) and the day's recorded
 outputs, which are carried as state because a daily update has nowhere else to
 keep them. Every extra prophylaxis stage adds $n_a n_z = 590$ states. The
-vivax block (§V) multiplies its compartments by the eleven batch levels.
+vivax block (§V) multiplies its compartments by the eight levels of its
+hypnozoite ladder, which hold the eleven batch counts (§V.1).
 
 ### 2.2 What is captured *without* a dimension
 
@@ -944,11 +945,40 @@ changes:
 `malariasimulation` gives each person an integer count of hypnozoite batches,
 $k \in \{0, \dots, k_{\max}\}$. Relapse is a hazard $k f$, so it is linear in
 $k$, but immunity, detectability and the U → S rate are not, and a mean count
-would not carry them. Every vivax compartment and immunity stock is therefore
-indexed $[i, j, \ell]$ -- age, heterogeneity, level -- where levels
-$1 \dots k_{\max}+1$ are the batch counts and, when a radical-cure drug is on
-the schedule, further levels hold people whose liver stage is still
-drug-protected (§V.5). Each day, everyone:
+would not carry them: people who carry many batches relapse often, so they are
+more immune, and more often inside a refractory window (§V.3), than their age
+and heterogeneity group's average. Giving every count its group's pooled
+immunity puts clinical incidence 28% high at EIR 3. Every vivax compartment and
+immunity stock is therefore indexed $[i, j, \ell]$ -- age, heterogeneity,
+level -- where the first levels hold the batch counts and, when a radical-cure
+drug's liver-stage protection outlasts the blood-stage protection given with it,
+further levels hold people whose liver stage is still drug-protected (§V.5).
+
+Counts 0 to 3 and $k_{\max}$ have a level each, and the counts between share
+levels in pairs: $\{4, 5\}$, $\{6, 7\}$, $\{8, 9\}$ for the default
+$k_{\max} = 10$, eight levels for eleven counts. Inside a pair the people
+follow a Poisson -- the shape a cell's count takes, batches arriving with bites
+and each lost at $\gamma_L$, which the cap at $k_{\max}$ truncates without
+changing the ratio of one count to the next -- whose rate $\theta$ puts the
+levels either side of the pair at what they hold. For neighbours whose lowest
+counts are $a$ below and $c$ above,
+$$
+\frac{N_{\text{above}}}{N_{\text{below}}} = \frac{\sum_{k \in \text{above}} \theta^k / k!}{\sum_{k \in \text{below}} \theta^k / k!},
+$$
+solved by three fixed-point steps in $\log\theta$, each shrinking the error at
+least $(c - a)$-fold. The pair's top count then holds $\theta / (\theta + t)$ of
+its people, $t$ the top count: those are the ones a bite moves up a level, and
+the rest, at the bottom count, the only ones a lost batch moves down one. The
+level's relapse hazard is $\bar k f$ at its people's mean count $\bar k$. Fitting
+the rate to the neighbours, rather than reading it off counts 0 and 1, keeps
+the shape right under radical cure, which empties the high counts into 0.
+Against a ladder with a level per count (`ode_tuning(batch_bins = FALSE)`), the
+pairs move no output of the `fleetcheck` vivax suite by more than 0.4%, for
+a quarter less run time; pairing $\{2, 3\}$ too would move under-five clinical
+incidence at EIR 30 by 0.9%, against a replicate band 2.3% either side of the
+IBM's median.
+
+Each day, everyone:
 
 - moves up one batch on an infection that came from a bite, capped at
   $k_{\max}$, and stays put on a relapse. The bite share of a cell's infections
@@ -1076,15 +1106,21 @@ not the blood stage cleared, since the IBM draws the two independently -- and
 start liver-stage protection, which blocks new batches (not infection) for a
 Weibull time from the dose. Protection is an attribute of the person, not of
 their disease state, so it sits on the level dimension as a chain of levels
-matched to the protected days, $M^2 / (V + M)$ stages: four for primaquine's
-4.7 days, eleven for tafenoquine's 27. The chain is sized for the
-shortest-protecting radical-cure drug on the schedule, so a switch from
+matched to the protected days, $M^2 / (V + M)$ stages: eleven for tafenoquine's
+27. It matters only while a bite can infect, and nobody in Tr or the
+post-treatment chain is infected, so protection that ends inside the blood-stage
+protection given with it guards only the few whose blood stage the drug did not
+clear. Primaquine's 4.7 days end inside chloroquine's 16 after Tr, and
+primaquine has no protected levels: its four would add half again to every
+vivax compartment, for an output change below 0.2%. A schedule whose longest
+liver-stage protection outlasts its shortest blood-stage protection keeps them,
+sized for the shortest-protecting radical-cure drug on it, so a switch from
 primaquine to tafenoquine keeps four stages: tafenoquine's mean protection is
 kept and its spread widened, a standard deviation of 12.5 days against the
-Weibull's 6.3. The last level returns to batch 0. A primaquine stage is left
-with probability 0.85 a day, faster than Tr is left (0.63), so the chain's clock
-acts on what the day leaves: someone who leaves Tr and moves a stage on the same
-day does both, and no cell can lose more than it holds. The day's radically
+Weibull's 6.3. The last level returns to batch 0. A primaquine stage on such a
+schedule is left with probability 0.85 a day, faster than Tr is left (0.63), so
+the chain's clock acts on what the day leaves: someone who leaves Tr and moves a
+stage on the same day does both, and no cell can lose more than it holds. The day's radically
 cured join the first level after it, so a stage is left no earlier than the day
 after the dose. They take their immunity with them -- the immunity of the nodes
 that fell ill, since the clinical draw is taken node by node and the less immune

@@ -267,7 +267,8 @@ run_simulation_ode <- function(timesteps, parameters = NULL, correlations = NULL
          "  run_simulation_ode(timesteps, parameters)", call. = FALSE)
   }
   inp <- build_inputs(parameters, init_EIR, tn$age_lower, n_ph = tn$n_ph,
-                      n_phc = tn$n_phc, n_sub = tn$n_sub, timesteps = timesteps)
+                      n_phc = tn$n_phc, n_sub = tn$n_sub, timesteps = timesteps,
+                      batch_bins = tn$batch_bins)
   generator <- get_generator(tn$odin_file)
   sys <- dust2::dust_system_create(generator, pars = inp$pars, n_particles = 1, dt = 1)
   dust2::dust_system_set_state_initial(sys)
