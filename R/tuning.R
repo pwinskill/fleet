@@ -7,91 +7,86 @@
 # and changing one should move the answer only by its own error term. Model
 # parameters, the target EIR included, live on the parameter list.
 
-#' Discretisation settings.
+#' Discretisation settings
 #'
-#' Numerical settings for [run_simulation_ode()]. Every default is the validated
-#' choice; a run with `ode_tuning()` untouched is the reference configuration.
-#' Pass either this object or a plain named list of the fields you want to
-#' change; anything left out keeps its default.
+#' Numerical settings for [run_simulation_ode()], passed as its `tuning`
+#' argument. Every default is the validated choice, and a run with the defaults
+#' is the reference configuration. `run_simulation_ode()` also accepts a plain
+#' named list of the fields to change: fields left out keep their defaults, and
+#' an unknown field is an error.
 #'
-#' @param age_lower age-group lower edges in **years**. The default is
+#' @param age_lower age-group lower edges in years. The default is
 #'   [default_age_lower()], a 118-group grid log-spaced between pinned reporting
-#'   ages and weighted towards the under-fives. Must start at 0, increase
-#'   strictly, and stay in years: a top edge above 1000 is rejected as a grid
-#'   supplied in days. Every group loses its ageing and mortality fraction each
-#'   day out of the same stock as the day's other exits, so the narrowest group
-#'   must be wide enough to hold them together. Progression and clearance do not
-#'   depend on transmission, and a grid with a group too narrow for them, a
-#'   little over a day, is an error before the run. Infection is checked as the
-#'   run goes: a run in which any compartment falls below zero stops with an
-#'   error naming the day and the age group. That takes several consecutive
-#'   groups a day or two wide at an EIR in the hundreds; the default grid's
-#'   narrowest groups are 16.6 days wide.
+#'   ages and weighted towards the under-fives; its documentation gives the
+#'   grid's accuracy and cost. Must be finite, start at 0 and increase strictly,
+#'   with at least two edges, and must be in years: a top edge above 1000 is
+#'   rejected as a grid given in days.
 #'
-#'   `fleet`'s age profile converges at first order in the number of groups:
-#'   each doubling halves its distance from the converged profile. The default
-#'   is the smallest grid on which every falciparum claim in `fleetcheck` passes.
-#'   It puts the EIR 20 clinical age profile within 3.2% of `fleet`'s own
-#'   converged answer, where 53 groups leave it 6.1% away; measured against the
-#'   IBM median, severe incidence at EIR 120 is 2% low on the default and 7% low
-#'   on 53 groups. A coarser grid, `default_age_lower(n_group = 53)`, runs over
-#'   twice as fast and is adequate where the level of severe incidence, or of
-#'   young children's incidence at high transmission, is not what a result rests
-#'   on; a finer one, `default_age_lower(n_group = 236)`, halves the grid's error
-#'   for twice the cost. See the `age-profile-clinical` and `severe-allage-eir`
-#'   claims in `fleetcheck` for the measurements.
-#' @param n_ph,n_phc stage counts for the post-treatment (`Ph`) and
-#'   chemoprevention (`Ph_c`) prophylaxis chains. `NULL` (default) matches the
+#'   Each day every group loses its ageing and mortality fraction out of the
+#'   same stock as the day's other exits, so the narrowest group must be wide
+#'   enough to hold them together. Progression and clearance do not depend on
+#'   transmission, and a grid with a group too narrow for them, a little over a
+#'   day, is an error before the run. Infection is checked as the run goes: a
+#'   run in which any compartment falls below zero stops with an error naming
+#'   the day and the age group. That takes several consecutive groups a day or
+#'   two wide at an EIR in the hundreds; the default grid's narrowest groups are
+#'   16.6 days wide.
+#' @param n_ph,n_phc stage counts of the post-treatment (`Ph`) and
+#'   chemoprevention (`Ph_c`) prophylaxis chains. `NULL` (default) matches each
 #'   chain to the drug's Weibull protection curve. A stage is left with a fixed
-#'   probability a day, so it lasts a geometric number of days, and `k` stages
-#'   match the protection's mean `M` and variance `V` at `M^2 / (V + M)` stages:
-#'   10 for SP-AQ as chemoprevention, 9 for DHA-PQP. `Ph` follows the treated
-#'   stage `Tr`, so its count matches the variance of the whole `Tr + Ph` sojourn
-#'   and its mean is the protection left after `Tr`: 9 stages for SP-AQ, 10 for
-#'   DHA-PQP, and 1 for AL, whose 10-day protection is already less variable
-#'   than `Tr` itself. A drug mixture is moment-matched as a mixture. A stage
-#'   lasts at least a day, and each day it also loses its ageing and mortality
-#'   fraction, so the default is held to what fits the shortest-protecting drug
-#'   on the schedule and capped at 20, and an explicit count that does not fit
-#'   is an error. The count is fixed for the run, sized at the seed's drug mix: a
-#'   first-line switch moves the chain's mean, not its shape.
+#'   probability each day, so it lasts a geometric number of days, and a chain
+#'   matches the protection's mean `M` and variance `V` with `M^2 / (V + M)`
+#'   stages: 10 for SP-AQ as chemoprevention, 9 for DHA-PQP. `Ph` follows the
+#'   treated stage `Tr`, so its count matches the variance of the whole
+#'   `Tr + Ph` sojourn and its mean is the protection left after `Tr`: 9 stages
+#'   for SP-AQ, 10 for DHA-PQP, and 1 for AL, whose 10-day protection is already
+#'   less variable than `Tr` itself. A drug mixture is moment-matched as a
+#'   mixture.
+#'
+#'   A stage lasts at least a day and also loses its ageing and mortality
+#'   fraction each day, so the default is limited to what fits the
+#'   shortest-protecting drug on the schedule and capped at 20, and an explicit
+#'   count that does not fit is an error. The count is fixed for the run, sized
+#'   at the seed's drug mix, so a first-line switch moves the chain's mean, not
+#'   its shape.
 #' @param n_sub sub-steps per day of the mosquito model, integrated by an
 #'   exponential midpoint rule (second order, and stable however stiff the
-#'   larval equations get). Once a run is on its cycle the error falls
-#'   fourfold with each doubling. At the default of 32 a seasonal run's daily
+#'   larval equations become). Once a run is on its cycle the error falls
+#'   fourfold with each doubling. At the default of 32, a seasonal run's daily
 #'   EIR stays within 2.4e-4 of the converged solution at the seasonal trough
-#'   (5.5e-6 of its peak), comparable to the per-step tolerance
-#'   `malariasimulation` integrates its own mosquito model to
-#'   (`r_tol = a_tol = 1e-4`); 8 would leave it 3.6e-3 off, a slight shift in
-#'   the phase of the seasonal cycle. Annual means agree to about 4e-6 at 32 and
+#'   (5.5e-6 of its peak), comparable to the per-step tolerance to which
+#'   `malariasimulation` integrates its own mosquito model
+#'   (`r_tol = a_tol = 1e-4`); 8 leaves it 3.6e-3 off, a slight shift in the
+#'   phase of the seasonal cycle. Annual means agree to about 4e-6 at 32 and
 #'   5e-5 at 8, and a run with no seasonality and no interventions is exact to
 #'   1e-11 at any count. The mosquito model is a small part of the day, so 32
 #'   costs 2 to 13% more than 8.
 #' @param batch_bins under *P. vivax*, whether hypnozoite batch counts share
-#'   levels. `malariasimulation` gives each person a count of hypnozoite batches,
-#'   0 to `kmax`, and `fleet` holds every vivax compartment and immunity stock at
-#'   each level of that ladder, so its length is most of a vivax run's cost. With
-#'   `TRUE` (default), counts 0 to 3 and `kmax` have a level each and the counts
-#'   between share levels in pairs, the people inside a pair spread as a Poisson
-#'   fitted to the levels either side: eight levels for the default `kmax = 10`,
-#'   which take a quarter less time than eleven and move no output of the
-#'   `fleetcheck` vivax suite by more than 0.4%. `FALSE` gives every count its
-#'   own level. Ignored under *P. falciparum*.
+#'   levels. `malariasimulation` gives each person a count of hypnozoite
+#'   batches, 0 to `kmax`, and `fleet` holds every vivax compartment and
+#'   immunity stock at each level of that ladder, so its length accounts for
+#'   most of a vivax run's cost. With `TRUE` (default), counts 0 to 3 and `kmax`
+#'   have a level each and the counts between share levels in pairs, the people
+#'   within a pair spread as a Poisson fitted to the levels either side. That
+#'   gives eight levels for the default `kmax = 10`, which take a quarter less
+#'   time than eleven and move no output of the `fleetcheck` vivax suite by more
+#'   than 0.4%. `FALSE` gives every count its own level. Ignored under
+#'   *P. falciparum*.
 #' @param odin_file optional path to an odin source to compile instead of the
 #'   generator built into the package: a discrete-time model with the built-in
-#'   one's parameters and states (development use; needs 'odin2' and a C++
-#'   toolchain). The compiled model is cached by path for the session, so an
+#'   one's parameters and states. For development; needs 'odin2' and a C++
+#'   toolchain. The compiled model is cached by path for the session, so an
 #'   edit to the file needs a new session.
 #' @param ... the ODE solver's controls (`atol`, `rtol`, `step_size_max`) and the
 #'   Erlang lag stage counts (`n_eir`, `n_foim`, `n_eip`) are accepted with a
 #'   warning and ignored: the model advances one day at a time, with the IBM's
-#'   own delay lines, so there is no solver to control and no lag to discretise.
-#'   Any other name is an error.
-#' @return a `fleet_ode_tuning` list.
-#' @seealso [run_simulation_ode()]
+#'   own delay lines, so there is no solver to control and no lag to
+#'   discretise. Any other name is an error.
+#' @return A list of class `fleet_ode_tuning`.
+#' @seealso [run_simulation_ode()], [default_age_lower()]
 #' @examples
 #' ode_tuning()$n_sub
-#' # a finer age grid, to see how much of a severe-incidence level is the grid
+#' # a finer age grid, to check how much of a severe-incidence level is the grid's
 #' length(ode_tuning(age_lower = default_age_lower(n_group = 417))$age_lower)
 #' @export
 ode_tuning <- function(age_lower = default_age_lower(), n_ph = NULL, n_phc = NULL,

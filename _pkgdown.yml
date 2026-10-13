@@ -1,35 +1,24 @@
 url: https://pwinskill.github.io/fleet
 
-# Not on CRAN, and no released version: `mode: unreleased` says so on the
-# version badge in the navbar.
+# Not on CRAN and no released version: `mode: unreleased` says so on the version
+# badge in the navbar.
 development:
   mode: unreleased
 
 # Bootstrap's defaults plus pkgdown/extra.scss, which is fleetcheck's theme.
-# There was a bslib block here setting three Google faces, six Bootstrap colour
-# roles, two radii and a navbar background; nearly all of it either restated
-# what extra.scss already sets or added weight the pages did not need, and the
-# display face and tinted panels were most of what made this site read as louder
-# than its sibling. `navbar-bg` is the one that has to stay: Bootstrap picks the
-# light or dark hamburger icon from it at compile time, and a stylesheet cannot
-# reach that decision.
-#
-# No light-switch, so the site is light only, as fleetcheck's is. The
-# `[data-bs-theme="dark"]` rules in extra.scss are kept rather than deleted:
-# they cost nothing while they never fire, and they are what a light-switch
-# would need if one is ever wanted back.
+# `navbar-bg` has to stay: Bootstrap picks the light or dark menu icon from it at
+# compile time, which a stylesheet cannot reach. There is no light switch, so the
+# site is light only, as fleetcheck's is; the `[data-bs-theme="dark"]` rules in
+# extra.scss are kept for a light switch if one is wanted later.
 template:
   bootstrap: 5
   bslib:
     navbar-bg: "#FFFFFF"
 
-# The three guides sit at the top level and the lookup material is grouped
-# behind one menu. pkgdown's default does the opposite: the function reference
-# gets a top-level slot of its own and all four non-intro articles go into an
-# "Articles" dropdown, labelled with their full titles. That buries the two
-# articles a reader most needs -- what to watch out for, and whether the numbers
-# can be trusted -- behind a menu, under headings too long to scan, while
-# promoting a four-topic function index above them.
+# Get started and Usage notes sit at the top level, where a reader looks first.
+# The specification, the parameter reference and the function index are grouped
+# under one Reference menu, rather than pkgdown's default of an Articles
+# dropdown beside a top-level function reference.
 navbar:
   structure:
     left:  [intro, using, evidence, lookup, news, contributing]
@@ -39,10 +28,10 @@ navbar:
       text: Get started
       href: articles/fleet.html
     using:
-      text: Using fleet well
+      text: Usage notes
       href: articles/using.html
     evidence:
-      text: Evidence
+      text: IBM comparison
       href: https://pwinskill.github.io/fleetcheck/
     lookup:
       text: Reference
@@ -52,7 +41,7 @@ navbar:
       - text: Parameter reference
         href: articles/parameters.html
       - text: -------
-      - text: Function index
+      - text: Functions
         href: reference/index.html
       - text: All articles
         href: articles/index.html
@@ -65,29 +54,22 @@ navbar:
       href: CONTRIBUTING.html
 
 home:
-  title: fleet • a fast mean-field twin of malariasimulation
+  title: Mean-field counterpart to malariasimulation
   description: >
-    A fast, deterministic mean-field counterpart to the malariasimulation
-    individual-based model of Plasmodium falciparum malaria, advanced one day at a
-    time on the IBM's own daily clock, built on odin2 / dust2.
+    A deterministic mean-field counterpart to the malariasimulation
+    individual-based model of Plasmodium falciparum and P. vivax malaria,
+    advanced one day at a time on the individual-based model's daily clock,
+    built on odin2 and dust2.
   sidebar:
-    structure: [glance, links, citation, license, authors, dev]
-    components:
-      glance:
-        title: At a glance
-        text: >
-          A single multi-decade run finishes in **under a second**, independent
-          of population size. Feed it an unmodified `malariasimulation` parameter
-          list and get `malariasimulation`'s output table straight back, ready for
-          `postie`.
+    structure: [links, citation, license, authors, dev]
+
 articles:
 - title: Articles
   navbar: ~
   contents:
-  # Ordered as a reader meets them, not alphabetically. Learn the interface, then
-  # what to watch out for, then the formal system, with its argument-by-argument
-  # lookup table behind it. The evidence that licenses any of it is a separate
-  # project, fleetcheck, and is linked from the navbar rather than duplicated here.
+  # In reading order: the interface, then what to watch out for, then the
+  # formal system and its argument-by-argument reference. The comparison with
+  # the IBM is a separate project, fleetcheck, linked from the navbar.
   - fleet
   - using
   - model
@@ -96,24 +78,17 @@ articles:
 reference:
 - title: Run the model
   desc: >
-    Simulate malaria transmission dynamics with the deterministic mean-field
-    model, one day at a time.
+    Run the mean-field model on a `malariasimulation` parameter list.
   contents:
   - run_simulation_ode
 - title: Discretisation settings
   desc: >
-    The age grid, the prophylaxis chains' stage counts and the mosquito
-    sub-steps per day. Every default is the validated choice: change one only
-    when you have a reason to.
+    The age grid, the prophylaxis chains' stage counts, the mosquito sub-steps
+    per day and the *P. vivax* hypnozoite levels. Every default is the
+    validated choice.
   contents:
   - ode_tuning
-- title: Age grid
-  desc: >
-    The default graded age discretisation used throughout the model.
-  contents:
   - default_age_lower
 - title: Package overview
-  desc: >
-    Background, scope, and pointers to the mean-field approximations.
   contents:
   - fleet-package

@@ -12,65 +12,74 @@
 #' @noRd
 AGE_ANCHORS <- c(0, 1, 2, 3, 5, 7, 10, 15, 20, 21, 30, 40, 60)
 
-#' Default (graded) age grid
+#' Default age grid
 #'
-#' Lower edges (in years) of the age groups: fine in childhood, where immunity and
-#' maternal dynamics move fast, and coarse in adulthood. Group edges are pinned
-#' at the conventional reporting boundaries -- 0, 1, 2, 3, 5, 7, 10, 15, 20, 30,
-#' 40, 60 years -- and at 21, so that whole groups make up exactly the year the
-#' IBM draws maternal immunity from, [20, 21). The groups between two anchors are
-#' of equal width. The budget of groups is spread across the anchor intervals in
-#' proportion to their width in `log(1 + age)`, weighted 1.25 below 5 years and
-#' 0.5 from 21 years; each interval gets at least one group, and the remainder is
-#' shared out largest-remainder.
+#' Lower edges, in years, of the default age groups: fine in childhood, where
+#' immunity and maternal immunity change fast, and coarse in adulthood.
 #'
-#' Log rather than linear width, because what the grid has to resolve is the
-#' rise of immunity with age, and that is far closer to a function of log age
-#' than of age. (Of `log(1 + age)` rather than `log(age)`, which is infinite
-#' over the first year. The offset is in years, so the allocation is not
-#' scale-free.) The grading matters more than the count: at 53 groups an
-#' equal-width grid is four times as far from the converged solution as a
-#' log-graded one (rms over the age profile), and a grid of fixed monthly /
-#' quarterly / yearly / 5-yearly sections, which over-resolves infancy and
-#' under-resolves everything above 15, 1.7 times as far. The weights move
-#' groups to where the grid's error comes from. It is largest in clinical and
-#' severe incidence among young children at high transmission, each age band's
-#' error comes from the groups inside it, and the groups above 21 years move no
-#' child's incidence measurably. Weighted, the grid matches the unweighted one's
-#' accuracy with about a quarter fewer groups.
+#' Group edges are pinned at the conventional reporting ages, 0, 1, 2, 3, 5, 7,
+#' 10, 15, 20, 30, 40 and 60 years, so that the usual output bands fall on group
+#' boundaries, and at 21, so that whole groups make up the year, [20, 21), from
+#' which the IBM draws maternal immunity. Groups between two anchors are of
+#' equal width. The groups are shared among the anchor intervals in proportion
+#' to each interval's width in `log(1 + age)`, weighted 1.25 below 5 years and
+#' 0.5 from 21 years; each interval gets at least one group, and the remainder
+#' is allocated by largest remainder.
 #'
-#' The default, 118 groups, is the smallest at which every falciparum claim in
-#' `fleetcheck` passes: the one that decides it is the clinical age profile's
-#' 3-5 year band at EIR 120, which needs 14 groups between 3 and 5 years. It is
-#' the smallest grid that passes, not the most accurate. The departure from
-#' `fleet`'s own converged profile is fleet-low and halves with each doubling of
-#' `n_group`, first order. On the default the largest departure of the EIR 20
-#' clinical age profile from the converged one is 3.2%, in the oldest band,
-#' which the weights coarsen, and the rms 1.6%; at 53 groups they are 6.1% and
-#' 3.2%. Measured against the IBM median, severe incidence at EIR 120 is 2% low.
-#' What refinement does **not** remove is the mean-field approximation itself --
-#' one immunity value per stratum, where the IBM holds a spread of infection
-#' histories at the same age -- so a persistent difference from the IBM is not
-#' evidence that the grid is too coarse. `validations/age-grid/run.R` in
-#' `fleetcheck` measures both.
+#' The width is logarithmic because what the grid has to resolve is the rise of
+#' immunity with age, which is far closer to a function of log age than of age.
+#' (`log(1 + age)` rather than `log(age)`, which is infinite over the first
+#' year; the offset is in years, so the allocation is not scale-free.) The
+#' grading matters more than the count: at 53 groups an equal-width grid is four
+#' times as far from the converged solution as a log-graded one (rms over the
+#' age profile), and a grid of fixed monthly, quarterly, yearly and 5-yearly
+#' sections, which over-resolves infancy and under-resolves everything above 15,
+#' 1.7 times as far. The grid's error is largest in clinical and severe
+#' incidence among young children at high transmission; each age band's error
+#' comes from the groups inside it, and the groups above 21 years have no
+#' measurable effect on any child's incidence. The weights move groups to where
+#' the error arises, and match the unweighted grid's accuracy with about a
+#' quarter fewer groups.
 #'
-#' Band aggregation weights each age group by the exact fraction of its own width
-#' that falls inside the band, so a band edge landing inside a group (as one
-#' can, away from the anchors) apportions that group between the two bands
-#' instead of handing it whole to one of them. The same is true of intervention
-#' age targeting. Neither is snapped to the grid.
+#' The default, 118 groups, is the smallest grid on which every falciparum
+#' claim in `fleetcheck` passes, not the most accurate; the deciding claim is
+#' the clinical age profile's 3-5 year band at EIR 120, which needs 14 groups
+#' between 3 and 5 years. `fleet`'s age profile converges at first order: its
+#' departure from the converged profile is fleet-low and halves with each
+#' doubling of `n_group`. On the default grid the largest departure of the
+#' EIR 20 clinical age profile is 3.2%, in the oldest band, which the weights
+#' coarsen, and the rms 1.6%; on 53 groups they are 6.1% and 3.2%. Against the
+#' IBM median, severe incidence at EIR 120 is 2% low on the default grid and 7%
+#' low on 53 groups.
 #'
-#' @param max_age oldest age-group lower edge, in **years** (the absorbing top
-#'   group). Must be a single finite number `>= 20`: below that the grid has too
-#'   few anchors left to resolve the ages over which immunity develops.
-#' @param n_group total number of age groups, the absorbing top group included.
-#'   The default is 118. Changing it refines or coarsens the whole grid while
-#'   keeping its shape, which is what a grid-convergence check wants; run time
-#'   is roughly in proportion.
-#' @return numeric vector of age-group lower edges in years.
+#' `n_group = 53` runs over twice as fast and is adequate where a result does
+#' not rest on the level of severe incidence, or of young children's incidence
+#' at high transmission; `n_group = 236` halves the grid's error for twice the
+#' cost. Refinement does not remove the mean-field approximation itself, one
+#' immunity value per stratum where the IBM holds a spread of infection
+#' histories at the same age, so a persistent difference from the IBM is not
+#' evidence that the grid is too coarse. `fleetcheck` measures both, in
+#' `validations/age-grid/run.R` and the `age-profile-clinical` and
+#' `severe-allage-eir` claims.
+#'
+#' Output bands and intervention age targets that do not fall on a group edge
+#' are apportioned by the fraction of each group's width they cover; neither is
+#' snapped to the grid.
+#'
+#' @param max_age lower edge, in years, of the oldest age group, which is
+#'   open-ended. A single finite number of at least 20: below that the grid has
+#'   too few anchors left to resolve the ages over which immunity develops.
+#' @param n_group total number of age groups, the open-ended top group
+#'   included. A whole number of at most 1e6, and at least one more than the
+#'   number of anchor intervals below `max_age` (14 for `max_age = 80`).
+#'   Changing it refines or coarsens the whole grid while keeping its shape, as
+#'   a grid-convergence check needs; run time is roughly proportional to it.
+#' @return A numeric vector of age-group lower edges in years, from 0 to
+#'   `max_age`.
+#' @seealso [ode_tuning()], which takes the grid as `age_lower`.
 #' @examples
 #' default_age_lower()
-#' # coarser top of the grid
+#' # open-ended top group from 60 years
 #' default_age_lower(max_age = 60)
 #' # under half the resolution everywhere, same shape, over twice as fast
 #' length(default_age_lower(n_group = 53))

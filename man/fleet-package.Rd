@@ -4,35 +4,32 @@
 \name{fleet-package}
 \alias{fleet}
 \alias{fleet-package}
-\title{fleet: a mean-field twin of malariasimulation}
+\title{fleet: mean-field counterpart to malariasimulation}
 \description{
-A fast, deterministic mean-field counterpart to the \pkg{malariasimulation}
-individual-based model of \emph{Plasmodium falciparum} malaria, built on the
-\pkg{odin2} / \pkg{dust2} stack and advanced one day at a time on the
-individual-based model's own clock. It reproduces the age- and
-biting-heterogeneity-structured human model (states S/D/A/U/Tr plus treatment
-and chemoprevention prophylaxis, and the six immunity functions) coupled to
-the compartmental mosquito model, and honours the same intervention modules.
-It accepts an unmodified \code{malariasimulation::get_parameters()} list, is
-seeded at the \pkg{malariaEquilibrium} solution, and returns
-malariasimulation-style outputs that feed straight into \pkg{postie}. A
-multi-decade run completes in under a second, independent of population
-size.
+A deterministic mean-field counterpart to the \pkg{malariasimulation}
+individual-based model (IBM) of \emph{Plasmodium falciparum} and \emph{P. vivax}
+malaria, advanced one day at a time on the IBM's daily clock and built on
+\pkg{odin2} and \pkg{dust2}. It reproduces the human model, structured by age
+and biting heterogeneity and, for \emph{P. vivax}, by hypnozoite batch, coupled to
+the compartmental mosquito model, with the same intervention modules. It
+takes an unmodified \code{malariasimulation::get_parameters()} list, is seeded at
+the \pkg{malariaEquilibrium} (or \pkg{malariaEquilibriumVivax}) solution, and
+returns \code{malariasimulation}'s output table, which \pkg{postie} post-processes
+as it would an IBM run. Run time does not depend on population size.
 }
-\section{Getting started}{
+\section{Functions}{
 
 \itemize{
-\item \code{\link[=run_simulation_ode]{run_simulation_ode()}}: run the model; returns a wide, daily count
-table (P. falciparum only).
-\item \code{\link[=default_age_lower]{default_age_lower()}}: the default graded age grid.
-\item \code{\link[=ode_tuning]{ode_tuning()}}: discretisation settings, passed as \verb{tuning =}.
+\item \code{\link[=run_simulation_ode]{run_simulation_ode()}} runs the model.
+\item \code{\link[=ode_tuning]{ode_tuning()}} holds the discretisation settings, passed as \code{tuning}.
+\item \code{\link[=default_age_lower]{default_age_lower()}} gives the default age grid.
 }
-The count table is malariasimulation-shaped, so post-process it with
-\pkg{postie} exactly as you would an IBM run: \code{postie::get_rates(out)} and
-\code{postie::get_prevalence(out, diagnostic = "lm")}.
-See \code{vignette("fleet")} for a worked tour and \code{vignette("using")} for where
-and how much the mean field departs from the IBM and what to do about it. The
-measured agreement behind those claims is a separate project,
+The \code{ode} in two of the names is kept for compatibility: the model is a daily
+update, not an ODE.
+
+\code{vignette("fleet")} is a worked introduction, and \code{vignette("using")} covers
+where the mean field departs from the IBM and what to do about it. Agreement
+with the IBM is measured in a separate project,
 \href{https://pwinskill.github.io/fleetcheck/}{fleetcheck}.
 }
 
