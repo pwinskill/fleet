@@ -1,39 +1,38 @@
-# fleet: a mean-field twin of malariasimulation
+# fleet: mean-field counterpart to malariasimulation
 
-A fast, deterministic mean-field counterpart to the malariasimulation
-individual-based model of *Plasmodium falciparum* malaria, built on the
-odin2 / dust2 stack and advanced one day at a time on the
-individual-based model's own clock. It reproduces the age- and
-biting-heterogeneity-structured human model (states S/D/A/U/Tr plus
-treatment and chemoprevention prophylaxis, and the six immunity
-functions) coupled to the compartmental mosquito model, and honours the
-same intervention modules. It accepts an unmodified
+A deterministic mean-field counterpart to the malariasimulation
+individual-based model (IBM) of *Plasmodium falciparum* and *P. vivax*
+malaria, advanced one day at a time on the IBM's daily clock and built
+on odin2 and dust2. It reproduces the human model, structured by age and
+biting heterogeneity and, for *P. vivax*, by hypnozoite batch, coupled
+to the compartmental mosquito model, with the same intervention modules.
+It takes an unmodified
 [`malariasimulation::get_parameters()`](https://rdrr.io/pkg/malariasimulation/man/get_parameters.html)
-list, is seeded at the malariaEquilibrium solution, and returns
-malariasimulation-style outputs that feed straight into postie. A
-multi-decade run completes in under a second, independent of population
-size.
+list, is seeded at the malariaEquilibrium (or malariaEquilibriumVivax)
+solution, and returns `malariasimulation`'s output table, which postie
+post-processes as it would an IBM run. Run time does not depend on
+population size.
 
-## Getting started
+## Functions
 
-- [`run_simulation_ode()`](https://pwinskill.github.io/fleet/reference/run_simulation_ode.md):
-  run the model; returns a wide, daily count table (P. falciparum only).
+- [`run_simulation_ode()`](https://pwinskill.github.io/fleet/reference/run_simulation_ode.md)
+  runs the model.
 
-- [`default_age_lower()`](https://pwinskill.github.io/fleet/reference/default_age_lower.md):
-  the default graded age grid.
+- [`ode_tuning()`](https://pwinskill.github.io/fleet/reference/ode_tuning.md)
+  holds the discretisation settings, passed as `tuning`.
 
-- [`ode_tuning()`](https://pwinskill.github.io/fleet/reference/ode_tuning.md):
-  discretisation settings, passed as `tuning =`.
+- [`default_age_lower()`](https://pwinskill.github.io/fleet/reference/default_age_lower.md)
+  gives the default age grid.
 
-The count table is malariasimulation-shaped, so post-process it with
-postie exactly as you would an IBM run: `postie::get_rates(out)` and
-`postie::get_prevalence(out, diagnostic = "lm")`. See
+The `ode` in two of the names is kept for compatibility: the model is a
+daily update, not an ODE.
+
 [`vignette("fleet")`](https://pwinskill.github.io/fleet/articles/fleet.md)
-for a worked tour and
+is a worked introduction, and
 [`vignette("using")`](https://pwinskill.github.io/fleet/articles/using.md)
-for where and how much the mean field departs from the IBM and what to
-do about it. The measured agreement behind those claims is a separate
-project, [fleetcheck](https://pwinskill.github.io/fleetcheck/).
+covers where the mean field departs from the IBM and what to do about
+it. Agreement with the IBM is measured in a separate project,
+[fleetcheck](https://pwinskill.github.io/fleetcheck/).
 
 ## See also
 

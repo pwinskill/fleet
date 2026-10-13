@@ -1,5 +1,30 @@
 # Changelog
 
+## fleet 0.0.0.9006
+
+- **Vivax hypnozoite batch counts 4 to 9 share levels in pairs.** Every
+  vivax compartment and immunity stock is held at each level of the
+  batch ladder, so its length sets most of a vivax run’s cost. Counts 0
+  to 3 and `kmax` keep a level each, and the counts between share levels
+  in pairs, the people inside a pair spread as a Poisson whose rate is
+  fitted to the levels either side: eight levels for the default eleven
+  counts, and a vivax run takes about a quarter less time. Against a
+  ladder with a level per count, which `ode_tuning(batch_bins = FALSE)`
+  still gives, no output of the `fleetcheck` vivax suite moves by more
+  than 0.4% and no vivax reference value by more than 0.32%. Fitting the
+  shape to the neighbouring levels, rather than reading a rate off
+  counts 0 and 1, is what holds it under radical cure, which empties the
+  high counts into 0.
+- **Primaquine radical cure has no liver-stage-protected levels.** Its
+  4.7 days of liver-stage protection end inside the 16 days of
+  chloroquine’s blood-stage protection given with it, during which no
+  bite infects and no batch can form, so its four levels protected only
+  the few whose blood stage the drug did not clear. Outputs move by
+  under 0.2%. With the paired ladder, a primaquine run takes about half
+  the time it did. Tafenoquine’s 27 days outlast chloroquine’s, and it
+  keeps its eleven levels.
+- Falciparum is untouched: its reference values are bit-identical.
+
 ## fleet 0.0.0.9005
 
 - **A parameter draw with `b0` near 1 runs.** The check that no age

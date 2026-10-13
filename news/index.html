@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">fleet</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.0.0.9005</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.0.0.9006</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -16,14 +16,14 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/fleet.html">Get started</a></li>
-<li class="nav-item"><a class="nav-link" href="../articles/using.html">Using fleet well</a></li>
-<li class="nav-item"><a class="nav-link" href="https://pwinskill.github.io/fleetcheck/">Evidence</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/using.html">Usage notes</a></li>
+<li class="nav-item"><a class="nav-link" href="https://pwinskill.github.io/fleetcheck/">IBM comparison</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-reference" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Reference</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-reference"><li><a class="dropdown-item" href="../articles/model.html">Model specification</a></li>
     <li><a class="dropdown-item" href="../articles/parameters.html">Parameter reference</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../reference/index.html">Function index</a></li>
+    <li><a class="dropdown-item" href="../reference/index.html">Functions</a></li>
     <li><a class="dropdown-item" href="../articles/index.html">All articles</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -42,6 +42,14 @@
       <small>Source: <a href="https://github.com/pwinskill/fleet/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.0.9006" id="fleet-0009006">fleet 0.0.0.9006<a class="anchor" aria-label="anchor" href="#fleet-0009006"></a></h2>
+<ul><li>
+<strong>Vivax hypnozoite batch counts 4 to 9 share levels in pairs.</strong> Every vivax compartment and immunity stock is held at each level of the batch ladder, so its length sets most of a vivax run’s cost. Counts 0 to 3 and <code>kmax</code> keep a level each, and the counts between share levels in pairs, the people inside a pair spread as a Poisson whose rate is fitted to the levels either side: eight levels for the default eleven counts, and a vivax run takes about a quarter less time. Against a ladder with a level per count, which <code>ode_tuning(batch_bins = FALSE)</code> still gives, no output of the <code>fleetcheck</code> vivax suite moves by more than 0.4% and no vivax reference value by more than 0.32%. Fitting the shape to the neighbouring levels, rather than reading a rate off counts 0 and 1, is what holds it under radical cure, which empties the high counts into 0.</li>
+<li>
+<strong>Primaquine radical cure has no liver-stage-protected levels.</strong> Its 4.7 days of liver-stage protection end inside the 16 days of chloroquine’s blood-stage protection given with it, during which no bite infects and no batch can form, so its four levels protected only the few whose blood stage the drug did not clear. Outputs move by under 0.2%. With the paired ladder, a primaquine run takes about half the time it did. Tafenoquine’s 27 days outlast chloroquine’s, and it keeps its eleven levels.</li>
+<li>Falciparum is untouched: its reference values are bit-identical.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.0.9005" id="fleet-0009005">fleet 0.0.0.9005<a class="anchor" aria-label="anchor" href="#fleet-0009005"></a></h2>
 <ul><li>

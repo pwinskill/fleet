@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>fleet • a fast mean-field twin of malariasimulation • fleet</title>
+<title>Mean-field counterpart to malariasimulation • fleet</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
@@ -15,10 +15,10 @@
 <link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><script src="extra.js"></script><meta property="og:title" content="fleet • a fast mean-field twin of malariasimulation">
-<meta name="description" content="A fast, deterministic mean-field counterpart to the malariasimulation individual-based model of Plasmodium falciparum malaria, advanced one day at a time on the IBM's own daily clock, built on odin2 / dust2.
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><script src="extra.js"></script><meta property="og:title" content="Mean-field counterpart to malariasimulation">
+<meta name="description" content="A deterministic mean-field counterpart to the malariasimulation individual-based model of Plasmodium falciparum and P. vivax malaria, advanced one day at a time on the individual-based model's daily clock, built on odin2 and dust2.
 ">
-<meta property="og:description" content="A fast, deterministic mean-field counterpart to the malariasimulation individual-based model of Plasmodium falciparum malaria, advanced one day at a time on the IBM's own daily clock, built on odin2 / dust2.
+<meta property="og:description" content="A deterministic mean-field counterpart to the malariasimulation individual-based model of Plasmodium falciparum and P. vivax malaria, advanced one day at a time on the individual-based model's daily clock, built on odin2 and dust2.
 ">
 <meta property="og:image" content="https://pwinskill.github.io/fleet/logo.png">
 </head>
@@ -30,7 +30,7 @@
 
     <a class="navbar-brand me-2" href="index.html">fleet</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.0.0.9005</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.0.0.9006</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,15 +40,15 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="articles/fleet.html">Get started</a></li>
-<li class="nav-item"><a class="nav-link" href="articles/using.html">Using fleet well</a></li>
-<li class="nav-item"><a class="nav-link" href="https://pwinskill.github.io/fleetcheck/">Evidence</a></li>
+<li class="nav-item"><a class="nav-link" href="articles/using.html">Usage notes</a></li>
+<li class="nav-item"><a class="nav-link" href="https://pwinskill.github.io/fleetcheck/">IBM comparison</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-reference" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Reference</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-reference">
 <li><a class="dropdown-item" href="articles/model.html">Model specification</a></li>
     <li><a class="dropdown-item" href="articles/parameters.html">Parameter reference</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="reference/index.html">Function index</a></li>
+    <li><a class="dropdown-item" href="reference/index.html">Functions</a></li>
     <li><a class="dropdown-item" href="articles/index.html">All articles</a></li>
   </ul>
 </li>
@@ -72,82 +72,39 @@
 <img src="logo.png" class="logo" alt=""><h1 id="fleet-">fleet <a class="anchor" aria-label="anchor" href="#fleet-"></a>
 </h1>
 </div>
-<p><a href="https://github.com/pwinskill/fleet/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/pwinskill/fleet/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a> <a href="https://github.com/pwinskill/fleet/actions/workflows/pkgdown.yaml" class="external-link"><img src="https://github.com/pwinskill/fleet/actions/workflows/pkgdown.yaml/badge.svg" alt="pkgdown"></a> <a href="https://lifecycle.r-lib.org/articles/stages.html#experimental" class="external-link"><img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle: experimental"></a> <a href="#not-ready-for-real-use"><img src="https://img.shields.io/badge/status-work%20in%20progress-orange.svg" alt="Status: work in progress"></a> <a href="#not-ready-for-real-use"><img src="https://img.shields.io/badge/not%20for-production%20use-red.svg" alt="Not for production use"></a> <a href="https://github.com/pwinskill/fleet/blob/main/LICENSE.md" class="external-link"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a></p>
-<blockquote>
-<h2 id="not-ready-for-real-use">Not ready for real use</h2>
-<p>⚠️ <strong><code>fleet</code> is a work in progress and is not validated for research, policy or operational use.</strong> It is published early so the approach and the comparison against <code>malariasimulation</code> can be looked at and argued with, not so that anyone can rely on its numbers.</p>
-<p>Concretely, and honestly:</p>
-<ul>
-<li>
-<strong>The API is unstable.</strong> <code><a href="reference/run_simulation_ode.html">run_simulation_ode()</a></code>’s signature has already changed once and may change again without deprecation. <strong>Known discrepancies against the IBM are open, not resolved.</strong> Across the 63-country site-file comparison <code>fleet</code> runs above the IBM on falciparum clinical and severe incidence, an excess that is <strong>not</strong> explained. On <em>P. vivax</em> sites it runs further above the IBM, and that is not explained either; and at school age its vivax LM prevalence and clinical incidence run a few per cent high, a limit of the mean field. The current verdict on every claim, with the numbers behind it, is in <em><a href="https://pwinskill.github.io/fleetcheck/">fleetcheck</a></em> — which is kept current, unlike any figure quoted here would be.</li>
-<li><strong>Severe incidence and anything derived from it (including DALYs) should be treated as indicative only.</strong></li>
-<li>Nothing here has been peer reviewed, and there is no versioned release.</li>
-</ul>
-<p>If you need results you can defend today, use <a href="https://github.com/mrc-ide/malariasimulation" class="external-link">malariasimulation</a>.</p>
-</blockquote>
-<blockquote>
-<p>A fast, deterministic <strong>mean-field twin</strong> of the <a href="https://github.com/mrc-ide/malariasimulation" class="external-link">malariasimulation</a> individual-based model of <em>Plasmodium falciparum</em> and <em>P. vivax</em> malaria, run on its daily clock: same inputs, same outputs, population-independent.</p>
-</blockquote>
+<p><a href="https://github.com/pwinskill/fleet/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/pwinskill/fleet/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a> <a href="https://github.com/pwinskill/fleet/actions/workflows/pkgdown.yaml" class="external-link"><img src="https://github.com/pwinskill/fleet/actions/workflows/pkgdown.yaml/badge.svg" alt="pkgdown"></a> <a href="https://lifecycle.r-lib.org/articles/stages.html#experimental" class="external-link"><img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle: experimental"></a> <a href="https://github.com/pwinskill/fleet/blob/main/LICENSE.md" class="external-link"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a></p>
+<p><code>fleet</code> is a deterministic mean-field counterpart to the <a href="https://github.com/mrc-ide/malariasimulation" class="external-link">malariasimulation</a> individual-based model (IBM) of <em>Plasmodium falciparum</em> and <em>P. vivax</em> malaria. It takes an unmodified <code>malariasimulation</code> parameter list, is seeded at the <code>malariaEquilibrium</code> (or <code>malariaEquilibriumVivax</code>) solution as the IBM is, advances one day at a time in the IBM’s order, and returns the IBM’s output table, so post-processing written for the IBM, including <a href="https://github.com/mrc-ide/postie" class="external-link">postie</a>, works unchanged.</p>
+<p>The human model is the Griffin-style model, structured by age and biting heterogeneity, and for <em>P. vivax</em> the White-style model with hypnozoite batches and relapse; both are coupled to the compartmental mosquito model. <code>fleet</code> is written in <a href="https://github.com/mrc-ide/odin2" class="external-link">odin2</a> and <a href="https://github.com/mrc-ide/dust2" class="external-link">dust2</a>. Compartments are per-capita densities, so run time does not depend on population size: a 30-year falciparum run takes about 2 s on one core. The intended uses are calibration, parameter sweeps and scenario work for which the IBM is too slow. Use the IBM when you need stochastic variation or individual heterogeneity beyond the mean field.</p>
 <div class="section level2">
-<h2 id="what-it-is">What it is<a class="anchor" aria-label="anchor" href="#what-it-is"></a>
+<h2 id="not-ready-for-real-use">Not ready for real use<a class="anchor" aria-label="anchor" href="#not-ready-for-real-use"></a>
 </h2>
-<p><code>fleet</code> reproduces the Griffin-style human model, structured by age and biting heterogeneity, coupled to the compartmental mosquito model, and for <em>P. vivax</em> the White-style model with its hypnozoite batches and relapse. Like <code>malariasimulation</code>, it advances one day at a time: every day it applies immunity decay, biting, one competing draw per person between infection and progression, a day of the mosquito model, and deaths and births, in the IBM’s order. It is written in <a href="https://github.com/mrc-ide/odin2" class="external-link">odin2</a> / <a href="https://github.com/mrc-ide/dust2" class="external-link">dust2</a>.</p>
-<table class="table">
-<colgroup>
-<col width="50%">
-<col width="50%">
-</colgroup>
-<tbody>
-<tr>
-<td><strong>Human states</strong></td>
-<td>
-<code>S / D / A / U / Tr</code>, plus the post-treatment and chemoprevention prophylaxis chains and the chemoprevention treated phase; for vivax each over 0 to 10 hypnozoite batches, with liver-stage protection after radical cure</td>
-</tr>
-<tr>
-<td><strong>Immunity</strong></td>
-<td>falciparum: four acquired states <code>IB / ICA / ID / IVA</code> and two maternal terms <code>ICM / IVM</code>, algebraic rather than state variables; vivax: <code>IAA / ICA</code> with their within-cell spread and refractory windows, and maternal <code>IAM / ICM</code>
-</td>
-</tr>
-<tr>
-<td><strong>Mosquito, per species</strong></td>
-<td>
-<code>E / L / P / Sm / Em / Im</code>, with the IBM’s own delay lines for incubation, the EIR and human infectivity</td>
-</tr>
-</tbody>
-</table>
-<p>It exists to give the malariasimulation ecosystem a <strong>deterministic, Monte-Carlo-free companion</strong> that:</p>
+<p><code>fleet</code> is a work in progress and is not validated for research, policy or operational use. It is published so that the approach and its comparison with <code>malariasimulation</code> can be examined, not so that its numbers can be relied on.</p>
 <ul>
-<li>
-<strong>Takes the same inputs as the individual-based model (IBM).</strong> <code><a href="reference/run_simulation_ode.html">run_simulation_ode()</a></code> accepts a <code><a href="https://rdrr.io/pkg/malariasimulation/man/get_parameters.html" class="external-link">malariasimulation::get_parameters()</a></code> list, with the usual <code>set_*</code> intervention builders layered on, unchanged, for either parasite: <code>get_parameters(parasite = "vivax")</code> runs the vivax model.</li>
-<li>
-<strong>Is seeded where the IBM is seeded.</strong> Initial conditions come from <code>malariaEquilibrium</code>, or <code>malariaEquilibriumVivax</code> for vivax, under the same treatment coverage the IBM seeds with. An undisturbed falciparum run’s prevalence relaxes off that seed by under half a percent and then holds, while incidence relaxes by a few per cent over the first years, more at high transmission. A vivax run moves further, as the IBM’s does: its clinical incidence settles about 20% above the seed and its realised EIR 4 to 17% above <code>init_EIR</code>, taking up to two decades at the lowest EIRs. So burn in before comparing levels, as with the IBM.</li>
-<li>
-<strong>Returns malariasimulation’s output table.</strong> A parameter list gives the columns the IBM would give it, under the same names and with the same meanings, so a post-processing pipeline written for the IBM, postie included, works on a <code>fleet</code> run unchanged.</li>
-<li>
-<strong>Is fast and population-independent.</strong> All compartments are per-capita densities, so a run costs the same whether you model a thousand people or ten million: a 30-year falciparum run takes about 1.7 s on the default 118-group age grid (0.7 s on 53 groups), a vivax run, with its hypnozoite dimension, about 26 s.</li>
+<li>The API is unstable. The signature of <code><a href="reference/run_simulation_ode.html">run_simulation_ode()</a></code> has changed once and may change again without deprecation.</li>
+<li>Known discrepancies with the IBM are open. On the country site files <code>fleet</code> runs above the IBM on falciparum clinical and severe incidence, and further above it on <em>P. vivax</em> sites; neither excess is explained. Treat severe incidence, and anything derived from it such as DALYs, as indicative only.</li>
+<li>Nothing has been peer reviewed, and there is no versioned release.</li>
 </ul>
-<p>Reach for the IBM instead when you need stochastic variation or individual heterogeneity beyond the mean field.</p>
+<p>The current verdict on each comparison is in <a href="https://pwinskill.github.io/fleetcheck/">fleetcheck</a>. For results that must be defensible now, use <code>malariasimulation</code>.</p>
 </div>
 <div class="section level2">
-<h2 id="install">Install<a class="anchor" aria-label="anchor" href="#install"></a>
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p><code>fleet</code> compiles C++ at install time, as do several of its dependencies, so you need a working C++ toolchain first: Rtools on Windows, the Xcode command line tools on macOS, the usual build tools (<code>r-base-dev</code> or equivalent) on Linux.</p>
+<p><code>fleet</code> and several of its dependencies compile C++ at install time, so a C++ toolchain is needed: Rtools on Windows, the Xcode command line tools on macOS, or <code>r-base-dev</code> or equivalent on Linux.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("remotes")</span></span>
 <span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"pwinskill/fleet"</span><span class="op">)</span></span></code></pre></div>
-<p>That also installs the GitHub-only hard dependencies (<code>dust2</code>, <code>monty</code>, <code>malariaEquilibrium</code> and <code>malariaEquilibriumVivax</code>), which <code>DESCRIPTION</code> <code>Remotes</code> points at. It installs nothing from <code>Suggests</code>; the examples need two of those:</p>
+<p>This also installs the hard dependencies that are only on GitHub (<code>dust2</code>, <code>monty</code>, <code>malariaEquilibrium</code> and <code>malariaEquilibriumVivax</code>), through <code>Remotes</code> in <code>DESCRIPTION</code>. It installs nothing from <code>Suggests</code>. The examples need two suggested packages, <code>malariasimulation</code> to build parameter lists and <code>postie</code> to post-process the output:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mrc-ide/malariasimulation"</span>, <span class="st">"mrc-ide/postie"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><code>malariasimulation</code> builds the parameter list and <code>postie</code> post-processes the output.</p>
 </div>
 <div class="section level2">
-<h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
+<h2 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
 </h2>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://pwinskill.github.io/fleet/">fleet</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># ask for incidence by age as you would of the IBM: fleet renders exactly the</span></span>
-<span><span class="co"># bands the list asks for (the defaults give 2-10 prevalence and no incidence)</span></span>
+<span><span class="co"># Output age bands are set on the parameter list, as for the IBM. The defaults</span></span>
+<span><span class="co"># give 2-10 prevalence and no incidence.</span></span>
 <span><span class="va">bands</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>min <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">5</span>, <span class="fl">15</span><span class="op">)</span> <span class="op">*</span> <span class="fl">365</span>, max <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">15</span>, <span class="fl">100</span><span class="op">)</span> <span class="op">*</span> <span class="fl">365</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">malariasimulation</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/malariasimulation/man/get_parameters.html" class="external-link">get_parameters</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  clinical_incidence_rendering_min_ages <span class="op">=</span> <span class="va">bands</span><span class="op">$</span><span class="va">min</span>,</span>
@@ -155,87 +112,41 @@
 <span>  severe_incidence_rendering_min_ages <span class="op">=</span> <span class="va">bands</span><span class="op">$</span><span class="va">min</span>,</span>
 <span>  severe_incidence_rendering_max_ages <span class="op">=</span> <span class="va">bands</span><span class="op">$</span><span class="va">max</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># 10-year daily table, in malariasimulation's columns</span></span>
+<span><span class="co"># 10 years, one row per day, in malariasimulation's columns</span></span>
 <span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/run_simulation_ode.html">run_simulation_ode</a></span><span class="op">(</span>timesteps <span class="op">=</span> <span class="fl">3650</span>, parameters <span class="op">=</span> <span class="fu">malariasimulation</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/malariasimulation/man/set_equilibrium.html" class="external-link">set_equilibrium</a></span><span class="op">(</span><span class="va">p</span>, init_EIR <span class="op">=</span> <span class="fl">20</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># postie-format rates and prevalence, exactly as for an IBM run</span></span>
+<span><span class="co"># post-processed as for an IBM run</span></span>
 <span><span class="fu">postie</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/postie/man/get_prevalence.html" class="external-link">get_prevalence</a></span><span class="op">(</span><span class="va">out</span>, diagnostic <span class="op">=</span> <span class="st">"lm"</span><span class="op">)</span><span class="op">$</span><span class="va">lm_prevalence_2_10</span></span>
 <span><span class="fu">postie</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/postie/man/get_rates.html" class="external-link">get_rates</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"time"</span>, <span class="st">"age_lower"</span>, <span class="st">"age_upper"</span>, <span class="st">"clinical"</span>, <span class="st">"severe"</span>, <span class="st">"dalys"</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
-<p>Layer interventions with the ordinary malariasimulation builders and re-run; everything is applied automatically from the parameter list, with no extra arguments. A vivax list runs the same way:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">malariasimulation</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/malariasimulation/man/set_drugs.html" class="external-link">set_drugs</a></span><span class="op">(</span><span class="va">p</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu">malariasimulation</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/malariasimulation/man/AL_params.html" class="external-link">AL_params</a></span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">malariasimulation</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/malariasimulation/man/set_clinical_treatment.html" class="external-link">set_clinical_treatment</a></span><span class="op">(</span><span class="va">p</span>, drug <span class="op">=</span> <span class="fl">1</span>, timesteps <span class="op">=</span> <span class="fl">1</span>, coverages <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span></span>
-<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">malariasimulation</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/malariasimulation/man/set_bednets.html" class="external-link">set_bednets</a></span><span class="op">(</span></span>
-<span>  <span class="va">p</span>, timesteps <span class="op">=</span> <span class="fl">365</span>, coverages <span class="op">=</span> <span class="fl">0.6</span>, retention <span class="op">=</span> <span class="fl">3</span> <span class="op">*</span> <span class="fl">365</span>,</span>
-<span>  dn0 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">0.387</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>, rn <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">0.563</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>,</span>
-<span>  rnm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">0.24</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>, gamman <span class="op">=</span> <span class="fl">2.64</span> <span class="op">*</span> <span class="fl">365</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/run_simulation_ode.html">run_simulation_ode</a></span><span class="op">(</span>timesteps <span class="op">=</span> <span class="fl">3650</span>, parameters <span class="op">=</span> <span class="fu">malariasimulation</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/malariasimulation/man/set_equilibrium.html" class="external-link">set_equilibrium</a></span><span class="op">(</span><span class="va">p</span>, init_EIR <span class="op">=</span> <span class="fl">20</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># P. vivax, with radical cure: relapses and hypnozoite carriage come back as columns.</span></span>
-<span><span class="co"># Radical cure starts on day 1 here, from a seed without it, so these rows are</span></span>
-<span><span class="co"># still settling; burn in first for a level to compare.</span></span>
-<span><span class="va">pv</span> <span class="op">&lt;-</span> <span class="fu">malariasimulation</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/malariasimulation/man/get_parameters.html" class="external-link">get_parameters</a></span><span class="op">(</span>parasite <span class="op">=</span> <span class="st">"vivax"</span><span class="op">)</span></span>
-<span><span class="va">pv</span> <span class="op">&lt;-</span> <span class="fu">malariasimulation</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/malariasimulation/man/set_drugs.html" class="external-link">set_drugs</a></span><span class="op">(</span><span class="va">pv</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu">malariasimulation</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/malariasimulation/man/CQ_PQ_params_vivax.html" class="external-link">CQ_PQ_params_vivax</a></span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">pv</span> <span class="op">&lt;-</span> <span class="fu">malariasimulation</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/malariasimulation/man/set_clinical_treatment.html" class="external-link">set_clinical_treatment</a></span><span class="op">(</span><span class="va">pv</span>, drug <span class="op">=</span> <span class="fl">1</span>, timesteps <span class="op">=</span> <span class="fl">1</span>, coverages <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span></span>
-<span><span class="va">out_pv</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/run_simulation_ode.html">run_simulation_ode</a></span><span class="op">(</span>timesteps <span class="op">=</span> <span class="fl">3650</span>, parameters <span class="op">=</span> <span class="fu">malariasimulation</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/malariasimulation/man/set_equilibrium.html" class="external-link">set_equilibrium</a></span><span class="op">(</span><span class="va">pv</span>, init_EIR <span class="op">=</span> <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">tail</a></span><span class="op">(</span><span class="va">out_pv</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"n_relapses"</span>, <span class="st">"n_with_hypnozoites"</span>, <span class="st">"iaa_mean"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<p>Three exported functions: <code><a href="reference/run_simulation_ode.html">run_simulation_ode()</a></code> runs the model, <code><a href="reference/ode_tuning.html">ode_tuning()</a></code> holds the discretisation settings, and <code><a href="reference/default_age_lower.html">default_age_lower()</a></code> gives the default graded age grid. Everything else comes off the parameter list. (The <code>ode</code> in two of the names is kept for compatibility: the model is a daily update, not an ODE.)</p>
-</div>
-<div class="section level2">
-<h2 id="how-well-does-it-match-the-ibm">How well does it match the IBM?<a class="anchor" aria-label="anchor" href="#how-well-does-it-match-the-ibm"></a>
-</h2>
-<p>That question has its own project: <strong><a href="https://pwinskill.github.io/fleetcheck/">fleetcheck</a></strong>, a register of claims about how closely <code>fleet</code> reproduces <code>malariasimulation</code>, each with the criterion that decides it, the value measured against it, and a verdict.</p>
-<p>It lives outside this repository on purpose. Evidence kept beside the code it vouches for is evidence the code’s author can quietly leave out of date, so this README quotes no comparison figures of its own.</p>
-<p><code>fleetcheck</code> runs its own CI, fails when a verdict and the register disagree, and refuses to tolerate a failing claim that has no written reason.</p>
+<p>Interventions are added with the usual <code>malariasimulation::set_*()</code> functions and read from the parameter list; <code><a href="reference/run_simulation_ode.html">run_simulation_ode()</a></code> has no extra arguments for them. A list from <code>get_parameters(parasite = "vivax")</code> runs the <em>P. vivax</em> model.</p>
+<p>The package exports three functions: <code><a href="reference/run_simulation_ode.html">run_simulation_ode()</a></code> runs the model, <code><a href="reference/ode_tuning.html">ode_tuning()</a></code> holds the discretisation settings, and <code><a href="reference/default_age_lower.html">default_age_lower()</a></code> gives the default age grid. The <code>ode</code> in two of the names is kept for compatibility; the model is a daily update, not an ODE.</p>
 </div>
 <div class="section level2">
 <h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
 </h2>
-<table class="table">
-<colgroup>
-<col width="50%">
-<col width="50%">
-</colgroup>
-<tbody>
-<tr>
-<td><strong><a href="https://pwinskill.github.io/fleet/articles/fleet.html">Get started</a></strong></td>
-<td>A worked tour: run the model, read the outputs with <code>postie</code>, layer on each intervention, handle seasonality and burn-in.</td>
-</tr>
-<tr>
-<td><strong><a href="https://pwinskill.github.io/fleet/articles/using.html">Using fleet well</a></strong></td>
-<td>Where the mean field departs from the IBM and what to do about it: things to do, things to leave alone, results to treat with caution, and what a run costs.</td>
-</tr>
-<tr>
-<td><strong><a href="https://pwinskill.github.io/fleetcheck/">fleetcheck</a></strong></td>
-<td>The evidence, as a separate project: a register of claims about agreement with the IBM — core relationships, age structure, demography, interventions, and 63 country site files — each with its criterion, measurement and verdict.</td>
-</tr>
-<tr>
-<td><strong><a href="https://pwinskill.github.io/fleet/articles/model.html">Model specification</a></strong></td>
-<td>The formal version: scope, what the state space does and does not carry, and the full daily update.</td>
-</tr>
-<tr>
-<td><strong><a href="https://pwinskill.github.io/fleet/articles/parameters.html">Parameter reference</a></strong></td>
-<td>Every <code>malariasimulation</code> <code>set_*()</code> function argument by argument: what <code>fleet</code> reproduces exactly, what it approximates, and what it rejects.</td>
-</tr>
-</tbody>
-</table>
-<p>Function reference: <a href="https://pwinskill.github.io/fleet/reference/run_simulation_ode.html"><code>?run_simulation_ode</code></a>, <a href="https://pwinskill.github.io/fleet/reference/ode_tuning.html"><code>?ode_tuning</code></a>, <a href="https://pwinskill.github.io/fleet/reference/default_age_lower.html"><code>?default_age_lower</code></a>. Contributing: <a href="https://github.com/pwinskill/fleet/blob/main/CONTRIBUTING.md" class="external-link">CONTRIBUTING.md</a>.</p>
+<ul>
+<li>
+<a href="https://pwinskill.github.io/fleet/articles/fleet.html">Get started</a>: running the model, reading the output with <code>postie</code>, interventions, demography, seasonality and <em>P. vivax</em>.</li>
+<li>
+<a href="https://pwinskill.github.io/fleet/articles/using.html">Usage notes</a>: where the mean field departs from the IBM and what to do about it, and run times.</li>
+<li>
+<a href="https://pwinskill.github.io/fleet/articles/model.html">Model specification</a>: scope, the state space and the full daily update.</li>
+<li>
+<a href="https://pwinskill.github.io/fleet/articles/parameters.html">Parameter reference</a>: how <code>fleet</code> handles every <code>malariasimulation</code> <code>set_*()</code> argument: exactly, approximately, or not at all.</li>
+<li>
+<a href="https://pwinskill.github.io/fleet/reference/index.html">Function reference</a>.</li>
+<li>
+<a href="https://github.com/pwinskill/fleet/blob/main/CONTRIBUTING.md" class="external-link">Contributing</a>.</li>
+</ul>
+<p>Agreement with the IBM is assessed in a separate project, <a href="https://pwinskill.github.io/fleetcheck/">fleetcheck</a>: a register of claims covering core relationships, age structure, demography, interventions and 63 country site files, each with the criterion that decides it, the value measured against it and a verdict. It records the evidence so far, failing claims included, and is not a completed validation. It is kept outside this repository so that the evidence cannot fall out of date unnoticed alongside the code it assesses, and this README quotes no comparison figures.</p>
 </div>
 <div class="section level2">
-<h2 id="license">License<a class="anchor" aria-label="anchor" href="#license"></a>
+<h2 id="licence">Licence<a class="anchor" aria-label="anchor" href="#licence"></a>
 </h2>
-<p>MIT. Copyright (c) 2026 Peter Winskill. Full text: <a href="https://github.com/pwinskill/fleet/blob/main/LICENSE.md" class="external-link">LICENSE.md</a>.</p>
+<p>MIT. Copyright (c) 2026 Peter Winskill. See <a href="https://github.com/pwinskill/fleet/blob/main/LICENSE.md" class="external-link">LICENSE.md</a>.</p>
 </div>
 </div>
-  </main><aside class="col-md-3"><div class="at-a-glance">
-<h2 data-toc-skip>At a glance</h2>
-<ul class="list-unstyled">
-<li><p>A single multi-decade run finishes in <strong>under a second</strong>, independent of population size. Feed it an unmodified <code>malariasimulation</code> parameter list and get <code>malariasimulation</code>’s output table straight back, ready for <code>postie</code>.</p></li>
-</ul>
-</div>
-
-<div class="links">
+  </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
 <li><a href="https://github.com/pwinskill/fleet/" class="external-link">Browse source code</a></li>

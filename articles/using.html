@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Using fleet well: approximations and what to do differently • fleet</title>
+<title>Usage notes • fleet</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
@@ -15,7 +15,7 @@
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><script src="../extra.js"></script><meta property="og:title" content="Using fleet well: approximations and what to do differently">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><script src="../extra.js"></script><meta property="og:title" content="Usage notes">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">fleet</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.0.0.9005</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.0.0.9006</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -35,15 +35,15 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../articles/fleet.html">Get started</a></li>
-<li class="active nav-item"><a class="nav-link" href="../articles/using.html">Using fleet well</a></li>
-<li class="nav-item"><a class="nav-link" href="https://pwinskill.github.io/fleetcheck/">Evidence</a></li>
+<li class="active nav-item"><a class="nav-link" href="../articles/using.html">Usage notes</a></li>
+<li class="nav-item"><a class="nav-link" href="https://pwinskill.github.io/fleetcheck/">IBM comparison</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-reference" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Reference</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-reference">
 <li><a class="dropdown-item" href="../articles/model.html">Model specification</a></li>
     <li><a class="dropdown-item" href="../articles/parameters.html">Parameter reference</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../reference/index.html">Function index</a></li>
+    <li><a class="dropdown-item" href="../reference/index.html">Functions</a></li>
     <li><a class="dropdown-item" href="../articles/index.html">All articles</a></li>
   </ul>
 </li>
@@ -67,7 +67,7 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.png" class="logo" alt=""><h1>Using fleet well: approximations and what to do differently</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>Usage notes</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/pwinskill/fleet/blob/main/vignettes/using.Rmd" class="external-link"><code>vignettes/using.Rmd</code></a></small>
@@ -76,193 +76,204 @@
 
     
     
-<blockquote>
-<p><strong>⚠️ Work in progress: not ready for real use.</strong>
-<code>fleet</code> is published early so the approach, and its
-comparison against <code>malariasimulation</code>, can be examined and
-argued with, not so that anyone can rely on its numbers: the API is
-unstable and nothing here has been peer reviewed. The known
-discrepancies against the IBM are open rather than resolved: an excess
-on falciparum clinical and severe incidence across the 63-country site
-files that is not yet explained; a larger excess on <em>P. vivax</em>
-sites, not yet explained either; and, at school age, vivax LM prevalence
-and clinical incidence a few per cent high. The full statement is on the
-<a href="https://pwinskill.github.io/fleet/">package front page</a>; if
-you need results you can defend today, use <a href="https://github.com/mrc-ide/malariasimulation" class="external-link">malariasimulation</a>.</p>
-</blockquote>
-<p><code>fleet</code> is a mean field. It carries the same mechanisms as
-the individual-based model and, for most outcomes, lands inside its
-replicate spread, but a stratum mean is not a population of individuals
-and some things do not survive the averaging. What follows is where that
-bites: what to do, what to leave alone, and which results to treat with
-caution.</p>
-<p>It assumes you can already run the model; if not, start with
-<code><a href="../articles/fleet.html">vignette("fleet")</a></code>. Section references of the form §B.4 are
-to <code><a href="../articles/model.html">vignette("model")</a></code>, which carries the formal system;
-function names link into <code><a href="../articles/parameters.html">vignette("parameters")</a></code>; the
-measurements behind the claims here are in <a href="https://pwinskill.github.io/fleetcheck/">fleetcheck</a>, which is
-kept current as the model changes, and this article is not.</p>
+<p><code>fleet</code> is not yet validated for real use; see the <a href="https://pwinskill.github.io/fleet/#not-ready-for-real-use">status
+note</a>.</p>
+<p><code>fleet</code> carries the same mechanisms as the
+individual-based model (IBM) and, for most outcomes, lands inside its
+replicate spread. A stratum mean is not a population of individuals,
+however, and some effects do not survive the averaging. This article
+covers what to do because of that, which settings to leave alone, which
+results to treat with caution, and what a run costs.</p>
+<p>Section references such as §B.4 are to
+<code><a href="../articles/model.html">vignette("model")</a></code>, and function links go to
+<code><a href="../articles/parameters.html">vignette("parameters")</a></code>. The measurements behind the claims
+here are in <a href="https://pwinskill.github.io/fleetcheck/">fleetcheck</a>, which is
+kept current as the model changes; the figures quoted here are not.</p>
 <div class="section level2">
-<h2 id="things-to-do">Things to do<a class="anchor" aria-label="anchor" href="#things-to-do"></a>
+<h2 id="recommended-practice">Recommended practice<a class="anchor" aria-label="anchor" href="#recommended-practice"></a>
 </h2>
-<p><strong>Call <code>set_equilibrium()</code> last.</strong> It freezes
-all 56 equilibrium parameters, 51 of them translated from the IBM list,
-at the values they held when it ran, and <code>fleet</code> merges that
-stored set over the live list. An edit made <em>after</em> it — another
-<code>set_*()</code> builder, or <code>parameters$du &lt;- 10</code> by
-hand — is a silent no-op, and the run comes out bit-identical to one
-without the edit. The IBM reads those fields directly and would honour
-the edit, so this is a real difference between the two models, not a
-quirk of this one. <code>fleet</code> warns when a live value disagrees
-with the stored one. If a calibration loop varies any of them, re-call
-<code>set_equilibrium()</code> each iteration.</p>
-<p><strong>Burn in before calibrating.</strong> The seed is a close
-approximation, not the exact fixed point (§F): prevalence relaxes by
-under half a per cent, but incidence by a few per cent over the first
-years, more at high transmission (+6% for under-5 clinical incidence at
-EIR 120). A vivax run moves much further, as the IBM’s does, because
-both build up a within-cell spread of immunity the seed does not have:
-its clinical incidence settles about 20% above the seed and its realised
-EIR 4 to 17% above <code>init_EIR</code> (more at lower EIR), within
-about eight years at EIR 3 but over two decades at EIR 0.3, so
-<code>init_EIR</code> is not the EIR a vivax run realises. A treated run
-whose treatment starts at timestep 1 starts untreated, as the IBM’s
-does, and settles onto its treated state over the first months. A
-seasonal run needs ~10 years to settle onto its limit cycle, and its
-annual-mean EIR sits about 7% below the aseasonal <code>init_EIR</code>
-target through nonlinear averaging. Discard the transient.</p>
-<p><strong>Match the age grid to your demography.</strong> If the oldest
-model age group runs past the top <code>deathrate_agegroups</code>,
-<code>fleet</code> applies the top death rate to those ages while the
-IBM removes them. Fix it either way round (widen the grid, or extend the
-death rates):</p>
+<div class="section level3">
+<h3 id="call-set_equilibrium-last">Call <code>set_equilibrium()</code> last<a class="anchor" aria-label="anchor" href="#call-set_equilibrium-last"></a>
+</h3>
+<p><code>set_equilibrium()</code> stores the equilibrium parameters on
+the list as <code>eq_params</code>, and <code>fleet</code> uses that
+stored set in place of the live values, except <code>iv0</code>. An edit
+made afterwards, by another <code>set_*()</code> function or by hand
+(<code>parameters$du &lt;- 10</code>), therefore has no effect, and the
+run is bit-identical to one without it. The IBM reads those fields
+directly and would apply the edit, so this is a real difference between
+the two models. <code>fleet</code> warns when a live value disagrees
+with the stored one. If a calibration loop varies any of these
+parameters, call <code>set_equilibrium()</code> again on each iteration.
+<code><a href="../reference/run_simulation_ode.html">?run_simulation_ode</a></code> has the details.</p>
+</div>
+<div class="section level3">
+<h3 id="burn-in">Burn in<a class="anchor" aria-label="anchor" href="#burn-in"></a>
+</h3>
+<p>The seed is a close approximation to the model’s fixed point, not the
+fixed point itself (§F). Falciparum prevalence relaxes by under 0.5%,
+and incidence by a few per cent over the first years, more at high
+transmission (+6% for under-5 clinical incidence at EIR 120).</p>
+<p>A <em>P. vivax</em> run moves further, as the IBM’s does, because
+both build up a within-cell spread of immunity that the seed does not
+have. Clinical incidence settles about 20% above the seed and the
+realised EIR 4 to 17% above <code>init_EIR</code> (more at lower EIR),
+within about eight years at EIR 3 but over two decades at EIR 0.3.
+<code>init_EIR</code> is therefore not the EIR a <em>P. vivax</em> run
+realises.</p>
+<p>A run whose treatment starts at timestep 1 starts untreated, as the
+IBM’s does, and settles onto its treated state over the first months. A
+seasonal run takes about 10 years to settle onto its limit cycle, and
+its annual-mean EIR is about 7% below the aseasonal
+<code>init_EIR</code> target through nonlinear averaging. Discard the
+transient.</p>
+</div>
+<div class="section level3">
+<h3 id="match-the-age-grid-to-the-demography">Match the age grid to the demography<a class="anchor" aria-label="anchor" href="#match-the-age-grid-to-the-demography"></a>
+</h3>
+<p>Under <code>set_demography()</code>, if the oldest model age group
+runs past the top of <code>deathrate_agegroups</code>,
+<code>fleet</code> applies the top death rate to those ages, where the
+IBM removes them. A warning is given. Do not ignore it: it changes the
+equilibrium age structure the whole run is seeded on (<a href="parameters.html#set_demography"><code>set_demography()</code></a>).
+Make the two match, either by extending the death rates or by lowering
+the grid’s top age group below the top death-rate edge. For death rates
+that stop at 60 years:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/run_simulation_ode.html">run_simulation_ode</a></span><span class="op">(</span><span class="va">t</span>, <span class="va">p</span>, tuning <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>age_lower <span class="op">=</span> <span class="fu"><a href="../reference/default_age_lower.html">default_age_lower</a></span><span class="op">(</span>max_age <span class="op">=</span> <span class="fl">100</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>A warning fires when they diverge; don’t ignore it, because it
-changes the equilibrium age structure the whole run is seeded on (<a href="parameters.html#set_demography"><code>set_demography()</code></a>).</p>
-<p><strong>Make your output bands a partition.</strong>
-<code>postie</code> treats every column as an independent age stratum,
-so overlapping bands are double-counted by any person-day-weighted
-aggregate (§G). A band <code>[lower, upper]</code> holds both its end
-days, as in the IBM, so a partition ends each band the day before the
-next one starts. Set each family’s own fields:</p>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/run_simulation_ode.html">run_simulation_ode</a></span><span class="op">(</span><span class="va">t</span>, <span class="va">p</span>, tuning <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>age_lower <span class="op">=</span> <span class="fu"><a href="../reference/default_age_lower.html">default_age_lower</a></span><span class="op">(</span>max_age <span class="op">=</span> <span class="fl">59</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="output">Output<a class="anchor" aria-label="anchor" href="#output"></a>
+</h3>
+<p><code>postie</code> treats every column as an independent age
+stratum, so overlapping bands are double-counted by any
+person-day-weighted aggregate (§G). Make each family’s bands a
+partition. A band <code>[lower, upper]</code> includes both end days, as
+in the IBM, so in a partition each band ends the day before the next one
+starts:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span><span class="op">$</span><span class="va">prevalence_rendering_min_ages</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2</span>, <span class="fl">10</span><span class="op">)</span> <span class="op">*</span> <span class="fl">365</span></span>
 <span><span class="va">p</span><span class="op">$</span><span class="va">prevalence_rendering_max_ages</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">10</span>, <span class="fl">100</span><span class="op">)</span> <span class="op">*</span> <span class="fl">365</span> <span class="op">-</span> <span class="fl">1</span></span></code></pre></div>
 <p>A family whose list is empty renders nothing, in <code>fleet</code>
 as in the IBM: the defaults give the 2-10 prevalence band and no
-incidence at all.</p>
-<p><strong>Compare rows by timestep.</strong> Row
+incidence.</p>
+<p>Row
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
-of a run is day
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
-— the state at its start and the incidence during it — exactly as
-<code>malariasimulation</code> renders its timestep
+of the output is day
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>,
+the state at its start and the incidence during it, exactly as
+<code>malariasimulation</code> renders timestep
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>,
 so the two tables line up row for row.</p>
-<p><strong>Read prevalence as a count over a population.</strong>
-<code>p_detect_lm_*</code> is the IBM’s expected number LM-detected, a
-count like <code>n_detect_lm_*</code>, not a prevalence. Prevalence is
-<code>n_detect_lm_*</code> / <code>n_age_*</code>, as
-<code>postie</code> computes it.</p>
-<p><strong>Convert EIR before comparing it.</strong> <code>fleet</code>
-reports <code>EIR</code> per adult per year, the value biting humans
+<p>Prevalence is <code>n_detect_lm_*</code> / <code>n_age_*</code>, as
+<code>postie</code> computes it. <code>p_detect_lm_*</code> is the IBM’s
+expected number LM-detected, a count like <code>n_detect_lm_*</code>,
+not a prevalence.</p>
+<p><code>EIR</code> is per adult per year, the value biting humans
 today. The IBM reports the same lagged quantity as a per-species daily
 total, so the like-for-like comparison is
 <code>EIR_&lt;species&gt; / human_population * 365</code>.</p>
-<p><strong>Sanity-check conservation.</strong>
-<code>S_count + D_count + A_count + U_count + Tr_count</code> should
+<p><code>S_count + D_count + A_count + U_count + Tr_count</code> should
 equal <code>human_population</code> to numerical tolerance.
 <code>Ph_count</code> is the drug-protected part of
 <code>S_count</code>, so it is not added again.</p>
 </div>
-<div class="section level2">
-<h2 id="things-to-leave-alone">Things to leave alone<a class="anchor" aria-label="anchor" href="#things-to-leave-alone"></a>
-</h2>
-<p><strong><code>acquired_immunity_offset</code>.</strong> Leave it
-unset. It defaults to 0 for falciparum, whose curves are read at a
-stratum mean, where the IBM’s per-individual 0.5 is a <em>worse</em>
-match to the IBM ensemble mean (§B.3); to 0.5 for vivax, whose curves
-are read at quadrature nodes that stand for people (§V.3); and to 0 for
-vivax with <code>immunity_spread = FALSE</code>, back at the cell
-mean.</p>
-<p><strong><code>bite_dedup</code>.</strong> Leave it at 1 for any
-scientific falciparum run. Setting 0 lets every bite infect
-independently, which the IBM does not do for falciparum (§B.2). Vivax
-counts every bite, as the IBM does, and ignores it.</p>
-<p><strong>Mosquito sub-steps (<code>n_sub</code>).</strong> The default
-of 32 integrates each day about as accurately as the IBM’s own mosquito
-solver does, and the lags the model carries are the IBM’s own delay
-lines, so there is nothing to sharpen. The prophylaxis chains
-(<code>n_ph</code>, <code>n_phc</code>) are sized from the drug’s
-Weibull by default (§B.4) and capped at 20; each stage adds
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>a</mi></msub><msub><mi>n</mi><mi>z</mi></msub></mrow><annotation encoding="application/x-tex">n_a n_z</annotation></semantics></math>
-states, and no chain can have more stages than its mean has days.</p>
-<p><strong><code>parameterise_total_M()</code> /
-<code>parameterise_mosquito_equilibrium()</code>.</strong> They have no
-effect; <code>fleet</code> re-derives <code>total_M</code> itself (<a href="parameters.html#set_equilibrium"><code>set_equilibrium()</code></a>:
-from <code>init_EIR</code> under the default demography, as the IBM’s
-own value under a custom one).</p>
 </div>
 <div class="section level2">
-<h2 id="results-to-treat-with-caution">Results to treat with caution<a class="anchor" aria-label="anchor" href="#results-to-treat-with-caution"></a>
+<h2 id="settings-to-leave-alone">Settings to leave alone<a class="anchor" aria-label="anchor" href="#settings-to-leave-alone"></a>
+</h2>
+<ul>
+<li>
+<code>acquired_immunity_offset</code>: leave it unset. It defaults
+to 0 for falciparum, whose curves are read at a stratum mean, where the
+IBM’s per-individual 0.5 is a worse match to the IBM ensemble mean
+(§B.3); to 0.5 for <em>P. vivax</em>, whose curves are read at
+quadrature nodes that stand for people (§V.3); and to 0 for <em>P.
+vivax</em> with <code>immunity_spread = FALSE</code>, back at the cell
+mean.</li>
+<li>
+<code>bite_dedup</code>: leave it at 1 for any scientific falciparum
+run. Setting 0 lets every bite infect independently, which the IBM does
+not do for falciparum (§B.2). <em>P. vivax</em> counts every bite, as
+the IBM does, and ignores it.</li>
+<li>
+<code>n_sub</code>: the default of 32 mosquito sub-steps per day
+integrates each day about as accurately as the IBM’s own mosquito
+solver, and the model’s lags are the IBM’s own delay lines, so there is
+nothing to sharpen.</li>
+<li>
+<code>n_ph</code>, <code>n_phc</code>: the prophylaxis chains are
+sized from the drug’s Weibull by default (§B.4) and capped at 20 stages.
+Each stage adds
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>a</mi></msub><msub><mi>n</mi><mi>z</mi></msub></mrow><annotation encoding="application/x-tex">n_a n_z</annotation></semantics></math>
+states, and no chain can have more stages than its mean has days.</li>
+<li>
+<code>parameterise_total_M()</code>,
+<code>parameterise_mosquito_equilibrium()</code>: these have no effect.
+<code>fleet</code> re-derives <code>total_M</code> itself, from
+<code>init_EIR</code> under the default demography and as the IBM’s own
+value under a custom one (<a href="parameters.html#set_equilibrium"><code>set_equilibrium()</code></a>).</li>
+</ul>
+</div>
+<div class="section level2">
+<h2 id="limitations">Limitations<a class="anchor" aria-label="anchor" href="#limitations"></a>
 </h2>
 <div class="section level3">
-<h3 id="severe-incidence-and-the-age-grid">Severe incidence, and the age grid<a class="anchor" aria-label="anchor" href="#severe-incidence-and-the-age-grid"></a>
+<h3 id="severe-incidence-and-the-age-grid">Severe incidence and the age grid<a class="anchor" aria-label="anchor" href="#severe-incidence-and-the-age-grid"></a>
 </h3>
-<p>Severe incidence is where the age grid shows most.
+<p>Severe incidence is the output most sensitive to the age grid.
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
-sits out on the convex tail of its Hill function from early childhood
-(§B.3 has the numbers), and a group’s severe incidence is evaluated at
-its mean immunity, so wherever immunity changes across a group, as it
-does fastest in the young groups where severe disease concentrates, the
-group returns too small a number. The error is first order in the group
-width. On the default 118 groups severe incidence at EIR 120 is 2% below
-the IBM median; on 53 groups, under half the cost, it runs 7% below, and
-clinical incidence in young children a few per cent low. So a result
-that rests on the level of severe incidence, or of clinical incidence in
-under-5s at high transmission, wants the default grid or a finer one,
-and a coarser grid is for everything else:</p>
+sits on the convex tail of its Hill function from early childhood (§B.3
+has the numbers), and a group’s severe incidence is evaluated at its
+mean immunity. So wherever immunity changes across a group, as it does
+fastest in the young groups where severe disease concentrates, the group
+returns too small a value. The error is first order in the group width.
+On the default 118 groups, severe incidence at EIR 120 is 2% below the
+IBM median; on 53 groups, at under half the cost, it is 7% below, and
+clinical incidence in young children a few per cent low. A result that
+rests on the level of severe incidence, or of clinical incidence in
+under-5s at high transmission, needs the default grid or a finer one; a
+coarser grid is adequate otherwise:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/run_simulation_ode.html">run_simulation_ode</a></span><span class="op">(</span><span class="va">t</span>, <span class="va">p</span>, tuning <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>age_lower <span class="op">=</span> <span class="fu"><a href="../reference/default_age_lower.html">default_age_lower</a></span><span class="op">(</span>n_group <span class="op">=</span> <span class="fl">53</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>The same convexity inside an (age,
+<p>The same convexity within an (age,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ζ</mi><annotation encoding="application/x-tex">\zeta</annotation></semantics></math>)
 stratum, where the IBM holds a spread of infection histories and the
 mean field one value, is a much smaller effect for falciparum. The
-measurements, kept current as the model changes, are the
-<code>severe-allage-eir</code> and <code>age-profile-clinical</code>
-claims in <a href="https://pwinskill.github.io/fleetcheck/">fleetcheck</a>.</p>
+measurements are the <code>severe-allage-eir</code> and
+<code>age-profile-clinical</code> claims in <a href="https://pwinskill.github.io/fleetcheck/">fleetcheck</a>.</p>
 <p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
-is also a <strong>post-hoc multiplier</strong> — severe counts are
+is also a post-hoc multiplier: severe counts are
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
 times an infection count the state equations have already determined
-(§G) — so nothing downstream absorbs an error in it, where
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>
-splits the infection inflow and feeds back through infectivity,
-treatment and immunity.</p>
+(§G), so nothing downstream absorbs an error in it.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>,
+by contrast, splits the infection inflow and feeds back through
+infectivity, treatment and immunity.</p>
 </div>
 <div class="section level3">
-<h3 id="p--vivax-where-biteless-days-are-common">
-<em>P. vivax</em> where biteless days are common<a class="anchor" aria-label="anchor" href="#p--vivax-where-biteless-days-are-common"></a>
+<h3 id="p--vivax-where-days-without-a-bite-are-common">
+<em>P. vivax</em> where days without a bite are common<a class="anchor" aria-label="anchor" href="#p--vivax-where-days-without-a-bite-are-common"></a>
 </h3>
 <p><code>malariasimulation</code> 3.0.0 evaluates vivax relapses only on
 days when at least one person is bitten, so wherever days without a bite
 are common the IBM loses relapses that <code>fleet</code> keeps, and
-runs below it, sometimes to elimination. That is a defect in the IBM,
+runs below it, sometimes to elimination. This is a defect in the IBM,
 which <code>fleet</code> does not copy; comparing the two there compares
-<code>fleet</code> with the defect. The chance of a biteless day in the
-IBM is about
+<code>fleet</code> with the defect. The probability of a day without a
+bite in the IBM is about
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mrow><mi>−</mi><msub><mtext mathvariant="normal">EIR</mtext><mtext mathvariant="normal">day</mtext></msub><mspace width="0.167em"></mspace><mover><mi>ψ</mi><mo accent="true">‾</mo></mover><mspace width="0.167em"></mspace><mi>N</mi></mrow></msup><annotation encoding="application/x-tex">e^{-\text{EIR}_{\text{day}}\, \bar\psi\, N}</annotation></semantics></math>
 for a daily EIR per adult, mean relative biting rate
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>ψ</mi><mo accent="true">‾</mo></mover><annotation encoding="application/x-tex">\bar\psi</annotation></semantics></math>
 and population
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>:
-in a 10,000-person run it passes 5% only below an EIR of about 0.14, and
-in 50,000 below about 0.03. So it matters in small populations, at the
-lowest transmission, and where vector control drives the day’s bites
-down. It does not explain <code>fleet</code>’s excess over the IBM on
-the vivax site files, whose 50,000-person runs almost never go a day
-without a bite; that excess is not yet explained.</p>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>.
+In a 10,000-person run it exceeds 5% only below an EIR of about 0.14,
+and in a 50,000-person run below about 0.03. It therefore matters in
+small populations, at the lowest transmission, and where vector control
+drives the day’s bites down. It does not explain <code>fleet</code>’s
+excess over the IBM on the vivax site files, whose 50,000-person runs
+almost never go a day without a bite; that excess is not yet
+explained.</p>
 </div>
 <div class="section level3">
 <h3 id="p--vivax-at-school-age">
@@ -274,11 +285,11 @@ those with more anti-parasite immunity clear sub-patent infections
 sooner, so the uninfected hold more of the immune, and the clinical draw
 takes the least immune. A mean field with one immunity distribution per
 cell does not carry that sorting (§V.7), and at EIR 10 its LM prevalence
-and clinical incidence in school-age children run 1–3% above the
+and clinical incidence in school-age children are 1–3% above the
 IBM’s.</p>
 </div>
 <div class="section level3">
-<h3 id="vector-control-eras">Vector-control eras<a class="anchor" aria-label="anchor" href="#vector-control-eras"></a>
+<h3 id="vector-control">Vector control<a class="anchor" aria-label="anchor" href="#vector-control"></a>
 </h3>
 <p>Population-averaged coverage loses the correlation of protection
 within individuals across bites, so <code>fleet</code> tends to sit
@@ -295,23 +306,23 @@ re-vaccination exclusion is not applied (<a href="parameters.html#set_mass_pev">
 campaign is unaffected.</p>
 </div>
 <div class="section level3">
-<h3 id="stochastic-scatter">Stochastic scatter<a class="anchor" aria-label="anchor" href="#stochastic-scatter"></a>
+<h3 id="stochastic-variation">Stochastic variation<a class="anchor" aria-label="anchor" href="#stochastic-variation"></a>
 </h3>
 <p><code>fleet</code> returns the ensemble mean, so it has no replicate
-spread of its own. A single IBM replicate is not a fair yardstick for
-it: compare against the IBM’s replicate median, and read the replicate
-band (median ± 1.28 SD, <code>fleetcheck</code>’s definition) as the
-noise <code>fleet</code> is not carrying.</p>
+spread of its own, and a single IBM replicate is not a fair comparison.
+Compare against the IBM’s replicate median, and read the replicate band
+(median ± 1.28 SD, <code>fleetcheck</code>’s definition) as the noise
+<code>fleet</code> does not carry.</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="cost-model">Cost model<a class="anchor" aria-label="anchor" href="#cost-model"></a>
+<h2 id="cost-model">Run times<a class="anchor" aria-label="anchor" href="#cost-model"></a>
 </h2>
 <p>Seconds for one complete <code><a href="../reference/run_simulation_ode.html">run_simulation_ode()</a></code> call:
 building the inputs, seeding the equilibrium, stepping the days and
-rendering the outputs, which is what you actually pay. Single core, at
-the <code><a href="../reference/ode_tuning.html">ode_tuning()</a></code> defaults, on the default 118-group age
-grid. Falciparum at EIR 20, the SMC scenarios at 15:</p>
+rendering the outputs. Single core, <code><a href="../reference/ode_tuning.html">ode_tuning()</a></code> defaults,
+default 118-group age grid. Falciparum at EIR 20, the SMC scenarios at
+EIR 15:</p>
 <table class="table">
 <thead><tr class="header">
 <th>Scenario</th>
@@ -358,23 +369,22 @@ grid. Falciparum at EIR 20, the SMC scenarios at 15:</p>
 </tr>
 </tbody>
 </table>
-<p>Three things to read off it.</p>
-<p><strong>Cost is proportional to the horizon.</strong> Every day costs
-the same, so the no-intervention row is 0.05 s per simulated year on an
-intercept of a few hundredths of a second: building the inputs and
-solving the seed are a small fixed charge next to the days.</p>
-<p><strong>Seasonality costs almost nothing</strong>, 1% at 30 years.
-The update does the same work each day however fast the solution is
-moving; rainfall only changes the day’s carrying capacity.</p>
-<p><strong>Chemoprevention is the dearer intervention</strong>, SMC 29%
-over a seasonal run, and everything together, vaccination included, 40%.
-What SMC adds is state – the two chemoprevention protection chains and
-the treated phase, about six hundred states per stage on the default
-grid – and each round pauses the run for its pulse.</p>
-<p>A vivax run costs about sixteen times a falciparum one: every
-compartment carries the hypnozoite-batch dimension, eleven levels, and
-each cell carries its immunity’s spread. At EIR 3, with 40% of clinical
-cases treated where a drug is named:</p>
+<p>Cost is proportional to the horizon, because every day costs the
+same: the no-intervention row is 0.05 s per simulated year on an
+intercept of a few hundredths of a second, so building the inputs and
+solving the seed are a small fixed charge. Seasonality adds 1% at 30
+years: the update does the same work each day however fast the solution
+is moving, and rainfall only changes the day’s carrying capacity.
+Chemoprevention is the most expensive intervention, SMC adding 29% to a
+seasonal run and everything together, vaccination included, 40%. SMC
+adds state, the two chemoprevention protection chains and the treated
+phase, about 600 states per stage on the default grid, and each round
+pauses the run for its pulse.</p>
+<p>A <em>P. vivax</em> run costs about 13 times a falciparum one: every
+compartment carries the hypnozoite-batch dimension, eight levels for
+eleven batch counts (§V.1), and each cell carries the spread of its
+immunity. At EIR 3, with 40% of clinical cases treated where a drug is
+named:</p>
 <table class="table">
 <thead><tr class="header">
 <th>Scenario</th>
@@ -385,37 +395,39 @@ cases treated where a drug is named:</p>
 <tbody>
 <tr class="odd">
 <td>No interventions</td>
-<td>4.7 s</td>
-<td>8.8 s</td>
-<td>25.8 s</td>
+<td>3.7 s</td>
+<td>6.9 s</td>
+<td>21.8 s</td>
 </tr>
 <tr class="even">
 <td>Treatment (chloroquine)</td>
-<td>5.5 s</td>
-<td>9.9 s</td>
-<td>27.2 s</td>
+<td>4.6 s</td>
+<td>8.3 s</td>
+<td>22.2 s</td>
 </tr>
 <tr class="odd">
 <td>Radical cure (CQ + primaquine)</td>
-<td>10.9 s</td>
-<td>20.4 s</td>
-<td>58.5 s</td>
+<td>5.6 s</td>
+<td>10.3 s</td>
+<td>28.5 s</td>
 </tr>
 <tr class="even">
 <td>Radical cure (CQ + tafenoquine)</td>
-<td>19.8 s</td>
-<td>38.4 s</td>
-<td>107 s</td>
+<td>16.6 s</td>
+<td>30.5 s</td>
+<td>88.2 s</td>
 </tr>
 </tbody>
 </table>
-<p>Radical cure is the dear vivax intervention: it adds the
-liver-stage-protected levels to the batch dimension, four for primaquine
-and eleven for tafenoquine, and the day’s radical-cure transfers, 2.1
-and 3.9 times the cost of treatment alone at 30 years.</p>
-<p>Population size is irrelevant, as it should be: the compartments are
+<p>Radical cure adds the day’s radical-cure transfers: with primaquine,
+1.3 times the cost of treatment alone at 30 years. Tafenoquine costs 4.0
+times as much: its liver-stage protection outlasts the blood-stage
+drug’s, so it adds eleven liver-stage-protected levels to the batch
+dimension, whereas primaquine’s ends inside chloroquine’s and adds none
+(§V.5).</p>
+<p>Population size does not affect run time: the compartments are
 per-capita densities, and <code>human_population</code> only rescales
-the count columns on the way out.</p>
+the count columns on output.</p>
 <table class="table">
 <thead><tr class="header">
 <th>Population</th>
@@ -434,27 +446,28 @@ the count columns on the way out.</p>
 <td>1.70 s</td>
 </tr></tbody>
 </table>
-<p>Of the discretisation settings, the mosquito sub-steps barely move
-the cost, since the mosquito model is a small part of the day: a 30-year
+<p>Of the discretisation settings, the mosquito sub-steps barely affect
+cost, since the mosquito model is a small part of the day: a 30-year
 seasonal run takes 1.70 s at <code>n_sub = 8</code>, 1.72 s at the
 default 32 and 1.75 s at 64. The age grid is the setting that costs, a
 little more than in proportion to its number of groups: on the 53 groups
 of <code>default_age_lower(n_group = 53)</code> the same run takes 0.70
 s.</p>
-<p>Measured as the minimum of five repeats, two for vivax, since
-contention can only add time, on R 4.5.2,
-<code>aarch64-w64-mingw32</code>. Treat them as indicative: one machine,
-one core, and a laptop under load will be slower. The 30-year seasonal
-run appears three times above, at 1.67 to 1.75 s; that spread is the
-machine’s, not the model’s. For how this compares with the IBM’s cost,
-see the <code>speed</code> claims in <a href="https://pwinskill.github.io/fleetcheck/">fleetcheck</a>.</p>
+<p>Times are the minimum of five repeats (two for <em>P. vivax</em>),
+since contention can only add time, on R 4.5.2,
+<code>aarch64-w64-mingw32</code>. They are indicative: one machine, one
+core, and a laptop under load will be slower. The 30-year seasonal run
+appears three times above, at 1.67 to 1.75 s; that spread is the
+machine’s, not the model’s. For a comparison with the IBM’s cost, see
+the <code>speed</code> claims in <a href="https://pwinskill.github.io/fleetcheck/">fleetcheck</a>.</p>
 </div>
 <div class="section level2">
 <h2 id="index-of-approximations">Index of approximations<a class="anchor" aria-label="anchor" href="#index-of-approximations"></a>
 </h2>
-<p>Every 🟡 in <code><a href="../articles/parameters.html">vignette("parameters")</a></code>, and when it matters.
-The first column links to the argument-by-argument account; § refers to
-<code><a href="../articles/model.html">vignette("model")</a></code>.</p>
+<p>Every mechanism labelled <em>Approximate</em> in
+<code><a href="../articles/parameters.html">vignette("parameters")</a></code>, and when it matters. The
+<em>Where</em> column links to the argument-by-argument account; §
+refers to <code><a href="../articles/model.html">vignette("model")</a></code>.</p>
 <table class="table">
 <colgroup>
 <col width="33%">
@@ -582,6 +595,22 @@ cell, shared by every disease state</td>
 <td>Vivax: IAA’s 44-day refractory window as four 11-day stages</td>
 <td>§V.3</td>
 <td>Infants’ IAA, 2.7% of itself; nothing else by more than 0.7%</td>
+</tr>
+<tr class="odd">
+<td>Vivax: hypnozoite batch counts 4 to 9 sharing levels in pairs, a
+Poisson inside each; <code>ode_tuning(batch_bins = FALSE)</code> gives
+every count its own</td>
+<td>
+<a href="../reference/ode_tuning.html"><code>ode_tuning()</code></a>,
+§V.1</td>
+<td>No output of the <code>fleetcheck</code> vivax suite by more than
+0.4%</td>
+</tr>
+<tr class="even">
+<td>Vivax: no liver-stage protection after primaquine, whose protection
+ends inside chloroquine’s blood-stage protection</td>
+<td>§V.5</td>
+<td>Primaquine radical cure, below 0.2%</td>
 </tr>
 <tr class="odd">
 <td>Vivax: prophylaxis chains protecting fully while they last, Tr
