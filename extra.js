@@ -1,3 +1,34 @@
+// Status banner: keep the page offset equal to the banner's height, which grows
+// when its text wraps, and point its link at this build's home page (the brand
+// link knows the relative depth) rather than at the live site.
+(function () {
+  "use strict";
+  function init() {
+    var banner = document.querySelector(".fl-status-banner");
+    if (!banner) return;
+    var root = document.documentElement;
+    function sync() {
+      root.style.setProperty("--fl-banner-h", banner.offsetHeight + "px");
+    }
+    sync();
+    if (window.ResizeObserver) new ResizeObserver(sync).observe(banner);
+    else window.addEventListener("resize", sync);
+
+    var brand = document.querySelector("a.navbar-brand");
+    var link = banner.querySelector("a");
+    if (brand && link) {
+      var url = new URL(brand.href);
+      url.hash = "not-ready-for-real-use";
+      link.href = url.href;
+    }
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+
 // Make horizontally scrolling regions reachable without a mouse.
 //
 // Wide tables and block equations are put in their own scroll box so they do
