@@ -10,10 +10,25 @@ development:
 # compile time, which a stylesheet cannot reach. There is no light switch, so the
 # site is light only, as fleetcheck's is; the `[data-bs-theme="dark"]` rules in
 # extra.scss are kept for a light switch if one is wanted later.
+#
+# `before_body` is the status banner fixed above the navbar on every page. It is
+# styled in extra.scss, and extra.js keeps the page offset in step with its
+# height and points its link at the home page from any depth. The href here is
+# the fallback when scripts do not run.
 template:
   bootstrap: 5
   bslib:
     navbar-bg: "#FFFFFF"
+  includes:
+    before_body: >
+      <div class="fl-status-banner" role="region" aria-label="Development status">
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      <span><span class="fl-banner-long"><code>fleet</code> is a work in progress and
+      is not validated for research, policy or operational use.</span><span
+      class="fl-banner-short">Work in progress: not validated for real use.</span>
+      <a href="https://pwinskill.github.io/fleet/#not-ready-for-real-use">Details</a></span>
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      </div>
 
 # Get started and Usage notes sit at the top level, where a reader looks first.
 # The specification, the parameter reference and the function index are grouped
